@@ -1,11 +1,131 @@
 @import 'tailwindcss';
+@import '../../vendor/livewire/flux/dist/flux.css';
+@import '../../resources/css/fonts.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
+/** Colors **/
+:root {
+    /** Color **/
+    --color-50: oklch(0.987 0.008 228.9);
+    --color-100: oklch(0.923 0.037 258.4);
+    --color-200: oklch(0.852 0.074 256.7);
+    --color-300: oklch(0.784 0.113 252);
+    --color-400: oklch(0.747 0.137 248.5);
+    --color-500: oklch(0.688 0.17 251.3);
+    --color-600: oklch(0.608 0.15 252);
+    --color-700: oklch(0.506 0.124 251.7);
+    --color-800: oklch(0.393 0.098 252.1);
+    --color-900: oklch(0.266 0.07 252.6);
+    --color-950: oklch(0.21 0.052 251.3);
+
+    /** Base Styles **/
+    --border: var(--color-zinc-200);
+    --input: var(--color-zinc-200);
+    --ring: var(--color-zinc-400);
+    --radius: 0.75rem;
+}
+
+.dark {
+    /** Base Styles **/
+    --border: var(--color-zinc-700);
+    --input: var(--color-zinc-700);
+    --ring: var(--color-zinc-600);
+}
+
+/** Theme Setup **/
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans:
+        Rubik, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+        'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /** Color Index **/
+    --color-index-50: var(--color-50);
+    --color-index-100: var(--color-100);
+    --color-index-200: var(--color-200);
+    --color-index-300: var(--color-300);
+    --color-index-400: var(--color-400);
+    --color-index-500: var(--color-500);
+    --color-index-600: var(--color-600);
+    --color-index-700: var(--color-700);
+    --color-index-800: var(--color-800);
+    --color-index-900: var(--color-900);
+    --color-index-950: var(--color-950);
+
+    /** Color Scale: Zinc **/
+    --color-zinc-50: var(--color-mist-50);
+    --color-zinc-100: var(--color-mist-100);
+    --color-zinc-200: var(--color-mist-200);
+    --color-zinc-300: var(--color-mist-300);
+    --color-zinc-400: var(--color-mist-400);
+    --color-zinc-500: var(--color-mist-500);
+    --color-zinc-600: var(--color-mist-600);
+    --color-zinc-700: var(--color-mist-700);
+    --color-zinc-800: var(--color-mist-800);
+    --color-zinc-900: var(--color-mist-900);
+    --color-zinc-950: var(--color-mist-950);
+
+    --color-accent: var(--color-index-400);
+    --color-accent-content: var(--color-index-500);
+    --color-accent-foreground: var(--color-white);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer theme {
+    .dark {
+        --color-accent: var(--color-index-600);
+        --color-accent-content: var(--color-index-400);
+        --color-accent-foreground: var(--color-white);
+    }
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-zinc-200, currentColor);
+    }
+
+    button,
+    [role='button'] {
+        cursor: pointer;
+    }
+}
+
+[data-flux-field]:not(ui-radio, ui-checkbox) {
+    @apply grid gap-2;
+}
+
+[data-flux-label] {
+    @apply mb-0! leading-tight!;
+}
+
+input:focus[data-flux-control],
+textarea:focus[data-flux-control],
+select:focus[data-flux-control] {
+    @apply ring-accent ring-1 ring-offset-1 ring-offset-zinc-50 outline-hidden;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+.custom-scrollbar {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #27272a transparent; /* Thumb / Track (Zinc-800) */
 }
