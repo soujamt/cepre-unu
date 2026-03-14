@@ -16,7 +16,7 @@
     @livewireStyles
     @fluxAppearance
 </head>
-<body class="flex h-screen bg-zinc-50 antialiased dark:bg-zinc-950" x-data="{ sidebarOpen: false }">
+<body class="flex h-screen bg-white antialiased dark:bg-zinc-800/75" x-data="{ sidebarOpen: false }">
     <div class="bg-unia-pattern fixed inset-0 -z-10"></div>
 
     <livewire:livewire.navegacion.sidebar.index />
@@ -26,13 +26,13 @@
             <x-slot:left>
                 <flux:button
                     id="mobile-menu-btn"
-                    class="-ml-2 md:hidden"
+                    class="md:hidden"
                     @click="sidebarOpen = !sidebarOpen"
                     aria-label="Toggle Menu"
-                    variant="subtle"
+                    variant="ghost"
                 >
                     <x-slot name="icon">
-                        <i class="ki-duotone ki-grid-2 text-2xl text-zinc-600 dark:text-zinc-200"></i>
+                        <x-ui.icon name="menu" size="6" class="text-zinc-500 dark:text-zinc-400" />
                     </x-slot>
                 </flux:button>
 
@@ -41,7 +41,7 @@
 
                     <div class="flex flex-col">
                         @yield ('header')
-                        @yield ('breadcrumbs-manual')
+                        @yield ('breadcrumbs')
                     </div>
                 </div>
             </x-slot:left>
@@ -49,13 +49,24 @@
             <x-slot:right>
                 <div class="flex items-center gap-2">
                     <!-- Theme Toggle Button -->
-                    <flux:button
-                        x-data
-                        x-on:click="$flux.dark = !$flux.dark"
-                        icon="moon"
-                        variant="subtle"
-                        aria-label="Toggle dark mode"
-                    />
+                    <flux:button x-data x-on:click="$flux.dark = !$flux.dark">
+                        <x-slot name="icon">
+                            <x-ui.icon
+                                name="moon"
+                                size="6"
+                                class="text-zinc-600 dark:text-white"
+                                x-show="$flux.dark"
+                                x-cloak
+                            />
+                            <x-ui.icon
+                                name="sun"
+                                size="6"
+                                class="text-zinc-600 dark:text-white"
+                                x-show="!$flux.dark"
+                                x-cloak
+                            />
+                        </x-slot>
+                    </flux:button>
                 </div>
                 <div class="flex items-center md:hidden">
                     <livewire:livewire.navegacion.profile.index :isNavbar="true" />
@@ -66,7 +77,7 @@
         <!-- Scrollable Content -->
         <div class="flex-1 overflow-y-auto">
             <div
-                class="z-10 flex h-16 items-center justify-between border-b border-zinc-200 bg-white px-5 md:hidden dark:border-zinc-800 dark:bg-zinc-950"
+                class="z-10 flex h-16 items-center justify-between border-b border-zinc-200 shadow-xs dark:shadow-lg px-5 md:hidden dark:border-zinc-700"
             >
                 <div class="flex items-center gap-3">
                     @yield ('icon')

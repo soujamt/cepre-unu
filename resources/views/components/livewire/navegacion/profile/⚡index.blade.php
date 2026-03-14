@@ -63,7 +63,7 @@ new class extends Component
                 <flux:navmenu.separator />
                 <flux:button variant="primary" color="red" class="w-full" wire:click="logout">
                     <x-slot name="icon">
-                        <i class="ki-duotone ki-exit-left text-xl"></i>
+                        <x-ui.icon name="power" size="5" class="text-white" />
                     </x-slot>
                     Cerrar Sesión
                 </flux:button>
@@ -78,7 +78,11 @@ new class extends Component
                     <flux:text variant="subtle" class="text-xs">{{ $email }}</flux:text>
                 </div>
             </div>
-            <flux:button variant="ghost" size="sm" color="red" wire:click="logout" icon="user" />
+            <flux:button variant="ghost" size="sm" color="red" wire:click="logout">
+                <x-slot name="icon">
+                    <x-ui.icon name="power" size="5" class="text-zinc-500 dark:text-zinc-400" />
+                </x-slot>
+            </flux:button>
         </div>
     @endif
 </div>

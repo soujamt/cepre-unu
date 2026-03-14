@@ -1,4 +1,4 @@
-@props (['href' => '#', 'active' => false, 'label'])
+@props (['href' => '#', 'active' => false, 'label', 'icon' => null])
 
 <a
     href="{{ $href }}"
@@ -6,7 +6,7 @@
     class="h-10 sm:h-10 flex items-center gap-2 px-2 py-1 text-sm font-regular rounded-lg group border
     {{ $active
        ? 'bg-index-500 text-white border-index-600 shadow-sm shadow-white/20 inset-shadow-xs inset-shadow-white/30 dark:shadow-black/20'
-       : 'text-zinc-600 border-zinc-100 hover:text-zinc-600 hover:bg-index-500/10 hover:border-index-600/10 dark:text-zinc-200 dark:border-zinc-800 hover:inset-shadow-xs hover:inset-shadow-white/20 dark:hover:bg-index-50/5 dark:hover:text-zinc-200 dark:hover:border-black/5'
+       : 'text-zinc-600 border-zinc-50 hover:text-zinc-600 hover:bg-index-500/10 hover:border-index-600/10 dark:text-zinc-200 dark:border-zinc-800 hover:inset-shadow-xs hover:inset-shadow-white/20 dark:hover:bg-index-50/5 dark:hover:text-zinc-200 dark:hover:border-black/5'
     }}"
     {{ $attributes }}
     wire:navigate
@@ -19,7 +19,9 @@
         }}
         "
     >
-        {{ $icon ?? $slot }}
+        @if ($icon)
+            <x-ui.icon :name="$icon" size="4" class="{{ $active ? 'text-white dark:text-white' : 'text-zinc-600 dark:text-white' }}" />
+        @endif
     </div>
     {{ $label }}
 </a>

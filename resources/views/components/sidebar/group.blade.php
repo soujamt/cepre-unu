@@ -1,4 +1,4 @@
-@props (['label', 'active' => false])
+@props (['label', 'active' => false, 'icon' => null])
 
 <div x-data="{ open: {{ $active ? 'true' : 'false' }} }" class="w-full">
     <button
@@ -8,7 +8,7 @@
         :class="{
             'bg-index-500/10 text-zinc-600 border-index-600/10 shadow-sm shadow-white/20 inset-shadow-xs inset-shadow-white/30 dark:inset-shadow-white/20 dark:bg-index-50/5 dark:text-zinc-200 dark:border-black/5 dark:shadow-black/10':
                 open,
-            'text-zinc-600 border-zinc-100 hover:text-zinc-600 hover:bg-index-500/10 hover:border-index-600/10 dark:text-zinc-200 dark:border-zinc-800 hover:inset-shadow-xs hover:inset-shadow-white/20 dark:hover:bg-index-50/5 dark:hover:text-zinc-200 dark:hover:border-black/5':
+            'text-zinc-600 border-zinc-50 hover:text-zinc-600 hover:bg-index-500/10 hover:border-index-600/10 dark:text-zinc-200 dark:border-zinc-800 hover:inset-shadow-xs hover:inset-shadow-white/20 dark:hover:bg-index-50/5 dark:hover:text-zinc-200 dark:hover:border-black/5':
                 !open,
         }"
     >
@@ -21,7 +21,9 @@
                     !open,
             }"
         >
-            {{ $icon ?? '' }}
+            @if ($icon)
+                <x-ui.icon :name="$icon" size="4" class="{{ $active ? 'text-zinc-600 dark:text-white' : 'text-zinc-600 dark:text-white' }}" />
+            @endif
         </div>
 
         <span>{{ $label }}</span>

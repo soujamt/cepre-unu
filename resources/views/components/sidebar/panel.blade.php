@@ -1,4 +1,4 @@
-<aside class="z-10 flex w-70 flex-col border-r border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+<aside class="z-10 flex w-70 flex-col border-r border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
     <!-- Workspace Header -->
     <div class="flex h-16 items-center border-b border-zinc-200 px-5 dark:border-zinc-700">
         <div class="flex items-center gap-3 font-medium text-zinc-700 dark:text-zinc-300">{{ $header ?? '' }}</div>
@@ -13,11 +13,11 @@
 
     <!-- Footer -->
     @if (isset($footer))
-        <div class="h-14 w-full border-t border-zinc-200 bg-zinc-100 px-3 dark:border-zinc-700 dark:bg-zinc-800">
+        <div class="h-14 w-full border-t border-zinc-200 bg-zinc-50 px-3 dark:border-zinc-700 dark:bg-zinc-800 hidden md:flex">
             <div class="flex h-full w-full items-center">{{ $footer }}</div>
         </div>
     @endif
-    <div class="h-14 w-full border-t border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+    <div class="h-14 w-full border-t border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
         <div class="flex h-full items-center justify-between px-3">
             <div class="flex flex-col">
                 <span class="text-[10px] font-normal tracking-wider text-zinc-500 uppercase dark:text-zinc-400">CEPRE UNIA</span>
