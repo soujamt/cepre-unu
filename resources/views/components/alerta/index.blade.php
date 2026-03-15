@@ -201,27 +201,27 @@
                 <div class="relative">
                     <!-- Success -->
                     <template x-if="type === 'success'">
-                        <i class="ki-filled ki-check-circle text-7xl text-green-500 dark:text-green-400"></i>
+                        <x-ui.icon name="check-circle" size="16" class="text-green-500" />
                     </template>
 
                     <!-- Error -->
                     <template x-if="type === 'error'">
-                        <i class="ki-filled ki-cross-circle text-7xl text-rose-500 dark:text-rose-400"></i>
+                        <x-ui.icon name="close-circle" size="16" class="text-red-500" />
                     </template>
 
                     <!-- Warning -->
                     <template x-if="type === 'warning'">
-                        <i class="ki-filled ki-information-2 text-7xl text-yellow-500 dark:text-yellow-400"></i>
+                        <x-ui.icon name="alert-circle" size="16" class="text-yellow-500" />
                     </template>
 
                     <!-- Info -->
                     <template x-if="type === 'info'">
-                        <i class="ki-filled ki-information-1 text-7xl text-sky-500 dark:text-sky-400"></i>
+                        <x-ui.icon name="info-circle" size="16" class="text-sky-600" />
                     </template>
 
                     <!-- Question -->
                     <template x-if="type === 'question'">
-                        <i class="ki-filled ki-question-2 text-7xl text-purple-600 dark:text-purple-400"></i>
+                        <x-ui.icon name="question-circle" size="16" class="text-purple-500" />
                     </template>
                 </div>
             </div>
@@ -242,7 +242,7 @@
 
             <!-- Botones -->
             <div class="flex gap-3 px-6 pb-6" :class="{ 'justify-center': !showCancel, 'justify-end': showCancel }">
-                <flux:button x-show="showCancel" @click="cancel()" variant="ghost" class="min-w-[100px] font-normal">
+                <flux:button x-show="showCancel" @click="cancel()" variant="ghost" class="min-w-25 font-normal">
                     <span x-text="cancelText"></span>
                 </flux:button>
 
@@ -252,7 +252,7 @@
                     @click="confirm()"
                     variant="primary"
                     color="green"
-                    class="min-w-[100px] font-normal"
+                    class="min-w-25 font-normal"
                 >
                     <span x-text="confirmText"></span>
                 </flux:button>
@@ -262,8 +262,8 @@
                     x-show="showConfirm && type === 'error'"
                     @click="confirm()"
                     variant="primary"
-                    color="rose"
-                    class="min-w-[100px] font-normal"
+                    color="red"
+                    class="min-w-25 font-normal"
                 >
                     <span x-text="confirmText"></span>
                 </flux:button>
@@ -274,7 +274,7 @@
                     @click="confirm()"
                     variant="primary"
                     color="yellow"
-                    class="min-w-[100px] font-normal"
+                    class="min-w-25 font-normal"
                 >
                     <span x-text="confirmText"></span>
                 </flux:button>
@@ -285,7 +285,7 @@
                     @click="confirm()"
                     variant="primary"
                     color="sky"
-                    class="min-w-[100px] font-normal"
+                    class="min-w-25 font-normal"
                 >
                     <span x-text="confirmText"></span>
                 </flux:button>
@@ -296,7 +296,7 @@
                     @click="confirm()"
                     variant="primary"
                     color="purple"
-                    class="min-w-[100px] font-normal"
+                    class="min-w-25 font-normal"
                 >
                     <span x-text="confirmText"></span>
                 </flux:button>

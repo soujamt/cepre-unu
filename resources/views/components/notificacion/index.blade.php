@@ -126,19 +126,19 @@
                 <template x-if="notification.type !== 'neutral'">
                     <div class="flex size-6 flex-none items-center justify-center rounded-full">
                         <template x-if="notification.type === 'success'">
-                            <i class="ki-solid ki-check-squared text-xl text-green-500"></i>
+                            <x-ui.icon name="check-circle" size="6" class="text-green-500" />
                         </template>
 
                         <template x-if="notification.type === 'error'">
-                            <i class="ki-solid ki-cross-square text-xl text-rose-500"></i>
+                            <x-ui.icon name="close-circle" size="6" class="text-red-500" />
                         </template>
 
                         <template x-if="notification.type === 'warning'">
-                            <i class="ki-solid ki-information-1 text-xl text-yellow-500"></i>
+                            <x-ui.icon name="alert-circle" size="6" class="text-yellow-500" />
                         </template>
 
                         <template x-if="notification.type === 'info'">
-                            <i class="ki-solid ki-information-2 text-xl text-sky-500"></i>
+                            <x-ui.icon name="info-circle" size="6" class="text-purple-500" />
                         </template>
                     </div>
                 </template>
