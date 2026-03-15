@@ -6,6 +6,6 @@
     <x-ui.icon
         :name="$icon"
         size="6"
-        class="text-index-400 dark:text-index-100"
+        class="text-index-500 dark:text-index-200"
     />
 </div>
