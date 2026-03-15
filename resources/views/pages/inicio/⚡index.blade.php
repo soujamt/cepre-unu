@@ -7,7 +7,8 @@ use Livewire\Component;
 new
 #[Layout('layouts::app')]
 #[Title('INICIO')]
-class extends Component {
+class extends Component
+{
     //
 };
 ?>
