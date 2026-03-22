@@ -1,0 +1,45 @@
+@blaze(fold: true)
+
+@php $srOnly = $srOnly ??= $attributes->pluck('sr-only'); @endphp
+
+@props([
+    'badge' => null,
+    'aside' => null,
+    'trailing' => null,
+    'srOnly' => null,
+])
+
+@php
+    $classes = Flux::classes()
+        ->add('inline-flex items-center')
+        ->add('text-sm font-medium')
+        ->add($srOnly ? 'sr-only' : '')
+        ->add('[:where(&)]:text-zinc-700 [:where(&)]:dark:text-zinc-200')
+        ->add('[&:has([data-flux-label-trailing])]:flex');
+@endphp
+
+<ui-label {{ $attributes->class($classes) }} data-flux-label>
+    {{ $slot }}
+
+    <?php if (is_string($badge)): ?>
+        <span class="ms-1.5 rounded-[4px] bg-zinc-800/5 px-1.5 py-1 text-xs text-zinc-800/70 -my-1 dark:bg-white/10 dark:text-zinc-300" aria-hidden="true">
+            {{ $badge }}
+        </span>
+    <?php elseif ($badge): ?>
+        <span class="ms-1.5" aria-hidden="true">
+            {{ $badge }}
+        </span>
+    <?php endif; ?>
+
+    <?php if ($aside): ?>
+        <span class="ms-1.5 rounded-[4px] bg-zinc-800/5 px-1.5 py-1 text-xs text-zinc-800/70 -my-1 dark:bg-white/10 dark:text-zinc-300" aria-hidden="true">
+            {{ $aside }}
+        </span>
+    <?php endif; ?>
+
+    <?php if ($trailing): ?>
+        <div class="ml-auto" data-flux-label-trailing>
+            {{ $trailing }}
+        </div>
+    <?php endif; ?>
+</ui-label>

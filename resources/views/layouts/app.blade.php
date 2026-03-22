@@ -75,7 +75,7 @@
         </x-header>
 
         <!-- Scrollable Content -->
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
             <div
                 class="z-10 flex h-16 items-center justify-between border-b border-zinc-200 shadow-xs dark:shadow-lg px-5 md:hidden dark:border-zinc-700"
             >
@@ -84,7 +84,10 @@
                     @yield ('header')
                 </div>
             </div>
-            <div class="h-full w-full p-5">{{ $slot }}</div>
+            <div class="flex min-h-0 flex-1 flex-col px-5 pt-5">
+                <div class="flex-1">{{ $slot }}</div>
+                <div class="h-5 shrink-0"></div>
+            </div>
         </div>
     </main>
 
