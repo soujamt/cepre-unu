@@ -20,7 +20,7 @@
         "
     >
         @if ($icon)
-            <x-ui.icon :name="$icon" size="4" class="{{ $active ? 'text-white dark:text-white' : 'text-zinc-600 dark:text-white' }}" />
+            <x-ui.icon :name="$icon" size="5" class="{{ $active ? 'text-white dark:text-white' : 'text-zinc-600 dark:text-white' }}" />
         @endif
     </div>
     {{ $label }}
