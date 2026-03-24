@@ -9,6 +9,7 @@
     'invalid' => null,
     'disabled' => false,
     'iconLeading' => null,
+    'wrapperData' => null,
 ])
 
 @php
@@ -49,7 +50,7 @@
         </label>
     @endif
 
-    <div class="relative">
+    <div class="relative" @if ($wrapperData) x-data="{{ $wrapperData }}" @endif>
         {{ $slot }}
 
         @if ($label && $floating)
