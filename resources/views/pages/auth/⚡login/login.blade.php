@@ -1,154 +1,39 @@
 <div
-    class="bg-white text-card-foreground relative flex w-full max-w-md flex-col gap-5 overflow-hidden rounded-xl border border-none py-6 pt-12 shadow-sm"
+    class="text-card-foreground relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-zinc-200/70 bg-white/95 shadow-xl ring-1 shadow-zinc-950/5 ring-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/90 dark:shadow-black/30 dark:ring-white/5"
 >
     <div
-        class="pointer-events-none absolute top-0 h-52 w-full rounded-t-xl bg-linear-to-t from-transparent to-zinc-500/5"
+        class="pointer-events-none absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(132,204,22,0.10),transparent)] dark:bg-[linear-gradient(180deg,rgba(163,230,53,0.12),transparent)]"
     ></div>
-    <svg width="520" height="209" viewBox="0 0 520 209" fill="none" xmlns="http://www.w3.org/2000/svg" class="pointer-events-none absolute inset-x-0 top-0">
-        <line x1="26.25" y1="1.07096e-08" x2="26.25" y2="94.7007" stroke="url(#paint0_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="45.25" y1="1.07096e-08" x2="45.25" y2="109.92" stroke="url(#paint1_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="65.25" y1="1.07096e-08" x2="65.25" y2="130.213" stroke="url(#paint2_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="84.25" y1="1.07096e-08" x2="84.25" y2="130.213" stroke="url(#paint3_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="104.25" y1="1.07096e-08" x2="104.25" y2="145.433" stroke="url(#paint4_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="123.25" y1="1.07096e-08" x2="123.25" y2="172.49" stroke="url(#paint5_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="143.25" y1="1.07096e-08" x2="143.25" y2="172.49" stroke="url(#paint6_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="163.25" y1="1.07096e-08" x2="163.25" y2="172.49" stroke="url(#paint7_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="182.25" y1="1.07096e-08" x2="182.25" y2="145.433" stroke="url(#paint8_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="202.25" y1="1.07096e-08" x2="202.25" y2="130.213" stroke="url(#paint9_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="221.25" y1="1.07096e-08" x2="221.25" y2="130.213" stroke="url(#paint10_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="241.25" y1="1.07096e-08" x2="241.25" y2="109.92" stroke="url(#paint11_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="260.25" y1="1.07096e-08" x2="260.25" y2="94.7007" stroke="url(#paint12_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="279.25" y1="1.07096e-08" x2="279.25" y2="109.92" stroke="url(#paint13_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="299.25" y1="1.07096e-08" x2="299.25" y2="130.213" stroke="url(#paint14_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="318.25" y1="1.07096e-08" x2="318.25" y2="130.213" stroke="url(#paint15_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="338.25" y1="1.07096e-08" x2="338.25" y2="145.433" stroke="url(#paint16_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="357.25" y1="1.07096e-08" x2="357.25" y2="172.49" stroke="url(#paint17_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="377.25" y1="1.07096e-08" x2="377.25" y2="172.49" stroke="url(#paint18_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="397.25" y1="1.07096e-08" x2="397.25" y2="172.49" stroke="url(#paint19_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="416.25" y1="1.07096e-08" x2="416.25" y2="145.433" stroke="url(#paint20_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="436.25" y1="1.07096e-08" x2="436.25" y2="130.213" stroke="url(#paint21_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="455.25" y1="1.07096e-08" x2="455.25" y2="130.213" stroke="url(#paint22_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="475.25" y1="1.07096e-08" x2="475.25" y2="109.92" stroke="url(#paint23_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <line x1="494.25" y1="1.07096e-08" x2="494.25" y2="94.7007" stroke="url(#paint24_linear_20485_40176)" stroke-opacity="0.1" stroke-width="0.5"></line>
-        <defs>
-            <linearGradient id="paint0_linear_20485_40176" x1="25.5" y1="-2.14191e-08" x2="25.5" y2="94.7007" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint1_linear_20485_40176" x1="44.5" y1="-2.14191e-08" x2="44.5" y2="109.92" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint2_linear_20485_40176" x1="64.5" y1="-2.14191e-08" x2="64.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint3_linear_20485_40176" x1="83.5" y1="-2.14191e-08" x2="83.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint4_linear_20485_40176" x1="103.5" y1="-2.14191e-08" x2="103.5" y2="145.433" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint5_linear_20485_40176" x1="122.5" y1="-2.14191e-08" x2="122.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint6_linear_20485_40176" x1="142.5" y1="-2.14191e-08" x2="142.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint7_linear_20485_40176" x1="162.5" y1="-2.14191e-08" x2="162.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint8_linear_20485_40176" x1="181.5" y1="-2.14191e-08" x2="181.5" y2="145.433" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint9_linear_20485_40176" x1="201.5" y1="-2.14191e-08" x2="201.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint10_linear_20485_40176" x1="220.5" y1="-2.14191e-08" x2="220.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint11_linear_20485_40176" x1="240.5" y1="-2.14191e-08" x2="240.5" y2="109.92" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint12_linear_20485_40176" x1="259.5" y1="-2.14191e-08" x2="259.5" y2="94.7007" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint13_linear_20485_40176" x1="278.5" y1="-2.14191e-08" x2="278.5" y2="109.92" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint14_linear_20485_40176" x1="298.5" y1="-2.14191e-08" x2="298.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint15_linear_20485_40176" x1="317.5" y1="-2.14191e-08" x2="317.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint16_linear_20485_40176" x1="337.5" y1="-2.14191e-08" x2="337.5" y2="145.433" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint17_linear_20485_40176" x1="356.5" y1="-2.14191e-08" x2="356.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint18_linear_20485_40176" x1="376.5" y1="-2.14191e-08" x2="376.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint19_linear_20485_40176" x1="396.5" y1="-2.14191e-08" x2="396.5" y2="172.49" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint20_linear_20485_40176" x1="415.5" y1="-2.14191e-08" x2="415.5" y2="145.433" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint21_linear_20485_40176" x1="435.5" y1="-2.14191e-08" x2="435.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint22_linear_20485_40176" x1="454.5" y1="-2.14191e-08" x2="454.5" y2="130.213" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint23_linear_20485_40176" x1="474.5" y1="-2.14191e-08" x2="474.5" y2="109.92" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-            <linearGradient id="paint24_linear_20485_40176" x1="493.5" y1="-2.14191e-08" x2="493.5" y2="94.7007" gradientUnits="userSpaceOnUse">
-                <stop stop-color="var(--primary)"></stop>
-                <stop offset="1" stop-color="var(--primary-foreground)"></stop>
-            </linearGradient>
-        </defs>
-    </svg>
     <div
-        data-slot="card-header"
-        class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6 justify-center gap-6 text-center"
-    >
-        <div class="flex flex-col md:flex-row items-center justify-center gap-3 md:px-15">
-            <img src="{{ asset('assets/media/logo_unu.png') }}" alt="Logo" class="w-20 md:w-15">
-            <span class="text-xl font-extrabold md:text-start">CENTRO PREUNIVERSITARIO</span>
-        </div>
-        <div>
-            <div class="mb-1.5 text-xl md:text-2xl font-semibold">Bienvenido de nuevo</div>
-            <div class="text-muted-foreground text-sm md:text-base">
-                Inicia sesión en tu cuenta para continuar
+        class="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-lime-500/60 to-transparent dark:via-lime-400/50"
+    ></div>
+
+    <div class="relative flex flex-col gap-8 px-6 py-7 sm:px-7 sm:py-8">
+        <div class="flex flex-col items-center gap-5 text-center">
+            <div
+                class="inline-flex items-center gap-3 rounded-full border border-lime-300 bg-lime-100 px-4 py-2 text-[11px] font-semibold tracking-[0.24em] text-lime-700 uppercase dark:border-lime-400/15 dark:bg-lime-400/8 dark:text-lime-300"
+            >
+                <span class="size-2 rounded-full bg-lime-500 dark:bg-lime-400"></span>
+                Acceso institucional
+            </div>
+
+            <div class="flex flex-col items-center gap-4">
+                <div
+                    class="flex size-20 items-center justify-center rounded-3xl border border-zinc-200/80 bg-white shadow-sm shadow-zinc-950/5 dark:border-white/10 dark:bg-zinc-950/70 dark:shadow-black/20"
+                >
+                    <img src="{{ asset('assets/media/logo_unu.png') }}" alt="Logo UNU" class="w-12" />
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-[11px] font-semibold tracking-[3px] text-zinc-500 uppercase dark:text-zinc-400">Centro Preuniversitario - UNU</p>
+                    <div class="text-2xl font-semibold tracking-tight text-zinc-900 sm:text-[2rem] dark:text-white">
+                        Inicia sesión
+                    </div>
+                    <p class="mx-auto max-w-xs text-sm leading-6 text-zinc-500 dark:text-zinc-400">Accede con tus credenciales para continuar en la plataforma institucional.</p>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="px-5">
+
         <form class="space-y-5" wire:submit="login" novalidate>
             <x-ui.input
                 name="correo"
@@ -170,7 +55,14 @@
                 required
                 floating
             />
-            <flux:button type="submit" class="w-full" variant="primary">Iniciar sesión</flux:button>
+
+            <div class="space-y-3 pt-1">
+                <flux:button type="submit" class="w-full" variant="primary">
+                    Ingresar
+                </flux:button>
+
+                <p class="text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">Plataforma de acceso para procesos académicos, inscripciones y seguimiento institucional.</p>
+            </div>
         </form>
     </div>
 </div>
