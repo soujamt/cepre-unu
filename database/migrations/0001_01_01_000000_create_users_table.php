@@ -6,44 +6,46 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+        Schema::create('tbl_usuario', function (Blueprint $table): void {
+            $table->bigIncrements('id_usu');
+            $table->string('usuario_usu', 50);
+            $table->string('clave_usu');
+            $table->string('correo_usu', 150)->nullable();
+            $table->string('nombres_usu', 150);
+            $table->enum('estado_usu', ['HABILITADO', 'DESHABILITADO', 'BLOQUEADO'])->default('HABILITADO');
             $table->rememberToken();
-            $table->timestamps();
+            $this->addAuditColumns($table);
+            $table->unique('usuario_usu', 'uk_usuario_usu');
+            $table->unique('correo_usu', 'uk_correo_usu');
+            $table->index('estado_usu', 'idx_usuario_estado');
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
-            $table->string('email')->primary();
-            $table->string('token');
-            $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
-        });
+        $this->addAuditForeignKeys('tbl_usuario');
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
+        Schema::dropIfExists('tbl_usuario');
+    }
+
+    private function addAuditColumns(Blueprint $table): void
+    {
+        $table->timestamp('creado_en')->useCurrent();
+        $table->timestamp('actualizado_en')->useCurrent()->useCurrentOnUpdate();
+        $table->timestamp('eliminado_en')->nullable();
+        $table->unsignedBigInteger('id_usuario_creador')->nullable();
+        $table->unsignedBigInteger('id_usuario_actualizador')->nullable();
+        $table->unsignedBigInteger('id_usuario_eliminador')->nullable();
+    }
+
+    private function addAuditForeignKeys(string $tableName): void
+    {
+        Schema::table($tableName, function (Blueprint $table) use ($tableName): void {
+            $table->foreign('id_usuario_creador', "{$tableName}_fk_usuario_creador")->references('id_usu')->on('tbl_usuario')->restrictOnDelete();
+            $table->foreign('id_usuario_actualizador', "{$tableName}_fk_usuario_actualizador")->references('id_usu')->on('tbl_usuario')->restrictOnDelete();
+            $table->foreign('id_usuario_eliminador', "{$tableName}_fk_usuario_eliminador")->references('id_usu')->on('tbl_usuario')->restrictOnDelete();
+        });
     }
 };
