@@ -18,14 +18,14 @@
 </head>
 
 <body
-    class="text-foreground dark:text-foreground-dark relative min-h-screen w-full overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(132,204,22,0.10),transparent_28%),linear-gradient(to_bottom,#f8fafc,#ffffff)] text-base antialiased dark:bg-[radial-gradient(circle_at_top,rgba(132,204,22,0.12),transparent_24%),linear-gradient(to_bottom,#111827,#09090b)]"
+    class="text-foreground dark:text-foreground-dark relative min-h-screen w-full overflow-x-hidden antialiased bg-white dark:bg-zinc-950"
 >
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
         <div
             class="absolute inset-x-0 top-0 h-64 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.82),transparent)] dark:bg-[linear-gradient(to_bottom,rgba(9,9,11,0.25),transparent)]"
         ></div>
         <div
-            class="absolute top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-lime-400/10 blur-3xl dark:bg-lime-300/10"
+            class="absolute top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-lime-400/30 blur-3xl dark:bg-lime-300/20"
         ></div>
         <div
             class="absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(156,163,175,0.5),transparent)] dark:bg-[linear-gradient(to_right,transparent,rgba(255,255,255,0.1),transparent)]"

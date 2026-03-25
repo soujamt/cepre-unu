@@ -14,96 +14,55 @@
 
 <div class="flex w-full flex-col gap-5">
     <div class="flex flex-col gap-1">
-        <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Hola, Usuario 👋</h1>
-        <p class="text-zinc-500 dark:text-zinc-400">Bienvenido al Sistema de Gestión de Inscripciones del Centro Preuniversitario de la Universidad Nacional de Ucayali - UNU. Selecciona un módulo para comenzar.</p>
+        <h1 class="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">Hola, Usuario ðŸ‘‹</h1>
+        <p class="text-zinc-500 dark:text-zinc-400">Bienvenido al Sistema de GestiÃ³n de Inscripciones del Centro Preuniversitario de la Universidad Nacional de Ucayali - UNU. Selecciona un mÃ³dulo para comenzar.</p>
     </div>
-    <form class="w-full max-w-md space-y-5" wire:submit="save" novalidate>
-        <x-ui.input
-            name="usuario"
-            label="Usuario"
-            type="text"
-            wire:model="usuario"
-            :invalid="$errors->has('usuario')"
-            :error="$errors->first('usuario')"
-            required
-            floating
-        />
 
-        <x-ui.input
-            name="correo"
-            label="Correo electrónico"
-            type="email"
-            wire:model="correo"
-            :invalid="$errors->has('correo')"
-            :error="$errors->first('correo')"
-            required
-            floating
-        />
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div class="w-full">
+            <x-card>
+                <x-slot:header>
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="flex size-8 items-center justify-center rounded-md bg-white text-zinc-700 shadow-xs dark:bg-zinc-800 dark:text-zinc-200"
+                            >
+                                <x-ui.icon name="home" size="5" />
+                            </div>
 
-        <x-ui.textarea
-            name="descripcion"
-            label="Descripción"
-            wire:model="descripcion"
-            :invalid="$errors->has('descripcion')"
-            :error="$errors->first('descripcion')"
-            autoResize
-            required
-            floating
-        />
+                            <div class="space-y-1">
+                                <p class="text-sm font-semibold text-zinc-900 dark:text-white">Panel principal</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Acceso rÃ¡pido a los mÃ³dulos del sistema</p>
+                            </div>
+                        </div>
 
-        <x-ui.select
-            name="carrera"
-            label="Carrera"
-            wire:model="carrera"
-            :invalid="$errors->has('carrera')"
-            :error="$errors->first('carrera')"
-            required
-            floating
-        >
-            <x-form.select.option value="sistemas">Ingeniería de Sistemas</x-form.select.option>
-            <x-form.select.option value="civil">Ingeniería Civil</x-form.select.option>
-            <x-form.select.option value="derecho">Derecho</x-form.select.option>
-            <x-form.select.option value="contabilidad">Contabilidad</x-form.select.option>
-        </x-ui.select>
+                        <span
+                            class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                        >
+                            En lÃ­nea
+                        </span>
+                    </div>
+                </x-slot:header>
 
-        <x-ui.select-multiple
-            name="modulos"
-            label="Módulos"
-            wire:model="modulos"
-            :invalid="$errors->has('modulos')"
-            :error="$errors->first('modulos')"
-            required
-            floating
-        >
-            <x-form.select.option value="inscripciones">Inscripciones</x-form.select.option>
-            <x-form.select.option value="pagos">Pagos</x-form.select.option>
-            <x-form.select.option value="reportes">Reportes</x-form.select.option>
-            <x-form.select.option value="seguridad">Seguridad</x-form.select.option>
-        </x-ui.select-multiple>
+                <div class="space-y-3">
+                    Hola
+                </div>
 
-        <x-ui.select-filter
-            name="programa"
-            label="Programa"
-            wire:model="programa"
-            :invalid="$errors->has('programa')"
-            :error="$errors->first('programa')"
-            required
-            floating
-        >
-            <option value="cepre" data-description="Modalidad regular">CEPRE Regular</option>
-            <option value="intensivo" data-description="Preparación acelerada">Ciclo Intensivo</option>
-            <option value="repaso" data-description="Refuerzo final antes del examen">Ciclo de Repaso</option>
-        </x-ui.select-filter>
+                <x-slot:footer>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex flex-wrap gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            <span class="rounded-full bg-white px-3 py-1 dark:bg-zinc-900">Inscripciones</span>
+                            <span class="rounded-full bg-white px-3 py-1 dark:bg-zinc-900">Pagos</span>
+                            <span class="rounded-full bg-white px-3 py-1 dark:bg-zinc-900">Reportes</span>
+                        </div>
 
-        <flux:field>
-            <flux:checkbox wire:model="acepta_terminos" label="Aceptar términos" />
-        </flux:field>
-
-        <flux:field variant="inline">
-            <flux:label>Estado activo</flux:label>
-            <flux:switch wire:model="activo" />
-        </flux:field>
-
-        <flux:button type="submit" variant="primary" class="w-full"> SAVE </flux:button>
-    </form>
+                        <div class="flex gap-2">
+                            <flux:button variant="ghost">Ver resumen</flux:button>
+                            <flux:button variant="primary">Ingresar</flux:button>
+                        </div>
+                    </div>
+                </x-slot:footer>
+            </x-card>
+        </div>
+    </div>
 </div>
