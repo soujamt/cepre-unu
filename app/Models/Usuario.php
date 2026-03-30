@@ -69,6 +69,17 @@ class Usuario extends Authenticatable
         return $this->correo_usu;
     }
 
+    public function getAvatarUrlAttribute(): string
+    {
+        $seed = $this->correo_usu ?: (string) ($this->getKey() ?: $this->nombres_usu);
+
+        return sprintf(
+            'https://avatars.laravel.cloud/%s?vibe=%s',
+            rawurlencode($seed),
+            'daybreak',
+        );
+    }
+
     public function usuarioRoles(): HasMany
     {
         return $this->hasMany(UsuarioRol::class, 'id_usuario', 'id_usu');
