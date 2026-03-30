@@ -4,7 +4,7 @@
     <button
         @click="open = !open"
         type="button"
-        class="font-regular group flex h-10 w-full items-center gap-2 rounded-lg border px-2 py-1 text-sm"
+        class="font-regular group flex h-10 w-full justify-start items-center gap-2 rounded-lg border px-2 py-1 text-sm"
         :class="{
             'bg-index-500/10 text-zinc-600 border-index-600/10 shadow-sm shadow-white/20 inset-shadow-xs inset-shadow-white/30 dark:inset-shadow-white/20 dark:bg-index-50/5 dark:text-zinc-200 dark:border-black/5 dark:shadow-black/10':
                 open,
@@ -26,7 +26,7 @@
             @endif
         </div>
 
-        <span>{{ $label }}</span>
+        <span class="text-start">{{ $label }}</span>
 
         <svg
             xmlns="http://www.w3.org/2000/svg"
