@@ -2,6 +2,8 @@
 
 use App\Enums\EstadoUsuario;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,6 +14,10 @@ new
 #[Title('INICIO DE SESION')]
 class extends Component
 {
+    private const MAX_LOGIN_ATTEMPTS = 5;
+
+    private const LOCKOUT_SECONDS = 60;
+
     public string $correo = '';
 
     public string $password = '';
@@ -41,7 +47,11 @@ class extends Component
 
     public function login(): void
     {
+        $this->correo = Str::lower(trim($this->correo));
+
         $credentials = $this->validate();
+
+        $this->ensureIsNotRateLimited();
 
         $authenticated = Auth::attempt([
             'correo_usu' => $credentials['correo'],
@@ -50,15 +60,36 @@ class extends Component
         ]);
 
         if (! $authenticated) {
+            RateLimiter::hit($this->throttleKey(), self::LOCKOUT_SECONDS);
+
             throw ValidationException::withMessages([
                 'correo' => 'Las credenciales ingresadas no son validas.',
             ]);
         }
 
+        RateLimiter::clear($this->throttleKey());
         session()->regenerate();
 
         $this->dispatch('toast', message: 'Bienvenido de nuevo', type: 'success');
 
         $this->redirectIntended(route('inicio'), navigate: true);
+    }
+
+    private function ensureIsNotRateLimited(): void
+    {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_LOGIN_ATTEMPTS)) {
+            return;
+        }
+
+        $seconds = RateLimiter::availableIn($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'correo' => 'Demasiados intentos. Intenta nuevamente en '.$seconds.' segundos.',
+        ]);
+    }
+
+    private function throttleKey(): string
+    {
+        return Str::transliterate(Str::lower($this->correo)).'|'.request()->ip();
     }
 };
