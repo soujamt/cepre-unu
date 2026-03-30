@@ -74,20 +74,22 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
 
                     {{-- Previous Page Link (Icon) --}}
                     @if ($paginator->onFirstPage())
-                        <flux:button
-
-                            disabled
-                            icon="chevron-left"
-                        />
+                        <flux:button disabled>
+                            <x-slot name="icon">
+                                <x-ui.icon name="caret-left" size="5" />
+                            </x-slot>
+                        </flux:button>
                     @else
                         <flux:button
-
                             type="button"
                             wire:click="previousPage('{{ $paginator->getPageName() }}')"
                             x-on:click="{{ $scrollIntoViewJsSnippet }}"
                             dusk="previousPage{{ $paginator->getPageName() == 'page' ? '' : '.' . $paginator->getPageName() }}.after"
-                            icon="chevron-left"
-                        />
+                        >
+                            <x-slot name="icon">
+                                <x-ui.icon name="caret-left" size="5" />
+                            </x-slot>
+                        </flux:button>
                     @endif
 
                     {{-- Pagination Elements (Page Numbers) --}}
@@ -135,19 +137,21 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                     {{-- Next Page Link (Icon) --}}
                     @if ($paginator->hasMorePages())
                         <flux:button
-
                             type="button"
                             wire:click="nextPage('{{ $paginator->getPageName() }}')"
                             x-on:click="{{ $scrollIntoViewJsSnippet }}"
                             dusk="nextPage{{ $paginator->getPageName() == 'page' ? '' : '.' . $paginator->getPageName() }}.after"
-                            icon="chevron-right"
-                        />
+                        >
+                            <x-slot name="icon">
+                                <x-ui.icon name="caret-right" size="5" />
+                            </x-slot>
+                        </flux:button>
                     @else
-                        <flux:button
-
-                            disabled
-                            icon="chevron-right"
-                        />
+                        <flux:button disabled>
+                            <x-slot name="icon">
+                                <x-ui.icon name="caret-right" size="5" />
+                            </x-slot>
+                        </flux:button>
                     @endif
 
                 </flux:button.group>

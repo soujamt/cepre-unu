@@ -1,11 +1,11 @@
-@blaze(fold: true, memo: true)
+@blaze (fold: true, memo: true)
 
 @php
 $classes = Flux::classes()
     ->add('shrink-0 size-[1.125rem] rounded-[.3rem] flex justify-center items-center')
     ->add('text-sm text-zinc-700 dark:text-zinc-800')
     ->add('shadow-xs [ui-checkbox[disabled]_&]:opacity-75 [ui-checkbox[data-checked][disabled]_&]:opacity-50 [ui-checkbox[disabled]_&]:shadow-none [ui-checkbox[data-checked]_&]:shadow-none [ui-checkbox[data-indeterminate]_&]:shadow-none')
-    ->add('[ui-checkbox[data-checked]:not([data-indeterminate])_&>svg:first-child]:block [ui-checkbox[data-indeterminate]_&>svg:last-child]:block')
+    ->add('[ui-checkbox[data-checked]:not([data-indeterminate])_&>.ui-icon:first-child]:inline-flex [ui-checkbox[data-indeterminate]_&>.ui-icon:last-child]:inline-flex')
     ->add([
         'border',
         'border-zinc-300 dark:border-white/10',
@@ -27,6 +27,6 @@ $classes = Flux::classes()
 @endphp
 
 <div {{ $attributes->class($classes) }} data-flux-checkbox-indicator>
-    <flux:icon.check variant="micro" class="hidden text-[var(--color-accent-foreground)]" />
-    <flux:icon.minus variant="micro" class="hidden text-[var(--color-accent-foreground)]" />
+    <x-ui.icon name="check" size="4" weight="bold" class="hidden text-[var(--color-accent-foreground)]" />
+    <x-ui.icon name="minus" size="4" weight="bold" class="hidden text-[var(--color-accent-foreground)]" />
 </div>

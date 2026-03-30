@@ -32,7 +32,7 @@
                     variant="ghost"
                 >
                     <x-slot name="icon">
-                        <x-ui.icon name="menu" size="6" class="text-zinc-500 dark:text-zinc-400" />
+                        <x-ui.icon name="list" size="6" class="text-zinc-500 dark:text-zinc-400" />
                     </x-slot>
                 </flux:button>
 
@@ -54,6 +54,7 @@
                             <x-ui.icon
                                 name="moon"
                                 size="6"
+                                weight="fill"
                                 class="text-zinc-600 dark:text-white"
                                 x-show="$flux.dark"
                                 x-cloak
@@ -61,6 +62,7 @@
                             <x-ui.icon
                                 name="sun"
                                 size="6"
+                                weight="fill"
                                 class="text-zinc-600 dark:text-white"
                                 x-show="!$flux.dark"
                                 x-cloak
@@ -77,7 +79,7 @@
         <!-- Scrollable Content -->
         <div class="flex min-h-0 flex-1 flex-col overflow-y-auto">
             <div
-                class="z-10 flex h-16 items-center justify-between border-b border-zinc-200 shadow-xs dark:shadow-lg px-5 md:hidden dark:border-zinc-700"
+                class="z-10 flex h-16 items-center justify-between border-b border-zinc-200 px-5 shadow-xs md:hidden dark:border-zinc-700 dark:shadow-lg"
             >
                 <div class="flex items-center gap-3">
                     @yield ('icon')

@@ -23,7 +23,7 @@ new class extends Component {
             href="{{ route('inicio') }}"
             :active="request()->routeIs('inicio')"
             wire:key="menu-inicio"
-            icon="home"
+            icon="house-simple"
         />
 
         <x-sidebar.group label="SEGURIDAD" :active="false" wire:key="menu-opciones" icon="shield">
@@ -31,9 +31,9 @@ new class extends Component {
             <x-sidebar.sub-item label="OPCIÓN 2" href="#" :active="false" wire:key="submenu-opcion-2" />
         </x-sidebar.group>
 
-        <x-sidebar.item label="CONFIGURACIÓN" href="#" :active="false" wire:key="menu-configuracion" icon="setting" />
+        <x-sidebar.item label="CONFIGURACIÓN" href="#" :active="false" wire:key="menu-configuracion" icon="gear" />
 
-        <x-sidebar.item label="Sin Menús" href="#" :active="false" wire:key="menu-sin-menus" icon="block" />
+        <x-sidebar.item label="Sin Menús" href="#" :active="false" wire:key="menu-sin-menus" icon="prohibit" />
 
         <x-slot:footer>
             <livewire:livewire.navegacion.profile.index :isNavbar="false" />

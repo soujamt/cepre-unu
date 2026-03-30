@@ -89,9 +89,7 @@
     />
 
     @if ($loading || $iconTrailing || $hasVisibilityToggle)
-        <div
-            class="absolute inset-y-0 inset-e-0 z-10 flex items-center justify-center gap-x-2 pe-3 text-xs"
-        >
+        <div class="absolute inset-y-0 inset-e-0 z-10 flex items-center justify-center gap-x-2 pe-3 text-xs">
             @if ($loading)
                 <div class="pointer-events-none">
                     <svg
@@ -110,15 +108,15 @@
             @if ($hasVisibilityToggle)
                 <button
                     type="button"
-                    x-on:click="showPassword = ! showPassword"
-                    class="flex justify-center items-center mt-2 text-zinc-400 transition-colors hover:text-zinc-600 focus:outline-none dark:text-white/60 dark:hover:text-white"
+                    x-on:click="showPassword = !showPassword"
+                    class="flex items-center justify-center text-zinc-400 transition-colors hover:text-zinc-600 focus:outline-none dark:text-white/60 dark:hover:text-white"
                     :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                 >
-                    <span x-show="! showPassword">
+                    <span x-show="!showPassword">
                         <x-ui.icon name="eye" size="5" />
                     </span>
                     <span x-show="showPassword" x-cloak>
-                        <x-ui.icon name="eye-off" size="5" />
+                        <x-ui.icon name="eye-slash" size="5" />
                     </span>
                 </button>
             @elseif ($iconTrailing)

@@ -1,10 +1,10 @@
-@blaze(fold: true, unsafe: ['icon:variant'])
+@blaze (fold: true, unsafe: ['icon:variant'])
 
 @php $iconVariant ??= $attributes->pluck('icon:variant'); @endphp
 
-@aware([ 'indicator' ])
+@aware ([ 'indicator' ])
 
-@props([
+@props ([
     'iconVariant' => 'micro',
     'description' => null,
     'indicator' => true,
@@ -54,9 +54,9 @@ $classes = Flux::classes()
 {{-- We have to put "data-flux-field" so that a single box can be disabled without "disabling" the group field label... --}}
 <ui-radio {{ $attributes->class($classes) }} data-flux-control data-flux-radio-cards tabindex="-1" data-flux-field>
     <?php if ($label): ?>
-        <div class="flex-1 flex gap-2">
+        <div class="flex flex-1 gap-2">
             <?php if (is_string($icon) && $icon !== ''): ?>
-                <flux:icon :icon="$icon" :variant="$iconVariant" :class="$iconClasses" />
+                <x-ui.icon :name="$icon" :size="$iconVariant === 'outline' ? '4' : '5'" class="{{ $iconClasses }}" />
             <?php elseif ($icon): ?>
                 {{ $icon }}
             <?php endif; ?>
@@ -69,7 +69,6 @@ $classes = Flux::classes()
                 <?php endif; ?>
             </div>
         </div>
-
         <?php if ($indicator): ?>
             <flux:radio.indicator />
         <?php endif; ?>

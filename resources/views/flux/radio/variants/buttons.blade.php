@@ -1,6 +1,6 @@
-@blaze(fold: true)
+@blaze (fold: true)
 
-@props([
+@props ([
     'accent' => true,
     'size' => 'base',
     'label' => null,
@@ -56,7 +56,11 @@ $iconAttributes = Flux::attributesAfter('icon:', $attributes, [
 {{-- We have to put "data-flux-field" so that a single box can be disabled without "disabling" the group field label... --}}
 <ui-radio {{ $attributes->class($classes) }} data-flux-control data-flux-radio-buttons tabindex="-1" data-flux-field>
     <?php if (is_string($icon) && $icon !== ''): ?>
-        <flux:icon :icon="$icon" :attributes="$iconAttributes" />
+        <x-ui.icon
+            :name="$icon"
+            :size="$iconAttributes->get('variant') === 'micro' ? '4' : '5'"
+            class="{{ $iconAttributes->get('class') }}"
+        />
     <?php elseif ($icon): ?>
         {{ $icon }}
     <?php endif; ?>

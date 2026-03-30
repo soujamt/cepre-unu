@@ -1,4 +1,4 @@
-@props([
+@props ([
     'name' => null,
     'label' => null,
     'hint' => null,
@@ -6,7 +6,7 @@
     'required' => false,
     'floating' => false,
     'iconLeading' => null,
-    'iconTrailing' => 'chevron-down',
+    'iconTrailing' => 'caret-down',
     'invalid' => null,
     'disabled' => false,
     'loading' => false,
@@ -131,8 +131,14 @@
         </select>
 
         @if ($iconLeading)
-            <div class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs">
-                <x-ui.icon :name="$iconLeading" size="5" class="{{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}" />
+            <div
+                class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs"
+            >
+                <x-ui.icon
+                    :name="$iconLeading"
+                    size="5"
+                    class="{{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}"
+                />
             </div>
         @endif
 
@@ -140,7 +146,9 @@
             <label
                 for="{{ $selectId }}"
                 class="pointer-events-none absolute z-10 origin-left transition-all duration-200 ease-out {{ $labelOffsetClasses }} {{ $floatingLabelColorClasses }}"
-                x-bind:class="labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'"
+                x-bind:class="
+                    labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'
+                "
             >
                 <span class="inline-flex items-center gap-1">
                     <span>{{ $label }}</span>
@@ -154,20 +162,22 @@
 
         <button
             type="button"
-            @click="open = ! open"
-            @disabled($disabled)
+            @click="open = !open"
+            @disabled ($disabled)
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses]) }}
         >
             <span
                 x-text="selectedLabels"
                 :class="{ 'text-zinc-400 dark:text-white/60': selectedIsEmpty() }"
                 class="block w-full truncate"
-                @class(['mt-3' => $floating])
+                @class (['mt-3' => $floating])
             ></span>
         </button>
 
         @if ($loading || $iconTrailing)
-            <div class="pointer-events-none absolute inset-y-0 inset-e-0 z-10 flex items-center justify-center pe-3 text-xs">
+            <div
+                class="pointer-events-none absolute inset-y-0 inset-e-0 z-10 flex items-center justify-center pe-3 text-xs"
+            >
                 @if ($loading)
                     <svg
                         class="size-5 animate-spin {{ $invalid ? 'text-red-400' : 'text-accent' }}"
@@ -180,9 +190,10 @@
                         <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4Z"></path>
                     </svg>
                 @elseif (is_string($iconTrailing))
-                    <flux:icon
-                        :icon="$iconTrailing"
-                        class="size-5 text-zinc-400 transition-transform duration-200 dark:text-white/60"
+                    <x-ui.icon
+                        :name="$iconTrailing"
+                        size="5"
+                        class="text-zinc-400 transition-transform duration-200 dark:text-white/60"
                         x-bind:class="{ 'rotate-180': open }"
                     />
                 @endif
@@ -211,13 +222,15 @@
                         @click="toggleOption(option.value)"
                         :class="{
                             'bg-zinc-100 dark:bg-zinc-900/50 text-zinc-900 dark:text-white': isSelected(option.value),
-                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50': ! isSelected(option.value),
+                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50': !isSelected(
+                                option.value,
+                            ),
                         }"
                         class="flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
                         <span class="truncate" x-text="option.label || option.value"></span>
                         <template x-if="isSelected(option.value)">
-                            <x-ui.icon name="check-circle" size="4" class="shrink-0 text-accent" />
+                            <x-ui.icon name="check-circle" size="4" class="text-accent shrink-0" />
                         </template>
                     </button>
                 </template>

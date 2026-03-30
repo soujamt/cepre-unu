@@ -201,27 +201,27 @@
                 <div class="relative">
                     <!-- Success -->
                     <template x-if="type === 'success'">
-                        <x-ui.icon name="check-circle" size="16" class="text-green-500" />
+                        <x-ui.icon name="check-circle" size="16" weight="fill" class="text-green-500" />
                     </template>
 
                     <!-- Error -->
                     <template x-if="type === 'error'">
-                        <x-ui.icon name="close-circle" size="16" class="text-red-500" />
+                        <x-ui.icon name="x-circle" size="16" weight="fill" class="text-red-500" />
                     </template>
 
                     <!-- Warning -->
                     <template x-if="type === 'warning'">
-                        <x-ui.icon name="alert-circle" size="16" class="text-yellow-500" />
+                        <x-ui.icon name="warning-circle" size="16" weight="fill" class="text-yellow-500" />
                     </template>
 
                     <!-- Info -->
                     <template x-if="type === 'info'">
-                        <x-ui.icon name="info-circle" size="16" class="text-sky-600" />
+                        <x-ui.icon name="info" size="16" weight="fill" class="text-sky-600" />
                     </template>
 
                     <!-- Question -->
                     <template x-if="type === 'question'">
-                        <x-ui.icon name="question-circle" size="16" class="text-purple-500" />
+                        <x-ui.icon name="question" size="16" weight="fill" class="text-purple-500" />
                     </template>
                 </div>
             </div>

@@ -126,19 +126,19 @@
                 <template x-if="notification.type !== 'neutral'">
                     <div class="flex size-6 flex-none items-center justify-center rounded-full">
                         <template x-if="notification.type === 'success'">
-                            <x-ui.icon name="check-circle" size="6" class="text-green-500" />
+                            <x-ui.icon name="check-circle" size="6" weight="fill" class="text-green-500" />
                         </template>
 
                         <template x-if="notification.type === 'error'">
-                            <x-ui.icon name="close-circle" size="6" class="text-red-500" />
+                            <x-ui.icon name="x-circle" size="6" weight="fill" class="text-red-500" />
                         </template>
 
                         <template x-if="notification.type === 'warning'">
-                            <x-ui.icon name="alert-circle" size="6" class="text-yellow-500" />
+                            <x-ui.icon name="warning-circle" size="6" weight="fill" class="text-yellow-500" />
                         </template>
 
                         <template x-if="notification.type === 'info'">
-                            <x-ui.icon name="info-circle" size="6" class="text-purple-500" />
+                            <x-ui.icon name="info" size="6" weight="fill" class="text-purple-500" />
                         </template>
                     </div>
                 </template>
@@ -154,10 +154,13 @@
                     @click="dismissNotification(notification.id)"
                     size="sm"
                     variant="subtle"
-                    icon="x-mark"
                     class="flex-none! cursor-pointer"
                     square
-                />
+                >
+                    <x-slot name="icon">
+                        <x-ui.icon name="x" size="4" />
+                    </x-slot>
+                </flux:button>
             </div>
         </template>
 

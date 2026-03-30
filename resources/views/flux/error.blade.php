@@ -1,7 +1,7 @@
 @blaze
 
-@props([
-    'icon' => 'alert-circle',
+@props ([
+    'icon' => 'warning-circle',
     'bag' => 'default',
     'message' => null,
     'deep' => true,
@@ -30,7 +30,6 @@ $classes = Flux::classes('flex items-center gap-1 text-xs font-medium text-red-5
         <?php if ($icon) : ?>
             <x-ui.icon :name="$icon" size="4" />
         <?php endif; ?>
-
         {{ $message }}
     <?php endif; ?>
 </div>

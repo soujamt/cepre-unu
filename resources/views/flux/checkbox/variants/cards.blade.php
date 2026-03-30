@@ -1,10 +1,10 @@
-@blaze(fold: true, unsafe: ['icon:variant'])
+@blaze (fold: true, unsafe: ['icon:variant'])
 
 @php $iconVariant ??= $attributes->pluck('icon:variant'); @endphp
 
-@aware([ 'indicator' ])
+@aware ([ 'indicator' ])
 
-@props([
+@props ([
     'iconVariant' => 'micro',
     'description' => null,
     'indicator' => true,
@@ -53,11 +53,17 @@ $classes = Flux::classes()
 {{-- We have to put tabindex="-1" here because otherwise, Livewire requests will wipe out tabindex state, --}}
 {{-- even with durable attributes for some reason... --}}
 {{-- We have to put "data-flux-field" so that a single box can be disabled without "disabling" the group field label... --}}
-<ui-checkbox {{ $attributes->class($classes) }} data-flux-control data-flux-checkbox-cards tabindex="-1" data-flux-field>
+<ui-checkbox
+    {{ $attributes->class($classes) }}
+    data-flux-control
+    data-flux-checkbox-cards
+    tabindex="-1"
+    data-flux-field
+>
     <?php if ($label): ?>
-        <div class="flex-1 flex gap-2">
+        <div class="flex flex-1 gap-2">
             <?php if (is_string($icon) && $icon !== ''): ?>
-                <flux:icon :icon="$icon" :variant="$iconVariant" :class="$iconClasses" />
+                <x-ui.icon :name="$icon" :size="$iconVariant === 'outline' ? '4' : '5'" class="{{ $iconClasses }}" />
             <?php elseif ($icon): ?>
                 {{ $icon }}
             <?php endif; ?>
@@ -70,7 +76,6 @@ $classes = Flux::classes()
                 <?php endif; ?>
             </div>
         </div>
-
         <flux:checkbox.indicator />
     <?php else: ?>
         {{ $slot }}

@@ -1,11 +1,11 @@
-@blaze(fold: true, unsafe: ['icon:trailing', 'icon:variant'])
+@blaze (fold: true, unsafe: ['icon:trailing', 'icon:variant'])
 
 @php $iconTrailing ??= $attributes->pluck('icon:trailing'); @endphp
 @php $iconVariant ??= $attributes->pluck('icon:variant'); @endphp
 
-@aware([ 'size' ])
+@aware ([ 'size' ])
 
-@props([
+@props ([
     'iconTrailing' => null,
     'iconVariant' => null,
     'label' => null,
@@ -39,7 +39,7 @@ $iconClasses = Flux::classes('text-zinc-500 dark:text-zinc-400 [ui-radio[data-ch
 {{-- even with durable attributes for some reason... --}}
 <ui-radio {{ $attributes->class($classes) }} data-flux-control data-flux-radio-segmented tabindex="-1">
     <?php if (is_string($icon) && $icon !== ''): ?>
-        <flux:icon :$icon :variant="$iconVariant" class="{!! $iconClasses !!}" />
+        <x-ui.icon :name="$icon" :size="$iconVariant === 'outline' ? '5' : '4'" class="{{ $iconClasses }}" />
     <?php elseif ($icon): ?>
         {{ $icon }}
     <?php endif; ?>
@@ -47,7 +47,7 @@ $iconClasses = Flux::classes('text-zinc-500 dark:text-zinc-400 [ui-radio[data-ch
     {{ $slot->isNotEmpty() ? $slot : $label }}
 
     <?php if (is_string($iconTrailing) && $iconTrailing !== ''): ?>
-        <flux:icon :icon="$iconTrailing" variant="micro" />
+        <x-ui.icon :name="$iconTrailing" size="4" />
     <?php elseif ($iconTrailing): ?>
         {{ $iconTrailing }}
     <?php endif; ?>

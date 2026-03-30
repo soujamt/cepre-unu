@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import '@phosphor-icons/web/light';
+@import '@phosphor-icons/web/regular';
+@import '@phosphor-icons/web/fill';
 @import '../../resources/css/fonts.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -206,4 +209,9 @@ select:focus[data-flux-control] {
 .custom-scrollbar {
     scrollbar-width: thin; /* Firefox */
     scrollbar-color: #27272a transparent; /* Thumb / Track (Zinc-800) */
+}
+
+.ui-icon-glyph {
+    display: block;
+    line-height: 1;
 }

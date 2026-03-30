@@ -1,4 +1,4 @@
-@props([
+@props ([
     'name' => null,
     'label' => null,
     'for' => null,
@@ -36,7 +36,9 @@
         : 'ps-3 text-zinc-500 dark:text-zinc-400';
 @endphp
 
-<div {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->class('grid gap-2') }}>
+<div
+    {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->class('grid gap-2') }}
+>
     @if ($label && ! $floating)
         <label
             @if ($for) for="{{ $for }}" @endif
@@ -71,7 +73,7 @@
 
     @if ($invalid && $error)
         <p class="flex items-center gap-1 text-xs font-medium {{ $hintClasses }}">
-            <x-ui.icon name="alert-circle" size="4" />
+            <x-ui.icon name="warning-circle" size="4" />
             {{ $error }}
         </p>
     @elseif ($hint)

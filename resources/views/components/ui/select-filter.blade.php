@@ -1,4 +1,4 @@
-@props([
+@props ([
     'name' => null,
     'label' => null,
     'hint' => null,
@@ -140,8 +140,14 @@
         </select>
 
         @if ($iconLeading)
-            <div class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs">
-                <flux:icon :icon="$iconLeading" class="size-5 {{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}" />
+            <div
+                class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs"
+            >
+                <x-ui.icon
+                    :name="$iconLeading"
+                    size="5"
+                    class="{{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}"
+                />
             </div>
         @endif
 
@@ -149,7 +155,9 @@
             <label
                 for="{{ $inputId }}"
                 class="pointer-events-none absolute z-10 origin-left transition-all duration-200 ease-out {{ $labelOffsetClasses }} {{ $floatingLabelColorClasses }}"
-                x-bind:class="labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'"
+                x-bind:class="
+                    labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'
+                "
             >
                 <span class="inline-flex items-center gap-1">
                     <span>{{ $label }}</span>
@@ -170,14 +178,16 @@
             @focus="openMenu()"
             @click="$el.select()"
             @keydown.escape="show = false"
-            @keydown.enter.prevent="if (filteredItems.length > 0) selectOption(filteredItems[0])"
+            @keydown.enter.prevent="if (filteredItems.length > 0) selectOption(filteredItems[0]);"
             placeholder="{{ $floating ? '' : $placeholder }}"
             autocomplete="off"
-            @disabled($disabled)
+            @disabled ($disabled)
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->merge(['class' => $controlClasses]) }}
         />
 
-        <div class="absolute inset-y-0 inset-e-0 z-10 flex items-center gap-x-1.5 pe-3 text-xs text-zinc-400 dark:text-white/60">
+        <div
+            class="absolute inset-y-0 inset-e-0 z-10 flex items-center gap-x-1.5 pe-3 text-xs text-zinc-400 dark:text-white/60"
+        >
             <button
                 x-show="value"
                 @click="clear()"
@@ -185,11 +195,11 @@
                 class="text-zinc-400 transition-colors hover:text-red-500 focus:outline-none"
                 x-cloak
             >
-                <flux:icon name="x-mark" class="size-5" />
+                <x-ui.icon name="x" size="5" />
             </button>
 
-            <div x-show="! value" x-cloak class="pointer-events-none">
-                <flux:icon icon="chevron-down" class="size-5 text-zinc-400 dark:text-white/60" />
+            <div x-show="!value" x-cloak class="pointer-events-none">
+                <x-ui.icon name="caret-down" size="5" class="text-zinc-400 dark:text-white/60" />
             </div>
         </div>
 
@@ -215,7 +225,8 @@
                         @click="selectOption(item)"
                         :class="{
                             'bg-zinc-100 dark:bg-zinc-900/50 text-zinc-900 dark:text-white': value == item.value,
-                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50': value != item.value,
+                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50':
+                                value != item.value,
                         }"
                         class="flex w-full cursor-pointer items-start justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
@@ -223,16 +234,19 @@
                             <span
                                 class="truncate"
                                 x-text="item.label"
-                                :class="{ 'font-medium': item.description, 'font-normal': ! item.description }"
+                                :class="{ 'font-medium': item.description, 'font-normal': !item.description }"
                             ></span>
 
                             <template x-if="item.description">
-                                <span class="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400" x-text="item.description"></span>
+                                <span
+                                    class="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400"
+                                    x-text="item.description"
+                                ></span>
                             </template>
                         </div>
 
                         <template x-if="value == item.value">
-                            <x-ui.icon name="check-circle" size="4" class="mt-1 shrink-0 text-accent" />
+                            <x-ui.icon name="check-circle" size="4" class="text-accent mt-1 shrink-0" />
                         </template>
                     </button>
                 </template>

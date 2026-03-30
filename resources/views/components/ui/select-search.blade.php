@@ -1,4 +1,4 @@
-@props([
+@props ([
     'name' => null,
     'label' => null,
     'hint' => null,
@@ -127,8 +127,14 @@
         class="group/select relative block w-full"
     >
         @if ($iconLeading)
-            <div class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs">
-                <flux:icon :icon="$iconLeading" class="size-5 {{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}" />
+            <div
+                class="pointer-events-none absolute inset-y-0 inset-s-0 z-10 flex items-center justify-center ps-3 text-xs"
+            >
+                <x-ui.icon
+                    :name="$iconLeading"
+                    size="5"
+                    class="{{ $invalid ? 'text-red-400' : 'text-zinc-400 dark:text-white/60' }}"
+                />
             </div>
         @endif
 
@@ -136,7 +142,9 @@
             <label
                 for="{{ $inputId }}"
                 class="pointer-events-none absolute z-10 origin-left transition-all duration-200 ease-out {{ $labelOffsetClasses }} {{ $floatingLabelColorClasses }}"
-                x-bind:class="labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'"
+                x-bind:class="
+                    labelRaised() ? 'top-1.5 translate-y-0 text-[10px]' : 'top-1/2 -translate-y-1/2 text-[13px]'
+                "
             >
                 <span class="inline-flex items-center gap-1">
                     <span>{{ $label }}</span>
@@ -158,27 +166,29 @@
             @keydown.escape="show = false"
             placeholder="{{ $floating ? '' : $placeholder }}"
             autocomplete="off"
-            @disabled($disabled)
+            @disabled ($disabled)
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->merge(['class' => $controlClasses]) }}
         />
 
-        <div class="absolute inset-y-0 inset-e-0 z-10 flex items-center gap-x-1.5 pe-3 text-xs text-zinc-400 dark:text-white/60">
+        <div
+            class="absolute inset-y-0 inset-e-0 z-10 flex items-center gap-x-1.5 pe-3 text-xs text-zinc-400 dark:text-white/60"
+        >
             <div x-show="searching" x-cloak>
-                <flux:icon name="loading" class="size-5 animate-spin" />
+                <x-ui.icon name="spinner-gap" size="5" class="animate-spin" />
             </div>
 
             <button
-                x-show="search && ! searching"
+                x-show="search && !searching"
                 @click="clear()"
                 type="button"
                 class="text-zinc-400 transition-colors hover:text-red-500 focus:outline-none"
                 x-cloak
             >
-                <flux:icon name="x-mark" class="size-5" />
+                <x-ui.icon name="x" size="5" />
             </button>
 
-            <div x-show="! search && ! searching" x-cloak class="pointer-events-none">
-                <flux:icon icon="chevron-down" class="size-5 text-zinc-400 dark:text-white/60" />
+            <div x-show="!search && !searching" x-cloak class="pointer-events-none">
+                <x-ui.icon name="caret-down" size="5" class="text-zinc-400 dark:text-white/60" />
             </div>
         </div>
 
@@ -194,7 +204,7 @@
             x-cloak
         >
             <div class="p-1">
-                <template x-if="options.length === 0 && ! searching">
+                <template x-if="options.length === 0 && !searching">
                     <div class="p-2 text-sm text-zinc-500 dark:text-zinc-400">No se encontraron coincidencias.</div>
                 </template>
 
@@ -204,13 +214,14 @@
                         @click="selectOption(option)"
                         :class="{
                             'bg-zinc-100 dark:bg-zinc-900/50 text-zinc-900 dark:text-white': value == option.value,
-                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50': value != option.value,
+                            'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50':
+                                value != option.value,
                         }"
                         class="flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
                         <span class="truncate" x-text="option.label"></span>
                         <template x-if="value == option.value">
-                            <x-ui.icon name="check-circle" size="4" class="shrink-0 text-accent" />
+                            <x-ui.icon name="check-circle" size="4" class="text-accent shrink-0" />
                         </template>
                     </button>
                 </template>
