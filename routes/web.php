@@ -10,4 +10,6 @@ Route::middleware('guest')->group(function (): void {
 Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
+
+    Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')->name('permisos.index');
 });

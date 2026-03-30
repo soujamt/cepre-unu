@@ -17,7 +17,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'USUARIOS', 'href' => '#', 'active' => $this->routeIs('usuarios.*')],
                     ['label' => 'ROLES', 'href' => '#', 'active' => $this->routeIs('roles.*')],
-                    ['label' => 'PERMISOS', 'href' => '#', 'active' => $this->routeIs('permisos.*')],
+                    ['label' => 'PERMISOS', 'href' => route('permisos.index'), 'active' => $this->routeIs('permisos.*')],
                 ],
             ],
             [
