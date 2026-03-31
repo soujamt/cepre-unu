@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoUsuario;
 use App\Models\Concerns\HasLegacyAuditRelations;
 use Database\Factories\UsuarioFactory;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 
 #[Table('tbl_usuario', key: 'id_usu')]
 #[Fillable(['usuario_usu', 'clave_usu', 'correo_usu', 'nombres_usu', 'estado_usu', 'remember_token'])]
@@ -88,6 +90,27 @@ class Usuario extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Rol::class, 'tbl_usuario_rol', 'id_usuario', 'id_rol', 'id_usu', 'id_rol');
+    }
+
+    public function permisoAcciones(): Collection
+    {
+        return $this->roles()
+            ->with('permisoAcciones')
+            ->get()
+            ->pluck('permisoAcciones')
+            ->flatten()
+            ->unique('id_peracc')
+            ->values();
+    }
+
+    public function hasPermisoAccion(string $clave): bool
+    {
+        return $this->roles()
+            ->whereHas('permisoAcciones', function ($query) use ($clave): void {
+                $query->where('clave_peracc', $clave)
+                    ->where('estado_peracc', EstadoCatalogo::Habilitado->value);
+            })
+            ->exists();
     }
 
     public function pagosValidados(): HasMany

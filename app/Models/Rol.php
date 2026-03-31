@@ -24,7 +24,7 @@ class Rol extends LegacyModel
         return $this->hasMany(UsuarioRol::class, 'id_rol', 'id_rol');
     }
 
-    public function rolAcciones(): HasMany
+    public function rolPermisoAcciones(): HasMany
     {
         return $this->hasMany(RolAccion::class, 'id_rol', 'id_rol');
     }
@@ -34,8 +34,8 @@ class Rol extends LegacyModel
         return $this->belongsToMany(Usuario::class, 'tbl_usuario_rol', 'id_rol', 'id_usuario', 'id_rol', 'id_usu');
     }
 
-    public function acciones(): BelongsToMany
+    public function permisoAcciones(): BelongsToMany
     {
-        return $this->belongsToMany(Accion::class, 'tbl_rol_accion', 'id_rol', 'id_accion', 'id_rol', 'id_acc');
+        return $this->belongsToMany(PermisoAccion::class, 'tbl_rol_permiso_accion', 'id_rol', 'id_peracc', 'id_rol', 'id_peracc');
     }
 }
