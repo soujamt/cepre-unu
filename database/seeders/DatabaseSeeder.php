@@ -20,10 +20,12 @@ class DatabaseSeeder extends Seeder
             TipoColegioSeeder::class,
         ]);
 
-        Usuario::factory()->create([
+        Usuario::query()->updateOrCreate([
             'usuario_usu' => 'testuser',
+        ], [
             'correo_usu' => 'test@unu.edu.pe',
-            'nombres_usu' => 'Test User',
+            'nombres_usu' => 'TEST USER',
+            'clave_usu' => 'password',
         ]);
     }
 }
