@@ -100,6 +100,9 @@ class Usuario extends Authenticatable
                 ->whereHas('permiso', function ($query): void {
                     $query->where('estado_permiso', EstadoCatalogo::Habilitado->value);
                 })
+                ->whereHas('accion', function ($query): void {
+                    $query->where('estado_accion', EstadoCatalogo::Habilitado->value);
+                })
                 ->get()
                 ->unique('id_peracc')
                 ->values();
@@ -108,16 +111,24 @@ class Usuario extends Authenticatable
         return $this->roles()
             ->where('estado_rol', EstadoCatalogo::Habilitado->value)
             ->with([
-                'permisoAcciones' => function ($query): void {
-                    $query->where('estado_peracc', EstadoCatalogo::Habilitado->value)
-                        ->whereHas('permiso', function ($permissionQuery): void {
-                            $permissionQuery->where('estado_permiso', EstadoCatalogo::Habilitado->value);
-                        });
+                'rolPermisoAcciones' => function ($query): void {
+                    $query->whereHas('permisoAccion', function ($permissionActionQuery): void {
+                        $permissionActionQuery
+                            ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                            ->whereHas('permiso', function ($permissionQuery): void {
+                                $permissionQuery->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+                            })
+                            ->whereHas('accion', function ($actionQuery): void {
+                                $actionQuery->where('estado_accion', EstadoCatalogo::Habilitado->value);
+                            });
+                    })->with('permisoAccion');
                 },
             ])
             ->get()
-            ->pluck('permisoAcciones')
+            ->pluck('rolPermisoAcciones')
             ->flatten()
+            ->pluck('permisoAccion')
+            ->filter()
             ->unique('id_peracc')
             ->values();
     }
@@ -130,12 +141,18 @@ class Usuario extends Authenticatable
 
         return $this->roles()
             ->where('estado_rol', EstadoCatalogo::Habilitado->value)
-            ->whereHas('permisoAcciones', function ($query) use ($clave): void {
-                $query->where('clave_peracc', $clave)
-                    ->where('estado_peracc', EstadoCatalogo::Habilitado->value);
-            })
-            ->whereHas('permisoAcciones.permiso', function ($query): void {
-                $query->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+            ->whereHas('rolPermisoAcciones', function ($rolePermissionQuery) use ($clave): void {
+                $rolePermissionQuery->whereHas('permisoAccion', function ($permissionActionQuery) use ($clave): void {
+                    $permissionActionQuery
+                        ->where('clave_peracc', $clave)
+                        ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                        ->whereHas('permiso', function ($permissionQuery): void {
+                            $permissionQuery->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+                        })
+                        ->whereHas('accion', function ($actionQuery): void {
+                            $actionQuery->where('estado_accion', EstadoCatalogo::Habilitado->value);
+                        });
+                });
             })
             ->exists();
     }

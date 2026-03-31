@@ -207,6 +207,11 @@ return new class extends Migration
                 'estado_accion' => 'HABILITADO',
             ],
             [
+                'nombre_accion' => 'Permisos',
+                'clave_accion' => 'permisos',
+                'estado_accion' => 'HABILITADO',
+            ],
+            [
                 'nombre_accion' => 'Eliminar',
                 'clave_accion' => 'eliminar',
                 'estado_accion' => 'HABILITADO',

@@ -292,7 +292,7 @@ class extends Component
             ])
             ->buscar($this->normalizarTexto($this->buscar))
             ->conEstados($this->estadosSeleccionados)
-            ->orderBy('nombre_permiso')
+            ->orderByDesc('id_permiso')
             ->paginate(10);
     }
 
