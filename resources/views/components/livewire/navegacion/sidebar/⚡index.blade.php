@@ -17,7 +17,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'USUARIOS', 'href' => '#', 'active' => $this->routeIs('usuarios.*')],
                     ['label' => 'ROLES', 'href' => '#', 'active' => $this->routeIs('roles.*')],
-                    ['label' => 'PERMISOS', 'href' => route('permisos.index'), 'active' => $this->routeIs('permisos.*')],
+                    ['label' => 'PERMISOS', 'href' => route('permisos.index'), 'active' => $this->routeIs('permisos.*'), 'permiso' => 'permisos_indice'],
                 ],
             ],
             [
@@ -109,21 +109,29 @@ new class extends Component
         />
 
         @foreach ($this->gruposMenu() as $grupo)
-            <x-sidebar.group
-                :label="$grupo['label']"
-                :active="$grupo['active']"
-                :icon="$grupo['icon']"
-                wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}"
-            >
-                @foreach ($grupo['items'] as $item)
-                    <x-sidebar.sub-item
-                        :label="$item['label']"
-                        :href="$item['href']"
-                        :active="$item['active']"
-                        wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}"
-                    />
-                @endforeach
-            </x-sidebar.group>
+            @php
+                $itemsVisibles = collect($grupo['items'])
+                    ->filter(fn (array $item): bool => ! isset($item['permiso']) || auth()->user()?->hasPermisoAccion($item['permiso']))
+                    ->values();
+            @endphp
+
+            @if ($itemsVisibles->isNotEmpty())
+                <x-sidebar.group
+                    :label="$grupo['label']"
+                    :active="$grupo['active']"
+                    :icon="$grupo['icon']"
+                    wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}"
+                >
+                    @foreach ($itemsVisibles as $item)
+                        <x-sidebar.sub-item
+                            :label="$item['label']"
+                            :href="$item['href']"
+                            :active="$item['active']"
+                            wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}"
+                        />
+                    @endforeach
+                </x-sidebar.group>
+            @endif
         @endforeach
 
         <x-slot:footer>

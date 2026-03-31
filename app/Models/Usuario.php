@@ -94,8 +94,27 @@ class Usuario extends Authenticatable
 
     public function permisoAcciones(): Collection
     {
+        if ($this->esAdministrador()) {
+            return PermisoAccion::query()
+                ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                ->whereHas('permiso', function ($query): void {
+                    $query->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+                })
+                ->get()
+                ->unique('id_peracc')
+                ->values();
+        }
+
         return $this->roles()
-            ->with('permisoAcciones')
+            ->where('estado_rol', EstadoCatalogo::Habilitado->value)
+            ->with([
+                'permisoAcciones' => function ($query): void {
+                    $query->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                        ->whereHas('permiso', function ($permissionQuery): void {
+                            $permissionQuery->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+                        });
+                },
+            ])
             ->get()
             ->pluck('permisoAcciones')
             ->flatten()
@@ -105,11 +124,27 @@ class Usuario extends Authenticatable
 
     public function hasPermisoAccion(string $clave): bool
     {
+        if ($this->esAdministrador()) {
+            return true;
+        }
+
         return $this->roles()
+            ->where('estado_rol', EstadoCatalogo::Habilitado->value)
             ->whereHas('permisoAcciones', function ($query) use ($clave): void {
                 $query->where('clave_peracc', $clave)
                     ->where('estado_peracc', EstadoCatalogo::Habilitado->value);
             })
+            ->whereHas('permisoAcciones.permiso', function ($query): void {
+                $query->where('estado_permiso', EstadoCatalogo::Habilitado->value);
+            })
+            ->exists();
+    }
+
+    public function esAdministrador(): bool
+    {
+        return $this->roles()
+            ->where('estado_rol', EstadoCatalogo::Habilitado->value)
+            ->where('nombre_rol', 'ADMINISTRADOR')
             ->exists();
     }
 

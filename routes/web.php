@@ -11,5 +11,7 @@ Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 
-    Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')->name('permisos.index');
+    Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')
+        ->middleware('permiso:permisos_indice')
+        ->name('permisos.index');
 });

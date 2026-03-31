@@ -15,6 +15,12 @@
 @endsection
 
 <div class="space-y-5">
+    @php
+        $puedeGestionarAcciones = auth()->user()?->hasPermisoAccion('permisos_editar')
+            || auth()->user()?->hasPermisoAccion('permisos_estado')
+            || auth()->user()?->hasPermisoAccion('permisos_eliminar');
+    @endphp
+
     <div class="flex justify-start gap-3">
         <div class="w-full lg:w-xs">
             <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar permisos" clearable>
@@ -69,12 +75,14 @@
             </flux:dropdown>
         </div>
 
-        <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarPermiso">
-            <x-slot name="icon">
-                <x-ui.icon name="plus" size="5" class="text-white" />
-            </x-slot>
-            Nuevo
-        </flux:button>
+        @permiso('permisos_crear')
+            <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarPermiso">
+                <x-slot name="icon">
+                    <x-ui.icon name="plus" size="5" class="text-white" />
+                </x-slot>
+                Nuevo
+            </flux:button>
+        @endpermiso
     </div>
 
     <div class="relative">
@@ -126,41 +134,51 @@
                         </x-table.cell>
                         <x-table.cell>{{ $permiso->creado_en->format('d M Y, h:i a') }}</x-table.cell>
                         <x-table.cell align="end">
-                            <flux:dropdown>
-                                <flux:button
-                                    icon:trailing="chevron-down"
-                                    size="sm"
-                                    variant="filled"
-                                    class="font-normal"
-                                >
-                                    Acciones
-                                </flux:button>
-                                <flux:menu>
-                                    <flux:menu.item wire:click="cargarPermiso({{ $permiso->id_permiso }})">
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="pencil" size="4" class="me-2" />
-                                        </x-slot>
-                                        Editar
-                                    </flux:menu.item>
-                                    <flux:menu.item
-                                        wire:click="$js.cargarAlertaEstado({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
+                            @if ($puedeGestionarAcciones)
+                                <flux:dropdown>
+                                    <flux:button
+                                        icon:trailing="chevron-down"
+                                        size="sm"
+                                        variant="filled"
+                                        class="font-normal"
                                     >
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
-                                        </x-slot>
-                                        Estado
-                                    </flux:menu.item>
-                                    <flux:menu.item
-                                        variant="danger"
-                                        wire:click="$js.cargarAlertaEliminar({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
-                                    >
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="trash" size="4" class="me-2" />
-                                        </x-slot>
-                                        Eliminar
-                                    </flux:menu.item>
-                                </flux:menu>
-                            </flux:dropdown>
+                                        Acciones
+                                    </flux:button>
+                                    <flux:menu>
+                                        @permiso('permisos_editar')
+                                            <flux:menu.item wire:click="cargarPermiso({{ $permiso->id_permiso }})">
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="pencil" size="4" class="me-2" />
+                                                </x-slot>
+                                                Editar
+                                            </flux:menu.item>
+                                        @endpermiso
+
+                                        @permiso('permisos_estado')
+                                            <flux:menu.item
+                                                wire:click="$js.cargarAlertaEstado({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
+                                                </x-slot>
+                                                Estado
+                                            </flux:menu.item>
+                                        @endpermiso
+
+                                        @permiso('permisos_eliminar')
+                                            <flux:menu.item
+                                                variant="danger"
+                                                wire:click="$js.cargarAlertaEliminar({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="trash" size="4" class="me-2" />
+                                                </x-slot>
+                                                Eliminar
+                                            </flux:menu.item>
+                                        @endpermiso
+                                    </flux:menu>
+                                </flux:dropdown>
+                            @endif
                         </x-table.cell>
                     </x-table.row>
                 @empty
@@ -197,54 +215,56 @@
         {{ $this->permisos->links() }}
     </div>
 
-    <flux:modal flyout variant="floating" name="modal-permiso" class="px-0! py-5! md:w-md!">
-        <div class="space-y-5">
-            <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>
-            <flux:separator variant="subtle" />
-
-            <form wire:submit="guardar" class="space-y-5">
-                <div class="space-y-5 px-5">
-                    <x-ui.input
-                        label="Nombre"
-                        type="text"
-                        wire:model="permisoForm.nombre"
-                        :invalid="$errors->has('permisoForm.nombre')"
-                        :error="$errors->first('permisoForm.nombre')"
-                        required
-                        floating
-                    />
-
-                    <x-ui.select-multiple
-                        label="Acciones"
-                        wire:model.live="permisoForm.acciones"
-                        placeholder="Seleccionar acciones"
-                        :invalid="$errors->has('permisoForm.acciones')"
-                        :error="$errors->first('permisoForm.acciones')"
-                        required
-                        floating
-                    >
-                        @foreach ($this->accionesDisponibles as $accion)
-                            <option wire:key="accion-{{ $accion->id_acc }}" value="{{ $accion->id_acc }}">
-                                {{ $accion->nombre_accion }}
-                            </option>
-                        @endforeach
-                    </x-ui.select-multiple>
-                </div>
-
+    @if (auth()->user()?->hasPermisoAccion('permisos_crear') || auth()->user()?->hasPermisoAccion('permisos_editar'))
+        <flux:modal flyout variant="floating" name="modal-permiso" class="px-0! py-5! md:w-md!">
+            <div class="space-y-5">
+                <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>
                 <flux:separator variant="subtle" />
 
-                <div class="flex px-5">
-                    <flux:spacer />
-                    <flux:button variant="primary" type="submit" class="font-normal">
-                        <x-slot name="icon">
-                            <x-ui.icon name="floppy-disk" size="5" class="text-white" />
-                        </x-slot>
-                        Guardar
-                    </flux:button>
-                </div>
-            </form>
-        </div>
-    </flux:modal>
+                <form wire:submit="guardar" class="space-y-5">
+                    <div class="space-y-5 px-5">
+                        <x-ui.input
+                            label="Nombre"
+                            type="text"
+                            wire:model="permisoForm.nombre"
+                            :invalid="$errors->has('permisoForm.nombre')"
+                            :error="$errors->first('permisoForm.nombre')"
+                            required
+                            floating
+                        />
+
+                        <x-ui.select-multiple
+                            label="Acciones"
+                            wire:model.live="permisoForm.acciones"
+                            placeholder="Seleccionar acciones"
+                            :invalid="$errors->has('permisoForm.acciones')"
+                            :error="$errors->first('permisoForm.acciones')"
+                            required
+                            floating
+                        >
+                            @foreach ($this->accionesDisponibles as $accion)
+                                <option wire:key="accion-{{ $accion->id_acc }}" value="{{ $accion->id_acc }}">
+                                    {{ $accion->nombre_accion }}
+                                </option>
+                            @endforeach
+                        </x-ui.select-multiple>
+                    </div>
+
+                    <flux:separator variant="subtle" />
+
+                    <div class="flex px-5">
+                        <flux:spacer />
+                        <flux:button variant="primary" type="submit" class="font-normal">
+                            <x-slot name="icon">
+                                <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                            </x-slot>
+                            Guardar
+                        </flux:button>
+                    </div>
+                </form>
+            </div>
+        </flux:modal>
+    @endif
 </div>
 
 @script

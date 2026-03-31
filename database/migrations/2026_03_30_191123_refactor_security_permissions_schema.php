@@ -9,6 +9,35 @@ return new class extends Migration
 {
     public function up(): void
     {
+        $accionesLegadas = DB::table('tbl_accion')
+            ->select([
+                'id_acc',
+                'nombre_acc',
+                'modulo_acc',
+                'estado_acc',
+                'creado_en',
+                'actualizado_en',
+                'eliminado_en',
+                'id_usuario_creador',
+                'id_usuario_actualizador',
+                'id_usuario_eliminador',
+            ])
+            ->orderBy('id_acc')
+            ->get();
+
+        $rolesAccionesLegadas = DB::table('tbl_rol_accion')
+            ->select([
+                'id_rol',
+                'id_accion',
+                'creado_en',
+                'actualizado_en',
+                'eliminado_en',
+                'id_usuario_creador',
+                'id_usuario_actualizador',
+                'id_usuario_eliminador',
+            ])
+            ->get();
+
         Schema::create('tbl_permiso', function (Blueprint $table): void {
             $table->bigIncrements('id_permiso');
             $table->string('nombre_permiso');
@@ -22,21 +51,18 @@ return new class extends Migration
 
         $this->addAuditForeignKeys('tbl_permiso');
 
-        $permisosLegados = DB::table('tbl_accion')
-            ->select([
-                'nombre_acc as nombre_permiso',
-                'modulo_acc as clave_permiso',
-                'estado_acc as estado_permiso',
-                'creado_en',
-                'actualizado_en',
-                'eliminado_en',
-                'id_usuario_creador',
-                'id_usuario_actualizador',
-                'id_usuario_eliminador',
+        $permisosLegados = $accionesLegadas
+            ->map(fn (object $permiso): array => [
+                'nombre_permiso' => $permiso->nombre_acc,
+                'clave_permiso' => $permiso->modulo_acc,
+                'estado_permiso' => $permiso->estado_acc,
+                'creado_en' => $permiso->creado_en,
+                'actualizado_en' => $permiso->actualizado_en,
+                'eliminado_en' => $permiso->eliminado_en,
+                'id_usuario_creador' => $permiso->id_usuario_creador,
+                'id_usuario_actualizador' => $permiso->id_usuario_actualizador,
+                'id_usuario_eliminador' => $permiso->id_usuario_eliminador,
             ])
-            ->orderBy('id_acc')
-            ->get()
-            ->map(fn (object $permiso): array => (array) $permiso)
             ->all();
 
         if ($permisosLegados !== []) {
@@ -94,6 +120,8 @@ return new class extends Migration
             $table->foreign('id_rol', 'fk_rol_permiso_accion_rol')->references('id_rol')->on('tbl_rol')->restrictOnDelete();
             $table->foreign('id_peracc', 'fk_rol_permiso_accion_peracc')->references('id_peracc')->on('tbl_permiso_accion')->restrictOnDelete();
         });
+
+        $this->migrarAsignacionesLegadas($accionesLegadas->all(), $rolesAccionesLegadas->all());
     }
 
     public function down(): void
@@ -194,5 +222,82 @@ return new class extends Migration
                 'estado_accion' => 'HABILITADO',
             ],
         ];
+    }
+
+    /**
+     * @param  array<int, object>  $accionesLegadas
+     * @param  array<int, object>  $rolesAccionesLegadas
+     */
+    private function migrarAsignacionesLegadas(array $accionesLegadas, array $rolesAccionesLegadas): void
+    {
+        if ($accionesLegadas === []) {
+            return;
+        }
+
+        $indiceId = DB::table('tbl_accion')
+            ->where('clave_accion', 'indice')
+            ->value('id_acc');
+
+        if (! is_numeric($indiceId)) {
+            return;
+        }
+
+        $indiceId = (int) $indiceId;
+
+        $permisosPorClave = DB::table('tbl_permiso')
+            ->select(['id_permiso', 'clave_permiso'])
+            ->get()
+            ->keyBy('clave_permiso');
+
+        $permisoAccionesPorAccionLegada = collect($accionesLegadas)
+            ->mapWithKeys(function (object $accionLegada) use ($permisosPorClave, $indiceId): array {
+                $permiso = $permisosPorClave->get($accionLegada->modulo_acc);
+
+                if ($permiso === null) {
+                    return [];
+                }
+
+                $permisoAccionId = DB::table('tbl_permiso_accion')->insertGetId([
+                    'id_permiso' => $permiso->id_permiso,
+                    'id_accion' => $indiceId,
+                    'clave_peracc' => "{$accionLegada->modulo_acc}_indice",
+                    'estado_peracc' => $accionLegada->estado_acc,
+                    'creado_en' => $accionLegada->creado_en,
+                    'actualizado_en' => $accionLegada->actualizado_en,
+                    'eliminado_en' => $accionLegada->eliminado_en,
+                    'id_usuario_creador' => $accionLegada->id_usuario_creador,
+                    'id_usuario_actualizador' => $accionLegada->id_usuario_actualizador,
+                    'id_usuario_eliminador' => $accionLegada->id_usuario_eliminador,
+                ]);
+
+                return [$accionLegada->id_acc => $permisoAccionId];
+            });
+
+        $rolesPermisoAccion = collect($rolesAccionesLegadas)
+            ->map(function (object $rolAccionLegado) use ($permisoAccionesPorAccionLegada): ?array {
+                $idPermisoAccion = $permisoAccionesPorAccionLegada->get($rolAccionLegado->id_accion);
+
+                if (! is_numeric($idPermisoAccion)) {
+                    return null;
+                }
+
+                return [
+                    'id_rol' => $rolAccionLegado->id_rol,
+                    'id_peracc' => (int) $idPermisoAccion,
+                    'creado_en' => $rolAccionLegado->creado_en,
+                    'actualizado_en' => $rolAccionLegado->actualizado_en,
+                    'eliminado_en' => $rolAccionLegado->eliminado_en,
+                    'id_usuario_creador' => $rolAccionLegado->id_usuario_creador,
+                    'id_usuario_actualizador' => $rolAccionLegado->id_usuario_actualizador,
+                    'id_usuario_eliminador' => $rolAccionLegado->id_usuario_eliminador,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($rolesPermisoAccion !== []) {
+            DB::table('tbl_rol_permiso_accion')->insert($rolesPermisoAccion);
+        }
     }
 };

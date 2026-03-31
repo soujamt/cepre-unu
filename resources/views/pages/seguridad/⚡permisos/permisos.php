@@ -1,5 +1,6 @@
 <?php
 
+use App\Traits\AuthorizesPermisos;
 use App\Enums\EstadoCatalogo;
 use App\Models\Accion;
 use App\Models\Permiso;
@@ -21,6 +22,7 @@ new
 #[Title('PERMISOS')]
 class extends Component
 {
+    use AuthorizesPermisos;
     use WithPagination;
 
     public string $buscar = '';
@@ -43,6 +45,11 @@ class extends Component
     public bool $isEdit = false;
 
     public ?int $editingId = null;
+
+    public function mount(): void
+    {
+        $this->autorizarPermiso('permisos', 'indice');
+    }
 
     public function updatedBuscar(): void
     {
@@ -122,6 +129,7 @@ class extends Component
 
     public function cargarPermiso(?int $id = null): void
     {
+        $this->autorizarPermiso('permisos', $id === null ? 'crear' : 'editar');
         $this->resetValidation();
 
         if ($id === null) {
@@ -153,6 +161,7 @@ class extends Component
 
     public function guardar(): void
     {
+        $this->autorizarPermiso('permisos', $this->isEdit ? 'editar' : 'crear');
         $data = $this->validate();
 
         try {
@@ -189,6 +198,8 @@ class extends Component
     #[On('permiso-cambiar-estado')]
     public function cambiarEstado(?int $id_permiso = null): void
     {
+        $this->autorizarPermiso('permisos', 'estado');
+
         if ($id_permiso === null) {
             $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
 
@@ -219,6 +230,8 @@ class extends Component
     #[On('permiso-eliminar')]
     public function eliminar(?int $id_permiso = null): void
     {
+        $this->autorizarPermiso('permisos', 'eliminar');
+
         if ($id_permiso === null) {
             $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
 
