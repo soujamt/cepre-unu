@@ -53,7 +53,7 @@ function otorgarPermisosRol(Usuario $usuario, array $claves): void
 
 test('authorized users can access the roles page', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice']);
+    otorgarPermisosRol($usuario, ['rol_indice']);
 
     $this->actingAs($usuario)
         ->get(route('roles.index'))
@@ -63,7 +63,7 @@ test('authorized users can access the roles page', function () {
 
 test('authorized users can register a role', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice', 'roles_crear']);
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_crear']);
 
     $this->actingAs($usuario);
 
@@ -82,7 +82,7 @@ test('authorized users can register a role', function () {
 
 test('authorized users can update a role', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice', 'roles_editar']);
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_editar']);
     $rol = Rol::query()->create([
         'nombre_rol' => 'COORDINADOR',
         'descripcion_rol' => 'Gestiona procesos internos',
@@ -107,7 +107,7 @@ test('authorized users can update a role', function () {
 
 test('administrator role name cannot be changed', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice', 'roles_editar']);
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_editar']);
 
     $rol = Rol::query()->create([
         'nombre_rol' => 'ADMINISTRADOR',
@@ -133,7 +133,7 @@ test('administrator role name cannot be changed', function () {
 
 test('authorized users can change state of a role', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice', 'roles_estado']);
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_estado']);
     $rol = Rol::query()->create([
         'nombre_rol' => 'COORDINADOR',
         'descripcion_rol' => null,
@@ -154,7 +154,7 @@ test('authorized users can change state of a role', function () {
 
 test('authorized users can assign permisos to a role', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice', 'roles_permisos']);
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_permisos']);
     $rol = Rol::query()->create([
         'nombre_rol' => 'COORDINADOR',
         'descripcion_rol' => null,
@@ -193,7 +193,7 @@ test('authorized users can assign permisos to a role', function () {
 
 test('roles index counts only active assigned actions', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosRol($usuario, ['roles_indice']);
+    otorgarPermisosRol($usuario, ['rol_indice']);
 
     $rol = Rol::query()->create([
         'nombre_rol' => 'EDITOR',

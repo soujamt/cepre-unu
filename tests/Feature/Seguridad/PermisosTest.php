@@ -52,7 +52,7 @@ function otorgarPermisos(Usuario $usuario, array $claves): void
 
 test('authenticated users with permiso can access the permisos page', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice']);
+    otorgarPermisos($usuario, ['permiso_indice']);
 
     $this->actingAs($usuario)
         ->get(route('permisos.index'))
@@ -70,7 +70,7 @@ test('authenticated users without permiso cannot access the permisos page', func
 
 test('authenticated users can register a permiso', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_crear']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_crear']);
     $acciones = Accion::query()
         ->whereIn('clave_accion', ['indice', 'crear'])
         ->pluck('id_acc')
@@ -110,7 +110,7 @@ test('authenticated users can register a permiso', function () {
 
 test('authenticated users can update a permiso', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_editar']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_editar']);
     $permiso = Permiso::query()->create([
         'clave_permiso' => 'ver_permisos',
         'nombre_permiso' => 'VER PERMISOS',
@@ -176,7 +176,7 @@ test('authenticated users can update a permiso', function () {
 
 test('authenticated users cannot register duplicated permisos by generated code', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_crear']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_crear']);
     $acciones = Accion::query()
         ->where('clave_accion', 'indice')
         ->pluck('id_acc')
@@ -200,7 +200,7 @@ test('authenticated users cannot register duplicated permisos by generated code'
 
 test('authenticated users must select at least one action for a permiso', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_crear']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_crear']);
 
     $this->actingAs($usuario);
 
@@ -213,7 +213,7 @@ test('authenticated users must select at least one action for a permiso', functi
 
 test('authenticated users can change estado of a permiso', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_estado']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_estado']);
     $permiso = Permiso::query()->create([
         'clave_permiso' => 'usuarios',
         'nombre_permiso' => 'USUARIOS',
@@ -235,7 +235,7 @@ test('authenticated users can change estado of a permiso', function () {
 
 test('authenticated users can delete a permiso', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice', 'permisos_eliminar']);
+    otorgarPermisos($usuario, ['permiso_indice', 'permiso_eliminar']);
     $permiso = Permiso::query()->create([
         'clave_permiso' => 'usuarios',
         'nombre_permiso' => 'USUARIOS',
@@ -257,10 +257,10 @@ test('authenticated users can delete a permiso', function () {
 
 test('disabled parent permiso no longer grants access even if permiso accion is enabled', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisos($usuario, ['permisos_indice']);
+    otorgarPermisos($usuario, ['permiso_indice']);
 
     Permiso::query()
-        ->where('clave_permiso', 'permisos')
+        ->where('clave_permiso', 'permiso')
         ->update(['estado_permiso' => 'DESHABILITADO']);
 
     $this->actingAs($usuario)

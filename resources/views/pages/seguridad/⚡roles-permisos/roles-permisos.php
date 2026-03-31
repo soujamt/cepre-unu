@@ -28,7 +28,7 @@ class extends Component
 
     public function mount(int $rol): void
     {
-        $this->autorizarPermiso('roles', 'permisos');
+        $this->autorizarPermiso('rol', 'permisos');
         $this->rolActual = Rol::query()->findOrFail($rol);
         $this->seleccionadas = $this->rolActual->rolPermisoAcciones()
             ->pluck('id_peracc')
@@ -49,7 +49,7 @@ class extends Component
 
     public function guardar(): void
     {
-        $this->autorizarPermiso('roles', 'permisos');
+        $this->autorizarPermiso('rol', 'permisos');
 
         if ($this->rolActual->nombre_rol === 'ADMINISTRADOR') {
             $this->dispatch('toast', message: 'El rol ADMINISTRADOR ya cuenta con acceso total.', type: 'info');

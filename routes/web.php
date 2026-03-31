@@ -11,13 +11,16 @@ Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 
+    Route::livewire('/seguridad/usuarios', 'pages::seguridad.usuarios')
+        ->middleware('permiso:usuario_indice')
+        ->name('usuarios.index');
     Route::livewire('/seguridad/roles', 'pages::seguridad.roles')
-        ->middleware('permiso:roles_indice')
+        ->middleware('permiso:rol_indice')
         ->name('roles.index');
     Route::livewire('/seguridad/roles/{rol}/permisos', 'pages::seguridad.roles-permisos')
-        ->middleware('permiso:roles_permisos')
+        ->middleware('permiso:rol_permisos')
         ->name('roles.permisos');
     Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')
-        ->middleware('permiso:permisos_indice')
+        ->middleware('permiso:permiso_indice')
         ->name('permisos.index');
 });

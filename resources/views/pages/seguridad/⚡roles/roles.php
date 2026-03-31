@@ -47,7 +47,7 @@ class extends Component
 
     public function mount(): void
     {
-        $this->autorizarPermiso('roles', 'indice');
+        $this->autorizarPermiso('rol', 'indice');
     }
 
     public function updatedBuscar(): void
@@ -71,7 +71,7 @@ class extends Component
                 'string',
                 'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $nombre = Str::upper($this->normalizarTexto((string) $value) ?? '');
+                    $nombre = $this->mayusculas($this->normalizarTexto((string) $value) ?? '');
 
                     if ($nombre === '') {
                         $fail('El nombre es obligatorio.');
@@ -126,7 +126,7 @@ class extends Component
 
     public function cargarRol(?int $id = null): void
     {
-        $this->autorizarPermiso('roles', $id === null ? 'crear' : 'editar');
+        $this->autorizarPermiso('rol', $id === null ? 'crear' : 'editar');
         $this->resetValidation();
 
         if ($id === null) {
@@ -154,12 +154,12 @@ class extends Component
 
     public function guardar(): void
     {
-        $this->autorizarPermiso('roles', $this->isEdit ? 'editar' : 'crear');
+        $this->autorizarPermiso('rol', $this->isEdit ? 'editar' : 'crear');
         $data = $this->validate();
 
         try {
             DB::transaction(function () use ($data): void {
-                $nombre = Str::upper($this->normalizarTexto($data['rolForm']['nombre']) ?? '');
+                $nombre = $this->mayusculas($this->normalizarTexto($data['rolForm']['nombre']) ?? '');
                 $descripcion = $this->normalizarTexto($data['rolForm']['descripcion']);
                 $payload = [
                     'nombre_rol' => $nombre,
@@ -204,7 +204,7 @@ class extends Component
     #[On('rol-cambiar-estado')]
     public function cambiarEstado(?int $id_rol = null): void
     {
-        $this->autorizarPermiso('roles', 'estado');
+        $this->autorizarPermiso('rol', 'estado');
 
         if ($id_rol === null) {
             $this->dispatch('toast', message: 'ID de rol no proporcionado.', type: 'error');
@@ -240,7 +240,7 @@ class extends Component
     #[On('rol-eliminar')]
     public function eliminar(?int $id_rol = null): void
     {
-        $this->autorizarPermiso('roles', 'eliminar');
+        $this->autorizarPermiso('rol', 'eliminar');
 
         if ($id_rol === null) {
             $this->dispatch('toast', message: 'ID de rol no proporcionado.', type: 'error');
@@ -320,5 +320,10 @@ class extends Component
         $normalizado = preg_replace('/\s+/u', ' ', trim($valor));
 
         return filled($normalizado) ? $normalizado : null;
+    }
+
+    private function mayusculas(string $valor): string
+    {
+        return mb_strtoupper($valor, 'UTF-8');
     }
 };

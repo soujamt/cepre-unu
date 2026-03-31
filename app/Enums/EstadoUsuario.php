@@ -11,7 +11,6 @@ enum EstadoUsuario: string implements PresentableEnum
 
     case Habilitado = 'HABILITADO';
     case Deshabilitado = 'DESHABILITADO';
-    case Bloqueado = 'BLOQUEADO';
 
     public function getNombre(): string
     {
@@ -23,7 +22,6 @@ enum EstadoUsuario: string implements PresentableEnum
         return match ($this) {
             self::Habilitado => 'green',
             self::Deshabilitado => 'red',
-            self::Bloqueado => 'amber',
         };
     }
 
@@ -32,7 +30,6 @@ enum EstadoUsuario: string implements PresentableEnum
         return match ($this) {
             self::Habilitado => 'check-square',
             self::Deshabilitado => 'x-square',
-            self::Bloqueado => 'lock',
         };
     }
 

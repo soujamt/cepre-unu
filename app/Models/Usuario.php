@@ -89,7 +89,8 @@ class Usuario extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Rol::class, 'tbl_usuario_rol', 'id_usuario', 'id_rol', 'id_usu', 'id_rol');
+        return $this->belongsToMany(Rol::class, 'tbl_usuario_rol', 'id_usuario', 'id_rol', 'id_usu', 'id_rol')
+            ->wherePivotNull('eliminado_en');
     }
 
     public function permisoAcciones(): Collection

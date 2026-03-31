@@ -16,10 +16,10 @@
 
 <div class="space-y-5">
     @php
-        $puedeGestionarAcciones = auth()->user()?->hasPermisoAccion('roles_editar')
-            || auth()->user()?->hasPermisoAccion('roles_estado')
-            || auth()->user()?->hasPermisoAccion('roles_eliminar')
-            || auth()->user()?->hasPermisoAccion('roles_permisos');
+        $puedeGestionarAcciones = auth()->user()?->hasPermisoAccion('rol_editar')
+            || auth()->user()?->hasPermisoAccion('rol_estado')
+            || auth()->user()?->hasPermisoAccion('rol_eliminar')
+            || auth()->user()?->hasPermisoAccion('rol_permisos');
     @endphp
 
     <div class="flex justify-start gap-3">
@@ -76,7 +76,7 @@
             </flux:dropdown>
         </div>
 
-        @permiso('roles_crear')
+        @permiso('rol_crear')
             <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarRol">
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
@@ -132,7 +132,7 @@
                                         Acciones
                                     </flux:button>
                                     <flux:menu>
-                                        @permiso('roles_editar')
+                                        @permiso('rol_editar')
                                             <flux:menu.item wire:click="cargarRol({{ $rol->id_rol }})">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="pencil" size="4" class="me-2" />
@@ -141,7 +141,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('roles_permisos')
+                                        @permiso('rol_permisos')
                                             <flux:menu.item href="{{ route('roles.permisos', $rol->id_rol) }}" wire:navigate>
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="key" size="4" class="me-2" />
@@ -150,7 +150,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('roles_estado')
+                                        @permiso('rol_estado')
                                             <flux:menu.item wire:click="$js.cargarAlertaEstado({{ $rol->id_rol }}, '{{ $rol->nombre_rol }}')">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
@@ -159,7 +159,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('roles_eliminar')
+                                        @permiso('rol_eliminar')
                                             <flux:menu.item
                                                 variant="danger"
                                                 wire:click="$js.cargarAlertaEliminar({{ $rol->id_rol }}, '{{ $rol->nombre_rol }}')"
@@ -209,7 +209,7 @@
         {{ $this->roles->links() }}
     </div>
 
-    @if (auth()->user()?->hasPermisoAccion('roles_crear') || auth()->user()?->hasPermisoAccion('roles_editar'))
+    @if (auth()->user()?->hasPermisoAccion('rol_crear') || auth()->user()?->hasPermisoAccion('rol_editar'))
         <flux:modal flyout variant="floating" name="modal-rol" class="px-0! py-5! md:w-md!">
             <div class="space-y-5">
                 <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>

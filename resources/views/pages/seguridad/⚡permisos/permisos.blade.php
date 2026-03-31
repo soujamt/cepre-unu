@@ -16,9 +16,9 @@
 
 <div class="space-y-5">
     @php
-        $puedeGestionarAcciones = auth()->user()?->hasPermisoAccion('permisos_editar')
-            || auth()->user()?->hasPermisoAccion('permisos_estado')
-            || auth()->user()?->hasPermisoAccion('permisos_eliminar');
+        $puedeGestionarAcciones = auth()->user()?->hasPermisoAccion('permiso_editar')
+            || auth()->user()?->hasPermisoAccion('permiso_estado')
+            || auth()->user()?->hasPermisoAccion('permiso_eliminar');
     @endphp
 
     <div class="flex justify-start gap-3">
@@ -75,7 +75,7 @@
             </flux:dropdown>
         </div>
 
-        @permiso('permisos_crear')
+        @permiso('permiso_crear')
             <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarPermiso">
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
@@ -145,7 +145,7 @@
                                         Acciones
                                     </flux:button>
                                     <flux:menu>
-                                        @permiso('permisos_editar')
+                                        @permiso('permiso_editar')
                                             <flux:menu.item wire:click="cargarPermiso({{ $permiso->id_permiso }})">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="pencil" size="4" class="me-2" />
@@ -154,7 +154,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('permisos_estado')
+                                        @permiso('permiso_estado')
                                             <flux:menu.item
                                                 wire:click="$js.cargarAlertaEstado({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
                                             >
@@ -165,7 +165,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('permisos_eliminar')
+                                        @permiso('permiso_eliminar')
                                             <flux:menu.item
                                                 variant="danger"
                                                 wire:click="$js.cargarAlertaEliminar({{ $permiso->id_permiso }}, '{{ $permiso->nombre_permiso }}')"
@@ -215,7 +215,7 @@
         {{ $this->permisos->links() }}
     </div>
 
-    @if (auth()->user()?->hasPermisoAccion('permisos_crear') || auth()->user()?->hasPermisoAccion('permisos_editar'))
+    @if (auth()->user()?->hasPermisoAccion('permiso_crear') || auth()->user()?->hasPermisoAccion('permiso_editar'))
         <flux:modal flyout variant="floating" name="modal-permiso" class="px-0! py-5! md:w-md!">
             <div class="space-y-5">
                 <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>

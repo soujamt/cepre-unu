@@ -48,7 +48,7 @@ class extends Component
 
     public function mount(): void
     {
-        $this->autorizarPermiso('permisos', 'indice');
+        $this->autorizarPermiso('permiso', 'indice');
     }
 
     public function updatedBuscar(): void
@@ -129,7 +129,7 @@ class extends Component
 
     public function cargarPermiso(?int $id = null): void
     {
-        $this->autorizarPermiso('permisos', $id === null ? 'crear' : 'editar');
+        $this->autorizarPermiso('permiso', $id === null ? 'crear' : 'editar');
         $this->resetValidation();
 
         if ($id === null) {
@@ -161,7 +161,7 @@ class extends Component
 
     public function guardar(): void
     {
-        $this->autorizarPermiso('permisos', $this->isEdit ? 'editar' : 'crear');
+        $this->autorizarPermiso('permiso', $this->isEdit ? 'editar' : 'crear');
         $data = $this->validate();
 
         try {
@@ -198,7 +198,7 @@ class extends Component
     #[On('permiso-cambiar-estado')]
     public function cambiarEstado(?int $id_permiso = null): void
     {
-        $this->autorizarPermiso('permisos', 'estado');
+        $this->autorizarPermiso('permiso', 'estado');
 
         if ($id_permiso === null) {
             $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
@@ -230,7 +230,7 @@ class extends Component
     #[On('permiso-eliminar')]
     public function eliminar(?int $id_permiso = null): void
     {
-        $this->autorizarPermiso('permisos', 'eliminar');
+        $this->autorizarPermiso('permiso', 'eliminar');
 
         if ($id_permiso === null) {
             $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
@@ -303,7 +303,7 @@ class extends Component
 
     private function guardarPermiso(?Permiso $permisoActual, string $nombre): Permiso
     {
-        $nombreMayuscula = Str::upper($nombre);
+        $nombreMayuscula = $this->mayusculas($nombre);
 
         $payload = [
             'clave_permiso' => $this->generarClave($nombre),
@@ -379,5 +379,10 @@ class extends Component
         $normalizado = preg_replace('/\s+/u', ' ', trim($valor));
 
         return filled($normalizado) ? $normalizado : null;
+    }
+
+    private function mayusculas(string $valor): string
+    {
+        return mb_strtoupper($valor, 'UTF-8');
     }
 };

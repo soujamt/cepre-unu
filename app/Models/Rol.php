@@ -31,7 +31,8 @@ class Rol extends LegacyModel
 
     public function usuarios(): BelongsToMany
     {
-        return $this->belongsToMany(Usuario::class, 'tbl_usuario_rol', 'id_rol', 'id_usuario', 'id_rol', 'id_usu');
+        return $this->belongsToMany(Usuario::class, 'tbl_usuario_rol', 'id_rol', 'id_usuario', 'id_rol', 'id_usu')
+            ->wherePivotNull('eliminado_en');
     }
 
     public function permisoAcciones(): BelongsToMany

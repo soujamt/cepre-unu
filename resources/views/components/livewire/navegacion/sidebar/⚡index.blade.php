@@ -15,9 +15,9 @@ new class extends Component
                 'icon' => 'shield-check',
                 'active' => $this->routeIs('seguridad.*', 'usuarios.*', 'roles.*', 'permisos.*'),
                 'items' => [
-                    ['label' => 'USUARIOS', 'href' => '#', 'active' => $this->routeIs('usuarios.*')],
-                    ['label' => 'ROLES', 'href' => route('roles.index'), 'active' => $this->routeIs('roles.*'), 'permiso' => 'roles_indice'],
-                    ['label' => 'PERMISOS', 'href' => route('permisos.index'), 'active' => $this->routeIs('permisos.*'), 'permiso' => 'permisos_indice'],
+                    ['label' => 'USUARIOS', 'href' => route('usuarios.index'), 'active' => $this->routeIs('usuarios.*'), 'permiso' => 'usuario_indice'],
+                    ['label' => 'ROLES', 'href' => route('roles.index'), 'active' => $this->routeIs('roles.*'), 'permiso' => 'rol_indice'],
+                    ['label' => 'PERMISOS', 'href' => route('permisos.index'), 'active' => $this->routeIs('permisos.*'), 'permiso' => 'permiso_indice'],
                 ],
             ],
             [
@@ -93,45 +93,32 @@ new class extends Component
     <x-sidebar.panel>
         <x-slot:header>
             <div
-                class="flex size-10 items-center justify-center rounded-md border border-zinc-200/80 bg-white shadow-sm shadow-zinc-950/5 dark:border-white/10 dark:bg-zinc-950/70 dark:shadow-black/20"
-            >
+                class="flex size-10 items-center justify-center rounded-md border border-zinc-200/80 bg-white shadow-sm shadow-zinc-950/5 dark:border-white/10 dark:bg-zinc-950/70 dark:shadow-black/20">
                 <img src="{{ asset('assets/media/logo_unu.png') }}" alt="Logo UNU" class="w-6" />
             </div>
             CEPRE UNU
         </x-slot:header>
 
-        <x-sidebar.item
-            label="INICIO"
-            href="{{ route('inicio') }}"
-            :active="request()->routeIs('inicio')"
-            wire:key="menu-inicio"
-            icon="house-simple"
-        />
+        <x-sidebar.item label="INICIO" href="{{ route('inicio') }}" :active="request()->routeIs('inicio')"
+            wire:key="menu-inicio" icon="house-simple" />
 
         @foreach ($this->gruposMenu() as $grupo)
-            @php
-                $itemsVisibles = collect($grupo['items'])
-                    ->filter(fn (array $item): bool => ! isset($item['permiso']) || auth()->user()?->hasPermisoAccion($item['permiso']))
-                    ->values();
-            @endphp
+        @php
+        $itemsVisibles = collect($grupo['items'])
+        ->filter(fn (array $item): bool => ! isset($item['permiso']) ||
+        auth()->user()?->hasPermisoAccion($item['permiso']))
+        ->values();
+        @endphp
 
-            @if ($itemsVisibles->isNotEmpty())
-                <x-sidebar.group
-                    :label="$grupo['label']"
-                    :active="$grupo['active']"
-                    :icon="$grupo['icon']"
-                    wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}"
-                >
-                    @foreach ($itemsVisibles as $item)
-                        <x-sidebar.sub-item
-                            :label="$item['label']"
-                            :href="$item['href']"
-                            :active="$item['active']"
-                            wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}"
-                        />
-                    @endforeach
-                </x-sidebar.group>
-            @endif
+        @if ($itemsVisibles->isNotEmpty())
+        <x-sidebar.group :label="$grupo['label']" :active="$grupo['active']" :icon="$grupo['icon']"
+            wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}">
+            @foreach ($itemsVisibles as $item)
+            <x-sidebar.sub-item :label="$item['label']" :href="$item['href']" :active="$item['active']"
+                wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}" />
+            @endforeach
+        </x-sidebar.group>
+        @endif
         @endforeach
 
         <x-slot:footer>
