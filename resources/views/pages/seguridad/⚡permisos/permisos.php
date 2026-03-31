@@ -2,8 +2,14 @@
 
 use App\Enums\EstadoCatalogo;
 use App\Models\Accion;
+use App\Models\Permiso;
+use App\Models\PermisoAccion;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -25,11 +31,11 @@ class extends Component
     public array $filtroEstado = [];
 
     /**
-     * @var array<string, string>
+     * @var array{nombre: string, acciones: array<int, int|string>}
      */
     public array $permisoForm = [
         'nombre' => '',
-        'descripcion' => '',
+        'acciones' => [],
     ];
 
     public string $tituloModal = 'Nuevo permiso';
@@ -59,7 +65,7 @@ class extends Component
                 'string',
                 'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $codigo = $this->generarCodigo((string) $value);
+                    $codigo = $this->generarClave((string) $value);
 
                     if ($codigo === '') {
                         $fail('El nombre es obligatorio.');
@@ -67,9 +73,9 @@ class extends Component
                         return;
                     }
 
-                    $exists = Accion::query()
-                        ->where('codigo_acc', $codigo)
-                        ->when($this->editingId, fn (Builder $query) => $query->where('id_acc', '!=', $this->editingId))
+                    $exists = Permiso::query()
+                        ->where('clave_permiso', $codigo)
+                        ->when($this->editingId, fn (Builder $query) => $query->where('id_permiso', '!=', $this->editingId))
                         ->exists();
 
                     if ($exists) {
@@ -77,7 +83,8 @@ class extends Component
                     }
                 },
             ],
-            'permisoForm.descripcion' => ['nullable', 'string', 'max:1000'],
+            'permisoForm.acciones' => ['required', 'array', 'min:1'],
+            'permisoForm.acciones.*' => ['integer', 'exists:tbl_accion,id_acc'],
         ];
     }
 
@@ -88,7 +95,8 @@ class extends Component
     {
         return [
             'permisoForm.nombre.required' => 'El nombre es obligatorio.',
-            'permisoForm.nombre.unique' => 'Ya existe un permiso con ese nombre.',
+            'permisoForm.acciones.required' => 'Debe seleccionar al menos una acción.',
+            'permisoForm.acciones.min' => 'Debe seleccionar al menos una acción.',
         ];
     }
 
@@ -97,7 +105,8 @@ class extends Component
         return EstadoCatalogo::cases();
     }
 
-    public function getEstadosSeleccionadosProperty(): array
+    #[Computed]
+    public function estadosSeleccionados(): array
     {
         return collect($this->filtroEstado)
             ->filter(fn (bool $selected): bool => $selected)
@@ -125,12 +134,16 @@ class extends Component
             return;
         }
 
-        $permiso = Accion::query()->findOrFail($id);
+        $permiso = Permiso::query()->findOrFail($id);
 
-        $this->editingId = $permiso->id_acc;
+        $this->editingId = $permiso->id_permiso;
         $this->permisoForm = [
-            'nombre' => $permiso->nombre_acc,
-            'descripcion' => $permiso->descripcion_acc ?? '',
+            'nombre' => $permiso->nombre_permiso,
+            'acciones' => $permiso->permisoAcciones()
+                ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                ->pluck('id_accion')
+                ->map(fn (int $idAccion): string => (string) $idAccion)
+                ->all(),
         ];
         $this->tituloModal = 'Editar permiso';
         $this->isEdit = true;
@@ -141,59 +154,94 @@ class extends Component
     public function guardar(): void
     {
         $data = $this->validate();
-        $nombre = $this->normalizarTexto($data['permisoForm']['nombre']);
-        $descripcion = $this->normalizarTexto($data['permisoForm']['descripcion'] ?? null);
-        $permisoActual = $this->editingId ? Accion::query()->findOrFail($this->editingId) : null;
 
-        $payload = [
-            'codigo_acc' => $this->generarCodigo($nombre),
-            'nombre_acc' => $nombre,
-            'modulo_acc' => $this->generarModulo($nombre),
-            'descripcion_acc' => $descripcion,
-            'estado_acc' => $permisoActual
-                ? $permisoActual->estado_acc->value
-                : EstadoCatalogo::Habilitado->value,
-        ];
+        try {
+            DB::transaction(function () use ($data): void {
+                $nombre = $this->normalizarTexto($data['permisoForm']['nombre']);
+                $accionesSeleccionadas = collect($data['permisoForm']['acciones'])
+                    ->map(fn (mixed $id): int => (int) $id)
+                    ->values()
+                    ->all();
+                $permisoActual = $this->editingId ? Permiso::query()->findOrFail($this->editingId) : null;
 
-        if ($permisoActual) {
-            $permisoActual->update($payload);
-            $this->dispatch('toast', message: 'Permiso actualizado correctamente.', type: 'success');
-        } else {
-            Accion::query()->create($payload);
-            $this->dispatch('toast', message: 'Permiso registrado correctamente.', type: 'success');
+                $permiso = $this->guardarPermiso($permisoActual, $nombre);
+
+                $this->sincronizarAcciones($permiso, $accionesSeleccionadas);
+            });
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo guardar el permiso. Intente nuevamente.', type: 'error');
+
+            return;
         }
 
+        $this->dispatch(
+            'toast',
+            message: $this->isEdit ? 'Permiso actualizado correctamente.' : 'Permiso registrado correctamente.',
+            type: 'success'
+        );
+
+        unset($this->permisos);
         $this->modal('modal-permiso')->close();
         $this->resetForm();
     }
 
     #[On('permiso-cambiar-estado')]
-    public function cambiarEstado(array $detail): void
+    public function cambiarEstado(?int $id_permiso = null): void
     {
-        $id = (int) ($detail['id_acc'] ?? 0);
-        $permiso = Accion::query()->findOrFail($id);
+        if ($id_permiso === null) {
+            $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
 
-        $permiso->update([
-            'estado_acc' => $permiso->estado_acc === EstadoCatalogo::Habilitado
-                ? EstadoCatalogo::Deshabilitado->value
-                : EstadoCatalogo::Habilitado->value,
-        ]);
+            return;
+        }
 
+        try {
+            DB::transaction(function () use ($id_permiso): void {
+                $permiso = Permiso::query()->findOrFail($id_permiso);
+
+                $permiso->update([
+                    'estado_permiso' => $permiso->estado_permiso === EstadoCatalogo::Habilitado
+                        ? EstadoCatalogo::Deshabilitado->value
+                        : EstadoCatalogo::Habilitado->value,
+                ]);
+            });
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo cambiar el estado del permiso.', type: 'error');
+
+            return;
+        }
+
+        unset($this->permisos);
         $this->dispatch('toast', message: 'Estado del permiso actualizado.', type: 'success');
     }
 
     #[On('permiso-eliminar')]
-    public function eliminar(array $detail): void
+    public function eliminar(?int $id_permiso = null): void
     {
-        $id = (int) ($detail['id_acc'] ?? 0);
+        if ($id_permiso === null) {
+            $this->dispatch('toast', message: 'ID de permiso no proporcionado.', type: 'error');
 
-        Accion::query()->findOrFail($id)->delete();
+            return;
+        }
 
-        if ($this->editingId === $id) {
+        try {
+            DB::transaction(function () use ($id_permiso): void {
+                Permiso::query()->findOrFail($id_permiso)->delete();
+            });
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo eliminar el permiso.', type: 'error');
+
+            return;
+        }
+
+        if ($this->editingId === $id_permiso) {
             $this->resetForm();
             $this->modal('modal-permiso')->close();
         }
 
+        unset($this->permisos);
         $this->dispatch('toast', message: 'Permiso eliminado correctamente.', type: 'success');
     }
 
@@ -203,40 +251,110 @@ class extends Component
         $this->tituloModal = 'Nuevo permiso';
         $this->permisoForm = [
             'nombre' => '',
-            'descripcion' => '',
+            'acciones' => [],
         ];
         $this->resetValidation();
     }
 
-    public function getPermisosProperty()
+    #[Computed]
+    public function accionesDisponibles(): Collection
     {
         return Accion::query()
-            ->when($this->buscar !== '', function (Builder $query): void {
-                $search = $this->normalizarTexto($this->buscar) ?? '';
+            ->habilitadas()
+            ->get();
+    }
 
-                $query->where(function (Builder $innerQuery) use ($search): void {
-                    $innerQuery
-                        ->where('codigo_acc', 'like', "%{$search}%")
-                        ->orWhere('nombre_acc', 'like', "%{$search}%")
-                        ->orWhere('modulo_acc', 'like', "%{$search}%")
-                        ->orWhere('descripcion_acc', 'like', "%{$search}%");
-                });
-            })
-            ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
-                $query->whereIn('estado_acc', $this->estadosSeleccionados);
-            })
-            ->orderBy('nombre_acc')
+    #[Computed]
+    public function permisos(): LengthAwarePaginator
+    {
+        return Permiso::query()
+            ->with([
+                'permisoAcciones' => fn ($query) => $query
+                    ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
+                    ->with('accion'),
+            ])
+            ->withCount([
+                'permisoAcciones as acciones_habilitadas_count' => fn (Builder $query) => $query
+                    ->where('estado_peracc', EstadoCatalogo::Habilitado->value),
+            ])
+            ->buscar($this->normalizarTexto($this->buscar))
+            ->conEstados($this->estadosSeleccionados)
+            ->orderBy('nombre_permiso')
             ->paginate(10);
     }
 
-    private function generarCodigo(string $nombre): string
+    private function generarClave(string $nombre): string
     {
-        return Str::upper(str_replace('-', '_', $this->generarModulo($nombre)));
+        return Str::replace('-', '_', Str::slug($this->normalizarTexto($nombre) ?? ''));
     }
 
-    private function generarModulo(string $nombre): string
+    private function guardarPermiso(?Permiso $permisoActual, string $nombre): Permiso
     {
-        return Str::slug($this->normalizarTexto($nombre) ?? '');
+        $nombreMayuscula = Str::upper($nombre);
+
+        $payload = [
+            'clave_permiso' => $this->generarClave($nombre),
+            'nombre_permiso' => $nombreMayuscula,
+            'estado_permiso' => $permisoActual
+                ? $permisoActual->estado_permiso->value
+                : EstadoCatalogo::Habilitado->value,
+        ];
+
+        if ($permisoActual) {
+            $permisoActual->update($payload);
+
+            return $permisoActual->refresh();
+        }
+
+        return Permiso::query()->create($payload);
+    }
+
+    /**
+     * @param  array<int, int>  $accionesSeleccionadas
+     */
+    private function sincronizarAcciones(Permiso $permiso, array $accionesSeleccionadas): void
+    {
+        $acciones = Accion::query()
+            ->whereIn('id_acc', $accionesSeleccionadas)
+            ->get()
+            ->keyBy('id_acc');
+
+        $permisoAccionesExistentes = $permiso->permisoAcciones()
+            ->withTrashed()
+            ->get()
+            ->keyBy('id_accion');
+
+        foreach ($accionesSeleccionadas as $idAccion) {
+            $accion = $acciones->get($idAccion);
+
+            if (! $accion instanceof Accion) {
+                continue;
+            }
+
+            $permisoAccion = $permisoAccionesExistentes->get($idAccion);
+            $payload = [
+                'clave_peracc' => "{$permiso->clave_permiso}_{$accion->clave_accion}",
+                'estado_peracc' => EstadoCatalogo::Habilitado->value,
+                'eliminado_en' => null,
+            ];
+
+            if ($permisoAccion instanceof PermisoAccion) {
+                $permisoAccion->update($payload);
+
+                continue;
+            }
+
+            $permiso->permisoAcciones()->create([
+                'id_accion' => $accion->id_acc,
+                ...$payload,
+            ]);
+        }
+
+        $permiso->permisoAcciones()
+            ->whereNotIn('id_accion', $accionesSeleccionadas)
+            ->update([
+                'estado_peracc' => EstadoCatalogo::Deshabilitado->value,
+            ]);
     }
 
     private function normalizarTexto(?string $valor): ?string
