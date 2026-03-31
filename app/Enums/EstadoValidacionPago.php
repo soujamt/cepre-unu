@@ -22,8 +22,8 @@ enum EstadoValidacionPago: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'amber',
-            self::Verificado => 'lime',
-            self::Rechazado => 'rose',
+            self::Verificado => 'green',
+            self::Rechazado => 'red',
         };
     }
 
@@ -31,8 +31,8 @@ enum EstadoValidacionPago: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'clock',
-            self::Verificado => 'check-squared',
-            self::Rechazado => 'cross-square',
+            self::Verificado => 'check-square',
+            self::Rechazado => 'x-square',
         };
     }
 

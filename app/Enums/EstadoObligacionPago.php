@@ -25,9 +25,9 @@ enum EstadoObligacionPago: string implements PresentableEnum
         return match ($this) {
             self::Pendiente => 'amber',
             self::Parcial => 'sky',
-            self::Pagado => 'lime',
+            self::Pagado => 'green',
             self::Exonerado => 'violet',
-            self::Anulado => 'rose',
+            self::Anulado => 'red',
         };
     }
 
@@ -36,9 +36,9 @@ enum EstadoObligacionPago: string implements PresentableEnum
         return match ($this) {
             self::Pendiente => 'clock',
             self::Parcial => 'wallet',
-            self::Pagado => 'check-squared',
+            self::Pagado => 'check-square',
             self::Exonerado => 'ticket',
-            self::Anulado => 'cross-square',
+            self::Anulado => 'x-square',
         };
     }
 

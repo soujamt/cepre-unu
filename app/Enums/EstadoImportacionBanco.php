@@ -22,8 +22,8 @@ enum EstadoImportacionBanco: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'amber',
-            self::Procesado => 'lime',
-            self::Observado => 'rose',
+            self::Procesado => 'green',
+            self::Observado => 'red',
         };
     }
 
@@ -31,7 +31,7 @@ enum EstadoImportacionBanco: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'clock',
-            self::Procesado => 'check-squared',
+            self::Procesado => 'check-square',
             self::Observado => 'alert-triangle',
         };
     }

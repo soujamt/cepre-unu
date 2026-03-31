@@ -22,8 +22,8 @@ enum EstadoImportacionBancoDetalle: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'amber',
-            self::Asociado => 'lime',
-            self::Observado => 'rose',
+            self::Asociado => 'green',
+            self::Observado => 'red',
         };
     }
 

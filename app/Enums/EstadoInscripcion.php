@@ -22,8 +22,8 @@ enum EstadoInscripcion: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'amber',
-            self::Activo => 'lime',
-            self::Anulado => 'rose',
+            self::Activo => 'green',
+            self::Anulado => 'red',
         };
     }
 
@@ -31,8 +31,8 @@ enum EstadoInscripcion: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'clock',
-            self::Activo => 'check-squared',
-            self::Anulado => 'cross-square',
+            self::Activo => 'check-square',
+            self::Anulado => 'x-square',
         };
     }
 

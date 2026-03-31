@@ -21,8 +21,8 @@ enum EstadoUsuario: string implements PresentableEnum
     public function getColor(): string
     {
         return match ($this) {
-            self::Habilitado => 'lime',
-            self::Deshabilitado => 'rose',
+            self::Habilitado => 'green',
+            self::Deshabilitado => 'red',
             self::Bloqueado => 'amber',
         };
     }
@@ -30,8 +30,8 @@ enum EstadoUsuario: string implements PresentableEnum
     public function getIcon(): string
     {
         return match ($this) {
-            self::Habilitado => 'check-squared',
-            self::Deshabilitado => 'cross-square',
+            self::Habilitado => 'check-square',
+            self::Deshabilitado => 'x-square',
             self::Bloqueado => 'lock',
         };
     }

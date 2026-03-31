@@ -27,7 +27,7 @@ enum TipoBeneficioConvenio: string implements PresentableEnum
         return match ($this) {
             self::ExoneracionTotal => 'violet',
             self::ExoneracionParcial => 'sky',
-            self::Descuento => 'lime',
+            self::Descuento => 'green',
         };
     }
 

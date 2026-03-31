@@ -1,3 +1,3 @@
-<thead {{ $attributes->class(['bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:text-zinc-200']) }}>
+<thead {{ $attributes->class(['bg-zinc-50 text-zinc-700 dark:bg-zinc-950/70 dark:text-zinc-200']) }}>
     {{ $slot }}
 </thead>

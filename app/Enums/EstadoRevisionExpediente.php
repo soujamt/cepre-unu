@@ -23,9 +23,9 @@ enum EstadoRevisionExpediente: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'amber',
-            self::Aprobado => 'lime',
+            self::Aprobado => 'green',
             self::Observado => 'sky',
-            self::Rechazado => 'rose',
+            self::Rechazado => 'red',
         };
     }
 
@@ -33,9 +33,9 @@ enum EstadoRevisionExpediente: string implements PresentableEnum
     {
         return match ($this) {
             self::Pendiente => 'clock',
-            self::Aprobado => 'check-squared',
+            self::Aprobado => 'check-square',
             self::Observado => 'info-square',
-            self::Rechazado => 'cross-square',
+            self::Rechazado => 'x-square',
         };
     }
 
