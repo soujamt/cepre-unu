@@ -13,7 +13,10 @@ class ModalidadAdmisionSeeder extends Seeder
         foreach (CepreOfertaCatalog::modalidades() as $record) {
             DB::table('tbl_modalidad_admision')->updateOrInsert(
                 ['codigo_mad' => $record['codigo_mad']],
-                $record,
+                [
+                    'id_mad' => (int) $record['codigo_mad'],
+                    ...$record,
+                ],
             );
         }
     }

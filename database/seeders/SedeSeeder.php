@@ -10,10 +10,13 @@ class SedeSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (CepreOfertaCatalog::sedes() as $record) {
+        foreach (array_values(CepreOfertaCatalog::sedes()) as $index => $record) {
             DB::table('tbl_sede')->updateOrInsert(
                 ['codigo_sed' => $record['codigo_sed']],
-                $record,
+                [
+                    'id_sed' => $index + 1,
+                    ...$record,
+                ],
             );
         }
     }

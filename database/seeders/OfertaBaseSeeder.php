@@ -26,6 +26,7 @@ class OfertaBaseSeeder extends Seeder
             DB::table('tbl_oferta_base')->updateOrInsert(
                 ['codigo_externo_ofb' => $record['codigo_ofb']],
                 [
+                    'id_ofb' => (int) $record['codigo_ofb'],
                     'codigo_externo_ofb' => $record['codigo_ofb'],
                     'id_modalidad_admision' => $modalidadIds[$record['codigo_mad']],
                     'id_lugar_inscripcion' => $lugarIds[$record['codigo_lin']],

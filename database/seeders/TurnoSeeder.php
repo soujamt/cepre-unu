@@ -24,16 +24,19 @@ class TurnoSeeder extends Seeder
     {
         return [
             [
+                'id_tur' => 1,
                 'codigo_tur' => 'MAN',
                 'nombre_tur' => 'MANANA',
                 'estado_tur' => 'HABILITADO',
             ],
             [
+                'id_tur' => 2,
                 'codigo_tur' => 'TAR',
                 'nombre_tur' => 'TARDE',
                 'estado_tur' => 'HABILITADO',
             ],
             [
+                'id_tur' => 3,
                 'codigo_tur' => 'NOC',
                 'nombre_tur' => 'NOCHE',
                 'estado_tur' => 'HABILITADO',

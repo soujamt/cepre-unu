@@ -11,9 +11,10 @@ class TipoColegioSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('tipos_colegio.json');
+        $records = $this->withSequentialIds($this->loadRecords('tipos_colegio.json'), 'id_tco');
 
         $this->upsertRecords('tbl_tipo_colegio', $records, ['codigo_tco'], [
+            'id_tco',
             'nombre_tco',
             'estado_tco',
         ]);

@@ -10,10 +10,13 @@ class CarreraSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (CepreOfertaCatalog::carreras() as $record) {
+        foreach (array_values(CepreOfertaCatalog::carreras()) as $index => $record) {
             DB::table('tbl_carrera')->updateOrInsert(
                 ['codigo_car' => $record['codigo_car']],
-                $record,
+                [
+                    'id_car' => $index + 1,
+                    ...$record,
+                ],
             );
         }
     }

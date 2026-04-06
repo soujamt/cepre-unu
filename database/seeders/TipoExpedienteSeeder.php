@@ -24,6 +24,7 @@ class TipoExpedienteSeeder extends Seeder
     {
         return [
             [
+                'id_tex' => 1,
                 'codigo_tex' => 'DNI',
                 'nombre_tex' => 'DNI',
                 'descripcion_tex' => 'DOCUMENTO NACIONAL DE IDENTIDAD',
@@ -31,6 +32,7 @@ class TipoExpedienteSeeder extends Seeder
                 'estado_tex' => 'HABILITADO',
             ],
             [
+                'id_tex' => 2,
                 'codigo_tex' => 'PAG',
                 'nombre_tex' => 'PAGO',
                 'descripcion_tex' => 'CONSTANCIA O VALIDACION DE PAGO',
@@ -38,6 +40,7 @@ class TipoExpedienteSeeder extends Seeder
                 'estado_tex' => 'HABILITADO',
             ],
             [
+                'id_tex' => 3,
                 'codigo_tex' => 'EST',
                 'nombre_tex' => 'DOCUMENTO DE ESTUDIANTE',
                 'descripcion_tex' => 'CERTIFICADO DE ESTUDIOS, LIBRETA DE NOTAS O CONSTANCIA',

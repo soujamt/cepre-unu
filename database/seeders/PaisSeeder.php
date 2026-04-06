@@ -11,9 +11,10 @@ class PaisSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('paises.json');
+        $records = $this->withSequentialIds($this->loadRecords('paises.json'), 'id_pai');
 
         $this->upsertRecords('tbl_pais', $records, ['codigo_pai'], [
+            'id_pai',
             'nombre_pai',
             'estado_pai',
         ]);

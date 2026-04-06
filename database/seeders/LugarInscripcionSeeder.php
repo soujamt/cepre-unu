@@ -16,6 +16,7 @@ class LugarInscripcionSeeder extends Seeder
             DB::table('tbl_lugar_inscripcion')->updateOrInsert(
                 ['codigo_lin' => $record['codigo_lin']],
                 [
+                    'id_lin' => (int) $record['codigo_lin'],
                     'codigo_lin' => $record['codigo_lin'],
                     'nombre_lin' => $record['nombre_lin'],
                     'id_sede' => $sedeIds[$record['codigo_sed']],

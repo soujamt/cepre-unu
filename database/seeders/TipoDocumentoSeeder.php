@@ -11,9 +11,10 @@ class TipoDocumentoSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('tipos_documento.json');
+        $records = $this->withSequentialIds($this->loadRecords('tipos_documento.json'), 'id_tdo');
 
         $this->upsertRecords('tbl_tipo_documento', $records, ['codigo_tdo'], [
+            'id_tdo',
             'nombre_tdo',
             'longitud_minima_tdo',
             'longitud_maxima_tdo',

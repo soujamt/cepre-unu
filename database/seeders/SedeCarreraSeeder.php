@@ -13,13 +13,14 @@ class SedeCarreraSeeder extends Seeder
         $sedeIds = DB::table('tbl_sede')->pluck('id_sed', 'codigo_sed');
         $carreraIds = DB::table('tbl_carrera')->pluck('id_car', 'nombre_car');
 
-        foreach (CepreOfertaCatalog::sedeCarreras() as $record) {
+        foreach (array_values(CepreOfertaCatalog::sedeCarreras()) as $index => $record) {
             DB::table('tbl_sede_carrera')->updateOrInsert(
                 [
                     'id_sede' => $sedeIds[$record['codigo_sed']],
                     'id_carrera' => $carreraIds[$record['nombre_car']],
                 ],
                 [
+                    'id_sca' => $index + 1,
                     'id_sede' => $sedeIds[$record['codigo_sed']],
                     'id_carrera' => $carreraIds[$record['nombre_car']],
                     'codigo_externo_sca' => $record['codigo_externo_sca'],

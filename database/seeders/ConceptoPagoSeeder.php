@@ -24,6 +24,7 @@ class ConceptoPagoSeeder extends Seeder
     {
         return [
             [
+                'id_cpg' => 1,
                 'codigo_cpg' => 'INS_UNA',
                 'nombre_cpg' => 'INSCRIPCION UNA CUOTA',
                 'descripcion_cpg' => 'INSCRIPCION PAGADA EN UNA SOLA CUOTA',
@@ -31,6 +32,7 @@ class ConceptoPagoSeeder extends Seeder
                 'estado_cpg' => 'HABILITADO',
             ],
             [
+                'id_cpg' => 2,
                 'codigo_cpg' => 'INS_CUO',
                 'nombre_cpg' => 'INSCRIPCION MAS CUOTAS',
                 'descripcion_cpg' => 'INSCRIPCION PAGADA EN VARIAS CUOTAS',
@@ -38,6 +40,7 @@ class ConceptoPagoSeeder extends Seeder
                 'estado_cpg' => 'HABILITADO',
             ],
             [
+                'id_cpg' => 3,
                 'codigo_cpg' => 'DUP_CAR',
                 'nombre_cpg' => 'DUPLICADO CARNET / CAMBIO CARRERA',
                 'descripcion_cpg' => 'DUPLICADO DE CARNET O CAMBIO DE CARRERA',
@@ -45,6 +48,7 @@ class ConceptoPagoSeeder extends Seeder
                 'estado_cpg' => 'HABILITADO',
             ],
             [
+                'id_cpg' => 4,
                 'codigo_cpg' => 'GUIA',
                 'nombre_cpg' => 'GUIA',
                 'descripcion_cpg' => 'PAGO POR GUIA',
@@ -52,6 +56,7 @@ class ConceptoPagoSeeder extends Seeder
                 'estado_cpg' => 'HABILITADO',
             ],
             [
+                'id_cpg' => 5,
                 'codigo_cpg' => 'HIJ_ADM',
                 'nombre_cpg' => 'DESCUENTO HIJO ADMINISTRATIVO',
                 'descripcion_cpg' => 'TARIFA ESPECIAL PARA HIJO DE TRABAJADOR UNU',
@@ -59,6 +64,7 @@ class ConceptoPagoSeeder extends Seeder
                 'estado_cpg' => 'HABILITADO',
             ],
             [
+                'id_cpg' => 6,
                 'codigo_cpg' => 'EXO_CEP',
                 'nombre_cpg' => 'EXONERACION CEPREUNU',
                 'descripcion_cpg' => 'EXONERACION O TARIFA ESPECIAL CEPREUNU',

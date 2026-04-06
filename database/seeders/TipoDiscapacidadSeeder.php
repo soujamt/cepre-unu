@@ -11,9 +11,10 @@ class TipoDiscapacidadSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('tipos_discapacidad.json');
+        $records = $this->withSequentialIds($this->loadRecords('tipos_discapacidad.json'), 'id_tdi');
 
         $this->upsertRecords('tbl_tipo_discapacidad', $records, ['codigo_tdi'], [
+            'id_tdi',
             'nombre_tdi',
             'estado_tdi',
         ]);

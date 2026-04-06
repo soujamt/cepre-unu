@@ -33,6 +33,22 @@ trait SeedsJsonCatalog
 
     /**
      * @param  list<array<string, mixed>>  $records
+     * @return list<array<string, mixed>>
+     */
+    protected function withSequentialIds(array $records, string $idKey, int $start = 1): array
+    {
+        $currentId = $start;
+
+        return array_map(function (array $record) use ($idKey, &$currentId): array {
+            return [
+                $idKey => $currentId++,
+                ...$record,
+            ];
+        }, $records);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $records
      * @param  list<string>  $uniqueBy
      * @param  list<string>  $updateColumns
      */

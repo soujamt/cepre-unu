@@ -11,9 +11,10 @@ class NacionalidadSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('nacionalidades.json');
+        $records = $this->withSequentialIds($this->loadRecords('nacionalidades.json'), 'id_nac');
 
         $this->upsertRecords('tbl_nacionalidad', $records, ['codigo_nac'], [
+            'id_nac',
             'nombre_nac',
             'estado_nac',
         ]);

@@ -23,4 +23,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')
         ->middleware('permiso:permiso_indice')
         ->name('permisos.index');
+
+    Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
+        ->middleware('permiso:tipo_expediente_indice')
+        ->name('tipos-expediente.index');
 });

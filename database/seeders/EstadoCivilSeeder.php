@@ -11,9 +11,10 @@ class EstadoCivilSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('estados_civiles.json');
+        $records = $this->withSequentialIds($this->loadRecords('estados_civiles.json'), 'id_eci');
 
         $this->upsertRecords('tbl_estado_civil', $records, ['codigo_eci'], [
+            'id_eci',
             'nombre_eci',
             'estado_eci',
         ]);

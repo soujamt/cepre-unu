@@ -11,9 +11,10 @@ class IdentidadEtnicaSeeder extends Seeder
 
     public function run(): void
     {
-        $records = $this->loadRecords('identidades_etnicas.json');
+        $records = $this->withSequentialIds($this->loadRecords('identidades_etnicas.json'), 'id_iet');
 
         $this->upsertRecords('tbl_identidad_etnica', $records, ['nombre_iet'], [
+            'id_iet',
             'codigo_iet',
             'nombre_iet',
             'estado_iet',
