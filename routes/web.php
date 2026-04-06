@@ -31,4 +31,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/semestres', 'pages::configuracion-academica.semestres')
         ->middleware('permiso:semestre_indice')
         ->name('semestres.index');
+
+    Route::livewire('/configuracion-academica/procesos', 'pages::configuracion-academica.procesos')
+        ->middleware('permiso:proceso_indice')
+        ->name('procesos.index');
 });
