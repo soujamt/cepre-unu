@@ -1,0 +1,1012 @@
+﻿[
+    {
+        "codigo_nac":  "1",
+        "nombre_nac":  "PERUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "2",
+        "nombre_nac":  "AFGANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "3",
+        "nombre_nac":  "ALBANESA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "4",
+        "nombre_nac":  "ALEMANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "5",
+        "nombre_nac":  "ANDORRANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "6",
+        "nombre_nac":  "ANGOLEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "7",
+        "nombre_nac":  "ANTIGUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "8",
+        "nombre_nac":  "ARGELINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "9",
+        "nombre_nac":  "ARGENTINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "10",
+        "nombre_nac":  "ARMENIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "11",
+        "nombre_nac":  "ARUBEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "12",
+        "nombre_nac":  "AUSTRALIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "13",
+        "nombre_nac":  "AUSTRIACA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "14",
+        "nombre_nac":  "AZERBAIYANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "15",
+        "nombre_nac":  "BAHAMEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "16",
+        "nombre_nac":  "BANGLADESÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "17",
+        "nombre_nac":  "BARBADENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "18",
+        "nombre_nac":  "BAREINÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "19",
+        "nombre_nac":  "BELGA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "20",
+        "nombre_nac":  "BELICEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "21",
+        "nombre_nac":  "BENINÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "22",
+        "nombre_nac":  "BIELORRUSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "23",
+        "nombre_nac":  "BIRMANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "24",
+        "nombre_nac":  "BOLIVIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "25",
+        "nombre_nac":  "BOSNIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "26",
+        "nombre_nac":  "BOTSUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "27",
+        "nombre_nac":  "BRASILEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "28",
+        "nombre_nac":  "BRITÁNICA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "29",
+        "nombre_nac":  "BRUNEANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "30",
+        "nombre_nac":  "BÚLGARA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "31",
+        "nombre_nac":  "BURKINÉS",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "32",
+        "nombre_nac":  "BURUNDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "33",
+        "nombre_nac":  "BUTANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "34",
+        "nombre_nac":  "CABOVERDIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "35",
+        "nombre_nac":  "CAMBOYANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "36",
+        "nombre_nac":  "CAMERUNESA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "37",
+        "nombre_nac":  "CANADIENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "38",
+        "nombre_nac":  "CATARÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "39",
+        "nombre_nac":  "CEILANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "40",
+        "nombre_nac":  "CENTROAFRICANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "41",
+        "nombre_nac":  "CHADIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "42",
+        "nombre_nac":  "CHECA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "43",
+        "nombre_nac":  "CHILENA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "44",
+        "nombre_nac":  "CHINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "45",
+        "nombre_nac":  "CHIPRIOTA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "46",
+        "nombre_nac":  "COLOMBIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "47",
+        "nombre_nac":  "COMORENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "48",
+        "nombre_nac":  "CONGOLEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "49",
+        "nombre_nac":  "CONGOLEÑA (COD. 49)",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "50",
+        "nombre_nac":  "COOKIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "51",
+        "nombre_nac":  "COSTARRICENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "52",
+        "nombre_nac":  "CRISTOBALEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "53",
+        "nombre_nac":  "CROATA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "54",
+        "nombre_nac":  "CUBANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "55",
+        "nombre_nac":  "DANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "56",
+        "nombre_nac":  "DOMINICANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "57",
+        "nombre_nac":  "DOMINIQUÉS",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "58",
+        "nombre_nac":  "ECUATOGUINEANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "59",
+        "nombre_nac":  "ECUATORIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "60",
+        "nombre_nac":  "EGIPCIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "61",
+        "nombre_nac":  "EMIRATÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "62",
+        "nombre_nac":  "ERITREA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "63",
+        "nombre_nac":  "ESLOVACA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "64",
+        "nombre_nac":  "ESLOVENA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "65",
+        "nombre_nac":  "ESPAÑOLA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "66",
+        "nombre_nac":  "ESTADOUNIDENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "67",
+        "nombre_nac":  "ESTONIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "68",
+        "nombre_nac":  "ETÍOPE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "69",
+        "nombre_nac":  "FILIPINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "70",
+        "nombre_nac":  "FINLANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "71",
+        "nombre_nac":  "FIYIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "72",
+        "nombre_nac":  "FRANCÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "73",
+        "nombre_nac":  "GABONÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "74",
+        "nombre_nac":  "GAMBIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "75",
+        "nombre_nac":  "GEORGIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "76",
+        "nombre_nac":  "GHANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "77",
+        "nombre_nac":  "GIBRALTAREÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "78",
+        "nombre_nac":  "GRANADINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "79",
+        "nombre_nac":  "GRIEGA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "80",
+        "nombre_nac":  "GROENLANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "81",
+        "nombre_nac":  "GUATEMALTECA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "82",
+        "nombre_nac":  "GUINEANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "83",
+        "nombre_nac":  "GUINEANA (COD. 83)",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "84",
+        "nombre_nac":  "GUYANESA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "85",
+        "nombre_nac":  "HAITIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "86",
+        "nombre_nac":  "HINDÚ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "87",
+        "nombre_nac":  "HONDUREÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "88",
+        "nombre_nac":  "HÚNGARA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "89",
+        "nombre_nac":  "INDONESIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "90",
+        "nombre_nac":  "IRANÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "91",
+        "nombre_nac":  "IRAQUÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "92",
+        "nombre_nac":  "IRLANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "93",
+        "nombre_nac":  "ISLANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "94",
+        "nombre_nac":  "ISRAELÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "95",
+        "nombre_nac":  "ITALIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "96",
+        "nombre_nac":  "JAMAIQUINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "97",
+        "nombre_nac":  "JAPONÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "98",
+        "nombre_nac":  "JORDANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "99",
+        "nombre_nac":  "KAZAJA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "100",
+        "nombre_nac":  "KENIATA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "101",
+        "nombre_nac":  "KIRGUISA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "102",
+        "nombre_nac":  "KIRIBATIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "103",
+        "nombre_nac":  "KUWAITÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "104",
+        "nombre_nac":  "LAOSIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "105",
+        "nombre_nac":  "LESOTENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "106",
+        "nombre_nac":  "LETÓNA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "107",
+        "nombre_nac":  "LIBANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "108",
+        "nombre_nac":  "LIBERIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "109",
+        "nombre_nac":  "LIBIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "110",
+        "nombre_nac":  "LIECHTENSTEINIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "111",
+        "nombre_nac":  "LITUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "112",
+        "nombre_nac":  "LUXEMBURGUÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "113",
+        "nombre_nac":  "MACEDONIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "114",
+        "nombre_nac":  "MALASIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "115",
+        "nombre_nac":  "MALAUÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "116",
+        "nombre_nac":  "MALDIVA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "117",
+        "nombre_nac":  "MALGACHE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "118",
+        "nombre_nac":  "MALIENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "119",
+        "nombre_nac":  "MALTÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "120",
+        "nombre_nac":  "MARFILEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "121",
+        "nombre_nac":  "MARROQUÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "122",
+        "nombre_nac":  "MARSHALÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "123",
+        "nombre_nac":  "MARTINIQUÉS",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "124",
+        "nombre_nac":  "MAURICIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "125",
+        "nombre_nac":  "MAURITANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "126",
+        "nombre_nac":  "MEXICANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "127",
+        "nombre_nac":  "MICRONESIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "128",
+        "nombre_nac":  "MOLDAVA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "129",
+        "nombre_nac":  "MONEGASCA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "130",
+        "nombre_nac":  "MONGOLA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "131",
+        "nombre_nac":  "MONTENEGRINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "132",
+        "nombre_nac":  "MOZAMBIQUEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "133",
+        "nombre_nac":  "NAMIBIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "134",
+        "nombre_nac":  "NAURUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "135",
+        "nombre_nac":  "NEERLANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "136",
+        "nombre_nac":  "NEOZELANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "137",
+        "nombre_nac":  "NEPALÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "138",
+        "nombre_nac":  "NICARAGÜENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "139",
+        "nombre_nac":  "NIGERIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "140",
+        "nombre_nac":  "NIGERINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "141",
+        "nombre_nac":  "NORCOREANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "142",
+        "nombre_nac":  "NORUEGA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "143",
+        "nombre_nac":  "OMANÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "144",
+        "nombre_nac":  "PAKISTANÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "145",
+        "nombre_nac":  "PALAUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "146",
+        "nombre_nac":  "PALESTINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "147",
+        "nombre_nac":  "PANAMEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "148",
+        "nombre_nac":  "PAPÚ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "149",
+        "nombre_nac":  "PARAGUAYA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "150",
+        "nombre_nac":  "POLACA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "151",
+        "nombre_nac":  "PORTUGUÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "152",
+        "nombre_nac":  "PUERTORRIQUEÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "153",
+        "nombre_nac":  "RUANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "154",
+        "nombre_nac":  "RUMANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "155",
+        "nombre_nac":  "RUSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "156",
+        "nombre_nac":  "SALOMONENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "157",
+        "nombre_nac":  "SALVADOREÑA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "158",
+        "nombre_nac":  "SAMOANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "159",
+        "nombre_nac":  "SANMARINENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "160",
+        "nombre_nac":  "SANTALUCENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "161",
+        "nombre_nac":  "SANTOTOMENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "162",
+        "nombre_nac":  "SANVICENTINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "163",
+        "nombre_nac":  "SAUDÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "164",
+        "nombre_nac":  "SENEGALÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "165",
+        "nombre_nac":  "SERBIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "166",
+        "nombre_nac":  "SEYCHELLENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "167",
+        "nombre_nac":  "SIERRALEONÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "168",
+        "nombre_nac":  "SINGAPURENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "169",
+        "nombre_nac":  "SIRIA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "170",
+        "nombre_nac":  "SOMALÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "171",
+        "nombre_nac":  "SUAZI",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "172",
+        "nombre_nac":  "SUDAFRICANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "173",
+        "nombre_nac":  "SUDANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "174",
+        "nombre_nac":  "SUECA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "175",
+        "nombre_nac":  "SUIZA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "176",
+        "nombre_nac":  "SURCOREANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "177",
+        "nombre_nac":  "SURINAMESA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "178",
+        "nombre_nac":  "SURSUDANÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "179",
+        "nombre_nac":  "TAILANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "180",
+        "nombre_nac":  "TAIWANÉS",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "181",
+        "nombre_nac":  "TANZANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "182",
+        "nombre_nac":  "TAYIKA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "183",
+        "nombre_nac":  "TIMORENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "184",
+        "nombre_nac":  "TOGOLÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "185",
+        "nombre_nac":  "TONGANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "186",
+        "nombre_nac":  "TRINITENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "187",
+        "nombre_nac":  "TUNECINA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "188",
+        "nombre_nac":  "TURCA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "189",
+        "nombre_nac":  "TURCOMANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "190",
+        "nombre_nac":  "TUVALUANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "191",
+        "nombre_nac":  "UCRANIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "192",
+        "nombre_nac":  "UGANDÉSA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "193",
+        "nombre_nac":  "URUGUAYA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "194",
+        "nombre_nac":  "UZBEKA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "195",
+        "nombre_nac":  "VANUATUENSE",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "196",
+        "nombre_nac":  "VATICANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "197",
+        "nombre_nac":  "VENEZOLANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "198",
+        "nombre_nac":  "VIETNAMITA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "199",
+        "nombre_nac":  "YEMENÍ",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "200",
+        "nombre_nac":  "YIBUTIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "201",
+        "nombre_nac":  "ZAMBIANA",
+        "estado_nac":  "HABILITADO"
+    },
+    {
+        "codigo_nac":  "202",
+        "nombre_nac":  "ZIMBABUENSE",
+        "estado_nac":  "HABILITADO"
+    }
+]

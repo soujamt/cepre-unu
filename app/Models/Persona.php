@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Enums\EstadoCatalogo;
 use App\Enums\SexoPersona;
+use App\Enums\TipoLenguaMaternaPersona;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_tipo_documento', 'numero_documento_per', 'apellido_paterno_per', 'apellido_materno_per', 'nombres_per', 'fecha_nacimiento_per', 'sexo_per', 'id_pais_nacimiento', 'id_nacionalidad', 'id_ubigeo_nacimiento', 'id_ubigeo_domicilio', 'direccion_per', 'celular_per', 'telefono_per', 'correo_electronico_per', 'discapacidad_per', 'id_tipo_discapacidad', 'id_identidad_etnica', 'id_lengua_nativa', 'id_lengua_extranjera', 'observacion_per', 'estado_per'])]
+#[Fillable(['id_tipo_documento', 'numero_documento_per', 'solo_un_apellido_per', 'apellido_paterno_per', 'apellido_materno_per', 'apellido_casada_per', 'nombres_per', 'fecha_nacimiento_per', 'sexo_per', 'id_estado_civil', 'id_pais_nacimiento', 'id_nacionalidad', 'id_ubigeo_nacimiento', 'id_ubigeo_domicilio', 'direccion_per', 'celular_per', 'telefono_per', 'correo_electronico_per', 'discapacidad_per', 'id_tipo_discapacidad', 'tipo_lengua_materna_per', 'id_identidad_etnica', 'id_lengua_nativa', 'id_lengua_extranjera', 'observacion_per', 'estado_per'])]
 #[Table('tbl_persona', key: 'id_per')]
 class Persona extends LegacyModel
 {
@@ -18,8 +19,10 @@ class Persona extends LegacyModel
         return [
             ...parent::casts(),
             'fecha_nacimiento_per' => 'date',
+            'solo_un_apellido_per' => 'boolean',
             'sexo_per' => SexoPersona::class,
             'discapacidad_per' => 'boolean',
+            'tipo_lengua_materna_per' => TipoLenguaMaternaPersona::class,
             'estado_per' => EstadoCatalogo::class,
         ];
     }
@@ -32,6 +35,11 @@ class Persona extends LegacyModel
     public function paisNacimiento(): BelongsTo
     {
         return $this->belongsTo(Pais::class, 'id_pais_nacimiento', 'id_pai');
+    }
+
+    public function estadoCivil(): BelongsTo
+    {
+        return $this->belongsTo(EstadoCivil::class, 'id_estado_civil', 'id_eci');
     }
 
     public function nacionalidad(): BelongsTo

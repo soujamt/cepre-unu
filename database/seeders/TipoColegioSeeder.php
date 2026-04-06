@@ -2,37 +2,20 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Concerns\SeedsJsonCatalog;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class TipoColegioSeeder extends Seeder
 {
+    use SeedsJsonCatalog;
+
     public function run(): void
     {
-        foreach ($this->records() as $record) {
-            DB::table('tbl_tipo_colegio')->updateOrInsert(
-                ['codigo_tco' => $record['codigo_tco']],
-                $record,
-            );
-        }
-    }
+        $records = $this->loadRecords('tipos_colegio.json');
 
-    /**
-     * @return array<int, array<string, string>>
-     */
-    private function records(): array
-    {
-        return [
-            [
-                'codigo_tco' => 'PUB',
-                'nombre_tco' => 'PUBLICO',
-                'estado_tco' => 'HABILITADO',
-            ],
-            [
-                'codigo_tco' => 'PRI',
-                'nombre_tco' => 'PRIVADO',
-                'estado_tco' => 'HABILITADO',
-            ],
-        ];
+        $this->upsertRecords('tbl_tipo_colegio', $records, ['codigo_tco'], [
+            'nombre_tco',
+            'estado_tco',
+        ]);
     }
 }

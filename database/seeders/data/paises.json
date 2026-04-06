@@ -1,0 +1,952 @@
+﻿[
+    {
+        "codigo_pai":  "1",
+        "nombre_pai":  "PERÚ",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "2",
+        "nombre_pai":  "AFGANISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "3",
+        "nombre_pai":  "ALBANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "4",
+        "nombre_pai":  "ALEMANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "5",
+        "nombre_pai":  "ALEMANIA REPÚBLICA DEMOCRÁTICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "6",
+        "nombre_pai":  "ANDORRA, PRINCIPADO DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "7",
+        "nombre_pai":  "ANGOLA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "8",
+        "nombre_pai":  "ANTIGUA Y BARBUDA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "9",
+        "nombre_pai":  "ANTILLAS HOLANDESAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "10",
+        "nombre_pai":  "ARABIA SAUDITA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "11",
+        "nombre_pai":  "ARGELIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "12",
+        "nombre_pai":  "ARGENTINA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "13",
+        "nombre_pai":  "AUSTRALIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "14",
+        "nombre_pai":  "AUSTRIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "15",
+        "nombre_pai":  "AZERBAIYÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "16",
+        "nombre_pai":  "BAHAMAS, ISLAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "17",
+        "nombre_pai":  "BANGLADESH",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "18",
+        "nombre_pai":  "BARBADOS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "19",
+        "nombre_pai":  "BAREIN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "20",
+        "nombre_pai":  "BÉLGICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "21",
+        "nombre_pai":  "BELICE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "22",
+        "nombre_pai":  "BIELORRUSIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "23",
+        "nombre_pai":  "BIRMANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "24",
+        "nombre_pai":  "BOLIVIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "25",
+        "nombre_pai":  "BOSNIA Y HERZEGOVINA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "26",
+        "nombre_pai":  "BOTSUANA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "27",
+        "nombre_pai":  "BRASIL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "28",
+        "nombre_pai":  "BRUNÉI",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "29",
+        "nombre_pai":  "BULGARIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "30",
+        "nombre_pai":  "BURKINA FASO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "31",
+        "nombre_pai":  "CAMBOYA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "32",
+        "nombre_pai":  "CAMERÚN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "33",
+        "nombre_pai":  "CANADÁ",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "34",
+        "nombre_pai":  "CARIBE NEERLANDÉS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "35",
+        "nombre_pai":  "CATAR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "36",
+        "nombre_pai":  "CHILE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "37",
+        "nombre_pai":  "CHINA, REPÚBLICA POPULAR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "38",
+        "nombre_pai":  "CHIPRE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "39",
+        "nombre_pai":  "COLOMBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "40",
+        "nombre_pai":  "COREA DEL NORTE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "41",
+        "nombre_pai":  "COREA DEL SUR, REPÚBLICA DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "42",
+        "nombre_pai":  "COSTA DE MARFIL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "43",
+        "nombre_pai":  "COSTA RICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "44",
+        "nombre_pai":  "CROACIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "45",
+        "nombre_pai":  "CUBA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "46",
+        "nombre_pai":  "DINAMARCA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "47",
+        "nombre_pai":  "DOMINICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "48",
+        "nombre_pai":  "ECUADOR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "49",
+        "nombre_pai":  "EL SALVADOR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "50",
+        "nombre_pai":  "EMIRATOS ÁRABES UNIDOS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "51",
+        "nombre_pai":  "ESLOVAQUIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "52",
+        "nombre_pai":  "ESLOVENIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "53",
+        "nombre_pai":  "ESPAÑA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "54",
+        "nombre_pai":  "ESTADOS UNIDOS DE AMÉRICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "55",
+        "nombre_pai":  "ESTONIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "56",
+        "nombre_pai":  "ETIOPÍA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "57",
+        "nombre_pai":  "FILIPINAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "58",
+        "nombre_pai":  "FINLANDIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "59",
+        "nombre_pai":  "FRANCIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "60",
+        "nombre_pai":  "GABÓN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "61",
+        "nombre_pai":  "GEORGIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "62",
+        "nombre_pai":  "GHANA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "63",
+        "nombre_pai":  "GRANADA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "64",
+        "nombre_pai":  "GRECIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "65",
+        "nombre_pai":  "GUATEMALA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "66",
+        "nombre_pai":  "GUAYANA FRANCESA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "67",
+        "nombre_pai":  "GUINEA ECUATORIAL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "68",
+        "nombre_pai":  "GUYANA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "69",
+        "nombre_pai":  "HAITÍ",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "70",
+        "nombre_pai":  "HONDURAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "71",
+        "nombre_pai":  "HONG KONG (COLONIA BRITÁNICA)",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "72",
+        "nombre_pai":  "HUNGRÍA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "73",
+        "nombre_pai":  "INDIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "74",
+        "nombre_pai":  "INDONESIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "75",
+        "nombre_pai":  "IRAK",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "76",
+        "nombre_pai":  "IRÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "77",
+        "nombre_pai":  "IRLANDA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "78",
+        "nombre_pai":  "IRLANDA DEL NORTE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "79",
+        "nombre_pai":  "ISLA DE JERSEY",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "80",
+        "nombre_pai":  "ISLANDIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "81",
+        "nombre_pai":  "ISLAS BERMUDAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "82",
+        "nombre_pai":  "ISLAS CAIMÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "83",
+        "nombre_pai":  "ISRAEL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "84",
+        "nombre_pai":  "ITALIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "85",
+        "nombre_pai":  "JAMAICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "86",
+        "nombre_pai":  "JAPÓN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "87",
+        "nombre_pai":  "JORDANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "88",
+        "nombre_pai":  "KAZAJSTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "89",
+        "nombre_pai":  "KENIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "90",
+        "nombre_pai":  "KIRGUISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "91",
+        "nombre_pai":  "KUWAIT",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "92",
+        "nombre_pai":  "LETONIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "93",
+        "nombre_pai":  "LÍBANO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "94",
+        "nombre_pai":  "LIBERIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "95",
+        "nombre_pai":  "LIBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "96",
+        "nombre_pai":  "LIECHTENSTEIN, PRINCIPADO DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "97",
+        "nombre_pai":  "LITUANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "98",
+        "nombre_pai":  "LUXEMBURGO, GRAN DUCADO DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "99",
+        "nombre_pai":  "MACEDONIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "100",
+        "nombre_pai":  "MADAGASCAR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "101",
+        "nombre_pai":  "MALASIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "102",
+        "nombre_pai":  "MALTA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "103",
+        "nombre_pai":  "MARRUECOS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "104",
+        "nombre_pai":  "MAURICIO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "105",
+        "nombre_pai":  "MÉXICO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "106",
+        "nombre_pai":  "MICRONESIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "107",
+        "nombre_pai":  "MOLDAVIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "108",
+        "nombre_pai":  "MÓNACO, PRINCIPADO DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "109",
+        "nombre_pai":  "MONGOLIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "110",
+        "nombre_pai":  "MONTENEGRO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "111",
+        "nombre_pai":  "MOZAMBIQUE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "112",
+        "nombre_pai":  "NAMIBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "113",
+        "nombre_pai":  "NEPAL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "114",
+        "nombre_pai":  "NICARAGUA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "115",
+        "nombre_pai":  "NIGERIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "116",
+        "nombre_pai":  "NORUEGA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "117",
+        "nombre_pai":  "NUEVA ZELANDA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "118",
+        "nombre_pai":  "OMÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "119",
+        "nombre_pai":  "PAÍSES BAJOS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "120",
+        "nombre_pai":  "PAKISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "121",
+        "nombre_pai":  "PALAU",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "122",
+        "nombre_pai":  "PALESTINA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "123",
+        "nombre_pai":  "PANAMÁ",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "124",
+        "nombre_pai":  "PAPÚA NUEVA GUINEA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "125",
+        "nombre_pai":  "PARAGUAY",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "126",
+        "nombre_pai":  "POLONIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "127",
+        "nombre_pai":  "PORTUGAL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "128",
+        "nombre_pai":  "PUERTO RICO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "129",
+        "nombre_pai":  "REINO UNIDO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "130",
+        "nombre_pai":  "REP. DEMOCRÁTICA DE SANTO TOME Y PRÍNCIPE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "131",
+        "nombre_pai":  "REP. DEMOCRÁTICA DEL CONGO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "132",
+        "nombre_pai":  "REPÚBLICA ÁRABE DE EGIPTO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "133",
+        "nombre_pai":  "REPÚBLICA CHECA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "134",
+        "nombre_pai":  "REPÚBLICA DE ARMENIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "135",
+        "nombre_pai":  "REPÚBLICA DE BURUNDI",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "136",
+        "nombre_pai":  "REPÚBLICA DE CABO VERDE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "137",
+        "nombre_pai":  "REPÚBLICA DE FIYI",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "138",
+        "nombre_pai":  "REPÚBLICA DE GAMBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "139",
+        "nombre_pai":  "REPÚBLICA DE GUINEA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "140",
+        "nombre_pai":  "REPÚBLICA DE GUINEA - BISAU",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "141",
+        "nombre_pai":  "REPÚBLICA DE KIRIBATI",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "142",
+        "nombre_pai":  "REPÚBLICA DE LAS SEYCHELLES",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "143",
+        "nombre_pai":  "REPÚBLICA DE NÍGER",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "144",
+        "nombre_pai":  "REPÚBLICA DE RUANDA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "145",
+        "nombre_pai":  "REPÚBLICA DE UGANDA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "146",
+        "nombre_pai":  "REPÚBLICA DEL CONGO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "147",
+        "nombre_pai":  "REPÚBLICA DEMOCRÁTICA DE TIMOR ORIENTAL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "148",
+        "nombre_pai":  "REPÚBLICA DEMOCRÁTICA POPULAR LAO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "149",
+        "nombre_pai":  "REPÚBLICA DOMINICANA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "150",
+        "nombre_pai":  "REPÚBLICA ISLÁMICA DE MAURITANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "151",
+        "nombre_pai":  "REPÚBLICA TOGOLESA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "152",
+        "nombre_pai":  "REPÚBLICA UNIDA DE TANZANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "153",
+        "nombre_pai":  "RUMANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "154",
+        "nombre_pai":  "RUSIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "155",
+        "nombre_pai":  "SAMOA AMERICANA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "156",
+        "nombre_pai":  "SAN CRISTOBAL Y NIEVES",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "157",
+        "nombre_pai":  "SAN MARINO, REPÚBLICA DE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "158",
+        "nombre_pai":  "SAN VICENTE Y LAS GRANADINAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "159",
+        "nombre_pai":  "SANTA LUCÍA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "160",
+        "nombre_pai":  "SENEGAL",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "161",
+        "nombre_pai":  "SERBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "162",
+        "nombre_pai":  "SIERRA LEONA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "163",
+        "nombre_pai":  "SINGAPUR",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "164",
+        "nombre_pai":  "SIRIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "165",
+        "nombre_pai":  "SOMALIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "166",
+        "nombre_pai":  "SRI LANKA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "167",
+        "nombre_pai":  "SUDÁFRICA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "168",
+        "nombre_pai":  "SUDÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "169",
+        "nombre_pai":  "SUECIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "170",
+        "nombre_pai":  "SUIZA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "171",
+        "nombre_pai":  "SURINAM",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "172",
+        "nombre_pai":  "SWAZILANDIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "173",
+        "nombre_pai":  "TAILANDIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "174",
+        "nombre_pai":  "TAIWÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "175",
+        "nombre_pai":  "TAYIKISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "176",
+        "nombre_pai":  "TRINIDAD Y TOBAGO",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "177",
+        "nombre_pai":  "TÚNEZ",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "178",
+        "nombre_pai":  "TURKMENISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "179",
+        "nombre_pai":  "TURQUÍA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "180",
+        "nombre_pai":  "UCRANIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "181",
+        "nombre_pai":  "UNIÓN DE LAS COMORAS",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "182",
+        "nombre_pai":  "URUGUAY",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "183",
+        "nombre_pai":  "UZBEKISTÁN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "184",
+        "nombre_pai":  "VENEZUELA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "185",
+        "nombre_pai":  "VIETNAM",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "186",
+        "nombre_pai":  "YEMEN",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "187",
+        "nombre_pai":  "YUGOSLAVIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "188",
+        "nombre_pai":  "ZAIRE",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "189",
+        "nombre_pai":  "ZAMBIA",
+        "estado_pai":  "HABILITADO"
+    },
+    {
+        "codigo_pai":  "190",
+        "nombre_pai":  "ZIMBABWE",
+        "estado_pai":  "HABILITADO"
+    }
+]

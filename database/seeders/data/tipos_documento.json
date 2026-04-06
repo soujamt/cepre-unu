@@ -1,0 +1,23 @@
+﻿[
+    {
+        "codigo_tdo":  "1",
+        "nombre_tdo":  "DOCUMENTO NACIONAL DE IDENTIDAD",
+        "longitud_minima_tdo":  8,
+        "longitud_maxima_tdo":  8,
+        "estado_tdo":  "HABILITADO"
+    },
+    {
+        "codigo_tdo":  "2",
+        "nombre_tdo":  "CARNET DE EXTRANJERIA",
+        "longitud_minima_tdo":  9,
+        "longitud_maxima_tdo":  12,
+        "estado_tdo":  "HABILITADO"
+    },
+    {
+        "codigo_tdo":  "3",
+        "nombre_tdo":  "CEDULA DE IDENTIDAD",
+        "longitud_minima_tdo":  8,
+        "longitud_maxima_tdo":  12,
+        "estado_tdo":  "HABILITADO"
+    }
+]

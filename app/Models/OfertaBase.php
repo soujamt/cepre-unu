@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_modalidad_admision', 'id_lugar_inscripcion', 'id_sede_carrera', 'estado_ofb'])]
+#[Fillable(['codigo_externo_ofb', 'id_modalidad_admision', 'id_lugar_inscripcion', 'id_sede_carrera', 'estado_ofb'])]
 #[Table('tbl_oferta_base', key: 'id_ofb')]
 class OfertaBase extends LegacyModel
 {

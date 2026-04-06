@@ -21,6 +21,55 @@ it('uses tbl_usuario as the authenticatable table', function (): void {
     ]))->toBeTrue();
 });
 
+it('stores the additional persona fields required by the legend', function (): void {
+    expect(Schema::hasColumns('tbl_persona', [
+        'solo_un_apellido_per',
+        'apellido_casada_per',
+        'tipo_lengua_materna_per',
+    ]))->toBeTrue();
+});
+
+it('stores the external offer code and allows repeated place names with different codes', function (): void {
+    expect(Schema::hasColumn('tbl_oferta_base', 'codigo_externo_ofb'))->toBeTrue();
+
+    $ubigeoId = fake()->unique()->numerify('######');
+
+    DB::table('tbl_ubigeo')->insert([
+        'id_ubi' => $ubigeoId,
+        'codigo_departamento_ubi' => '25',
+        'codigo_provincia_ubi' => '01',
+        'codigo_distrito_ubi' => substr($ubigeoId, 4, 2),
+        'nombre_departamento_ubi' => 'Ucayali',
+        'nombre_provincia_ubi' => 'Coronel Portillo',
+        'nombre_distrito_ubi' => fake()->city(),
+        'estado_ubi' => 'HABILITADO',
+    ]);
+
+    $sedeId = (int) DB::table('tbl_sede')->insertGetId([
+        'codigo_sed' => fake()->unique()->lexify('SED????'),
+        'nombre_sed' => fake()->unique()->company(),
+        'id_ubigeo' => $ubigeoId,
+        'estado_sed' => 'HABILITADO',
+    ], 'id_sed');
+
+    $insertA = DB::table('tbl_lugar_inscripcion')->insert([
+        'codigo_lin' => '603',
+        'nombre_lin' => 'PUCALLPA',
+        'id_sede' => $sedeId,
+        'estado_lin' => 'HABILITADO',
+    ]);
+
+    $insertB = DB::table('tbl_lugar_inscripcion')->insert([
+        'codigo_lin' => '604',
+        'nombre_lin' => 'PUCALLPA',
+        'id_sede' => $sedeId,
+        'estado_lin' => 'HABILITADO',
+    ]);
+
+    expect($insertA)->toBeTrue();
+    expect($insertB)->toBeTrue();
+});
+
 it('enforces unique document per persona', function (): void {
     $tipoDocumentoId = insertTipoDocumento();
 
@@ -77,6 +126,7 @@ function insertPersona(int $tipoDocumentoId, string $numeroDocumento): bool
     return DB::table('tbl_persona')->insert([
         'id_tipo_documento' => $tipoDocumentoId,
         'numero_documento_per' => $numeroDocumento,
+        'solo_un_apellido_per' => false,
         'apellido_paterno_per' => 'Perez',
         'nombres_per' => 'Juan',
         'fecha_nacimiento_per' => '2000-01-01',
@@ -199,6 +249,7 @@ function createInscripcionContext(): array
     $personaId = (int) DB::table('tbl_persona')->insertGetId([
         'id_tipo_documento' => $tipoDocumentoId,
         'numero_documento_per' => fake()->unique()->numerify('########'),
+        'solo_un_apellido_per' => false,
         'apellido_paterno_per' => 'Perez',
         'nombres_per' => 'Maria',
         'fecha_nacimiento_per' => '2001-01-01',
@@ -208,6 +259,7 @@ function createInscripcionContext(): array
         'id_ubigeo_nacimiento' => $ubigeoId,
         'id_ubigeo_domicilio' => $ubigeoId,
         'discapacidad_per' => false,
+        'tipo_lengua_materna_per' => 'NATIVA',
         'estado_per' => 'HABILITADO',
     ], 'id_per');
     DB::table('tbl_colegio')->insert([

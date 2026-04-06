@@ -1,0 +1,127 @@
+﻿[
+    {
+        "codigo_tdi":  "1",
+        "nombre_tdi":  "DISCAPACIDAD MOTRIZ",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "2",
+        "nombre_tdi":  "DISCAPACIDAD VISUAL",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "3",
+        "nombre_tdi":  "VISUAL Y ESQUEMA CORPORAL",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "4",
+        "nombre_tdi":  "DISMINUIDOS VISUALES",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "5",
+        "nombre_tdi":  "DISCAPACIDAD AUDITIVA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "6",
+        "nombre_tdi":  "AUTISMO",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "7",
+        "nombre_tdi":  "DISCAPACIDAD MENTAL",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "8",
+        "nombre_tdi":  "PARALISIS CEREBRAL",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "9",
+        "nombre_tdi":  "DISCAPACIDAD INTELECTUAL",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "10",
+        "nombre_tdi":  "SORDOCEGUERA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "11",
+        "nombre_tdi":  "NO CUENTA CON INFORMACION",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "12",
+        "nombre_tdi":  "OTROS",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "13",
+        "nombre_tdi":  "SINDROME DE ASPERGER",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "14",
+        "nombre_tdi":  "HEMIPLEJIA NO IDENTIFICADA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "15",
+        "nombre_tdi":  "ESTENOSIS CONGENITA DE LA VALVULA AORTICA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "16",
+        "nombre_tdi":  "MULTIDISCAPACIDAD",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "17",
+        "nombre_tdi":  "DISCAPACIDAD FISICA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "18",
+        "nombre_tdi":  "TRANSTORNO DEL ESPECTRO AUTISTA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "19",
+        "nombre_tdi":  "T. POR DEFICIT DE ATENCION CON HIPERACTIVIDAD",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "20",
+        "nombre_tdi":  "T. ESPECIFICO DEL APRENDIZAJE",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "21",
+        "nombre_tdi":  "T. MENTALES Y DEL COMPORTAMIENTO",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "22",
+        "nombre_tdi":  "ENFERMEDADES RARAS",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "23",
+        "nombre_tdi":  "TALLA BAJA",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "24",
+        "nombre_tdi":  "TALENTO",
+        "estado_tdi":  "HABILITADO"
+    },
+    {
+        "codigo_tdi":  "25",
+        "nombre_tdi":  "SUPERDOTACION",
+        "estado_tdi":  "HABILITADO"
+    }
+]
