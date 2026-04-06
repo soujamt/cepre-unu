@@ -37,7 +37,7 @@
 @endphp
 
 <div
-    {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->class('grid gap-2') }}
+    {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->class('grid min-w-0 gap-2') }}
 >
     @if ($label && ! $floating)
         <label
@@ -52,7 +52,7 @@
         </label>
     @endif
 
-    <div class="relative" @if ($wrapperData) x-data="{{ $wrapperData }}" @endif>
+    <div class="relative min-w-0" @if ($wrapperData) x-data="{{ $wrapperData }}" @endif>
         {{ $slot }}
 
         @if ($label && $floating)

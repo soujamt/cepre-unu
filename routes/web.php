@@ -35,4 +35,12 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/procesos', 'pages::configuracion-academica.procesos')
         ->middleware('permiso:proceso_indice')
         ->name('procesos.index');
+
+    Route::livewire('/configuracion-academica/ofertas', 'pages::configuracion-academica.ofertas')
+        ->middleware('permiso:oferta_indice')
+        ->name('ofertas.index');
+
+    Route::livewire('/configuracion-academica/ofertas/asignar', 'pages::configuracion-academica.ofertas-asignar')
+        ->middleware('permiso:oferta_crear')
+        ->name('ofertas.asignar');
 });

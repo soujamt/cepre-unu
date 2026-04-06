@@ -28,7 +28,7 @@
         ? 'text-red-500'
         : 'text-zinc-500 dark:text-zinc-400';
     $controlClasses = \App\Helpers\Flux::classes()
-        ->add('w-full rounded-lg border text-left disabled:shadow-none dark:shadow-none')
+        ->add('w-full min-w-0 rounded-lg border text-left disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
         ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 dark:text-zinc-300')
         ->add($floating ? 'h-12 pt-5.5 pb-1.5 text-base sm:text-sm leading-5.5' : 'h-10 py-2 text-base sm:text-sm leading-5.5')
@@ -123,7 +123,7 @@
         }"
         x-init="init()"
         @click.outside="open = false"
-        class="group/select relative block w-full"
+        class="group/select relative block w-full min-w-0"
     >
         <select id="{{ $selectId }}" x-ref="realSelect" class="hidden">
             <option value="">{{ $placeholder }}</option>
@@ -164,12 +164,12 @@
             type="button"
             @click="open = !open"
             @disabled ($disabled)
-            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses]) }}
+            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses, 'min-w-0']) }}
         >
             <span
                 x-text="selectedLabels"
                 :class="{ 'text-zinc-400 dark:text-white/60': selectedIsEmpty() }"
-                class="block w-full truncate"
+                class="block w-full min-w-0 truncate"
                 @class (['mt-3' => $floating])
             ></span>
         </button>

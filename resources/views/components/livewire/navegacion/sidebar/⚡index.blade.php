@@ -48,7 +48,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'SEMESTRES', 'href' => route('semestres.index'), 'active' => $this->routeIs('semestres.*'), 'permiso' => 'semestre_indice'],
                     ['label' => 'PROCESOS', 'href' => route('procesos.index'), 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
-                    ['label' => 'OFERTAS', 'href' => '#', 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
+                    ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'CONVENIOS', 'href' => '#', 'active' => $this->routeIs('convenios.*'), 'permiso' => 'convenio_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => '#', 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
                     ['label' => 'REQUISITOS', 'href' => '#', 'active' => $this->routeIs('requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
