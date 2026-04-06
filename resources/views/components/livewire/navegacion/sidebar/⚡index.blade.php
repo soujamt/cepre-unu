@@ -38,18 +38,20 @@ new class extends Component
                 'icon' => 'gear-six',
                 'active' => $this->routeIs(
                     'configuraciones.*',
-                    'periodos.*',
+                    'semestres.*',
                     'procesos.*',
-                    'modalidades.*',
-                    'carreras.*',
-                    'ofertas.*'
+                    'ofertas.*',
+                    'convenios.*',
+                    'reglas-pago.*',
+                    'requisitos-expediente.*'
                 ),
                 'items' => [
-                    ['label' => 'PERÍODOS', 'href' => '#', 'active' => $this->routeIs('periodos.*')],
-                    ['label' => 'PROCESOS', 'href' => '#', 'active' => $this->routeIs('procesos.*')],
-                    ['label' => 'MODALIDADES', 'href' => '#', 'active' => $this->routeIs('modalidades.*')],
-                    ['label' => 'CARRERAS', 'href' => '#', 'active' => $this->routeIs('carreras.*')],
-                    ['label' => 'OFERTAS', 'href' => '#', 'active' => $this->routeIs('ofertas.*')],
+                    ['label' => 'SEMESTRES', 'href' => '#', 'active' => $this->routeIs('semestres.*'), 'permiso' => 'semestre_indice'],
+                    ['label' => 'PROCESOS', 'href' => '#', 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
+                    ['label' => 'OFERTAS', 'href' => '#', 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
+                    ['label' => 'CONVENIOS', 'href' => '#', 'active' => $this->routeIs('convenios.*'), 'permiso' => 'convenio_indice'],
+                    ['label' => 'REGLAS DE PAGO', 'href' => '#', 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
+                    ['label' => 'REQUISITOS', 'href' => '#', 'active' => $this->routeIs('requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
                 ],
             ],
             [
@@ -70,7 +72,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'REPORTES GENERALES', 'href' => '#', 'active' => $this->routeIs('reportes.generales.*')],
                     ['label' => 'REPORTES DE PAGOS', 'href' => '#', 'active' => $this->routeIs('reportes.pagos.*')],
-                    ['label' => 'REPORTES ACADÉMICOS', 'href' => '#', 'active' => $this->routeIs('reportes.academicos.*')],
+                    ['label' => 'REPORTES ACADEMICOS', 'href' => '#', 'active' => $this->routeIs('reportes.academicos.*')],
                 ],
             ],
         ];
@@ -97,22 +99,21 @@ new class extends Component
             wire:key="menu-inicio" icon="house-simple" />
 
         @foreach ($this->gruposMenu() as $grupo)
-        @php
-        $itemsVisibles = collect($grupo['items'])
-        ->filter(fn (array $item): bool => ! isset($item['permiso']) ||
-        auth()->user()?->hasPermisoAccion($item['permiso']))
-        ->values();
-        @endphp
+            @php
+                $itemsVisibles = collect($grupo['items'])
+                    ->filter(fn (array $item): bool => ! isset($item['permiso']) || auth()->user()?->hasPermisoAccion($item['permiso']))
+                    ->values();
+            @endphp
 
-        @if ($itemsVisibles->isNotEmpty())
-        <x-sidebar.group :label="$grupo['label']" :active="$grupo['active']" :icon="$grupo['icon']"
-            wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}">
-            @foreach ($itemsVisibles as $item)
-            <x-sidebar.sub-item :label="$item['label']" :href="$item['href']" :active="$item['active']"
-                wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}" />
-            @endforeach
-        </x-sidebar.group>
-        @endif
+            @if ($itemsVisibles->isNotEmpty())
+                <x-sidebar.group :label="$grupo['label']" :active="$grupo['active']" :icon="$grupo['icon']"
+                    wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}">
+                    @foreach ($itemsVisibles as $item)
+                        <x-sidebar.sub-item :label="$item['label']" :href="$item['href']" :active="$item['active']"
+                            wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}" />
+                    @endforeach
+                </x-sidebar.group>
+            @endif
         @endforeach
 
         <x-slot:footer>
