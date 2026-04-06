@@ -27,4 +27,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
         ->middleware('permiso:tipo_expediente_indice')
         ->name('tipos-expediente.index');
+
+    Route::livewire('/configuracion-academica/semestres', 'pages::configuracion-academica.semestres')
+        ->middleware('permiso:semestre_indice')
+        ->name('semestres.index');
 });
