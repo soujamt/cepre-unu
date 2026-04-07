@@ -58,4 +58,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/convenios', 'pages::configuracion-academica.convenios')
         ->middleware('permiso:convenio_indice')
         ->name('convenios.index');
+
+    Route::livewire('/configuracion-academica/requisitos', 'pages::configuracion-academica.requisitos')
+        ->middleware('permiso:requisito_expediente_indice')
+        ->name('requisitos.index');
 });

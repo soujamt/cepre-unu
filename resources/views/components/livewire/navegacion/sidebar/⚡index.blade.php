@@ -43,6 +43,7 @@ new class extends Component
                     'ofertas.*',
                     'convenios.*',
                     'reglas-pago.*',
+                    'requisitos.*',
                     'requisitos-expediente.*'
                 ),
                 'items' => [
@@ -51,7 +52,7 @@ new class extends Component
                     ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'CONVENIOS', 'href' => route('convenios.index'), 'active' => $this->routeIs('convenios.*'), 'permiso' => 'convenio_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
-                    ['label' => 'REQUISITOS', 'href' => '#', 'active' => $this->routeIs('requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
+                    ['label' => 'REQUISITOS', 'href' => route('requisitos.index'), 'active' => $this->routeIs('requisitos.*', 'requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
                 ],
             ],
             [
