@@ -54,4 +54,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/reglas-pago', 'pages::configuracion-academica.reglas-pago')
         ->middleware('permiso:regla_pago_indice')
         ->name('reglas-pago.index');
+
+    Route::livewire('/configuracion-academica/convenios', 'pages::configuracion-academica.convenios')
+        ->middleware('permiso:convenio_indice')
+        ->name('convenios.index');
 });
