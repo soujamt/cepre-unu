@@ -104,7 +104,7 @@
                             </div>
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal py-3">
-                            <div class="space-y-2.5">
+                            <div class="space-y-1">
                                 <div class="font-medium leading-5 text-zinc-800 dark:text-zinc-100">{{ $reglaPago->proceso?->nombre_pro }}</div>
                                 <div class="flex flex-wrap gap-2">
                                     <flux:badge color="zinc" size="lg">
