@@ -31,6 +31,8 @@ it('stores the additional persona fields required by the legend', function (): v
 
 it('stores the external offer code and allows repeated place names with different codes', function (): void {
     expect(Schema::hasColumn('tbl_oferta_base', 'codigo_externo_ofb'))->toBeTrue();
+    expect(Schema::hasColumn('tbl_oferta_base', 'id_modalidad_lugar_inscripcion'))->toBeTrue();
+    expect(Schema::hasTable('tbl_modalidad_lugar_inscripcion'))->toBeTrue();
 
     $ubigeoId = fake()->unique()->numerify('######');
 
@@ -218,9 +220,13 @@ function createInscripcionContext(): array
         'codigo_externo_sca' => fake()->unique()->numerify('####'),
         'estado_sca' => 'HABILITADO',
     ], 'id_sca');
-    $ofertaBaseId = (int) DB::table('tbl_oferta_base')->insertGetId([
+    $modalidadLugarInscripcionId = (int) DB::table('tbl_modalidad_lugar_inscripcion')->insertGetId([
         'id_modalidad_admision' => $modalidadId,
         'id_lugar_inscripcion' => $lugarInscripcionId,
+        'estado_mli' => 'HABILITADO',
+    ], 'id_mli');
+    $ofertaBaseId = (int) DB::table('tbl_oferta_base')->insertGetId([
+        'id_modalidad_lugar_inscripcion' => $modalidadLugarInscripcionId,
         'id_sede_carrera' => $sedeCarreraId,
         'estado_ofb' => 'HABILITADO',
     ], 'id_ofb');

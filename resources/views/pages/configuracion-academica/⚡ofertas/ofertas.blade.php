@@ -1,5 +1,5 @@
 @section ('icon')
-    <x-header.icon icon="layers-2" />
+    <x-header.icon icon="stack-simple" />
 @endsection
 
 @section ('header')
@@ -105,13 +105,13 @@
                     <x-table.row>
                         <x-table.cell>{{ $this->ofertas->firstItem() + $loop->index }}</x-table.cell>
                         <x-table.cell>
-                            <div class="space-y-1">
+                            <div class="space-y-0">
                                 <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $oferta->proceso?->nombre_pro }}</div>
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $oferta->proceso?->semestre?->nombre_sem }}</div>
                             </div>
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal">
-                            <div class="space-y-1">
+                            <div class="space-y-0">
                                 <div class="font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ $this->descripcionOfertaBase($oferta->ofertaBase) }}
                                 </div>

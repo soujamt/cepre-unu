@@ -6,6 +6,7 @@ use App\Enums\EstadoCatalogo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 #[Fillable(['codigo_mad', 'nombre_mad', 'descripcion_mad', 'estado_mad'])]
 #[Table('tbl_modalidad_admision', key: 'id_mad')]
@@ -18,9 +19,21 @@ class ModalidadAdmision extends LegacyModel
         ]);
     }
 
-    public function ofertasBase(): HasMany
+    public function modalidadesLugarInscripcion(): HasMany
     {
-        return $this->hasMany(OfertaBase::class, 'id_modalidad_admision', 'id_mad');
+        return $this->hasMany(ModalidadLugarInscripcion::class, 'id_modalidad_admision', 'id_mad');
+    }
+
+    public function ofertasBase(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            OfertaBase::class,
+            ModalidadLugarInscripcion::class,
+            'id_modalidad_admision',
+            'id_modalidad_lugar_inscripcion',
+            'id_mad',
+            'id_mli',
+        );
     }
 
     public function reglasPago(): HasMany

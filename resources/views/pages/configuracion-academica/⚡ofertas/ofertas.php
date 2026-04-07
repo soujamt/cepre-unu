@@ -145,8 +145,8 @@ class extends Component
     {
         return OfertaBase::query()
             ->with([
-                'modalidadAdmision',
-                'lugarInscripcion.sede',
+                'modalidadLugarInscripcion.modalidadAdmision',
+                'modalidadLugarInscripcion.lugarInscripcion.sede',
                 'sedeCarrera.sede',
                 'sedeCarrera.carrera',
             ])
@@ -317,8 +317,8 @@ class extends Component
         return ProcesoOferta::query()
             ->with([
                 'proceso.semestre',
-                'ofertaBase.modalidadAdmision',
-                'ofertaBase.lugarInscripcion.sede',
+                'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+                'ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
                 'ofertaBase.sedeCarrera.sede',
                 'ofertaBase.sedeCarrera.carrera',
                 'turno',
@@ -335,9 +335,9 @@ class extends Component
                                 ->where('nombre_sem', 'like', "%{$search}%"));
                     })->orWhereHas('ofertaBase', function (Builder $ofertaBaseQuery) use ($search): void {
                         $ofertaBaseQuery->where('codigo_externo_ofb', 'like', "%{$search}%")
-                            ->orWhereHas('modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
+                            ->orWhereHas('modalidadLugarInscripcion.modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
                                 ->where('nombre_mad', 'like', "%{$search}%"))
-                            ->orWhereHas('lugarInscripcion', fn (Builder $lugarQuery) => $lugarQuery
+                            ->orWhereHas('modalidadLugarInscripcion.lugarInscripcion', fn (Builder $lugarQuery) => $lugarQuery
                                 ->where('nombre_lin', 'like', "%{$search}%"))
                             ->orWhereHas('sedeCarrera.sede', fn (Builder $sedeQuery) => $sedeQuery
                                 ->where('nombre_sed', 'like', "%{$search}%"))
@@ -360,10 +360,10 @@ class extends Component
             return 'SIN OFERTA BASE';
         }
 
-        $modalidad = $ofertaBase->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
+        $modalidad = $ofertaBase->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
         $carrera = $ofertaBase->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
         $sede = $ofertaBase->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-        $lugar = $ofertaBase->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
+        $lugar = $ofertaBase->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
 
         return "{$modalidad} | {$carrera} | {$sede} | {$lugar}";
     }

@@ -172,6 +172,32 @@ class CepreOfertaCatalog
         return array_values($records);
     }
 
+    /**
+     * @return list<array{id_mli:int,codigo_mad:string,codigo_lin:string,estado_mli:string}>
+     */
+    public static function modalidadesLugarInscripcion(): array
+    {
+        $records = [];
+        $id = 1;
+
+        foreach (self::ofertas() as $offer) {
+            $key = "{$offer['codigo_mad']}|{$offer['codigo_lin']}";
+
+            if (array_key_exists($key, $records)) {
+                continue;
+            }
+
+            $records[$key] = [
+                'id_mli' => $id++,
+                'codigo_mad' => $offer['codigo_mad'],
+                'codigo_lin' => $offer['codigo_lin'],
+                'estado_mli' => 'HABILITADO',
+            ];
+        }
+
+        return array_values($records);
+    }
+
     private static function rawOffers(): string
     {
         return <<<'TEXT'

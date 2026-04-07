@@ -10,13 +10,11 @@ use App\Models\ProcesoOferta;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
@@ -24,7 +22,6 @@ new
 class extends Component
 {
     use AuthorizesPermisos;
-    use WithPagination;
 
     public string $buscar = '';
 
@@ -48,13 +45,11 @@ class extends Component
 
     public function updatedBuscar(): void
     {
-        $this->resetPage();
     }
 
     public function updatedIdProceso(): void
     {
         $this->seleccionadas = [];
-        $this->resetPage();
     }
 
     public function updatedIdTurno(): void
@@ -64,12 +59,13 @@ class extends Component
 
     public function updatedIdModalidad(): void
     {
-        $this->resetPage();
+        $this->idLugarInscripcion = '';
+        $this->seleccionadas = [];
     }
 
     public function updatedIdLugarInscripcion(): void
     {
-        $this->resetPage();
+        $this->seleccionadas = [];
     }
 
     /**
@@ -80,6 +76,8 @@ class extends Component
         return [
             'idProceso' => ['required', 'integer', 'exists:tbl_proceso,id_pro'],
             'idTurno' => ['required', 'integer', 'exists:tbl_turno,id_tur'],
+            'idModalidad' => ['required', 'integer', 'exists:tbl_modalidad_admision,id_mad'],
+            'idLugarInscripcion' => ['required', 'integer', 'exists:tbl_lugar_inscripcion,id_lin'],
             'seleccionadas' => ['required', 'array', 'min:1'],
             'seleccionadas.*' => ['integer', 'exists:tbl_oferta_base,id_ofb'],
         ];
@@ -93,6 +91,8 @@ class extends Component
         return [
             'idProceso.required' => 'El proceso es obligatorio.',
             'idTurno.required' => 'El turno es obligatorio.',
+            'idModalidad.required' => 'La modalidad es obligatoria.',
+            'idLugarInscripcion.required' => 'El lugar de inscripcion es obligatorio.',
             'seleccionadas.required' => 'Debe seleccionar al menos una oferta base.',
             'seleccionadas.min' => 'Debe seleccionar al menos una oferta base.',
         ];
@@ -132,6 +132,12 @@ class extends Component
         return LugarInscripcion::query()
             ->with('sede')
             ->where('estado_lin', EstadoCatalogo::Habilitado->value)
+            ->when(filled($this->idModalidad), function (Builder $query): void {
+                $query->whereHas('modalidadesLugarInscripcion', function (Builder $builder): void {
+                    $builder->where('id_modalidad_admision', (int) $this->idModalidad)
+                        ->where('estado_mli', EstadoCatalogo::Habilitado->value);
+                });
+            })
             ->orderBy('id_lin')
             ->get();
     }
@@ -159,12 +165,84 @@ class extends Component
     }
 
     #[Computed]
-    public function ofertasBase(): LengthAwarePaginator
+    public function filtrosAplicados(): bool
     {
+        return filled($this->idModalidad) && filled($this->idLugarInscripcion);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    #[Computed]
+    public function idsOfertasYaAsignadas(): array
+    {
+        if (blank($this->idProceso) || blank($this->idTurno) || ! $this->filtrosAplicados()) {
+            return [];
+        }
+
+        $idsOfertasBase = $this->ofertasBase
+            ->pluck('id_ofb')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->values();
+
+        if ($idsOfertasBase->isEmpty()) {
+            return [];
+        }
+
+        return ProcesoOferta::query()
+            ->where('id_proceso', (int) $this->idProceso)
+            ->where('id_turno', (int) $this->idTurno)
+            ->whereIn('id_oferta_base', $idsOfertasBase)
+            ->pluck('id_oferta_base')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->all();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    #[Computed]
+    public function idsOfertasSeleccionables(): array
+    {
+        $idsAsignadas = $this->idsOfertasYaAsignadas();
+
+        return $this->ofertasBase
+            ->pluck('id_ofb')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->reject(fn (int $id): bool => in_array($id, $idsAsignadas, true))
+            ->values()
+            ->all();
+    }
+
+    #[Computed]
+    public function todasLasOfertasVisiblesSeleccionadas(): bool
+    {
+        if ($this->idsOfertasSeleccionables() === []) {
+            return false;
+        }
+
+        $idsSeleccionadas = collect($this->seleccionadas)
+            ->map(fn (int|string $id): int => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return collect($this->idsOfertasSeleccionables())
+            ->diff($idsSeleccionadas)
+            ->isEmpty();
+    }
+
+    #[Computed]
+    public function ofertasBase(): \Illuminate\Database\Eloquent\Collection
+    {
+        if (! $this->filtrosAplicados()) {
+            return OfertaBase::newCollection();
+        }
+
         return OfertaBase::query()
             ->with([
-                'modalidadAdmision',
-                'lugarInscripcion.sede',
+                'modalidadLugarInscripcion.modalidadAdmision',
+                'modalidadLugarInscripcion.lugarInscripcion.sede',
                 'sedeCarrera.sede',
                 'sedeCarrera.carrera',
             ])
@@ -174,19 +252,23 @@ class extends Component
             ])
             ->where('estado_ofb', EstadoCatalogo::Habilitado->value)
             ->when(filled($this->idModalidad), function (Builder $query): void {
-                $query->where('id_modalidad_admision', (int) $this->idModalidad);
+                $query->whereHas('modalidadLugarInscripcion', function (Builder $builder): void {
+                    $builder->where('id_modalidad_admision', (int) $this->idModalidad);
+                });
             })
             ->when(filled($this->idLugarInscripcion), function (Builder $query): void {
-                $query->where('id_lugar_inscripcion', (int) $this->idLugarInscripcion);
+                $query->whereHas('modalidadLugarInscripcion', function (Builder $builder): void {
+                    $builder->where('id_lugar_inscripcion', (int) $this->idLugarInscripcion);
+                });
             })
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 
                 $query->where(function (Builder $innerQuery) use ($search): void {
                     $innerQuery->where('codigo_externo_ofb', 'like', "%{$search}%")
-                        ->orWhereHas('modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
+                        ->orWhereHas('modalidadLugarInscripcion.modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
                             ->where('nombre_mad', 'like', "%{$search}%"))
-                        ->orWhereHas('lugarInscripcion', fn (Builder $lugarQuery) => $lugarQuery
+                        ->orWhereHas('modalidadLugarInscripcion.lugarInscripcion', fn (Builder $lugarQuery) => $lugarQuery
                             ->where('nombre_lin', 'like', "%{$search}%"))
                         ->orWhereHas('sedeCarrera.sede', fn (Builder $sedeQuery) => $sedeQuery
                             ->where('nombre_sed', 'like', "%{$search}%"))
@@ -195,7 +277,7 @@ class extends Component
                 });
             })
             ->orderBy('codigo_externo_ofb')
-            ->paginate(15);
+            ->get();
     }
 
     public function guardar(): void
@@ -254,29 +336,45 @@ class extends Component
         unset($this->ofertasBase);
 
         $this->dispatch('toast', message: $mensaje, type: 'success');
+
+        $this->redirect(route('ofertas.index'), navigate: true);
+    }
+
+    public function seleccionarTodasLasOfertasVisibles(): void
+    {
+        $this->seleccionadas = array_map(
+            static fn (int $id): string => (string) $id,
+            $this->idsOfertasSeleccionables()
+        );
+    }
+
+    public function limpiarSeleccionadasVisibles(): void
+    {
+        $idsVisibles = $this->ofertasBase
+            ->pluck('id_ofb')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->all();
+
+        $this->seleccionadas = collect($this->seleccionadas)
+            ->reject(fn (int|string $id): bool => in_array((int) $id, $idsVisibles, true))
+            ->map(fn (int|string $id): string => (string) $id)
+            ->values()
+            ->all();
     }
 
     public function descripcionOfertaBase(OfertaBase $ofertaBase): string
     {
-        $modalidad = $ofertaBase->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
+        $modalidad = $ofertaBase->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
         $carrera = $ofertaBase->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
         $sede = $ofertaBase->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-        $lugar = $ofertaBase->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
+        $lugar = $ofertaBase->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
 
         return "{$modalidad} | {$carrera} | {$sede} | {$lugar}";
     }
 
     public function ofertaYaAsignada(int $idOfertaBase): bool
     {
-        if (blank($this->idProceso) || blank($this->idTurno)) {
-            return false;
-        }
-
-        return ProcesoOferta::query()
-            ->where('id_proceso', (int) $this->idProceso)
-            ->where('id_oferta_base', $idOfertaBase)
-            ->where('id_turno', (int) $this->idTurno)
-            ->exists();
+        return in_array($idOfertaBase, $this->idsOfertasYaAsignadas(), true);
     }
 
     private function normalizarTexto(?string $valor): ?string

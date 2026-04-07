@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             CarreraSeeder::class,
             LugarInscripcionSeeder::class,
             ModalidadAdmisionSeeder::class,
+            ModalidadLugarInscripcionSeeder::class,
             SedeCarreraSeeder::class,
             OfertaBaseSeeder::class,
         ]);

@@ -4,6 +4,7 @@ use App\Models\Accion;
 use App\Models\Carrera;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
+use App\Models\ModalidadLugarInscripcion;
 use App\Models\OfertaBase;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
@@ -110,11 +111,15 @@ function crearContextoOfertaAcademica(int $indice): array
         'nombre_mad' => "MODALIDAD {$indice}",
         'estado_mad' => 'HABILITADO',
     ]);
+    $modalidadLugarInscripcion = ModalidadLugarInscripcion::query()->create([
+        'id_modalidad_admision' => $modalidad->id_mad,
+        'id_lugar_inscripcion' => $lugar->id_lin,
+        'estado_mli' => 'HABILITADO',
+    ]);
 
     $ofertaBase = OfertaBase::query()->create([
         'codigo_externo_ofb' => (string) (2700 + $indice),
-        'id_modalidad_admision' => $modalidad->id_mad,
-        'id_lugar_inscripcion' => $lugar->id_lin,
+        'id_modalidad_lugar_inscripcion' => $modalidadLugarInscripcion->id_mli,
         'id_sede_carrera' => $sedeCarrera->id_sca,
         'estado_ofb' => 'HABILITADO',
     ]);
@@ -127,8 +132,38 @@ function crearContextoOfertaAcademica(int $indice): array
 
     return [
         'ofertaBase' => $ofertaBase,
+        'modalidad' => $modalidad,
+        'lugarInscripcion' => $lugar,
         'turno' => $turno,
     ];
+}
+
+function crearOfertaBaseAdicionalParaContexto(array $contexto, int $indice): OfertaBase
+{
+    $sede = $contexto['lugarInscripcion']->sede;
+
+    $carrera = Carrera::query()->create([
+        'codigo_car' => "CARRERA_EXTRA{$indice}",
+        'nombre_car' => "CARRERA EXTRA {$indice}",
+        'estado_car' => 'HABILITADO',
+    ]);
+
+    $sedeCarrera = SedeCarrera::query()->create([
+        'id_sede' => $sede->id_sed,
+        'id_carrera' => $carrera->id_car,
+        'codigo_externo_sca' => "SCA_EXTRA{$indice}",
+        'estado_sca' => 'HABILITADO',
+    ]);
+
+    return OfertaBase::query()->create([
+        'codigo_externo_ofb' => (string) (3700 + $indice),
+        'id_modalidad_lugar_inscripcion' => ModalidadLugarInscripcion::query()
+            ->where('id_modalidad_admision', $contexto['modalidad']->id_mad)
+            ->where('id_lugar_inscripcion', $contexto['lugarInscripcion']->id_lin)
+            ->value('id_mli'),
+        'id_sede_carrera' => $sedeCarrera->id_sca,
+        'estado_ofb' => 'HABILITADO',
+    ]);
 }
 
 test('authorized users can access ofertas page', function () {
@@ -161,13 +196,72 @@ test('users can filter ofertas base by modalidad and lugar de inscripcion', func
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.ofertas-asignar')
-        ->set('idModalidad', (string) $contextoA['ofertaBase']->id_modalidad_admision)
+        ->set('idModalidad', (string) $contextoA['modalidad']->id_mad)
+        ->set('idLugarInscripcion', (string) $contextoA['lugarInscripcion']->id_lin)
         ->assertSee((string) $contextoA['ofertaBase']->codigo_externo_ofb)
         ->assertDontSee((string) $contextoB['ofertaBase']->codigo_externo_ofb)
         ->set('idModalidad', '')
-        ->set('idLugarInscripcion', (string) $contextoB['ofertaBase']->id_lugar_inscripcion)
+        ->set('idLugarInscripcion', (string) $contextoB['lugarInscripcion']->id_lin)
+        ->assertDontSee((string) $contextoB['ofertaBase']->codigo_externo_ofb)
+        ->set('idModalidad', (string) $contextoB['modalidad']->id_mad)
+        ->set('idLugarInscripcion', (string) $contextoB['lugarInscripcion']->id_lin)
         ->assertSee((string) $contextoB['ofertaBase']->codigo_externo_ofb)
         ->assertDontSee((string) $contextoA['ofertaBase']->codigo_externo_ofb);
+});
+
+test('asignar ofertas page waits for modalidad and lugar before showing results', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosOferta($usuario, ['oferta_crear']);
+
+    crearContextoOfertaAcademica(1);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.ofertas-asignar')
+        ->assertSee('Seleccione modalidad y lugar de inscripcion para ver las ofertas disponibles.')
+        ->assertDontSee('2701');
+});
+
+test('users can select all visible ofertas base except already assigned ones', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosOferta($usuario, ['oferta_crear']);
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_i',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-03-31',
+        'estado_sem' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()->create([
+        'id_semestre' => $semestre->id_sem,
+        'codigo_pro' => 'proceso_ordinario_2026_i',
+        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-03-15',
+        'estado_pro' => 'HABILITADO',
+    ]);
+
+    $contexto = crearContextoOfertaAcademica(1);
+    $ofertaExtra = crearOfertaBaseAdicionalParaContexto($contexto, 1);
+
+    ProcesoOferta::query()->create([
+        'id_proceso' => $proceso->id_pro,
+        'id_oferta_base' => $contexto['ofertaBase']->id_ofb,
+        'id_turno' => $contexto['turno']->id_tur,
+        'estado_pof' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.ofertas-asignar')
+        ->set('idProceso', (string) $proceso->id_pro)
+        ->set('idTurno', (string) $contexto['turno']->id_tur)
+        ->set('idModalidad', (string) $contexto['modalidad']->id_mad)
+        ->set('idLugarInscripcion', (string) $contexto['lugarInscripcion']->id_lin)
+        ->call('seleccionarTodasLasOfertasVisibles')
+        ->assertSet('seleccionadas', [(string) $ofertaExtra->id_ofb]);
 });
 
 test('authenticated users without permiso cannot access ofertas page', function () {
@@ -207,6 +301,8 @@ test('authorized users can register multiple ofertas por proceso', function () {
     Livewire::test('pages::configuracion-academica.ofertas-asignar')
         ->set('idProceso', (string) $proceso->id_pro)
         ->set('idTurno', (string) $contextoA['turno']->id_tur)
+        ->set('idModalidad', (string) $contextoA['modalidad']->id_mad)
+        ->set('idLugarInscripcion', (string) $contextoA['lugarInscripcion']->id_lin)
         ->set('seleccionadas', [(string) $contextoA['ofertaBase']->id_ofb, (string) $contextoB['ofertaBase']->id_ofb])
         ->call('guardar')
         ->assertHasNoErrors();
@@ -409,6 +505,8 @@ test('oferta validates duplicate combination and required fields', function () {
     Livewire::test('pages::configuracion-academica.ofertas-asignar')
         ->set('idProceso', (string) $proceso->id_pro)
         ->set('idTurno', (string) $contexto['turno']->id_tur)
+        ->set('idModalidad', (string) $contexto['modalidad']->id_mad)
+        ->set('idLugarInscripcion', (string) $contexto['lugarInscripcion']->id_lin)
         ->set('seleccionadas', [(string) $contexto['ofertaBase']->id_ofb])
         ->call('guardar')
         ->assertHasNoErrors();
@@ -421,11 +519,15 @@ test('oferta validates duplicate combination and required fields', function () {
     Livewire::test('pages::configuracion-academica.ofertas-asignar')
         ->set('idProceso', '')
         ->set('idTurno', '')
+        ->set('idModalidad', '')
+        ->set('idLugarInscripcion', '')
         ->set('seleccionadas', [])
         ->call('guardar')
         ->assertHasErrors([
             'idProceso',
             'idTurno',
+            'idModalidad',
+            'idLugarInscripcion',
             'seleccionadas',
         ]);
 });
