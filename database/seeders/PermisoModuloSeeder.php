@@ -111,6 +111,11 @@ class PermisoModuloSeeder extends Seeder
                 'nombre_permiso' => 'REQUISITOS DE EXPEDIENTE',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
+            [
+                'clave_permiso' => 'pago',
+                'nombre_permiso' => 'PAGOS',
+                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+            ],
         ];
     }
 }

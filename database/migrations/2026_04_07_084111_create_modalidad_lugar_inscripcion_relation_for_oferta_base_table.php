@@ -9,27 +9,35 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('tbl_modalidad_lugar_inscripcion', function (Blueprint $table): void {
-            $table->bigIncrements('id_mli');
-            $table->unsignedTinyInteger('id_modalidad_admision');
-            $table->unsignedInteger('id_lugar_inscripcion');
-            $table->enum('estado_mli', ['HABILITADO', 'DESHABILITADO'])->default('HABILITADO');
-            $this->addAuditColumns($table);
-            $table->unique(['id_modalidad_admision', 'id_lugar_inscripcion'], 'uk_modalidad_lugar_inscripcion');
-            $table->index(['id_modalidad_admision', 'estado_mli'], 'idx_mli_modalidad_estado');
-            $table->index(['id_lugar_inscripcion', 'estado_mli'], 'idx_mli_lugar_estado');
-        });
+        if (! Schema::hasTable('tbl_modalidad_lugar_inscripcion')) {
+            Schema::create('tbl_modalidad_lugar_inscripcion', function (Blueprint $table): void {
+                $table->bigIncrements('id_mli');
+                $table->unsignedTinyInteger('id_modalidad_admision');
+                $table->unsignedInteger('id_lugar_inscripcion');
+                $table->enum('estado_mli', ['HABILITADO', 'DESHABILITADO'])->default('HABILITADO');
+                $this->addAuditColumns($table);
+                $table->unique(['id_modalidad_admision', 'id_lugar_inscripcion'], 'uk_modalidad_lugar_inscripcion');
+                $table->index(['id_modalidad_admision', 'estado_mli'], 'idx_mli_modalidad_estado');
+                $table->index(['id_lugar_inscripcion', 'estado_mli'], 'idx_mli_lugar_estado');
+            });
 
-        $this->addAuditForeignKeys('tbl_modalidad_lugar_inscripcion');
+            $this->addAuditForeignKeys('tbl_modalidad_lugar_inscripcion');
 
-        Schema::table('tbl_modalidad_lugar_inscripcion', function (Blueprint $table): void {
-            $table->foreign('id_modalidad_admision', 'fk_mli_modalidad')->references('id_mad')->on('tbl_modalidad_admision')->restrictOnDelete();
-            $table->foreign('id_lugar_inscripcion', 'fk_mli_lugar')->references('id_lin')->on('tbl_lugar_inscripcion')->restrictOnDelete();
-        });
+            Schema::table('tbl_modalidad_lugar_inscripcion', function (Blueprint $table): void {
+                $table->foreign('id_modalidad_admision', 'fk_mli_modalidad')->references('id_mad')->on('tbl_modalidad_admision')->restrictOnDelete();
+                $table->foreign('id_lugar_inscripcion', 'fk_mli_lugar')->references('id_lin')->on('tbl_lugar_inscripcion')->restrictOnDelete();
+            });
+        }
 
-        Schema::table('tbl_oferta_base', function (Blueprint $table): void {
-            $table->unsignedBigInteger('id_modalidad_lugar_inscripcion')->nullable()->after('codigo_externo_ofb');
-        });
+        if (! Schema::hasColumn('tbl_oferta_base', 'id_modalidad_lugar_inscripcion')) {
+            Schema::table('tbl_oferta_base', function (Blueprint $table): void {
+                $table->unsignedBigInteger('id_modalidad_lugar_inscripcion')->nullable()->after('codigo_externo_ofb');
+            });
+        }
+
+        if (! Schema::hasColumn('tbl_oferta_base', 'id_modalidad_admision') || ! Schema::hasColumn('tbl_oferta_base', 'id_lugar_inscripcion')) {
+            return;
+        }
 
         $parejas = DB::table('tbl_oferta_base')
             ->select('id_modalidad_admision', 'id_lugar_inscripcion')
@@ -37,11 +45,15 @@ return new class extends Migration
             ->get();
 
         foreach ($parejas as $pareja) {
-            DB::table('tbl_modalidad_lugar_inscripcion')->insert([
-                'id_modalidad_admision' => $pareja->id_modalidad_admision,
-                'id_lugar_inscripcion' => $pareja->id_lugar_inscripcion,
-                'estado_mli' => 'HABILITADO',
-            ]);
+            DB::table('tbl_modalidad_lugar_inscripcion')->updateOrInsert(
+                [
+                    'id_modalidad_admision' => $pareja->id_modalidad_admision,
+                    'id_lugar_inscripcion' => $pareja->id_lugar_inscripcion,
+                ],
+                [
+                    'estado_mli' => 'HABILITADO',
+                ],
+            );
         }
 
         $mapaModalidadLugar = DB::table('tbl_modalidad_lugar_inscripcion')
@@ -63,8 +75,8 @@ return new class extends Migration
         }
 
         Schema::table('tbl_oferta_base', function (Blueprint $table): void {
-            $table->dropForeign(['id_modalidad_admision']);
-            $table->dropForeign(['id_lugar_inscripcion']);
+            $this->dropForeignKey($table, 'fk_oferta_base_modalidad', ['id_modalidad_admision']);
+            $this->dropForeignKey($table, 'fk_oferta_base_lugar', ['id_lugar_inscripcion']);
             $table->dropUnique('uk_oferta_base');
             $table->dropIndex('idx_oferta_base_lugar_estado');
         });
@@ -111,7 +123,7 @@ return new class extends Migration
         }
 
         Schema::table('tbl_oferta_base', function (Blueprint $table): void {
-            $table->dropForeign(['id_modalidad_lugar_inscripcion']);
+            $this->dropForeignKey($table, 'fk_oferta_base_mli', ['id_modalidad_lugar_inscripcion']);
             $table->dropUnique('uk_oferta_base');
             $table->dropIndex('idx_oferta_base_mli_estado');
         });
@@ -147,5 +159,19 @@ return new class extends Migration
             $table->foreign('id_usuario_actualizador', "{$tableName}_fk_usuario_actualizador")->references('id_usu')->on('tbl_usuario')->restrictOnDelete();
             $table->foreign('id_usuario_eliminador', "{$tableName}_fk_usuario_eliminador")->references('id_usu')->on('tbl_usuario')->restrictOnDelete();
         });
+    }
+
+    /**
+     * @param  list<string>  $columns
+     */
+    private function dropForeignKey(Blueprint $table, string $indexName, array $columns): void
+    {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            $table->dropForeign($columns);
+
+            return;
+        }
+
+        $table->dropForeign($indexName);
     }
 };

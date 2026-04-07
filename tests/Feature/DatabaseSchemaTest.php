@@ -80,6 +80,20 @@ it('stores the enhanced payment rule fields for cuotas and convenios', function 
     ]))->toBeTrue();
 });
 
+it('stores the additional bank import metadata for the fixed-width txt files', function (): void {
+    expect(Schema::hasColumns('tbl_importacion_banco', [
+        'moneda_iba',
+        'fecha_lote_iba',
+        'total_registros_reportado_iba',
+        'total_monto_reportado_iba',
+    ]))->toBeTrue();
+
+    expect(Schema::hasColumns('tbl_importacion_banco_detalle', [
+        'codigo_canal_ibd',
+        'codigo_oficina_ibd',
+    ]))->toBeTrue();
+});
+
 it('enforces unique document per persona', function (): void {
     $tipoDocumentoId = insertTipoDocumento();
 
@@ -360,9 +374,13 @@ function createPagoContext(): array
 
     $importacionBancoId = (int) DB::table('tbl_importacion_banco')->insertGetId([
         'nombre_archivo_iba' => 'pagos.txt',
+        'moneda_iba' => 'PEN',
         'fecha_importacion_iba' => now(),
+        'fecha_lote_iba' => now()->toDateString(),
         'total_registros_iba' => 1,
+        'total_registros_reportado_iba' => 1,
         'total_monto_iba' => 50,
+        'total_monto_reportado_iba' => 50,
         'estado_iba' => 'PENDIENTE',
     ], 'id_iba');
 
@@ -371,6 +389,8 @@ function createPagoContext(): array
         'numero_documento_ibd' => '12345678',
         'nombre_depositante_ibd' => 'Juan Perez',
         'numero_operacion_ibd' => 'OP-001',
+        'codigo_canal_ibd' => 'WNET',
+        'codigo_oficina_ibd' => '0204',
         'fecha_pago_ibd' => now(),
         'monto_ibd' => 50,
         'texto_linea_ibd' => 'detalle',

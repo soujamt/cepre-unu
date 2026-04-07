@@ -62,7 +62,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'POSTULANTES', 'href' => '#', 'active' => $this->routeIs('postulantes.*')],
                     ['label' => 'INSCRIPCIONES', 'href' => '#', 'active' => $this->routeIs('inscripciones.*')],
-                    ['label' => 'PAGOS', 'href' => '#', 'active' => $this->routeIs('pagos.*')],
+                    ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.*'), 'permiso' => 'pago_indice'],
                     ['label' => 'EXPEDIENTES', 'href' => '#', 'active' => $this->routeIs('expedientes.*')],
                 ],
             ],

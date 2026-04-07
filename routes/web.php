@@ -62,4 +62,9 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/requisitos', 'pages::configuracion-academica.requisitos')
         ->middleware('permiso:requisito_expediente_indice')
         ->name('requisitos.index');
+
+    // Inscripciones
+    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos')
+        ->middleware('permiso:pago_indice')
+        ->name('pagos.index');
 });

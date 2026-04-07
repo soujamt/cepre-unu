@@ -32,7 +32,7 @@ enum EstadoImportacionBanco: string implements PresentableEnum
         return match ($this) {
             self::Pendiente => 'clock',
             self::Procesado => 'check-square',
-            self::Observado => 'alert-triangle',
+            self::Observado => 'warning',
         };
     }
 
