@@ -72,6 +72,14 @@ it('stores the external offer code and allows repeated place names with differen
     expect($insertB)->toBeTrue();
 });
 
+it('stores the enhanced payment rule fields for cuotas and convenios', function (): void {
+    expect(Schema::hasColumns('tbl_regla_pago', [
+        'id_convenio_proceso',
+        'permite_cuotas_rpa',
+        'requiere_pago_completo_rpa',
+    ]))->toBeTrue();
+});
+
 it('enforces unique document per persona', function (): void {
     $tipoDocumentoId = insertTipoDocumento();
 
@@ -330,9 +338,12 @@ function createPagoContext(): array
         'id_concepto_pago' => $conceptoPagoId,
         'id_proceso' => $procesoId,
         'id_modalidad_admision' => $modalidadId,
+        'id_convenio_proceso' => null,
         'monto_total_rpa' => 100,
+        'permite_cuotas_rpa' => true,
         'monto_minimo_primera_cuota_rpa' => 50,
         'numero_maximo_cuotas_rpa' => 2,
+        'requiere_pago_completo_rpa' => false,
         'vigente_desde_rpa' => '2026-01-01',
         'estado_rpa' => 'HABILITADO',
     ], 'id_rpa');

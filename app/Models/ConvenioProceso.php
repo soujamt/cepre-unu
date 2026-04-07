@@ -36,4 +36,9 @@ class ConvenioProceso extends LegacyModel
     {
         return $this->hasMany(Inscripcion::class, 'id_convenio_proceso', 'id_cpr');
     }
+
+    public function reglasPago(): HasMany
+    {
+        return $this->hasMany(ReglaPago::class, 'id_convenio_proceso', 'id_cpr');
+    }
 }

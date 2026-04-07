@@ -50,4 +50,8 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/ofertas/asignar', 'pages::configuracion-academica.ofertas-asignar')
         ->middleware('permiso:oferta_crear')
         ->name('ofertas.asignar');
+
+    Route::livewire('/configuracion-academica/reglas-pago', 'pages::configuracion-academica.reglas-pago')
+        ->middleware('permiso:regla_pago_indice')
+        ->name('reglas-pago.index');
 });
