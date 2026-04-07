@@ -9,25 +9,32 @@ Route::middleware('guest')->group(function (): void {
 
 Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
+    // Dashboard
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 
+    // Seguridad
     Route::livewire('/seguridad/usuarios', 'pages::seguridad.usuarios')
         ->middleware('permiso:usuario_indice')
         ->name('usuarios.index');
+
     Route::livewire('/seguridad/roles', 'pages::seguridad.roles')
         ->middleware('permiso:rol_indice')
         ->name('roles.index');
+
     Route::livewire('/seguridad/roles/{rol}/permisos', 'pages::seguridad.roles-permisos')
         ->middleware('permiso:rol_permisos')
         ->name('roles.permisos');
+
     Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')
         ->middleware('permiso:permiso_indice')
         ->name('permisos.index');
 
+    // Mantenedores
     Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
         ->middleware('permiso:tipo_expediente_indice')
         ->name('tipos-expediente.index');
 
+    // Configuración Académica
     Route::livewire('/configuracion-academica/semestres', 'pages::configuracion-academica.semestres')
         ->middleware('permiso:semestre_indice')
         ->name('semestres.index');
