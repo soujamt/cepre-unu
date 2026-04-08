@@ -16,6 +16,17 @@
 
 <div class="space-y-5">
     @permiso('pago_crear')
+        <div class="flex justify-end">
+            <flux:button variant="ghost" href="{{ route('pagos.validar') }}" wire:navigate class="font-normal">
+                <x-slot name="icon">
+                    <x-ui.icon name="shield-check" size="5" />
+                </x-slot>
+                Validar pagos
+            </flux:button>
+        </div>
+    @endpermiso
+
+    @permiso('pago_crear')
         <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="space-y-5">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

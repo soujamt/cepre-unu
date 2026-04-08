@@ -21,6 +21,7 @@ test('permission module seeder creates base permisos and acciones for active mod
     expect(DB::table('tbl_permiso')->where('clave_permiso', 'regla_pago')->exists())->toBeTrue();
     expect(DB::table('tbl_permiso')->where('clave_permiso', 'requisito_expediente')->exists())->toBeTrue();
     expect(DB::table('tbl_permiso')->where('clave_permiso', 'pago')->exists())->toBeTrue();
+    expect(DB::table('tbl_permiso')->where('clave_permiso', 'inscripcion')->exists())->toBeTrue();
 
     expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'usuario_indice')->exists())->toBeTrue();
     expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'rol_permisos')->exists())->toBeTrue();
@@ -33,4 +34,5 @@ test('permission module seeder creates base permisos and acciones for active mod
     expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'regla_pago_eliminar')->exists())->toBeTrue();
     expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'requisito_expediente_indice')->exists())->toBeTrue();
     expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'pago_crear')->exists())->toBeTrue();
+    expect(DB::table('tbl_permiso_accion')->where('clave_peracc', 'inscripcion_indice')->exists())->toBeTrue();
 });

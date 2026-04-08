@@ -64,7 +64,19 @@ Route::middleware('auth')->group(function (): void {
         ->name('requisitos.index');
 
     // Inscripciones
+    Route::livewire('/inscripciones', 'pages::inscripciones.inscripciones')
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.index');
+
+    Route::livewire('/inscripciones/nueva', 'pages::inscripciones.inscripcion-crear')
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.crear');
+
     Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos')
         ->middleware('permiso:pago_indice')
         ->name('pagos.index');
+
+    Route::livewire('/inscripciones/pagos/validar', 'pages::inscripciones.pagos-validar')
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.validar');
 });
