@@ -82,6 +82,7 @@ it('stores the enhanced payment rule fields for cuotas and convenios', function 
 
 it('stores the additional bank import metadata for the fixed-width txt files', function (): void {
     expect(Schema::hasColumns('tbl_importacion_banco', [
+        'hash_archivo_iba',
         'moneda_iba',
         'fecha_lote_iba',
         'total_registros_reportado_iba',
@@ -89,6 +90,8 @@ it('stores the additional bank import metadata for the fixed-width txt files', f
     ]))->toBeTrue();
 
     expect(Schema::hasColumns('tbl_importacion_banco_detalle', [
+        'numero_operacion_raw_ibd',
+        'numero_operacion_visible_ibd',
         'codigo_canal_ibd',
         'codigo_oficina_ibd',
     ]))->toBeTrue();

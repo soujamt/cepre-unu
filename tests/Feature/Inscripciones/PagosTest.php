@@ -111,6 +111,8 @@ test('authorized users can import a valid bank txt file', function () {
     $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
         'id_importacion_banco' => $importacion?->id_iba,
         'numero_documento_ibd' => '47467212',
+        'numero_operacion_raw_ibd' => '7799041670',
+        'numero_operacion_visible_ibd' => '41670',
         'numero_operacion_ibd' => '7799041670',
         'codigo_oficina_ibd' => '0204',
         'codigo_canal_ibd' => 'WNET',
@@ -122,10 +124,33 @@ test('authorized users can import a valid bank txt file', function () {
         'id_importacion_banco' => $importacion?->id_iba,
         'numero_documento_ibd' => '7450332',
         'nombre_depositante_ibd' => 'LUCY BETTY FALCON ROJAS',
+        'numero_operacion_raw_ibd' => '817041676',
+        'numero_operacion_visible_ibd' => '41676',
         'numero_operacion_ibd' => '817041676',
         'codigo_oficina_ibd' => '01068',
         'codigo_canal_ibd' => 'Y%G',
         'monto_ibd' => 30.00,
         'estado_ibd' => 'PENDIENTE',
     ]);
+});
+
+test('the same txt file cannot be imported twice', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido()))
+        ->call('importar')
+        ->assertHasNoErrors();
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768-COPIA.TXT', crearTxtBancoValido()))
+        ->call('importar')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'Este archivo TXT ya fue importado anteriormente.', type: 'warning');
+
+    expect(ImportacionBanco::query()->count())->toBe(1);
+    expect(ImportacionBanco::query()->first()?->detalles()->count())->toBe(2);
 });

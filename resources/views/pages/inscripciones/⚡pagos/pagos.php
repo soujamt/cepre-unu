@@ -114,10 +114,26 @@ class extends Component
             }
 
             $parsed = $parser->parse($content);
+            $hashArchivo = hash('sha256', $content);
 
-            DB::transaction(function () use ($data, $parsed): void {
+            $importacionExistente = ImportacionBanco::query()
+                ->where('hash_archivo_iba', $hashArchivo)
+                ->first();
+
+            if ($importacionExistente !== null) {
+                $this->detalleImportacionId = $importacionExistente->id_iba;
+                unset($this->detalleImportacionSeleccionada);
+                $this->archivo = null;
+
+                $this->dispatch('toast', message: 'Este archivo TXT ya fue importado anteriormente.', type: 'warning');
+
+                return;
+            }
+
+            DB::transaction(function () use ($data, $hashArchivo, $parsed): void {
                 $importacion = ImportacionBanco::query()->create([
                     'nombre_archivo_iba' => $data['archivo']->getClientOriginalName(),
+                    'hash_archivo_iba' => $hashArchivo,
                     'moneda_iba' => $parsed['header']['moneda'],
                     'fecha_importacion_iba' => now(),
                     'fecha_lote_iba' => $parsed['header']['fecha_lote'],
@@ -138,6 +154,8 @@ class extends Component
                         'id_importacion_banco' => $importacion->id_iba,
                         'numero_documento_ibd' => $detail['numero_documento_normalizado'] ?? $detail['numero_documento'],
                         'nombre_depositante_ibd' => $detail['nombre_depositante'],
+                        'numero_operacion_raw_ibd' => $detail['numero_operacion_normalizado'] ?? $detail['numero_operacion'],
+                        'numero_operacion_visible_ibd' => $detail['numero_operacion_visible'],
                         'numero_operacion_ibd' => $detail['numero_operacion_normalizado'] ?? $detail['numero_operacion'],
                         'codigo_canal_ibd' => $detail['codigo_canal'],
                         'codigo_oficina_ibd' => $detail['codigo_oficina'],
@@ -221,7 +239,7 @@ class extends Component
     {
         $partes = [
             $detalle->numero_documento_ibd ?: 'SIN DOCUMENTO',
-            $detalle->numero_operacion_ibd ?: 'SIN OPERACION',
+            $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd ?: 'SIN OPERACION',
         ];
 
         if ($detalle->codigo_oficina_ibd || $detalle->codigo_canal_ibd) {

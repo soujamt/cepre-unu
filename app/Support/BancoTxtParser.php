@@ -102,6 +102,7 @@ class BancoTxtParser
             'monto_control' => $montoControl,
             'numero_operacion' => $numeroOperacion !== '' ? $numeroOperacion : null,
             'numero_operacion_normalizado' => $this->normalizeOperation($numeroOperacion),
+            'numero_operacion_visible' => $this->visibleOperation($numeroOperacion),
             'fecha_pago' => $fechaPago,
             'codigo_oficina' => $origen['codigo_oficina'],
             'codigo_canal' => $origen['codigo_canal'],
@@ -229,5 +230,20 @@ class BancoTxtParser
         $normalized = ltrim($trimmed, '0');
 
         return $normalized !== '' ? $normalized : '0';
+    }
+
+    private function visibleOperation(string $value): ?string
+    {
+        $normalized = $this->normalizeOperation($value);
+
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{6,}$/', $normalized) === 1) {
+            return substr($normalized, -5);
+        }
+
+        return $normalized;
     }
 }

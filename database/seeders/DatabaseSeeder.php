@@ -39,10 +39,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $usuario = Usuario::query()->updateOrCreate([
-            'usuario_usu' => 'testuser',
+            'usuario_usu' => 'superadmin',
         ], [
-            'correo_usu' => 'test@unu.edu.pe',
-            'nombres_usu' => 'TEST USER',
+            'correo_usu' => 'superadmin@unu.edu.pe',
+            'nombres_usu' => 'SUPER ADMINISTRADOR',
             'clave_usu' => 'password',
             'estado_usu' => 'HABILITADO',
         ]);

@@ -42,6 +42,7 @@ it('parses the fixed-width bank txt structure correctly', function () {
         ->and($result['details'][0]['monto'])->toBe(450.0)
         ->and($result['details'][0]['numero_operacion'])->toBe('007799041670')
         ->and($result['details'][0]['numero_operacion_normalizado'])->toBe('7799041670')
+        ->and($result['details'][0]['numero_operacion_visible'])->toBe('41670')
         ->and($result['details'][0]['fecha_pago'])->toBe('2026-03-19')
         ->and($result['details'][0]['codigo_oficina'])->toBe('0204')
         ->and($result['details'][0]['codigo_canal'])->toBe('WNET');

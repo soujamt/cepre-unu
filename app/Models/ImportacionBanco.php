@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['nombre_archivo_iba', 'moneda_iba', 'fecha_importacion_iba', 'fecha_lote_iba', 'total_registros_iba', 'total_registros_reportado_iba', 'total_monto_iba', 'total_monto_reportado_iba', 'estado_iba', 'observacion_iba'])]
+#[Fillable(['nombre_archivo_iba', 'hash_archivo_iba', 'moneda_iba', 'fecha_importacion_iba', 'fecha_lote_iba', 'total_registros_iba', 'total_registros_reportado_iba', 'total_monto_iba', 'total_monto_reportado_iba', 'estado_iba', 'observacion_iba'])]
 #[Table('tbl_importacion_banco', key: 'id_iba')]
 class ImportacionBanco extends LegacyModel
 {

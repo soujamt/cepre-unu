@@ -278,6 +278,11 @@
                                             {{ $detalle->nombre_depositante_ibd ?: 'SIN NOMBRE REGISTRADO' }}
                                         </p>
                                         <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $this->detalleResumen($detalle) }}</p>
+                                        @if ($detalle->numero_operacion_raw_ibd && $detalle->numero_operacion_visible_ibd && $detalle->numero_operacion_raw_ibd !== $detalle->numero_operacion_visible_ibd)
+                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                Operacion banco: {{ $detalle->numero_operacion_raw_ibd }}
+                                            </p>
+                                        @endif
                                     </div>
 
                                     <flux:badge color="{{ $this->estadoDetalleColor($detalle) }}" size="lg">

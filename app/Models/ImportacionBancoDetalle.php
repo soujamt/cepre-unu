@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['id_importacion_banco', 'numero_documento_ibd', 'nombre_depositante_ibd', 'numero_operacion_ibd', 'codigo_canal_ibd', 'codigo_oficina_ibd', 'fecha_pago_ibd', 'monto_ibd', 'texto_linea_ibd', 'estado_ibd'])]
+#[Fillable(['id_importacion_banco', 'numero_documento_ibd', 'nombre_depositante_ibd', 'numero_operacion_raw_ibd', 'numero_operacion_visible_ibd', 'numero_operacion_ibd', 'codigo_canal_ibd', 'codigo_oficina_ibd', 'fecha_pago_ibd', 'monto_ibd', 'texto_linea_ibd', 'estado_ibd'])]
 #[Table('tbl_importacion_banco_detalle', key: 'id_ibd')]
 class ImportacionBancoDetalle extends LegacyModel
 {
