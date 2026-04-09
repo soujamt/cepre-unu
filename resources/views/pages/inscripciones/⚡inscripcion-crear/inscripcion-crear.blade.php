@@ -63,9 +63,8 @@
                                         >
                                             @if ($esCompletado)
                                                 <x-ui.icon
-                                                    name="check-circle"
+                                                    name="check"
                                                     size="5"
-                                                    variant="solid"
                                                     class="text-current"
                                                 />
                                             @else
