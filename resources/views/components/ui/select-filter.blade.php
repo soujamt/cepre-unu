@@ -182,7 +182,7 @@
             placeholder="{{ $floating ? '' : $placeholder }}"
             autocomplete="off"
             @disabled ($disabled)
-            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->merge(['class' => $controlClasses]) }}
+            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer'])->merge(['class' => $controlClasses]) }}
         />
 
         <div

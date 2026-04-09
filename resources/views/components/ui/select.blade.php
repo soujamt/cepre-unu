@@ -65,10 +65,6 @@
                 }
 
                 this.$watch('selected', () => this.syncSelectVisuals());
-
-                Livewire.hook('morph.updated', () => {
-                    this.$nextTick(() => this.syncOptionsFromDOM());
-                });
             },
 
             syncOptionsFromDOM() {
@@ -111,6 +107,10 @@
             toggleOption(value) {
                 this.selected = value;
                 this.open = false;
+                this.$dispatch('ui-select-changed', {
+                    name: @js($name),
+                    value,
+                });
             },
 
             isSelected(value) {
@@ -162,9 +162,9 @@
 
         <button
             type="button"
-            @click="open = !open"
+            @click="syncOptionsFromDOM(); open = !open"
             @disabled ($disabled)
-            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses, 'min-w-0']) }}
+            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses, 'min-w-0']) }}
         >
             <span
                 x-text="selectedLabels"

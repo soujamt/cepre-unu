@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\UbigeoSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/auth', '/auth/login');
@@ -9,6 +10,9 @@ Route::middleware('guest')->group(function (): void {
 
 Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
+    Route::get('/api/ubigeos/search', UbigeoSearchController::class)
+        ->name('api.ubigeo.search');
+
     // Dashboard
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 

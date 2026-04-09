@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'reniec' => [
+        'url' => env('URL_API_RENIEC'),
+        'token' => env('TOKEN_API_RENIEC', env('API_RENIEC_KEY')),
+        'allow_insecure_ssl' => env('RENIEC_ALLOW_INSECURE_SSL', false),
+    ],
+
 ];

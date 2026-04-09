@@ -3,6 +3,7 @@
 use App\Enums\EstadoCatalogo;
 use App\Enums\SexoPersona;
 use App\Enums\TipoLenguaMaternaPersona;
+use App\Services\ReniecService;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
 use App\Models\LenguaExtranjera;
@@ -28,6 +29,14 @@ class extends Component
     use AuthorizesPermisos;
 
     public int $pasoActual = 1;
+    public array $tiposDocumentoCatalogo = [];
+    public array $estadosCivilesCatalogo = [];
+    public array $paisesCatalogo = [];
+    public array $nacionalidadesCatalogo = [];
+    public array $identidadesEtnicasCatalogo = [];
+    public array $lenguasNativasCatalogo = [];
+    public array $lenguasExtranjerasCatalogo = [];
+    public array $tiposDiscapacidadCatalogo = [];
 
     /**
      * @var array{
@@ -90,9 +99,28 @@ class extends Component
 
     public ?int $personaId = null;
 
+    public ?string $reniecMensaje = null;
+
+    public string $reniecTipoMensaje = 'info';
+
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'crear');
+        $this->hidratarCatalogos();
+    }
+
+    public function updatedPersonaFormIdTipoDocumento(): void
+    {
+        $this->limpiarEstadoReniec();
+    }
+
+    public function updatedPersonaFormNumeroDocumento(string $valor): void
+    {
+        if ($this->esTipoDocumentoDniSeleccionado()) {
+            $this->personaForm['numero_documento'] = preg_replace('/\D+/', '', $valor) ?? '';
+        }
+
+        $this->limpiarEstadoReniec();
     }
 
     public function updatedPersonaFormSoloUnApellido(string $valor): void
@@ -127,6 +155,18 @@ class extends Component
         }
     }
 
+    #[Computed]
+    public function esTipoDocumentoDni(): bool
+    {
+        return $this->esTipoDocumentoDniSeleccionado();
+    }
+
+    #[Computed]
+    public function puedeConsultarReniec(): bool
+    {
+        return $this->esTipoDocumentoDniSeleccionado() && strlen($this->personaForm['numero_documento']) === 8;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -134,7 +174,30 @@ class extends Component
     {
         return [
             'personaForm.id_tipo_documento' => ['required', 'integer', 'exists:tbl_tipo_documento,id_tdo'],
-            'personaForm.numero_documento' => ['required', 'string', 'max:25'],
+            'personaForm.numero_documento' => [
+                'required',
+                'string',
+                'max:25',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $tipoDocumento = $this->tipoDocumentoSeleccionado();
+
+                    if ($tipoDocumento === null || blank($value)) {
+                        return;
+                    }
+
+                    $longitud = mb_strlen(trim((string) $value));
+
+                    if ($tipoDocumento->longitud_minima_tdo !== null && $longitud < (int) $tipoDocumento->longitud_minima_tdo) {
+                        $fail("El numero de documento debe tener al menos {$tipoDocumento->longitud_minima_tdo} caracteres.");
+
+                        return;
+                    }
+
+                    if ($tipoDocumento->longitud_maxima_tdo !== null && $longitud > (int) $tipoDocumento->longitud_maxima_tdo) {
+                        $fail("El numero de documento no debe superar {$tipoDocumento->longitud_maxima_tdo} caracteres.");
+                    }
+                },
+            ],
             'personaForm.solo_un_apellido' => ['required', 'in:0,1'],
             'personaForm.tiene_apellido_casada' => ['required', 'in:0,1'],
             'personaForm.apellido_paterno' => ['required', 'string', 'max:255'],
@@ -246,91 +309,86 @@ class extends Component
     #[Computed]
     public function tiposDocumento(): \Illuminate\Database\Eloquent\Collection
     {
-        return TipoDocumento::query()
-            ->where('estado_tdo', EstadoCatalogo::Habilitado->value)
-            ->orderBy('id_tdo')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->tiposDocumentoCatalogo)
+                ->map(fn (array $tipoDocumento): TipoDocumento => tap(new TipoDocumento(), fn (TipoDocumento $model) => $model->forceFill($tipoDocumento)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function estadosCiviles(): \Illuminate\Database\Eloquent\Collection
     {
-        return EstadoCivil::query()
-            ->where('estado_eci', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_eci')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->estadosCivilesCatalogo)
+                ->map(fn (array $estadoCivil): EstadoCivil => tap(new EstadoCivil(), fn (EstadoCivil $model) => $model->forceFill($estadoCivil)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function paises(): \Illuminate\Database\Eloquent\Collection
     {
-        return Pais::query()
-            ->where('estado_pai', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_pai')
-            ->limit(50)
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->paisesCatalogo)
+                ->map(fn (array $pais): Pais => tap(new Pais(), fn (Pais $model) => $model->forceFill($pais)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function nacionalidades(): \Illuminate\Database\Eloquent\Collection
     {
-        return Nacionalidad::query()
-            ->where('estado_nac', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_nac')
-            ->limit(80)
-            ->get();
-    }
-
-    #[Computed]
-    public function ubigeos(): \Illuminate\Database\Eloquent\Collection
-    {
-        return Ubigeo::query()
-            ->where('estado_ubi', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_departamento_ubi')
-            ->orderBy('nombre_provincia_ubi')
-            ->orderBy('nombre_distrito_ubi')
-            ->limit(200)
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->nacionalidadesCatalogo)
+                ->map(fn (array $nacionalidad): Nacionalidad => tap(new Nacionalidad(), fn (Nacionalidad $model) => $model->forceFill($nacionalidad)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function identidadesEtnicas(): \Illuminate\Database\Eloquent\Collection
     {
-        return IdentidadEtnica::query()
-            ->where('estado_iet', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_iet')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->identidadesEtnicasCatalogo)
+                ->map(fn (array $identidadEtnica): IdentidadEtnica => tap(new IdentidadEtnica(), fn (IdentidadEtnica $model) => $model->forceFill($identidadEtnica)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function lenguasNativas(): \Illuminate\Database\Eloquent\Collection
     {
-        return LenguaNativa::query()
-            ->where('estado_lna', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_lna')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->lenguasNativasCatalogo)
+                ->map(fn (array $lenguaNativa): LenguaNativa => tap(new LenguaNativa(), fn (LenguaNativa $model) => $model->forceFill($lenguaNativa)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function lenguasExtranjeras(): \Illuminate\Database\Eloquent\Collection
     {
-        return LenguaExtranjera::query()
-            ->where('estado_lex', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_lex')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->lenguasExtranjerasCatalogo)
+                ->map(fn (array $lenguaExtranjera): LenguaExtranjera => tap(new LenguaExtranjera(), fn (LenguaExtranjera $model) => $model->forceFill($lenguaExtranjera)))
+                ->all(),
+        );
     }
 
     #[Computed]
     public function tiposDiscapacidad(): \Illuminate\Database\Eloquent\Collection
     {
-        return TipoDiscapacidad::query()
-            ->where('estado_tdi', EstadoCatalogo::Habilitado->value)
-            ->orderBy('nombre_tdi')
-            ->get();
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->tiposDiscapacidadCatalogo)
+                ->map(fn (array $tipoDiscapacidad): TipoDiscapacidad => tap(new TipoDiscapacidad(), fn (TipoDiscapacidad $model) => $model->forceFill($tipoDiscapacidad)))
+                ->all(),
+        );
     }
 
     public function guardarPasoPersonal(): void
     {
+        $this->normalizarEstadoPersonaForm();
         $data = $this->validate();
 
         try {
@@ -395,6 +453,48 @@ class extends Component
         $this->dispatch('toast', message: 'Informacion personal guardada correctamente.', type: 'success');
     }
 
+    public function consultarReniec(): void
+    {
+        if (! $this->esTipoDocumentoDniSeleccionado()) {
+            $this->reniecTipoMensaje = 'warning';
+            $this->reniecMensaje = 'La consulta RENIEC solo esta disponible para DNI.';
+
+            return;
+        }
+
+        $numeroDocumento = preg_replace('/\D+/', '', $this->personaForm['numero_documento']) ?? '';
+        $this->personaForm['numero_documento'] = $numeroDocumento;
+
+        if (strlen($numeroDocumento) !== 8) {
+            $this->reniecTipoMensaje = 'warning';
+            $this->reniecMensaje = 'Ingrese un DNI valido de 8 digitos para consultar RENIEC.';
+
+            return;
+        }
+
+        $resultado = app(ReniecService::class)->consultar($numeroDocumento);
+
+        if (! ($resultado['success'] ?? false)) {
+            $this->reniecTipoMensaje = 'error';
+            $this->reniecMensaje = (string) ($resultado['message'] ?? 'No se pudo consultar RENIEC.');
+
+            return;
+        }
+
+        $data = $resultado['data'] ?? [];
+
+        $this->personaForm['numero_documento'] = (string) ($data['numero'] ?? $numeroDocumento);
+        $this->personaForm['nombres'] = (string) ($data['nombres'] ?? $this->personaForm['nombres']);
+        $this->personaForm['apellido_paterno'] = (string) ($data['apellido_paterno'] ?? $this->personaForm['apellido_paterno']);
+
+        if ($this->personaForm['solo_un_apellido'] !== '1') {
+            $this->personaForm['apellido_materno'] = (string) ($data['apellido_materno'] ?? $this->personaForm['apellido_materno']);
+        }
+
+        $this->reniecTipoMensaje = 'success';
+        $this->reniecMensaje = 'Datos recuperados desde RENIEC. Puede ajustarlos manualmente si lo necesita.';
+    }
+
     public function irPasoAnterior(): void
     {
         if ($this->pasoActual > 1) {
@@ -425,6 +525,133 @@ class extends Component
     private function mayusculas(string $valor): string
     {
         return mb_strtoupper(trim($valor), 'UTF-8');
+    }
+
+    private function esTipoDocumentoDniSeleccionado(): bool
+    {
+        $tipoDocumento = $this->tipoDocumentoSeleccionado();
+
+        if ($tipoDocumento === null) {
+            return false;
+        }
+
+        $codigo = trim((string) $tipoDocumento->codigo_tdo);
+        $nombre = mb_strtoupper(trim((string) $tipoDocumento->nombre_tdo), 'UTF-8');
+        $longitudMinima = (int) ($tipoDocumento->longitud_minima_tdo ?? 0);
+        $longitudMaxima = (int) ($tipoDocumento->longitud_maxima_tdo ?? 0);
+
+        return in_array($codigo, ['1', 'DNI'], true)
+            || ($longitudMinima === 8
+                && $longitudMaxima === 8
+                && str_contains($nombre, 'IDENTIDAD'));
+    }
+
+    private function tipoDocumentoSeleccionado(): ?TipoDocumento
+    {
+        if ($this->personaForm['id_tipo_documento'] === '') {
+            return null;
+        }
+
+        return $this->tiposDocumento()
+            ->firstWhere('id_tdo', (int) $this->personaForm['id_tipo_documento']);
+    }
+
+    private function hidratarCatalogos(): void
+    {
+        $this->tiposDocumentoCatalogo = TipoDocumento::query()
+            ->where('estado_tdo', EstadoCatalogo::Habilitado->value)
+            ->orderBy('id_tdo')
+            ->get(['id_tdo', 'codigo_tdo', 'nombre_tdo', 'longitud_minima_tdo', 'longitud_maxima_tdo'])
+            ->map(fn (TipoDocumento $tipoDocumento): array => $tipoDocumento->toArray())
+            ->all();
+
+        $this->estadosCivilesCatalogo = EstadoCivil::query()
+            ->where('estado_eci', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_eci')
+            ->get(['id_eci', 'nombre_eci'])
+            ->map(fn (EstadoCivil $estadoCivil): array => $estadoCivil->toArray())
+            ->all();
+
+        $this->paisesCatalogo = Pais::query()
+            ->where('estado_pai', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_pai')
+            ->limit(50)
+            ->get(['id_pai', 'nombre_pai'])
+            ->map(fn (Pais $pais): array => $pais->toArray())
+            ->all();
+
+        $this->nacionalidadesCatalogo = Nacionalidad::query()
+            ->where('estado_nac', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_nac')
+            ->limit(80)
+            ->get(['id_nac', 'nombre_nac'])
+            ->map(fn (Nacionalidad $nacionalidad): array => $nacionalidad->toArray())
+            ->all();
+
+        $this->identidadesEtnicasCatalogo = IdentidadEtnica::query()
+            ->where('estado_iet', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_iet')
+            ->get(['id_iet', 'nombre_iet'])
+            ->map(fn (IdentidadEtnica $identidadEtnica): array => $identidadEtnica->toArray())
+            ->all();
+
+        $this->lenguasNativasCatalogo = LenguaNativa::query()
+            ->where('estado_lna', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_lna')
+            ->get(['id_lna', 'nombre_lna'])
+            ->map(fn (LenguaNativa $lenguaNativa): array => $lenguaNativa->toArray())
+            ->all();
+
+        $this->lenguasExtranjerasCatalogo = LenguaExtranjera::query()
+            ->where('estado_lex', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_lex')
+            ->get(['id_lex', 'nombre_lex'])
+            ->map(fn (LenguaExtranjera $lenguaExtranjera): array => $lenguaExtranjera->toArray())
+            ->all();
+
+        $this->tiposDiscapacidadCatalogo = TipoDiscapacidad::query()
+            ->where('estado_tdi', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_tdi')
+            ->get(['id_tdi', 'nombre_tdi'])
+            ->map(fn (TipoDiscapacidad $tipoDiscapacidad): array => $tipoDiscapacidad->toArray())
+            ->all();
+    }
+
+    private function limpiarEstadoReniec(): void
+    {
+        $this->reniecMensaje = null;
+        $this->reniecTipoMensaje = 'info';
+    }
+
+    private function normalizarEstadoPersonaForm(): void
+    {
+        if ($this->personaForm['solo_un_apellido'] === '1') {
+            $this->personaForm['apellido_materno'] = '';
+        }
+
+        if ($this->personaForm['tiene_apellido_casada'] !== '1') {
+            $this->personaForm['apellido_casada'] = '';
+        }
+
+        if ($this->personaForm['discapacidad'] !== '1') {
+            $this->personaForm['id_tipo_discapacidad'] = '';
+        }
+
+        if ($this->personaForm['tipo_lengua_materna'] === TipoLenguaMaternaPersona::Nativa->value) {
+            $this->personaForm['id_lengua_extranjera'] = '';
+        }
+
+        if ($this->personaForm['tipo_lengua_materna'] === TipoLenguaMaternaPersona::Extranjera->value) {
+            $this->personaForm['id_lengua_nativa'] = '';
+        }
+
+        if (! in_array($this->personaForm['tipo_lengua_materna'], [
+            TipoLenguaMaternaPersona::Nativa->value,
+            TipoLenguaMaternaPersona::Extranjera->value,
+        ], true)) {
+            $this->personaForm['id_lengua_nativa'] = '';
+            $this->personaForm['id_lengua_extranjera'] = '';
+        }
     }
 
     private function nullableUpper(?string $valor): ?string

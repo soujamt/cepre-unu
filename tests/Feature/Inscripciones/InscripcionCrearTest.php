@@ -16,6 +16,8 @@ use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
@@ -195,4 +197,58 @@ test('users can register personal information for a new inscripcion draft', func
     expect($persona?->nombres_per)->toBe('LUCY BETTY');
     expect($persona?->correo_electronico_per)->toBe('lucy@test.com');
     expect($persona?->discapacidad_per)->toBeTrue();
+});
+
+test('dni can be consulted with reniec and autofill personal names', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    Http::fake([
+        'https://api.decolecta.com/v1/reniec/dni*' => Http::response([
+            'first_name' => 'ROXANA KARINA',
+            'first_last_name' => 'DELGADO',
+            'second_last_name' => 'HUAMANI',
+            'full_name' => 'DELGADO HUAMANI ROXANA KARINA',
+            'document_number' => '46027897',
+        ]),
+    ]);
+
+    Config::set('services.reniec.url', 'https://api.decolecta.com');
+    Config::set('services.reniec.token', 'token-prueba');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
+        ->set('personaForm.numero_documento', '46027897')
+        ->call('consultarReniec')
+        ->assertSet('personaForm.numero_documento', '46027897')
+        ->assertSet('personaForm.nombres', 'ROXANA KARINA')
+        ->assertSet('personaForm.apellido_paterno', 'DELGADO')
+        ->assertSet('personaForm.apellido_materno', 'HUAMANI')
+        ->assertSet('reniecTipoMensaje', 'success');
+});
+
+test('non dni documents keep manual flow without reniec lookup', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $tipoDocumento = TipoDocumento::query()->create([
+        'codigo_tdo' => 'CE',
+        'nombre_tdo' => 'CARNET DE EXTRANJERIA',
+        'longitud_minima_tdo' => 9,
+        'longitud_maxima_tdo' => 12,
+        'estado_tdo' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $tipoDocumento->id_tdo)
+        ->set('personaForm.numero_documento', 'ABC123456')
+        ->call('consultarReniec')
+        ->assertSet('reniecTipoMensaje', 'warning')
+        ->assertSet('reniecMensaje', 'La consulta RENIEC solo esta disponible para DNI.');
 });

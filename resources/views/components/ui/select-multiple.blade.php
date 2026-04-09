@@ -167,7 +167,7 @@
             type="button"
             @click="open = !open"
             @disabled ($disabled)
-            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses]) }}
+            {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses]) }}
         >
             <div class="flex w-full flex-wrap gap-1.5 overflow-hidden py-0" @class (['mt-3' => $floating])>
                 <template x-for="value in (Array.isArray(selected) ? selected : [])" :key="value">

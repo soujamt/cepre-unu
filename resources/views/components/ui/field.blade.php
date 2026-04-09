@@ -37,7 +37,7 @@
 @endphp
 
 <div
-    {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.change', 'wire:model.lazy', 'wire:model.defer'])->class('grid min-w-0 gap-2') }}
+        {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer'])->class('grid min-w-0 gap-2') }}
 >
     @if ($label && ! $floating)
         <label

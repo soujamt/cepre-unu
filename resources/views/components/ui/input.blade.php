@@ -81,7 +81,7 @@
     <input
         id="{{ $inputId }}"
         x-bind:type="{{ $hasVisibilityToggle ? "showPassword ? 'text' : '".e($type)."'" : "'".e($type)."'" }}"
-        @if (! is_null($value) && ! $attributes->has('wire:model') && ! $attributes->has('wire:model.live') && ! $attributes->has('wire:model.blur') && ! $attributes->has('wire:model.change') && ! $attributes->has('wire:model.lazy') && ! $attributes->has('wire:model.defer')) value="{{ $value }}" @endif
+        @if (! is_null($value) && ! $attributes->has('wire:model') && ! $attributes->has('wire:model.live') && ! $attributes->has('wire:model.blur') && ! $attributes->has('wire:model.lazy') && ! $attributes->has('wire:model.defer')) value="{{ $value }}" @endif
         placeholder="{{ $placeholder }}"
         @disabled ($disabled)
         @readonly ($readonly)
