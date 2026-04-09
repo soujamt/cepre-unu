@@ -66,11 +66,7 @@
                                             ])
                                         >
                                             @if ($esCompletado)
-                                                <x-ui.icon
-                                                    name="check"
-                                                    size="5"
-                                                    class="text-current"
-                                                />
+                                                <x-ui.icon name="check" size="5" class="text-current" />
                                             @else
                                                 <x-ui.icon :name="$paso['icono']" size="5" class="text-current" />
                                             @endif
@@ -739,7 +735,6 @@
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre la procedencia educativa y el historial de postulacion del postulante.</p>
                     </div>
                 </div>
-
                 <div
                     class="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
@@ -834,7 +829,9 @@
                                     >
                                         <option value="">Seleccionar tipo</option>
                                         @foreach ($this->tiposColegio as $tipoColegio)
-                                            <option value="{{ $tipoColegio->id_tco }}">{{ $tipoColegio->nombre_tco }}</option>
+                                            <option value="{{ $tipoColegio->id_tco }}">
+                                                {{ $tipoColegio->nombre_tco }}
+                                            </option>
                                         @endforeach
                                     </x-ui.select>
                                 </div>
@@ -879,7 +876,7 @@
                                 <div
                                     x-show="!paisColegioId"
                                     x-cloak
-                                    class="lg:col-span-12 rounded-xl border border-dashed border-zinc-300 bg-white/70 px-4 py-3 text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-400"
+                                    class="rounded-xl border border-dashed border-zinc-300 bg-white/70 px-4 py-3 text-sm text-zinc-500 lg:col-span-12 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-400"
                                 >
                                     Seleccione primero el pais del colegio para continuar con la procedencia educativa.
                                 </div>
@@ -934,7 +931,12 @@
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso, quedara lista la procedencia educativa para continuar con la postulacion.</p>
 
                             <div class="flex gap-3">
-                                <flux:button variant="ghost" type="button" wire:click="irPasoAnterior" class="font-normal">
+                                <flux:button
+                                    variant="ghost"
+                                    type="button"
+                                    wire:click="irPasoAnterior"
+                                    class="font-normal"
+                                >
                                     Volver
                                 </flux:button>
 
@@ -955,7 +957,9 @@
                                             class="animate-spin text-white"
                                         />
                                     </x-slot>
-                                    <span wire:loading.remove wire:target="guardarPasoGeneral">Guardar y continuar</span>
+                                    <span wire:loading.remove wire:target="guardarPasoGeneral"
+                                        >Guardar y continuar</span
+                                    >
                                     <span wire:loading wire:target="guardarPasoGeneral">Guardando...</span>
                                 </flux:button>
                             </div>
