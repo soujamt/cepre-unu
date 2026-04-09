@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Accion;
+use App\Models\Colegio;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
 use App\Models\LenguaExtranjera;
@@ -11,6 +12,7 @@ use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Rol;
+use App\Models\TipoColegio;
 use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
@@ -126,6 +128,21 @@ function crearCatalogosPasoPersonal(): array
         'estado_tdi' => 'HABILITADO',
     ]);
 
+    $tipoColegio = TipoColegio::query()->create([
+        'codigo_tco' => 'PUB',
+        'nombre_tco' => 'PUBLICO',
+        'estado_tco' => 'HABILITADO',
+    ]);
+
+    $colegio = Colegio::query()->create([
+        'id_col' => '0915389',
+        'codigo_modular_col' => '0915389',
+        'nombre_col' => 'AGROPECUARIO PADRE ABAD',
+        'id_tipo_colegio' => $tipoColegio->id_tco,
+        'id_ubigeo' => $ubigeo->id_ubi,
+        'estado_col' => 'HABILITADO',
+    ]);
+
     return compact(
         'tipoDocumento',
         'estadoCivil',
@@ -136,6 +153,8 @@ function crearCatalogosPasoPersonal(): array
         'lenguaNativa',
         'lenguaExtranjera',
         'tipoDiscapacidad',
+        'tipoColegio',
+        'colegio',
     );
 }
 
@@ -437,4 +456,161 @@ test('non dni documents keep manual flow and warn when there is no local match',
         ->call('buscarDatosPersona')
         ->assertSet('reniecTipoMensaje', 'warning')
         ->assertSet('reniecMensaje', 'No se encontraron datos registrados. Complete el formulario manualmente.');
+});
+
+test('users can register general information and continue to postulacion step', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 2)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
+        ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
+        ->assertSet('colegioLabel', '0915389 | AGROPECUARIO PADRE ABAD')
+        ->set('generalForm.veces_postula_unu', '1')
+        ->set('generalForm.veces_postula_otras', '2')
+        ->set('generalForm.observacion', 'OBSERVACION GENERAL')
+        ->call('guardarPasoGeneral')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 3)
+        ->assertSet('generalForm.nombre_colegio_extranjero', '')
+        ->assertDispatched('toast', message: 'Informacion general guardada correctamente.', type: 'success');
+});
+
+test('general information validates future graduation year and required postulation counts', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 2)
+        ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 1))
+        ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
+        ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
+        ->set('generalForm.veces_postula_unu', '')
+        ->set('generalForm.veces_postula_otras', '')
+        ->call('guardarPasoGeneral')
+        ->assertHasErrors([
+            'generalForm.anio_graduacion',
+            'generalForm.veces_postula_unu',
+            'generalForm.veces_postula_otras',
+        ])
+        ->assertSet('pasoActual', 2);
+});
+
+test('cannot jump to postulacion step when general information is invalid', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 2)
+        ->set('generalForm.anio_graduacion', '')
+        ->call('irPaso', 3)
+        ->assertSet('pasoActual', 2)
+        ->assertHasErrors(['generalForm.anio_graduacion'])
+        ->assertDispatched('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
 });

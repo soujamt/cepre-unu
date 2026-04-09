@@ -61,16 +61,21 @@
             init() {
                 if (this.value && this.selectedLabel) {
                     this.search = this.selectedLabel;
+                } else if (this.value) {
+                    this.resolveSelectedValue();
                 }
 
                 this.$watch('value', (value) => {
                     if (! value) {
                         this.search = '';
+                        this.selectedLabel = '';
                         return;
                     }
 
                     if (this.selectedLabel) {
                         this.search = this.selectedLabel;
+                    } else {
+                        this.resolveSelectedValue();
                     }
                 });
             },
@@ -109,6 +114,41 @@
                         this.options = [];
                         this.searching = false;
                     });
+            },
+
+            async resolveSelectedValue() {
+                if (! this.value) {
+                    return;
+                }
+
+                const headers = {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                };
+
+                if (this.apiKey) {
+                    headers['X-API-KEY'] = this.apiKey;
+                }
+
+                try {
+                    const response = await fetch(this.url + '?value=' + encodeURIComponent(this.value), {
+                        method: 'GET',
+                        headers,
+                    });
+
+                    if (! response.ok) {
+                        throw new Error('Error en la API');
+                    }
+
+                    const option = await response.json();
+
+                    if (option && option.value) {
+                        this.selectedLabel = option.label;
+                        this.search = option.label;
+                    }
+                } catch {
+                    this.selectedLabel = '';
+                }
             },
 
             selectOption(option) {

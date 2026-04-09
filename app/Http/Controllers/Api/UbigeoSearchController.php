@@ -14,6 +14,24 @@ class UbigeoSearchController extends Controller
      */
     public function __invoke(Request $request): JsonResponse
     {
+        $value = trim((string) $request->query('value', ''));
+
+        if ($value !== '') {
+            $ubigeo = Ubigeo::query()
+                ->where('estado_ubi', 'HABILITADO')
+                ->where('id_ubi', $value)
+                ->first();
+
+            if ($ubigeo === null) {
+                return response()->json([]);
+            }
+
+            return response()->json([
+                'value' => $ubigeo->id_ubi,
+                'label' => "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}",
+            ]);
+        }
+
         $query = trim((string) $request->query('query', ''));
 
         if (mb_strlen($query) < 2) {

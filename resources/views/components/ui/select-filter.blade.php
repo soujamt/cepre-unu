@@ -50,6 +50,7 @@
             filteredItems: [],
             value: @entangle($attributes->wire('model')),
             search: '',
+            name: @js($name),
 
             init() {
                 this.refreshOptions();
@@ -113,6 +114,11 @@
                 this.search = item.label;
                 this.show = false;
                 this.filteredItems = this.allItems;
+                this.$dispatch('ui-select-changed', {
+                    name: this.name,
+                    value: item.value,
+                    label: item.label,
+                });
             },
 
             clear() {
@@ -120,6 +126,11 @@
                 this.search = '';
                 this.filteredItems = this.allItems;
                 this.show = false;
+                this.$dispatch('ui-select-changed', {
+                    name: this.name,
+                    value: '',
+                    label: '',
+                });
                 this.$refs.searchInput.focus();
             },
 

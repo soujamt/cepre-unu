@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ColegioSearchController;
 use App\Http\Controllers\Api\UbigeoSearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,9 @@ Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
     Route::get('/api/ubigeos/search', UbigeoSearchController::class)
         ->name('api.ubigeo.search');
+
+    Route::get('/api/colegios/search', ColegioSearchController::class)
+        ->name('api.colegio.search');
 
     // Dashboard
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');

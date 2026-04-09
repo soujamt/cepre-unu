@@ -6,16 +6,19 @@ use App\Enums\TipoLenguaMaternaPersona;
 use App\Services\ReniecService;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
+use App\Models\Colegio;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\Persona;
 use App\Models\TipoDiscapacidad;
+use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -37,6 +40,7 @@ class extends Component
     public array $lenguasNativasCatalogo = [];
     public array $lenguasExtranjerasCatalogo = [];
     public array $tiposDiscapacidadCatalogo = [];
+    public array $tiposColegioCatalogo = [];
 
     /**
      * @var array{
@@ -97,7 +101,32 @@ class extends Component
         'observacion' => '',
     ];
 
+    /**
+     * @var array{
+     *   anio_graduacion:string,
+     *   id_pais_colegio:string,
+     *   id_tipo_colegio:string,
+     *   id_colegio:string,
+     *   nombre_colegio_extranjero:string,
+     *   veces_postula_unu:int,
+     *   veces_postula_otras:int,
+     *   observacion:string
+     * }
+     */
+    public array $generalForm = [
+        'anio_graduacion' => '',
+        'id_pais_colegio' => '',
+        'id_tipo_colegio' => '',
+        'id_colegio' => '',
+        'nombre_colegio_extranjero' => '',
+        'veces_postula_unu' => 0,
+        'veces_postula_otras' => 0,
+        'observacion' => '',
+    ];
+
     public ?int $personaId = null;
+
+    public ?int $inscripcionId = null;
 
     public ?string $reniecMensaje = null;
 
@@ -108,6 +137,8 @@ class extends Component
     public string $ubigeoNacimientoLabel = '';
 
     public string $ubigeoDomicilioLabel = '';
+
+    public string $colegioLabel = '';
 
     public function mount(): void
     {
@@ -173,6 +204,34 @@ class extends Component
         if ($valor === TipoLenguaMaternaPersona::Extranjera->value) {
             $this->personaForm['id_lengua_nativa'] = '';
         }
+    }
+
+    public function updatedGeneralFormIdPaisColegio(): void
+    {
+        $this->generalForm['id_colegio'] = '';
+        $this->generalForm['nombre_colegio_extranjero'] = '';
+        $this->colegioLabel = '';
+        $this->dispatch(
+            'ui-select-search-filled',
+            name: 'generalForm.id_colegio',
+            value: '',
+            label: '',
+        );
+    }
+
+    public function updatedGeneralFormIdColegio(string $value): void
+    {
+        if ($value === '') {
+            $this->colegioLabel = '';
+
+            return;
+        }
+
+        $colegio = Colegio::query()->find($value);
+
+        $this->colegioLabel = $colegio === null
+            ? ''
+            : "{$colegio->id_col} | {$colegio->nombre_col}";
     }
 
     #[Computed]
@@ -291,6 +350,41 @@ class extends Component
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    protected function rulesPasoGeneral(): array
+    {
+        return [
+            'generalForm.anio_graduacion' => ['required', 'integer', 'digits:4', 'min:1950', 'max:'.((int) now()->format('Y'))],
+            'generalForm.id_pais_colegio' => ['required', 'integer', 'exists:tbl_pais,id_pai'],
+            'generalForm.id_tipo_colegio' => ['required', 'integer', 'exists:tbl_tipo_colegio,id_tco'],
+            'generalForm.id_colegio' => [
+                'nullable',
+                'string',
+                'exists:tbl_colegio,id_col',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if ($this->esPaisPeruSeleccionado() && blank($value)) {
+                        $fail('Debe seleccionar el colegio de procedencia.');
+                    }
+                },
+            ],
+            'generalForm.nombre_colegio_extranjero' => [
+                'nullable',
+                'string',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (! $this->esPaisPeruSeleccionado() && blank($value)) {
+                        $fail('Debe registrar el nombre del colegio extranjero.');
+                    }
+                },
+            ],
+            'generalForm.veces_postula_unu' => ['required', 'integer', 'min:0', 'max:99'],
+            'generalForm.veces_postula_otras' => ['required', 'integer', 'min:0', 'max:99'],
+            'generalForm.observacion' => ['nullable', 'string', 'max:1000'],
+        ];
+    }
+
+    /**
      * @return array<string, string>
      */
     protected function messages(): array
@@ -311,6 +405,21 @@ class extends Component
             'personaForm.tipo_lengua_materna.required' => 'El tipo de lengua materna es obligatorio.',
             'personaForm.id_identidad_etnica.required' => 'La identidad etnica es obligatoria.',
             'personaForm.correo_electronico.email' => 'El correo electronico debe ser valido.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function messagesPasoGeneral(): array
+    {
+        return [
+            'generalForm.anio_graduacion.required' => 'El ano de graduacion es obligatorio.',
+            'generalForm.anio_graduacion.integer' => 'El ano de graduacion debe ser numerico.',
+            'generalForm.id_pais_colegio.required' => 'El pais del colegio es obligatorio.',
+            'generalForm.id_tipo_colegio.required' => 'El tipo de colegio es obligatorio.',
+            'generalForm.veces_postula_unu.required' => 'Debe indicar cuantas veces postulo a la UNU.',
+            'generalForm.veces_postula_otras.required' => 'Debe indicar cuantas veces postulo a otras universidades.',
         ];
     }
 
@@ -404,6 +513,35 @@ class extends Component
                 ->map(fn (array $tipoDiscapacidad): TipoDiscapacidad => tap(new TipoDiscapacidad(), fn (TipoDiscapacidad $model) => $model->forceFill($tipoDiscapacidad)))
                 ->all(),
         );
+    }
+
+    #[Computed]
+    public function tiposColegio(): \Illuminate\Database\Eloquent\Collection
+    {
+        return new \Illuminate\Database\Eloquent\Collection(
+            collect($this->tiposColegioCatalogo)
+                ->map(fn (array $tipoColegio): TipoColegio => tap(new TipoColegio(), fn (TipoColegio $model) => $model->forceFill($tipoColegio)))
+                ->all(),
+        );
+    }
+
+    #[Computed]
+    public function paisPeruId(): string
+    {
+        $paisPeru = $this->paises()
+            ->first(function (Pais $pais): bool {
+                $codigo = trim((string) ($pais->codigo_pai ?? ''));
+                $nombre = Str::of((string) ($pais->nombre_pai ?? ''))
+                    ->ascii()
+                    ->upper()
+                    ->trim()
+                    ->value();
+
+                return in_array($codigo, ['1', 'PE'], true)
+                    || $nombre === 'PERU';
+            });
+
+        return (string) ($paisPeru?->id_pai ?? '');
     }
 
     public function guardarPasoPersonal(): void
@@ -542,6 +680,20 @@ class extends Component
         $this->reniecMensaje = 'Datos recuperados desde RENIEC. Puede ajustarlos manualmente si lo necesita.';
     }
 
+    public function guardarPasoGeneral(): void
+    {
+        $this->normalizarEstadoGeneralForm();
+
+        $data = $this->validate(
+            $this->rulesPasoGeneral(),
+            $this->messagesPasoGeneral(),
+        );
+
+        $this->generalForm = array_merge($this->generalForm, $data['generalForm']);
+        $this->pasoActual = 3;
+        $this->dispatch('toast', message: 'Informacion general guardada correctamente.', type: 'success');
+    }
+
     public function irPasoAnterior(): void
     {
         if ($this->pasoActual > 1) {
@@ -559,6 +711,22 @@ class extends Component
             $this->dispatch('toast', message: 'Primero debe guardar la informacion personal.', type: 'warning');
 
             return;
+        }
+
+        if ($paso > 2) {
+            $this->normalizarEstadoGeneralForm();
+
+            try {
+                $this->validate(
+                    $this->rulesPasoGeneral(),
+                    $this->messagesPasoGeneral(),
+                );
+            } catch (\Illuminate\Validation\ValidationException $exception) {
+                $this->setErrorBag($exception->validator->errors());
+                $this->dispatch('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
+
+                return;
+            }
         }
 
         $this->pasoActual = $paso;
@@ -659,6 +827,13 @@ class extends Component
             ->orderBy('nombre_tdi')
             ->get(['id_tdi', 'nombre_tdi'])
             ->map(fn (TipoDiscapacidad $tipoDiscapacidad): array => $tipoDiscapacidad->toArray())
+            ->all();
+
+        $this->tiposColegioCatalogo = TipoColegio::query()
+            ->where('estado_tco', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_tco')
+            ->get(['id_tco', 'codigo_tco', 'nombre_tco'])
+            ->map(fn (TipoColegio $tipoColegio): array => $tipoColegio->toArray())
             ->all();
     }
 
@@ -768,6 +943,12 @@ class extends Component
         return "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
     }
 
+    private function esPaisPeruSeleccionado(): bool
+    {
+        return $this->generalForm['id_pais_colegio'] !== ''
+            && (string) $this->generalForm['id_pais_colegio'] === $this->paisPeruId();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -801,6 +982,18 @@ class extends Component
             'id_lengua_extranjera' => '',
             'observacion' => '',
         ];
+    }
+
+    private function normalizarEstadoGeneralForm(): void
+    {
+        if ($this->esPaisPeruSeleccionado()) {
+            $this->generalForm['nombre_colegio_extranjero'] = '';
+
+            return;
+        }
+
+        $this->generalForm['id_colegio'] = '';
+        $this->colegioLabel = '';
     }
 
     private function normalizarEstadoPersonaForm(): void
