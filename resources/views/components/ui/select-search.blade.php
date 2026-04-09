@@ -11,6 +11,7 @@
     'placeholder' => 'Buscar...',
     'iconLeading' => 'magnifying-glass',
     'apiKey' => null,
+    'selectedLabel' => null,
 ])
 
 @php
@@ -54,11 +55,22 @@
             searching: false,
             url: @js($action),
             apiKey: @js($apiKey),
+            selectedLabel: @js($selectedLabel),
+            name: @js($name),
 
             init() {
+                if (this.value && this.selectedLabel) {
+                    this.search = this.selectedLabel;
+                }
+
                 this.$watch('value', (value) => {
                     if (! value) {
                         this.search = '';
+                        return;
+                    }
+
+                    if (this.selectedLabel) {
+                        this.search = this.selectedLabel;
                     }
                 });
             },
@@ -102,6 +114,7 @@
             selectOption(option) {
                 this.value = option.value;
                 this.search = option.label;
+                this.selectedLabel = option.label;
                 this.show = false;
             },
 
@@ -122,8 +135,22 @@
             labelRaised() {
                 return this.show || !! this.search || !! this.value;
             },
+
+            applyExternalSelection(detail) {
+                if (detail.name !== this.name) {
+                    return;
+                }
+
+                this.value = detail.value ?? null;
+                this.selectedLabel = detail.label ?? '';
+                this.search = this.selectedLabel;
+                this.options = [];
+                this.show = false;
+                this.searching = false;
+            },
         }"
         @click.outside="show = false"
+        x-on:ui-select-search-filled.window="applyExternalSelection($event.detail)"
         class="group/select relative block w-full"
     >
         @if ($iconLeading)

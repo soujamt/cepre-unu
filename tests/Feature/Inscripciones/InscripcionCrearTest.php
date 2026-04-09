@@ -160,8 +160,8 @@ test('users can register personal information for a new inscripcion draft', func
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '74503321')
-        ->set('personaForm.solo_un_apellido', '0')
-        ->set('personaForm.tiene_apellido_casada', '0')
+        ->set('personaForm.solo_un_apellido', false)
+        ->set('personaForm.tiene_apellido_casada', false)
         ->set('personaForm.apellido_paterno', 'Falcon')
         ->set('personaForm.apellido_materno', 'Rojas')
         ->set('personaForm.apellido_casada', '')
@@ -177,7 +177,7 @@ test('users can register personal information for a new inscripcion draft', func
         ->set('personaForm.celular', '987654321')
         ->set('personaForm.telefono', '061123456')
         ->set('personaForm.correo_electronico', 'lucy@test.com')
-        ->set('personaForm.discapacidad', '1')
+        ->set('personaForm.discapacidad', true)
         ->set('personaForm.id_tipo_discapacidad', (string) $catalogos['tipoDiscapacidad']->id_tdi)
         ->set('personaForm.tipo_lengua_materna', 'NATIVA')
         ->set('personaForm.id_identidad_etnica', (string) $catalogos['identidadEtnica']->id_iet)
@@ -199,7 +199,120 @@ test('users can register personal information for a new inscripcion draft', func
     expect($persona?->discapacidad_per)->toBeTrue();
 });
 
-test('dni can be consulted with reniec and autofill personal names', function () {
+test('existing person data is loaded from the local system before consulting reniec', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => 'REGISTRO EXISTENTE',
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    Http::fake();
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
+        ->set('personaForm.numero_documento', '46027897')
+        ->call('buscarDatosPersona')
+        ->assertSet('personaId', $persona->id_per)
+        ->assertSet('personaForm.nombres', 'ROXANA KARINA')
+        ->assertSet('personaForm.apellido_paterno', 'DELGADO')
+        ->assertSet('personaForm.apellido_materno', 'HUAMANI')
+        ->assertSet('personaForm.correo_electronico', 'roxana@test.com')
+        ->assertSet('personaForm.tipo_lengua_materna', 'NATIVA')
+        ->assertSet('ubigeoNacimientoLabel', '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA')
+        ->assertSet('ubigeoDomicilioLabel', '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA')
+        ->assertSet('reniecTipoMensaje', 'success')
+        ->assertDispatched('ui-select-search-filled', name: 'personaForm.id_ubigeo_nacimiento', value: '250101', label: '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA')
+        ->assertDispatched('ui-select-search-filled', name: 'personaForm.id_ubigeo_domicilio', value: '250101', label: '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA');
+
+    Http::assertNothingSent();
+});
+
+test('changing document after autoload resets the previously loaded person context', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => 'REGISTRO EXISTENTE',
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
+        ->set('personaForm.numero_documento', '46027897')
+        ->call('buscarDatosPersona')
+        ->assertSet('personaId', $persona->id_per)
+        ->set('personaForm.numero_documento', '46027898')
+        ->assertSet('personaId', null)
+        ->assertSet('origenDatosPersona', null)
+        ->assertSet('personaForm.numero_documento', '46027898')
+        ->assertSet('personaForm.nombres', '')
+        ->assertSet('personaForm.correo_electronico', '')
+        ->assertSet('personaForm.id_ubigeo_nacimiento', '')
+        ->assertSet('personaForm.tipo_lengua_materna', '')
+        ->assertSet('ubigeoNacimientoLabel', '')
+        ->assertSet('ubigeoDomicilioLabel', '')
+        ->assertSet('reniecMensaje', null);
+});
+
+test('dni can be consulted with reniec and autofill personal names when there is no local match', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
@@ -223,7 +336,7 @@ test('dni can be consulted with reniec and autofill personal names', function ()
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
-        ->call('consultarReniec')
+        ->call('buscarDatosPersona')
         ->assertSet('personaForm.numero_documento', '46027897')
         ->assertSet('personaForm.nombres', 'ROXANA KARINA')
         ->assertSet('personaForm.apellido_paterno', 'DELGADO')
@@ -231,7 +344,80 @@ test('dni can be consulted with reniec and autofill personal names', function ()
         ->assertSet('reniecTipoMensaje', 'success');
 });
 
-test('non dni documents keep manual flow without reniec lookup', function () {
+test('reniec lookup clears stale complementary data from a previously loaded local person', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    Persona::query()->create([
+        'id_tipo_documento' => $catalogos['tipoDocumento']->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $catalogos['estadoCivil']->id_eci,
+        'id_pais_nacimiento' => $catalogos['pais']->id_pai,
+        'id_nacionalidad' => $catalogos['nacionalidad']->id_nac,
+        'id_ubigeo_nacimiento' => $catalogos['ubigeo']->id_ubi,
+        'id_ubigeo_domicilio' => $catalogos['ubigeo']->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => true,
+        'id_tipo_discapacidad' => $catalogos['tipoDiscapacidad']->id_tdi,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $catalogos['identidadEtnica']->id_iet,
+        'id_lengua_nativa' => $catalogos['lenguaNativa']->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => 'REGISTRO EXISTENTE',
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    Http::fake([
+        'https://api.decolecta.com/v1/reniec/dni*' => Http::response([
+            'first_name' => 'MARIA LUISA',
+            'first_last_name' => 'PEREZ',
+            'second_last_name' => 'RAMIREZ',
+            'full_name' => 'PEREZ RAMIREZ MARIA LUISA',
+            'document_number' => '46027899',
+        ]),
+    ]);
+
+    Config::set('services.reniec.url', 'https://api.decolecta.com');
+    Config::set('services.reniec.token', 'token-prueba');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
+        ->set('personaForm.numero_documento', '46027897')
+        ->call('buscarDatosPersona')
+        ->set('personaForm.numero_documento', '46027899')
+        ->call('buscarDatosPersona')
+        ->assertSet('personaId', null)
+        ->assertSet('origenDatosPersona', 'reniec')
+        ->assertSet('personaForm.numero_documento', '46027899')
+        ->assertSet('personaForm.nombres', 'MARIA LUISA')
+        ->assertSet('personaForm.apellido_paterno', 'PEREZ')
+        ->assertSet('personaForm.apellido_materno', 'RAMIREZ')
+        ->assertSet('personaForm.correo_electronico', '')
+        ->assertSet('personaForm.id_ubigeo_nacimiento', '')
+        ->assertSet('personaForm.id_ubigeo_domicilio', '')
+        ->assertSet('personaForm.discapacidad', false)
+        ->assertSet('personaForm.id_tipo_discapacidad', '')
+        ->assertSet('personaForm.tipo_lengua_materna', '')
+        ->assertSet('ubigeoNacimientoLabel', '')
+        ->assertSet('ubigeoDomicilioLabel', '')
+        ->assertSet('reniecTipoMensaje', 'success');
+});
+
+test('non dni documents keep manual flow and warn when there is no local match', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
@@ -248,7 +434,7 @@ test('non dni documents keep manual flow without reniec lookup', function () {
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaForm.id_tipo_documento', (string) $tipoDocumento->id_tdo)
         ->set('personaForm.numero_documento', 'ABC123456')
-        ->call('consultarReniec')
+        ->call('buscarDatosPersona')
         ->assertSet('reniecTipoMensaje', 'warning')
-        ->assertSet('reniecMensaje', 'La consulta RENIEC solo esta disponible para DNI.');
+        ->assertSet('reniecMensaje', 'No se encontraron datos registrados. Complete el formulario manualmente.');
 });

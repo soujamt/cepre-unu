@@ -136,10 +136,18 @@
                             esTipoDocumentoDni() {
                                 return this.dniTipoDocumentoId !== '' && String(this.tipoDocumentoId) === String(this.dniTipoDocumentoId);
                             },
-                            puedeConsultarReniecLocal() {
+                            puedeBuscarDatosLocal() {
                                 const numero = String(this.numeroDocumento ?? '').replace(/\D+/g, '');
 
-                                return this.esTipoDocumentoDni() && numero.length === 8;
+                                if (! this.tipoDocumentoId) {
+                                    return false;
+                                }
+
+                                if (this.esTipoDocumentoDni()) {
+                                    return numero.length === 8;
+                                }
+
+                                return numero.length > 0;
                             },
                             colSpanApellidos() {
                                 const visible = 1 + (! this.soloUnApellido ? 1 : 0) + (this.tieneApellidoCasada ? 1 : 0);
@@ -163,6 +171,7 @@
                                 $wire.$watch('personaForm.solo_un_apellido', (value) => this.soloUnApellido = value);
                                 $wire.$watch('personaForm.tiene_apellido_casada', (value) => this.tieneApellidoCasada = value);
                                 $wire.$watch('personaForm.discapacidad', (value) => this.discapacidad = value);
+                                $wire.$watch('personaForm.tipo_lengua_materna', (value) => this.tipoLenguaMaterna = value ?? '');
                             },
                         }"
                         x-on:ui-select-changed.window="
@@ -213,51 +222,63 @@
                                 </div>
 
                                 <div class="lg:col-span-3">
-                                    <div x-show="esTipoDocumentoDni()" x-cloak>
+                                    <div>
                                         <flux:button
                                             type="button"
                                             variant="primary"
                                             color="purple"
-                                            wire:click="consultarReniec"
+                                            wire:click="buscarDatosPersona"
                                             wire:loading.attr="disabled"
-                                            wire:target="consultarReniec"
-                                            x-bind:disabled="!puedeConsultarReniecLocal()"
+                                            wire:target="buscarDatosPersona"
+                                            x-bind:disabled="!puedeBuscarDatosLocal()"
                                             class="h-12 w-full justify-center rounded-xl"
                                         >
                                             <x-slot name="icon">
-                                                <x-ui.icon name="identification-card" size="5" class="text-current" />
+                                                <x-ui.icon
+                                                    x-show="esTipoDocumentoDni()"
+                                                    x-cloak
+                                                    name="identification-card"
+                                                    size="5"
+                                                    class="text-current"
+                                                />
+                                                <x-ui.icon
+                                                    x-show="!esTipoDocumentoDni()"
+                                                    x-cloak
+                                                    name="magnifying-glass"
+                                                    size="5"
+                                                    class="text-current"
+                                                />
                                             </x-slot>
-                                            Consultar RENIEC
+                                            <span wire:loading.remove wire:target="buscarDatosPersona"
+                                                >Buscar datos</span
+                                            >
+                                            <span wire:loading wire:target="buscarDatosPersona">Buscando...</span>
                                         </flux:button>
-                                    </div>
-
-                                    <div
-                                        x-show="!esTipoDocumentoDni()"
-                                        x-cloak
-                                        class="flex h-12 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-100/70 px-4 text-sm text-zinc-400 dark:border-white/10 dark:bg-zinc-800/50 dark:text-zinc-500"
-                                    >
-                                        Disponible para DNI
                                     </div>
                                 </div>
                             </div>
 
                             @if ($reniecMensaje)
                                 @php
-                                $calloutVariant = match ($reniecTipoMensaje) {
-                                    'success' => 'success',
-                                    'warning' => 'warning',
-                                    'error' => 'danger',
-                                    default => 'secondary',
-                                };
+                                    $calloutVariant = match ($reniecTipoMensaje) {
+                                        'success' => 'success',
+                                        'warning' => 'warning',
+                                        'error' => 'danger',
+                                        default => 'secondary',
+                                    };
 
-                                $calloutIcon = match ($reniecTipoMensaje) {
-                                    'success' => 'check-circle',
-                                    'warning' => 'exclamation-circle',
-                                    'error' => 'x-circle',
-                                    default => 'information-circle',
-                                };
-                            @endphp
-                                <flux:callout :variant="$calloutVariant" :icon="$calloutIcon" heading="Consulta RENIEC">
+                                    $calloutIcon = match ($reniecTipoMensaje) {
+                                        'success' => 'check-circle',
+                                        'warning' => 'exclamation-circle',
+                                        'error' => 'x-circle',
+                                        default => 'information-circle',
+                                    };
+                                @endphp
+                                <flux:callout
+                                    :variant="$calloutVariant"
+                                    :icon="$calloutIcon"
+                                    heading="Busqueda de datos"
+                                >
                                     {{ $reniecMensaje }}
                                 </flux:callout>
                             @endif
@@ -434,6 +455,7 @@
                                         label="Ubigeo nacimiento"
                                         wire:model="personaForm.id_ubigeo_nacimiento"
                                         :action="route('api.ubigeo.search')"
+                                        :selected-label="$this->ubigeoNacimientoLabel"
                                         placeholder="Buscar ubigeo de nacimiento"
                                         :invalid="$errors->has('personaForm.id_ubigeo_nacimiento')"
                                         :error="$errors->first('personaForm.id_ubigeo_nacimiento')"
@@ -447,6 +469,7 @@
                                         label="Ubigeo domicilio"
                                         wire:model="personaForm.id_ubigeo_domicilio"
                                         :action="route('api.ubigeo.search')"
+                                        :selected-label="$this->ubigeoDomicilioLabel"
                                         placeholder="Buscar ubigeo de domicilio"
                                         :invalid="$errors->has('personaForm.id_ubigeo_domicilio')"
                                         :error="$errors->first('personaForm.id_ubigeo_domicilio')"

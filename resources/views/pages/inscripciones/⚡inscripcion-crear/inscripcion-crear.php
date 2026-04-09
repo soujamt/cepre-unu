@@ -103,6 +103,12 @@ class extends Component
 
     public string $reniecTipoMensaje = 'info';
 
+    public ?string $origenDatosPersona = null;
+
+    public string $ubigeoNacimientoLabel = '';
+
+    public string $ubigeoDomicilioLabel = '';
+
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'crear');
@@ -111,6 +117,13 @@ class extends Component
 
     public function updatedPersonaFormIdTipoDocumento(): void
     {
+        if ($this->origenDatosPersona !== null) {
+            $this->reiniciarFormularioPorCambioIdentidad(
+                (string) $this->personaForm['id_tipo_documento'],
+                (string) $this->personaForm['numero_documento'],
+            );
+        }
+
         $this->limpiarEstadoReniec();
     }
 
@@ -118,6 +131,13 @@ class extends Component
     {
         if ($this->esTipoDocumentoDniSeleccionado()) {
             $this->personaForm['numero_documento'] = preg_replace('/\D+/', '', $valor) ?? '';
+        }
+
+        if ($this->origenDatosPersona !== null) {
+            $this->reiniciarFormularioPorCambioIdentidad(
+                (string) $this->personaForm['id_tipo_documento'],
+                (string) $this->personaForm['numero_documento'],
+            );
         }
 
         $this->limpiarEstadoReniec();
@@ -453,17 +473,50 @@ class extends Component
         $this->dispatch('toast', message: 'Informacion personal guardada correctamente.', type: 'success');
     }
 
-    public function consultarReniec(): void
+    public function buscarDatosPersona(): void
     {
-        if (! $this->esTipoDocumentoDniSeleccionado()) {
+        $tipoDocumento = $this->tipoDocumentoSeleccionado();
+
+        if ($tipoDocumento === null) {
             $this->reniecTipoMensaje = 'warning';
-            $this->reniecMensaje = 'La consulta RENIEC solo esta disponible para DNI.';
+            $this->reniecMensaje = 'Seleccione el tipo de documento antes de buscar datos.';
 
             return;
         }
 
-        $numeroDocumento = preg_replace('/\D+/', '', $this->personaForm['numero_documento']) ?? '';
-        $this->personaForm['numero_documento'] = $numeroDocumento;
+        $numeroDocumento = trim((string) $this->personaForm['numero_documento']);
+
+        if ($this->esTipoDocumentoDniSeleccionado()) {
+            $numeroDocumento = preg_replace('/\D+/', '', $numeroDocumento) ?? '';
+            $this->personaForm['numero_documento'] = $numeroDocumento;
+        }
+
+        if ($numeroDocumento === '') {
+            $this->reniecTipoMensaje = 'warning';
+            $this->reniecMensaje = 'Ingrese el numero de documento antes de buscar datos.';
+
+            return;
+        }
+
+        $persona = Persona::query()
+            ->where('id_tipo_documento', (int) $this->personaForm['id_tipo_documento'])
+            ->where('numero_documento_per', $numeroDocumento)
+            ->first();
+
+        if ($persona !== null) {
+            $this->cargarPersonaDesdeSistema($persona);
+            $this->reniecTipoMensaje = 'success';
+            $this->reniecMensaje = 'Se encontraron datos registrados en el sistema. Puede revisarlos y actualizarlos si lo necesita.';
+
+            return;
+        }
+
+        if (! $this->esTipoDocumentoDniSeleccionado()) {
+            $this->reniecTipoMensaje = 'warning';
+            $this->reniecMensaje = 'No se encontraron datos registrados. Complete el formulario manualmente.';
+
+            return;
+        }
 
         if (strlen($numeroDocumento) !== 8) {
             $this->reniecTipoMensaje = 'warning';
@@ -483,13 +536,7 @@ class extends Component
 
         $data = $resultado['data'] ?? [];
 
-        $this->personaForm['numero_documento'] = (string) ($data['numero'] ?? $numeroDocumento);
-        $this->personaForm['nombres'] = (string) ($data['nombres'] ?? $this->personaForm['nombres']);
-        $this->personaForm['apellido_paterno'] = (string) ($data['apellido_paterno'] ?? $this->personaForm['apellido_paterno']);
-
-        if (! $this->personaForm['solo_un_apellido']) {
-            $this->personaForm['apellido_materno'] = (string) ($data['apellido_materno'] ?? $this->personaForm['apellido_materno']);
-        }
+        $this->cargarPersonaDesdeReniec($data, $numeroDocumento);
 
         $this->reniecTipoMensaje = 'success';
         $this->reniecMensaje = 'Datos recuperados desde RENIEC. Puede ajustarlos manualmente si lo necesita.';
@@ -619,6 +666,141 @@ class extends Component
     {
         $this->reniecMensaje = null;
         $this->reniecTipoMensaje = 'info';
+    }
+
+    private function cargarPersonaDesdeSistema(Persona $persona): void
+    {
+        $persona->loadMissing(['ubigeoNacimiento', 'ubigeoDomicilio']);
+
+        $this->origenDatosPersona = 'sistema';
+        $this->personaId = $persona->id_per;
+        $this->personaForm['numero_documento'] = (string) $persona->numero_documento_per;
+        $this->personaForm['solo_un_apellido'] = (bool) $persona->solo_un_apellido_per;
+        $this->personaForm['tiene_apellido_casada'] = filled($persona->apellido_casada_per);
+        $this->personaForm['apellido_paterno'] = (string) ($persona->apellido_paterno_per ?? '');
+        $this->personaForm['apellido_materno'] = (string) ($persona->apellido_materno_per ?? '');
+        $this->personaForm['apellido_casada'] = (string) ($persona->apellido_casada_per ?? '');
+        $this->personaForm['nombres'] = (string) ($persona->nombres_per ?? '');
+        $this->personaForm['fecha_nacimiento'] = $persona->fecha_nacimiento_per?->format('Y-m-d') ?? '';
+        $this->personaForm['sexo'] = $persona->sexo_per?->value ?? (string) ($persona->sexo_per ?? '');
+        $this->personaForm['id_estado_civil'] = (string) ($persona->id_estado_civil ?? '');
+        $this->personaForm['id_pais_nacimiento'] = (string) ($persona->id_pais_nacimiento ?? '');
+        $this->personaForm['id_nacionalidad'] = (string) ($persona->id_nacionalidad ?? '');
+        $this->personaForm['id_ubigeo_nacimiento'] = (string) ($persona->id_ubigeo_nacimiento ?? '');
+        $this->personaForm['id_ubigeo_domicilio'] = (string) ($persona->id_ubigeo_domicilio ?? '');
+        $this->personaForm['direccion'] = (string) ($persona->direccion_per ?? '');
+        $this->personaForm['celular'] = (string) ($persona->celular_per ?? '');
+        $this->personaForm['telefono'] = (string) ($persona->telefono_per ?? '');
+        $this->personaForm['correo_electronico'] = (string) ($persona->correo_electronico_per ?? '');
+        $this->personaForm['discapacidad'] = (bool) $persona->discapacidad_per;
+        $this->personaForm['id_tipo_discapacidad'] = (string) ($persona->id_tipo_discapacidad ?? '');
+        $this->personaForm['tipo_lengua_materna'] = $persona->tipo_lengua_materna_per?->value ?? (string) ($persona->tipo_lengua_materna_per ?? '');
+        $this->personaForm['id_identidad_etnica'] = (string) ($persona->id_identidad_etnica ?? '');
+        $this->personaForm['id_lengua_nativa'] = (string) ($persona->id_lengua_nativa ?? '');
+        $this->personaForm['id_lengua_extranjera'] = (string) ($persona->id_lengua_extranjera ?? '');
+        $this->personaForm['observacion'] = (string) ($persona->observacion_per ?? '');
+        $this->normalizarEstadoPersonaForm();
+        $this->sincronizarEtiquetasUbigeo(
+            $persona->ubigeoNacimiento,
+            $persona->ubigeoDomicilio,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function cargarPersonaDesdeReniec(array $data, string $numeroDocumento): void
+    {
+        $this->reiniciarFormularioPorCambioIdentidad(
+            (string) $this->personaForm['id_tipo_documento'],
+            $numeroDocumento,
+        );
+
+        $this->origenDatosPersona = 'reniec';
+        $this->personaId = null;
+        $this->personaForm['numero_documento'] = (string) ($data['numero'] ?? $numeroDocumento);
+        $this->personaForm['nombres'] = (string) ($data['nombres'] ?? $this->personaForm['nombres']);
+        $this->personaForm['apellido_paterno'] = (string) ($data['apellido_paterno'] ?? $this->personaForm['apellido_paterno']);
+
+        if (! $this->personaForm['solo_un_apellido']) {
+            $this->personaForm['apellido_materno'] = (string) ($data['apellido_materno'] ?? $this->personaForm['apellido_materno']);
+        }
+    }
+
+    private function reiniciarFormularioPorCambioIdentidad(string $idTipoDocumento, string $numeroDocumento): void
+    {
+        $this->personaId = null;
+        $this->origenDatosPersona = null;
+        $this->personaForm = array_merge($this->formularioPersonaBase(), [
+            'id_tipo_documento' => $idTipoDocumento,
+            'numero_documento' => $numeroDocumento,
+        ]);
+
+        $this->sincronizarEtiquetasUbigeo(null, null);
+    }
+
+    private function sincronizarEtiquetasUbigeo(?Ubigeo $ubigeoNacimiento, ?Ubigeo $ubigeoDomicilio): void
+    {
+        $this->ubigeoNacimientoLabel = $this->formatearEtiquetaUbigeo($ubigeoNacimiento);
+        $this->ubigeoDomicilioLabel = $this->formatearEtiquetaUbigeo($ubigeoDomicilio);
+
+        $this->dispatch(
+            'ui-select-search-filled',
+            name: 'personaForm.id_ubigeo_nacimiento',
+            value: $this->personaForm['id_ubigeo_nacimiento'],
+            label: $this->ubigeoNacimientoLabel,
+        );
+
+        $this->dispatch(
+            'ui-select-search-filled',
+            name: 'personaForm.id_ubigeo_domicilio',
+            value: $this->personaForm['id_ubigeo_domicilio'],
+            label: $this->ubigeoDomicilioLabel,
+        );
+    }
+
+    private function formatearEtiquetaUbigeo(?Ubigeo $ubigeo): string
+    {
+        if ($ubigeo === null) {
+            return '';
+        }
+
+        return "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function formularioPersonaBase(): array
+    {
+        return [
+            'id_tipo_documento' => '',
+            'numero_documento' => '',
+            'solo_un_apellido' => false,
+            'tiene_apellido_casada' => false,
+            'apellido_paterno' => '',
+            'apellido_materno' => '',
+            'apellido_casada' => '',
+            'nombres' => '',
+            'fecha_nacimiento' => '',
+            'sexo' => '',
+            'id_estado_civil' => '',
+            'id_pais_nacimiento' => '',
+            'id_nacionalidad' => '',
+            'id_ubigeo_nacimiento' => '',
+            'id_ubigeo_domicilio' => '',
+            'direccion' => '',
+            'celular' => '',
+            'telefono' => '',
+            'correo_electronico' => '',
+            'discapacidad' => false,
+            'id_tipo_discapacidad' => '',
+            'tipo_lengua_materna' => '',
+            'id_identidad_etnica' => '',
+            'id_lengua_nativa' => '',
+            'id_lengua_extranjera' => '',
+            'observacion' => '',
+        ];
     }
 
     private function normalizarEstadoPersonaForm(): void
