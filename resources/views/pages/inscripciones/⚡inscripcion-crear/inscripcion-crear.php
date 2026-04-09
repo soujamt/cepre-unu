@@ -42,8 +42,8 @@ class extends Component
      * @var array{
      *   id_tipo_documento:string,
      *   numero_documento:string,
-     *   solo_un_apellido:string,
-     *   tiene_apellido_casada:string,
+     *   solo_un_apellido:bool,
+     *   tiene_apellido_casada:bool,
      *   apellido_paterno:string,
      *   apellido_materno:string,
      *   apellido_casada:string,
@@ -59,7 +59,7 @@ class extends Component
      *   celular:string,
      *   telefono:string,
      *   correo_electronico:string,
-     *   discapacidad:string,
+     *   discapacidad:bool,
      *   id_tipo_discapacidad:string,
      *   tipo_lengua_materna:string,
      *   id_identidad_etnica:string,
@@ -71,8 +71,8 @@ class extends Component
     public array $personaForm = [
         'id_tipo_documento' => '',
         'numero_documento' => '',
-        'solo_un_apellido' => '0',
-        'tiene_apellido_casada' => '0',
+        'solo_un_apellido' => false,
+        'tiene_apellido_casada' => false,
         'apellido_paterno' => '',
         'apellido_materno' => '',
         'apellido_casada' => '',
@@ -88,7 +88,7 @@ class extends Component
         'celular' => '',
         'telefono' => '',
         'correo_electronico' => '',
-        'discapacidad' => '0',
+        'discapacidad' => false,
         'id_tipo_discapacidad' => '',
         'tipo_lengua_materna' => '',
         'id_identidad_etnica' => '',
@@ -123,23 +123,23 @@ class extends Component
         $this->limpiarEstadoReniec();
     }
 
-    public function updatedPersonaFormSoloUnApellido(string $valor): void
+    public function updatedPersonaFormSoloUnApellido(bool $valor): void
     {
-        if ($valor === '1') {
+        if ($valor) {
             $this->personaForm['apellido_materno'] = '';
         }
     }
 
-    public function updatedPersonaFormTieneApellidoCasada(string $valor): void
+    public function updatedPersonaFormTieneApellidoCasada(bool $valor): void
     {
-        if ($valor !== '1') {
+        if (! $valor) {
             $this->personaForm['apellido_casada'] = '';
         }
     }
 
-    public function updatedPersonaFormDiscapacidad(string $valor): void
+    public function updatedPersonaFormDiscapacidad(bool $valor): void
     {
-        if ($valor !== '1') {
+        if (! $valor) {
             $this->personaForm['id_tipo_discapacidad'] = '';
         }
     }
@@ -198,15 +198,15 @@ class extends Component
                     }
                 },
             ],
-            'personaForm.solo_un_apellido' => ['required', 'in:0,1'],
-            'personaForm.tiene_apellido_casada' => ['required', 'in:0,1'],
+            'personaForm.solo_un_apellido' => ['boolean'],
+            'personaForm.tiene_apellido_casada' => ['boolean'],
             'personaForm.apellido_paterno' => ['required', 'string', 'max:255'],
             'personaForm.apellido_materno' => [
                 'nullable',
                 'string',
                 'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if ($this->personaForm['solo_un_apellido'] === '0' && blank($value)) {
+                    if (! $this->personaForm['solo_un_apellido'] && blank($value)) {
                         $fail('El segundo apellido es obligatorio cuando no se marca solo un apellido.');
                     }
                 },
@@ -216,7 +216,7 @@ class extends Component
                 'string',
                 'max:255',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if ($this->personaForm['tiene_apellido_casada'] === '1' && blank($value)) {
+                    if ($this->personaForm['tiene_apellido_casada'] && blank($value)) {
                         $fail('Debe registrar el apellido de casado(a).');
                     }
                 },
@@ -233,13 +233,13 @@ class extends Component
             'personaForm.celular' => ['nullable', 'string', 'max:20'],
             'personaForm.telefono' => ['nullable', 'string', 'max:20'],
             'personaForm.correo_electronico' => ['nullable', 'email', 'max:255'],
-            'personaForm.discapacidad' => ['required', 'in:0,1'],
+            'personaForm.discapacidad' => ['boolean'],
             'personaForm.id_tipo_discapacidad' => [
                 'nullable',
                 'integer',
                 'exists:tbl_tipo_discapacidad,id_tdi',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    if ($this->personaForm['discapacidad'] === '1' && blank($value)) {
+                    if ($this->personaForm['discapacidad'] && blank($value)) {
                         $fail('Debe seleccionar el tipo de discapacidad.');
                     }
                 },
@@ -396,12 +396,12 @@ class extends Component
                 $payload = [
                     'id_tipo_documento' => (int) $data['personaForm']['id_tipo_documento'],
                     'numero_documento_per' => trim($data['personaForm']['numero_documento']),
-                    'solo_un_apellido_per' => $data['personaForm']['solo_un_apellido'] === '1',
+                    'solo_un_apellido_per' => $data['personaForm']['solo_un_apellido'],
                     'apellido_paterno_per' => $this->mayusculas($data['personaForm']['apellido_paterno']),
-                    'apellido_materno_per' => $data['personaForm']['solo_un_apellido'] === '1'
+                    'apellido_materno_per' => $data['personaForm']['solo_un_apellido']
                         ? null
                         : $this->nullableUpper($data['personaForm']['apellido_materno']),
-                    'apellido_casada_per' => $data['personaForm']['tiene_apellido_casada'] === '1'
+                    'apellido_casada_per' => $data['personaForm']['tiene_apellido_casada']
                         ? $this->nullableUpper($data['personaForm']['apellido_casada'])
                         : null,
                     'nombres_per' => $this->mayusculas($data['personaForm']['nombres']),
@@ -416,8 +416,8 @@ class extends Component
                     'celular_per' => $this->nullableTrim($data['personaForm']['celular']),
                     'telefono_per' => $this->nullableTrim($data['personaForm']['telefono']),
                     'correo_electronico_per' => $this->nullableLower($data['personaForm']['correo_electronico']),
-                    'discapacidad_per' => $data['personaForm']['discapacidad'] === '1',
-                    'id_tipo_discapacidad' => $data['personaForm']['discapacidad'] === '1'
+                    'discapacidad_per' => $data['personaForm']['discapacidad'],
+                    'id_tipo_discapacidad' => $data['personaForm']['discapacidad']
                         ? (int) $data['personaForm']['id_tipo_discapacidad']
                         : null,
                     'tipo_lengua_materna_per' => $data['personaForm']['tipo_lengua_materna'],
@@ -487,7 +487,7 @@ class extends Component
         $this->personaForm['nombres'] = (string) ($data['nombres'] ?? $this->personaForm['nombres']);
         $this->personaForm['apellido_paterno'] = (string) ($data['apellido_paterno'] ?? $this->personaForm['apellido_paterno']);
 
-        if ($this->personaForm['solo_un_apellido'] !== '1') {
+        if (! $this->personaForm['solo_un_apellido']) {
             $this->personaForm['apellido_materno'] = (string) ($data['apellido_materno'] ?? $this->personaForm['apellido_materno']);
         }
 
@@ -575,7 +575,6 @@ class extends Component
         $this->paisesCatalogo = Pais::query()
             ->where('estado_pai', EstadoCatalogo::Habilitado->value)
             ->orderBy('nombre_pai')
-            ->limit(50)
             ->get(['id_pai', 'nombre_pai'])
             ->map(fn (Pais $pais): array => $pais->toArray())
             ->all();
@@ -583,7 +582,6 @@ class extends Component
         $this->nacionalidadesCatalogo = Nacionalidad::query()
             ->where('estado_nac', EstadoCatalogo::Habilitado->value)
             ->orderBy('nombre_nac')
-            ->limit(80)
             ->get(['id_nac', 'nombre_nac'])
             ->map(fn (Nacionalidad $nacionalidad): array => $nacionalidad->toArray())
             ->all();
@@ -625,15 +623,15 @@ class extends Component
 
     private function normalizarEstadoPersonaForm(): void
     {
-        if ($this->personaForm['solo_un_apellido'] === '1') {
+        if ($this->personaForm['solo_un_apellido']) {
             $this->personaForm['apellido_materno'] = '';
         }
 
-        if ($this->personaForm['tiene_apellido_casada'] !== '1') {
+        if (! $this->personaForm['tiene_apellido_casada']) {
             $this->personaForm['apellido_casada'] = '';
         }
 
-        if ($this->personaForm['discapacidad'] !== '1') {
+        if (! $this->personaForm['discapacidad']) {
             $this->personaForm['id_tipo_discapacidad'] = '';
         }
 

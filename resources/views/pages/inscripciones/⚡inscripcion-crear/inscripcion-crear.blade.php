@@ -71,7 +71,10 @@
                         <p>Persona base: <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $personaId ? 'REGISTRADA' : 'PENDIENTE' }}</span></p>
                     </div>
 
-                    <flux:button variant="ghost" class="w-full font-normal" wire:click="volverListado">
+                    <flux:button variant="filled" class="w-full font-normal" wire:click="volverListado">
+                        <x-slot name="icon">
+                            <x-ui.icon name="arrow-left" size="5" class="text-current" />
+                        </x-slot>
                         Volver al listado
                     </flux:button>
                 </div>
@@ -90,8 +93,22 @@
                     </div>
                 </div>
                 <div
-                    class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
+                    <div
+                        wire:loading.flex
+                        wire:target="guardarPasoPersonal"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-2xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                    >
+                        <div class="flex flex-col items-center gap-3 text-center">
+                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <div>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando informacion personal</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
+                            </div>
+                        </div>
+                    </div>
+
                     @php
                         $tipoDocumentoDniId = (string) optional(
                             $this->tiposDocumento->first(
@@ -105,7 +122,7 @@
 
                     <form
                         wire:submit="guardarPasoPersonal"
-                        class="relative space-y-6"
+                        class="space-y-6"
                         x-data="{
                             tipoDocumentoId: @js($personaForm['id_tipo_documento']),
                             numeroDocumento: @js($personaForm['numero_documento']),
@@ -125,53 +142,36 @@
                                 return this.esTipoDocumentoDni() && numero.length === 8;
                             },
                             colSpanApellidos() {
-                                const total = 2 + (this.soloUnApellido !== '1' ? 1 : 0) + (this.tieneApellidoCasada === '1' ? 1 : 0);
+                                const visible = 1 + (! this.soloUnApellido ? 1 : 0) + (this.tieneApellidoCasada ? 1 : 0);
 
-                                if (total === 4) {
-                                    return 'lg:col-span-3';
-                                }
-
-                                if (total === 3) {
+                                if (visible === 3) {
                                     return 'lg:col-span-4';
                                 }
 
+                                if (visible === 1) {
+                                    return 'lg:col-span-12';
+                                }
+
                                 return 'lg:col-span-6';
-                            },
-                            colSpanDiscapacidad() {
-                                return this.discapacidad === '1' ? 'lg:col-span-4' : 'lg:col-span-6';
                             },
                             colSpanLengua() {
                                 return (this.tipoLenguaMaterna === this.tipoLenguaNativa || this.tipoLenguaMaterna === this.tipoLenguaExtranjera)
                                     ? 'lg:col-span-4'
                                     : 'lg:col-span-6';
                             },
+                            init() {
+                                $wire.$watch('personaForm.solo_un_apellido', (value) => this.soloUnApellido = value);
+                                $wire.$watch('personaForm.tiene_apellido_casada', (value) => this.tieneApellidoCasada = value);
+                                $wire.$watch('personaForm.discapacidad', (value) => this.discapacidad = value);
+                            },
                         }"
                         x-on:ui-select-changed.window="
                             if ($event.detail.name === 'personaForm.id_tipo_documento')
                                 tipoDocumentoId = $event.detail.value ?? '';
-                            if ($event.detail.name === 'personaForm.solo_un_apellido')
-                                soloUnApellido = $event.detail.value ?? '0';
-                            if ($event.detail.name === 'personaForm.tiene_apellido_casada')
-                                tieneApellidoCasada = $event.detail.value ?? '0';
-                            if ($event.detail.name === 'personaForm.discapacidad')
-                                discapacidad = $event.detail.value ?? '0';
                             if ($event.detail.name === 'personaForm.tipo_lengua_materna')
                                 tipoLenguaMaterna = $event.detail.value ?? '';
                         "
                     >
-                        <div
-                            wire:loading.flex
-                            wire:target="guardarPasoPersonal"
-                            class="absolute inset-0 z-30 hidden items-center justify-center rounded-2xl bg-white/75 backdrop-blur-[1px] dark:bg-zinc-900/75"
-                        >
-                            <div
-                                class="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-700 shadow-sm dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200"
-                            >
-                                <x-ui.icon name="spinner-gap" size="5" class="text-accent animate-spin" />
-                                <span>Guardando informacion personal...</span>
-                            </div>
-                        </div>
-
                         <section
                             class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
@@ -213,39 +213,30 @@
                                 </div>
 
                                 <div class="lg:col-span-3">
-                                    <div class="pt-[0.08rem]">
-                                        <div x-show="esTipoDocumentoDni()" x-cloak>
-                                            <flux:button
-                                                type="button"
-                                                variant="primary"
-                                                color="blue"
-                                                wire:click="consultarReniec"
-                                                wire:loading.attr="disabled"
-                                                wire:target="consultarReniec"
-                                                x-bind:disabled="!puedeConsultarReniecLocal()"
-                                                class="h-12 w-full justify-center rounded-xl"
-                                            >
-                                                <x-slot name="icon">
-                                                    <x-ui.icon
-                                                        name="identification-card"
-                                                        size="5"
-                                                        class="text-current"
-                                                    />
-                                                </x-slot>
-                                                <span wire:loading.remove wire:target="consultarReniec"
-                                                    >Consultar RENIEC</span
-                                                >
-                                                <span wire:loading wire:target="consultarReniec">Consultando...</span>
-                                            </flux:button>
-                                        </div>
-
-                                        <div
-                                            x-show="!esTipoDocumentoDni()"
-                                            x-cloak
-                                            class="flex h-12 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-100/70 px-4 text-sm text-zinc-400 dark:border-white/10 dark:bg-zinc-800/50 dark:text-zinc-500"
+                                    <div x-show="esTipoDocumentoDni()" x-cloak>
+                                        <flux:button
+                                            type="button"
+                                            variant="primary"
+                                            color="purple"
+                                            wire:click="consultarReniec"
+                                            wire:loading.attr="disabled"
+                                            wire:target="consultarReniec"
+                                            x-bind:disabled="!puedeConsultarReniecLocal()"
+                                            class="h-12 w-full justify-center rounded-xl"
                                         >
-                                            Disponible para DNI
-                                        </div>
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="identification-card" size="5" class="text-current" />
+                                            </x-slot>
+                                            Consultar RENIEC
+                                        </flux:button>
+                                    </div>
+
+                                    <div
+                                        x-show="!esTipoDocumentoDni()"
+                                        x-cloak
+                                        class="flex h-12 items-center justify-center rounded-xl border border-dashed border-zinc-300 bg-zinc-100/70 px-4 text-sm text-zinc-400 dark:border-white/10 dark:bg-zinc-800/50 dark:text-zinc-500"
+                                    >
+                                        Disponible para DNI
                                     </div>
                                 </div>
                             </div>
@@ -277,24 +268,24 @@
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Datos personales</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Complete los apellidos, nombres y datos personales principales del postulante.</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Complete los apellidos, nombres, datos personales y estado civil del postulante.</p>
                             </div>
 
-                            <div class="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-12">
-                                <div class="lg:col-span-4">
-                                    <x-ui.select
-                                        label="Solo un apellido"
-                                        wire:model="personaForm.solo_un_apellido"
-                                        :invalid="$errors->has('personaForm.solo_un_apellido')"
-                                        :error="$errors->first('personaForm.solo_un_apellido')"
-                                        required
-                                        floating
-                                    >
-                                        <option value="0">NO</option>
-                                        <option value="1">SI</option>
-                                    </x-ui.select>
-                                </div>
+                            <div class="flex flex-wrap items-center gap-x-8 gap-y-3">
+                                <flux:switch
+                                    wire:model="personaForm.solo_un_apellido"
+                                    label="Solo un apellido"
+                                    align="left"
+                                />
 
+                                <flux:switch
+                                    wire:model="personaForm.tiene_apellido_casada"
+                                    label="Tiene apellido de casado(a)"
+                                    align="left"
+                                />
+                            </div>
+
+                            <div class="grid gap-4 lg:grid-cols-12">
                                 <div x-bind:class="colSpanApellidos()">
                                     <x-ui.input
                                         label="Primer apellido"
@@ -307,7 +298,7 @@
                                     />
                                 </div>
 
-                                <div x-show="soloUnApellido !== '1'" x-cloak x-bind:class="colSpanApellidos()">
+                                <div x-show="!soloUnApellido" x-cloak x-bind:class="colSpanApellidos()">
                                     <x-ui.input
                                         label="Segundo apellido"
                                         type="text"
@@ -318,21 +309,7 @@
                                     />
                                 </div>
 
-                                <div x-bind:class="colSpanApellidos()">
-                                    <x-ui.select
-                                        label="Tiene apellido de casado(a)"
-                                        wire:model="personaForm.tiene_apellido_casada"
-                                        :invalid="$errors->has('personaForm.tiene_apellido_casada')"
-                                        :error="$errors->first('personaForm.tiene_apellido_casada')"
-                                        required
-                                        floating
-                                    >
-                                        <option value="0">NO</option>
-                                        <option value="1">SI</option>
-                                    </x-ui.select>
-                                </div>
-
-                                <div x-show="tieneApellidoCasada === '1'" x-cloak x-bind:class="colSpanApellidos()">
+                                <div x-show="tieneApellidoCasada" x-cloak x-bind:class="colSpanApellidos()">
                                     <x-ui.input
                                         label="Apellido casada"
                                         type="text"
@@ -404,9 +381,20 @@
                                         @endforeach
                                     </x-ui.select>
                                 </div>
+                            </div>
+                        </section>
 
-                                <div class="lg:col-span-4">
-                                    <x-ui.select
+                        <section
+                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                        >
+                            <div class="space-y-1">
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Nacimiento y domicilio</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre el origen, ubigeo, domicilio y datos de contacto del postulante.</p>
+                            </div>
+
+                            <div class="grid gap-4 lg:grid-cols-12">
+                                <div class="lg:col-span-6">
+                                    <x-ui.select-filter
                                         label="Pais nacimiento"
                                         wire:model="personaForm.id_pais_nacimiento"
                                         :invalid="$errors->has('personaForm.id_pais_nacimiento')"
@@ -418,11 +406,11 @@
                                         @foreach ($this->paises as $pais)
                                             <option value="{{ $pais->id_pai }}">{{ $pais->nombre_pai }}</option>
                                         @endforeach
-                                    </x-ui.select>
+                                    </x-ui.select-filter>
                                 </div>
 
-                                <div class="lg:col-span-4">
-                                    <x-ui.select
+                                <div class="lg:col-span-6">
+                                    <x-ui.select-filter
                                         label="Nacionalidad"
                                         wire:model="personaForm.id_nacionalidad"
                                         :invalid="$errors->has('personaForm.id_nacionalidad')"
@@ -436,17 +424,8 @@
                                                 {{ $nacionalidad->nombre_nac }}
                                             </option>
                                         @endforeach
-                                    </x-ui.select>
+                                    </x-ui.select-filter>
                                 </div>
-                            </div>
-                        </section>
-
-                        <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
-                        >
-                            <div class="space-y-1">
-                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Nacimiento y domicilio</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Ubique el nacimiento y el domicilio actual para dejar lista la base del postulante.</p>
                             </div>
 
                             <div class="grid gap-4 lg:grid-cols-12">
@@ -478,7 +457,7 @@
                             </div>
 
                             <div class="grid gap-4 lg:grid-cols-12">
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
                                     <x-ui.input
                                         label="Direccion"
                                         type="text"
@@ -490,7 +469,20 @@
                                     />
                                 </div>
 
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
+                                    <x-ui.input
+                                        label="Correo electronico"
+                                        type="email"
+                                        wire:model="personaForm.correo_electronico"
+                                        :invalid="$errors->has('personaForm.correo_electronico')"
+                                        :error="$errors->first('personaForm.correo_electronico')"
+                                        floating
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="grid gap-4 lg:grid-cols-12">
+                                <div class="lg:col-span-6">
                                     <x-ui.input
                                         label="Celular"
                                         type="text"
@@ -501,7 +493,7 @@
                                     />
                                 </div>
 
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
                                     <x-ui.input
                                         label="Telefono"
                                         type="text"
@@ -519,56 +511,37 @@
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Perfil complementario</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre medios de contacto, discapacidad, identidad etnica y lengua materna.</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre discapacidad, identidad etnica y lengua materna del postulante.</p>
                             </div>
 
-                            <div class="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-12">
-                                <div x-bind:class="colSpanDiscapacidad()">
-                                    <x-ui.input
-                                        label="Correo electronico"
-                                        type="email"
-                                        wire:model="personaForm.correo_electronico"
-                                        :invalid="$errors->has('personaForm.correo_electronico')"
-                                        :error="$errors->first('personaForm.correo_electronico')"
-                                        floating
-                                    />
-                                </div>
+                            <div class="flex items-center">
+                                <flux:switch
+                                    wire:model="personaForm.discapacidad"
+                                    label="Tiene discapacidad"
+                                    align="left"
+                                />
+                            </div>
 
-                                <div x-bind:class="colSpanDiscapacidad()">
-                                    <x-ui.select
-                                        label="Discapacidad"
-                                        wire:model="personaForm.discapacidad"
-                                        :invalid="$errors->has('personaForm.discapacidad')"
-                                        :error="$errors->first('personaForm.discapacidad')"
-                                        required
-                                        floating
-                                    >
-                                        <option value="0">NO</option>
-                                        <option value="1">SI</option>
-                                    </x-ui.select>
-                                </div>
-
-                                <div x-show="discapacidad === '1'" x-cloak x-bind:class="colSpanDiscapacidad()">
-                                    <x-ui.select
-                                        label="Tipo discapacidad"
-                                        wire:model="personaForm.id_tipo_discapacidad"
-                                        :invalid="$errors->has('personaForm.id_tipo_discapacidad')"
-                                        :error="$errors->first('personaForm.id_tipo_discapacidad')"
-                                        floating
-                                    >
-                                        <option value="">Seleccionar tipo</option>
-                                        @foreach ($this->tiposDiscapacidad as $tipoDiscapacidad)
-                                            <option value="{{ $tipoDiscapacidad->id_tdi }}">
-                                                {{ $tipoDiscapacidad->nombre_tdi }}
-                                            </option>
-                                        @endforeach
-                                    </x-ui.select>
-                                </div>
+                            <div x-show="discapacidad" x-cloak class="lg:col-span-6">
+                                <x-ui.select
+                                    label="Tipo discapacidad"
+                                    wire:model="personaForm.id_tipo_discapacidad"
+                                    :invalid="$errors->has('personaForm.id_tipo_discapacidad')"
+                                    :error="$errors->first('personaForm.id_tipo_discapacidad')"
+                                    floating
+                                >
+                                    <option value="">Seleccionar tipo</option>
+                                    @foreach ($this->tiposDiscapacidad as $tipoDiscapacidad)
+                                        <option value="{{ $tipoDiscapacidad->id_tdi }}">
+                                            {{ $tipoDiscapacidad->nombre_tdi }}
+                                        </option>
+                                    @endforeach
+                                </x-ui.select>
                             </div>
 
                             <div class="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-12">
                                 <div x-bind:class="colSpanLengua()">
-                                    <x-ui.select
+                                    <x-ui.select-filter
                                         label="Identidad etnica"
                                         wire:model="personaForm.id_identidad_etnica"
                                         :invalid="$errors->has('personaForm.id_identidad_etnica')"
@@ -582,7 +555,7 @@
                                                 {{ $identidadEtnica->nombre_iet }}
                                             </option>
                                         @endforeach
-                                    </x-ui.select>
+                                    </x-ui.select-filter>
                                 </div>
 
                                 <div x-bind:class="colSpanLengua()">
@@ -608,7 +581,7 @@
                                     x-cloak
                                     x-bind:class="colSpanLengua()"
                                 >
-                                    <x-ui.select
+                                    <x-ui.select-filter
                                         label="Lengua nativa"
                                         wire:model="personaForm.id_lengua_nativa"
                                         :invalid="$errors->has('personaForm.id_lengua_nativa')"
@@ -621,7 +594,7 @@
                                                 {{ $lenguaNativa->nombre_lna }}
                                             </option>
                                         @endforeach
-                                    </x-ui.select>
+                                    </x-ui.select-filter>
                                 </div>
 
                                 <div
@@ -629,7 +602,7 @@
                                     x-cloak
                                     x-bind:class="colSpanLengua()"
                                 >
-                                    <x-ui.select
+                                    <x-ui.select-filter
                                         label="Lengua extranjera"
                                         wire:model="personaForm.id_lengua_extranjera"
                                         :invalid="$errors->has('personaForm.id_lengua_extranjera')"
@@ -642,7 +615,7 @@
                                                 {{ $lenguaExtranjera->nombre_lex }}
                                             </option>
                                         @endforeach
-                                    </x-ui.select>
+                                    </x-ui.select-filter>
                                 </div>
                             </div>
 
