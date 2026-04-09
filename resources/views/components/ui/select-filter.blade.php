@@ -54,12 +54,18 @@
             init() {
                 this.refreshOptions();
 
-                const observer = new MutationObserver(() => this.refreshOptions());
+                const observer = new MutationObserver((mutations) => {
+                    const hasOptionChange = mutations.some(
+                        m => m.type === 'childList' && (m.addedNodes.length > 0 || m.removedNodes.length > 0)
+                    );
+
+                    if (hasOptionChange) {
+                        this.refreshOptions();
+                    }
+                });
 
                 observer.observe(this.$refs.realSelect, {
                     childList: true,
-                    subtree: true,
-                    attributes: true,
                 });
 
                 this.$watch('value', () => {

@@ -322,7 +322,7 @@
                             </div>
 
                             <div class="grid gap-4 lg:grid-cols-12">
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
                                     <x-ui.input
                                         label="Nombres"
                                         type="text"
@@ -334,7 +334,7 @@
                                     />
                                 </div>
 
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
                                     <x-ui.input
                                         label="Fecha nacimiento"
                                         type="date"
@@ -345,8 +345,10 @@
                                         floating
                                     />
                                 </div>
+                            </div>
 
-                                <div class="lg:col-span-4">
+                            <div class="grid gap-4 lg:grid-cols-12">
+                                <div class="lg:col-span-6">
                                     <x-ui.select
                                         label="Sexo"
                                         wire:model="personaForm.sexo"
@@ -361,10 +363,8 @@
                                         @endforeach
                                     </x-ui.select>
                                 </div>
-                            </div>
 
-                            <div class="grid gap-4 lg:grid-cols-12">
-                                <div class="lg:col-span-4">
+                                <div class="lg:col-span-6">
                                     <x-ui.select
                                         label="Estado civil"
                                         wire:model="personaForm.id_estado_civil"
@@ -522,21 +522,23 @@
                                 />
                             </div>
 
-                            <div x-show="discapacidad" x-cloak class="lg:col-span-6">
-                                <x-ui.select
-                                    label="Tipo discapacidad"
-                                    wire:model="personaForm.id_tipo_discapacidad"
-                                    :invalid="$errors->has('personaForm.id_tipo_discapacidad')"
-                                    :error="$errors->first('personaForm.id_tipo_discapacidad')"
-                                    floating
-                                >
-                                    <option value="">Seleccionar tipo</option>
-                                    @foreach ($this->tiposDiscapacidad as $tipoDiscapacidad)
-                                        <option value="{{ $tipoDiscapacidad->id_tdi }}">
-                                            {{ $tipoDiscapacidad->nombre_tdi }}
-                                        </option>
-                                    @endforeach
-                                </x-ui.select>
+                            <div class="grid gap-4 lg:grid-cols-12">
+                                <div x-show="discapacidad" x-cloak class="lg:col-span-6">
+                                    <x-ui.select
+                                        label="Tipo discapacidad"
+                                        wire:model="personaForm.id_tipo_discapacidad"
+                                        :invalid="$errors->has('personaForm.id_tipo_discapacidad')"
+                                        :error="$errors->first('personaForm.id_tipo_discapacidad')"
+                                        floating
+                                    >
+                                        <option value="">Seleccionar tipo</option>
+                                        @foreach ($this->tiposDiscapacidad as $tipoDiscapacidad)
+                                            <option value="{{ $tipoDiscapacidad->id_tdi }}">
+                                                {{ $tipoDiscapacidad->nombre_tdi }}
+                                            </option>
+                                        @endforeach
+                                    </x-ui.select>
+                                </div>
                             </div>
 
                             <div class="grid gap-4 lg:grid-flow-row-dense lg:grid-cols-12">
