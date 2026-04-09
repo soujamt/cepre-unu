@@ -24,51 +24,97 @@
             <div
                 class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
             >
-                <div class="space-y-4">
+                <div class="space-y-5">
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso de registro</p>
                         <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Formulario por pasos</h3>
                     </div>
 
-                    <div class="space-y-3">
-                        @foreach ($this->pasos as $indice => $paso)
-                            <button
-                                type="button"
-                                wire:key="paso-inscripcion-{{ $indice }}"
-                                wire:click="irPaso({{ $indice }})"
-                                @class ([
-                                    'w-full rounded-xl border p-4 text-left transition',
-                                    'border-zinc-900 bg-zinc-50 shadow-xs dark:border-white dark:bg-zinc-950/70' => $pasoActual === $indice,
-                                    'border-zinc-200 bg-white hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20' => $pasoActual !== $indice,
-                                ])
-                            >
-                                <div class="flex items-start gap-3">
-                                    <div
-                                        class="flex size-8 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900"
-                                    >
-                                        {{ $indice }}
+                    <div class="relative">
+                        {{-- Linea conectora vertical --}}
+                        <div class="absolute top-5 bottom-5 left-5 w-px bg-zinc-200 dark:bg-white/10"></div>
+
+                        <div class="relative space-y-1">
+                            @foreach ($this->pasos as $indice => $paso)
+                                @php
+                                    $esActivo = $pasoActual === $indice;
+                                    $esCompletado = $indice < $pasoActual && ($indice === 1 ? $personaId !== null : false);
+                                    $esPendiente = ! $esActivo && ! $esCompletado;
+                                @endphp
+                                <button
+                                    type="button"
+                                    wire:key="paso-inscripcion-{{ $indice }}"
+                                    wire:click="irPaso({{ $indice }})"
+                                    @class ([
+                                        'group relative w-full rounded-xl p-2.5 text-left transition',
+                                        'bg-yellow-500 shadow-sm dark:bg-yellow-500' => $esActivo,
+                                        'hover:bg-zinc-50 dark:hover:bg-zinc-800/50' => ! $esActivo,
+                                    ])
+                                >
+                                    <div class="flex items-center gap-3">
+                                        {{-- Indicador circular --}}
+                                        <div
+                                            @class ([
+                                                'relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition',
+                                                'bg-white text-yellow-500 shadow-sm dark:bg-zinc-900 dark:text-yellow-400' => $esActivo,
+                                                'bg-lime-500 text-white' => $esCompletado,
+                                                'border border-zinc-200 bg-white text-zinc-400 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-500' => $esPendiente,
+                                            ])
+                                        >
+                                            @if ($esCompletado)
+                                                <x-ui.icon
+                                                    name="check-circle"
+                                                    size="5"
+                                                    variant="solid"
+                                                    class="text-current"
+                                                />
+                                            @else
+                                                <x-ui.icon :name="$paso['icono']" size="5" class="text-current" />
+                                            @endif
+                                        </div>
+
+                                        {{-- Texto --}}
+                                        <div class="min-w-0 flex-1">
+                                            <p
+                                                @class ([
+                                                    'truncate text-sm font-medium',
+                                                    'text-white dark:text-zinc-900' => $esActivo,
+                                                    'text-zinc-800 dark:text-zinc-100' => $esCompletado,
+                                                    'text-zinc-500 dark:text-zinc-400' => $esPendiente,
+                                                ])
+                                            >
+                                                {{ $paso['titulo'] }}
+                                            </p>
+                                            <p
+                                                @class ([
+                                                    'truncate text-xs',
+                                                    'text-zinc-600 dark:text-yellow-900' => $esActivo,
+                                                    'text-zinc-600 dark:text-zinc-300' => $esCompletado,
+                                                    'text-zinc-400 dark:text-zinc-500' => $esPendiente,
+                                                ])
+                                            >
+                                                {{ $paso['descripcion'] }}
+                                            </p>
+                                        </div>
+
+                                        {{-- Badge estado --}}
+                                        @if ($esActivo)
+                                            <span
+                                                class="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-white uppercase dark:bg-zinc-900/30 dark:text-zinc-900"
+                                            >
+                                                Actual
+                                            </span>
+                                        @elseif ($esCompletado)
+                                            <span
+                                                class="shrink-0 rounded-full bg-lime-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-lime-600 uppercase dark:bg-lime-500/10 dark:text-lime-400"
+                                            >
+                                                Listo
+                                            </span>
+                                        @endif
                                     </div>
-
-                                    <div class="space-y-1">
-                                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $paso['titulo'] }}</p>
-                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $paso['descripcion'] }}</p>
-                                    </div>
-                                </div>
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            <div
-                class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
-            >
-                <div class="space-y-3">
-                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Estado actual</p>
-
-                    <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-                        <p>Paso: <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $this->pasos[$pasoActual]['titulo'] }}</span></p>
-                        <p>Persona base: <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ $personaId ? 'REGISTRADA' : 'PENDIENTE' }}</span></p>
+                                </button>
+                            @endforeach
+                        </div>
                     </div>
 
                     <flux:button variant="filled" class="w-full font-normal" wire:click="volverListado">
