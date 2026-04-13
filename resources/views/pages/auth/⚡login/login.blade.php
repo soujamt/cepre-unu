@@ -42,6 +42,7 @@
                 wire:model="correo"
                 :invalid="$errors->has('correo')"
                 :error="$errors->first('correo')"
+                autocomplete="email"
                 required
                 floating
             />
@@ -52,16 +53,13 @@
                 wire:model="password"
                 :invalid="$errors->has('password')"
                 :error="$errors->first('password')"
+                autocomplete="current-password"
                 required
                 floating
             />
 
-            <div class="space-y-3 pt-1">
-                <flux:button type="submit" class="w-full" variant="primary">
-                    Ingresar
-                </flux:button>
-
-                <p class="text-center text-xs leading-5 text-zinc-500 dark:text-zinc-400">Plataforma de acceso para procesos académicos, inscripciones y seguimiento institucional.</p>
+            <div class="pt-1">
+                <flux:button type="submit" class="w-full" variant="primary"> Ingresar </flux:button>
             </div>
         </form>
     </div>

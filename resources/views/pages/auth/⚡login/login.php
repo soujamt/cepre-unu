@@ -11,7 +11,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.auth')]
-#[Title('INICIO DE SESION')]
+#[Title('INICIO DE SESIÓN')]
 class extends Component
 {
     private const MAX_LOGIN_ATTEMPTS = 5;
@@ -39,9 +39,9 @@ class extends Component
     protected function messages(): array
     {
         return [
-            'correo.required' => 'El correo electronico es obligatorio.',
-            'correo.email' => 'Ingresa un correo electronico valido.',
-            'password.required' => 'La contrasena es obligatoria.',
+            'correo.required' => 'El correo electrónico es obligatorio.',
+            'correo.email' => 'Ingresa un correo electrónico válido.',
+            'password.required' => 'La contraseña es obligatoria.',
         ];
     }
 
@@ -63,7 +63,7 @@ class extends Component
             RateLimiter::hit($this->throttleKey(), self::LOCKOUT_SECONDS);
 
             throw ValidationException::withMessages([
-                'correo' => 'Las credenciales ingresadas no son validas.',
+                'correo' => 'Las credenciales ingresadas no son válidas.',
             ]);
         }
 
