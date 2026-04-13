@@ -83,8 +83,10 @@ class extends Component
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
+        $this->dispatch('rate-limited', segundos: $seconds);
+
         throw ValidationException::withMessages([
-            'correo' => 'Demasiados intentos. Intenta nuevamente en '.$seconds.' segundos.',
+            'lockout' => 'rate_limited',
         ]);
     }
 

@@ -1,4 +1,23 @@
 <div
+    x-data="{
+        segundosRestantes: 0,
+        intervalo: null,
+        get bloqueado() {
+            return this.segundosRestantes > 0;
+        },
+        iniciarContador(segundos) {
+            clearInterval(this.intervalo);
+            this.segundosRestantes = segundos;
+            this.intervalo = setInterval(() => {
+                this.segundosRestantes--;
+                if (this.segundosRestantes <= 0) {
+                    clearInterval(this.intervalo);
+                    this.segundosRestantes = 0;
+                }
+            }, 1000);
+        },
+    }"
+    @rate-limited.window="iniciarContador($event.detail.segundos)"
     class="text-card-foreground relative w-full max-w-md overflow-hidden rounded-[1.75rem] border border-zinc-200/70 bg-white/95 shadow-xl ring-1 shadow-zinc-950/5 ring-white/70 backdrop-blur-sm dark:border-white/10 dark:bg-zinc-900/90 dark:shadow-black/30 dark:ring-white/5"
 >
     <div
@@ -34,7 +53,17 @@
             </div>
         </div>
 
-        <form class="space-y-5" wire:submit="login" novalidate>
+        <div
+            x-show="bloqueado"
+            x-cloak
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-400/20 dark:bg-amber-400/8"
+        >
+            <p class="text-center text-sm font-medium text-amber-700 dark:text-amber-400">Demasiados intentos. Intenta nuevamente en
+            <span class="font-bold tabular-nums" x-text="segundosRestantes"></span>
+            segundos.</p>
+        </div>
+
+        <form class="space-y-5" wire:submit="login" novalidate :inert="bloqueado" :class="{ 'opacity-50': bloqueado }">
             <x-ui.input
                 name="correo"
                 label="Correo electrónico"

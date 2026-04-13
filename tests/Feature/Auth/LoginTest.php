@@ -101,7 +101,7 @@ test('login is rate limited after too many failed attempts', function () {
     }
 
     $component->call('login')
-        ->assertHasErrors(['correo']);
+        ->assertHasErrors(['lockout']);
 
     expect(RateLimiter::tooManyAttempts($key, 5))->toBeTrue();
 });
