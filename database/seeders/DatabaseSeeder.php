@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             ModalidadLugarInscripcionSeeder::class,
             SedeCarreraSeeder::class,
             OfertaBaseSeeder::class,
+            ConfiguracionAcademicaInicialSeeder::class,
         ]);
 
         $usuario = Usuario::query()->updateOrCreate([
