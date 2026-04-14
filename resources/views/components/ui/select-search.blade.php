@@ -56,6 +56,7 @@
             url: @js($action),
             apiKey: @js($apiKey),
             selectedLabel: @js($selectedLabel),
+            _lastLabel: @js($selectedLabel),
             name: @js($name),
 
             init() {
@@ -65,6 +66,17 @@
                     this.resolveSelectedValue();
                 }
 
+                this.$nextTick(() => {
+                    if (this.value && ! this.search) {
+                        if (this._lastLabel) {
+                            this.selectedLabel = this._lastLabel;
+                            this.search = this._lastLabel;
+                        } else {
+                            this.resolveSelectedValue();
+                        }
+                    }
+                });
+
                 this.$watch('value', (value) => {
                     if (! value) {
                         this.search = '';
@@ -73,7 +85,11 @@
                     }
 
                     if (this.selectedLabel) {
+                        this._lastLabel = this.selectedLabel;
                         this.search = this.selectedLabel;
+                    } else if (this._lastLabel) {
+                        this.selectedLabel = this._lastLabel;
+                        this.search = this._lastLabel;
                     } else {
                         this.resolveSelectedValue();
                     }
@@ -155,6 +171,7 @@
                 this.value = option.value;
                 this.search = option.label;
                 this.selectedLabel = option.label;
+                this._lastLabel = option.label;
                 this.show = false;
             },
 
@@ -163,6 +180,8 @@
                 this.search = '';
                 this.options = [];
                 this.show = false;
+                this.selectedLabel = '';
+                this._lastLabel = '';
                 this.$refs.searchInput.focus();
             },
 
@@ -183,6 +202,7 @@
 
                 this.value = detail.value ?? null;
                 this.selectedLabel = detail.label ?? '';
+                this._lastLabel = this.selectedLabel;
                 this.search = this.selectedLabel;
                 this.options = [];
                 this.show = false;
