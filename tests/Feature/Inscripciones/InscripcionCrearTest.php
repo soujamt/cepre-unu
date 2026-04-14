@@ -458,7 +458,7 @@ test('non dni documents keep manual flow and warn when there is no local match',
         ->assertSet('reniecMensaje', 'No se encontraron datos registrados. Complete el formulario manualmente.');
 });
 
-test('users can register general information and continue to postulacion step', function () {
+test('users can register general information and receive a warning when there is no active process yet', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
@@ -510,7 +510,7 @@ test('users can register general information and continue to postulacion step', 
         ->assertHasNoErrors()
         ->assertSet('pasoActual', 3)
         ->assertSet('generalForm.nombre_colegio_extranjero', '')
-        ->assertDispatched('toast', message: 'Informacion general guardada correctamente.', type: 'success');
+        ->assertDispatched('toast', message: 'Informacion general guardada. No hay un proceso de inscripcion activo en este momento.', type: 'warning');
 });
 
 test('general information validates future graduation year and required postulation counts', function () {

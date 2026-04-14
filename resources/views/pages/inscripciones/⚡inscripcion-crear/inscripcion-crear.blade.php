@@ -971,11 +971,59 @@
                     class="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        <x-ui.icon name="stack" size="14" class="text-zinc-400 dark:text-zinc-500" />
-                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                            {{ $this->pasos[$pasoActual]['titulo'] }}
-                        </p>
-                        <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitara en la siguiente iteracion. La base personal ya quedo guardada y lista para continuar.</p>
+                        @if ($pasoActual === 3)
+                            @php($contextoProceso = $this->contextoProcesoPostulacion)
+
+                            <x-ui.icon
+                                :name="$contextoProceso['disponible'] ? 'graduation-cap' : 'warning-circle'"
+                                size="14"
+                                class="{{ $contextoProceso['disponible'] ? 'text-green-500 dark:text-green-400' : 'text-amber-500 dark:text-amber-400' }}"
+                            />
+                            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                                {{ $this->pasos[$pasoActual]['titulo'] }}
+                            </p>
+
+                            <div class="w-full max-w-2xl text-left">
+                                <flux:callout
+                                    variant="{{ $contextoProceso['disponible'] ? 'success' : 'warning' }}"
+                                    icon="{{ $contextoProceso['disponible'] ? 'check-circle' : 'exclamation-circle' }}"
+                                    heading="{{ $contextoProceso['mensaje'] }}"
+                                >
+                                    @if ($contextoProceso['proceso'])
+                                        <div class="space-y-1 text-sm">
+                                            <p>
+                                                <span class="font-medium">Proceso:</span>
+                                                {{ $contextoProceso['proceso']->nombre_pro }}
+                                            </p>
+                                            <p>
+                                                <span class="font-medium">Semestre:</span>
+                                                {{ $contextoProceso['proceso']->semestre?->nombre_sem }}
+                                            </p>
+                                            <p>
+                                                <span class="font-medium">Fechas:</span>
+                                                {{ $contextoProceso['proceso']->fecha_inicio_pro?->format('d/m/Y') }}
+                                                -
+                                                {{ $contextoProceso['proceso']->fecha_fin_pro?->format('d/m/Y') }}
+                                            </p>
+                                        </div>
+                                    @else
+                                        <p class="text-sm">
+                                            Cuando habilitemos el detalle de postulacion, aqui solo se mostraran procesos vigentes y con ofertas activas.
+                                        </p>
+                                    @endif
+                                </flux:callout>
+                            </div>
+
+                            <p class="max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">
+                                El detalle de postulacion se habilitara en la siguiente iteracion, pero desde ahora ya estamos validando si existe un proceso disponible para inscribir.
+                            </p>
+                        @else
+                            <x-ui.icon name="stack" size="14" class="text-zinc-400 dark:text-zinc-500" />
+                            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                                {{ $this->pasos[$pasoActual]['titulo'] }}
+                            </p>
+                            <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitara en la siguiente iteracion. La base personal ya quedo guardada y lista para continuar.</p>
+                        @endif
 
                         <div class="flex gap-3">
                             <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">

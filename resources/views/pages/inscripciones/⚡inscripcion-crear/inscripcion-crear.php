@@ -16,6 +16,7 @@ use App\Models\TipoDiscapacidad;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
+use App\Support\ProcesoInscripcionResolver;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -140,6 +141,11 @@ class extends Component
 
     public string $colegioLabel = '';
 
+    /**
+     * @var array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}|null
+     */
+    public ?array $contextoProcesoPostulacionCache = null;
+
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'crear');
@@ -244,6 +250,16 @@ class extends Component
     public function puedeConsultarReniec(): bool
     {
         return $this->esTipoDocumentoDniSeleccionado() && strlen($this->personaForm['numero_documento']) === 8;
+    }
+
+    /**
+     * @return array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}
+     */
+    #[Computed]
+    public function contextoProcesoPostulacion(): array
+    {
+        return $this->contextoProcesoPostulacionCache
+            ?? $this->refrescarContextoProcesoPostulacion();
     }
 
     /**
@@ -691,7 +707,20 @@ class extends Component
 
         $this->generalForm = array_merge($this->generalForm, $data['generalForm']);
         $this->pasoActual = 3;
-        $this->dispatch('toast', message: 'Informacion general guardada correctamente.', type: 'success');
+
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if ($contextoProceso['disponible']) {
+            $this->dispatch('toast', message: 'Informacion general guardada correctamente.', type: 'success');
+
+            return;
+        }
+
+        $this->dispatch(
+            'toast',
+            message: 'Informacion general guardada. '.$contextoProceso['mensaje'],
+            type: 'warning',
+        );
     }
 
     public function irPasoAnterior(): void
@@ -724,6 +753,16 @@ class extends Component
             } catch (\Illuminate\Validation\ValidationException $exception) {
                 $this->setErrorBag($exception->validator->errors());
                 $this->dispatch('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
+
+                return;
+            }
+        }
+
+        if ($paso > 3) {
+            $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+            if (! $contextoProceso['disponible']) {
+                $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
 
                 return;
             }
@@ -841,6 +880,14 @@ class extends Component
     {
         $this->reniecMensaje = null;
         $this->reniecTipoMensaje = 'info';
+    }
+
+    /**
+     * @return array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}
+     */
+    private function refrescarContextoProcesoPostulacion(): array
+    {
+        return $this->contextoProcesoPostulacionCache = app(ProcesoInscripcionResolver::class)->resolver();
     }
 
     private function cargarPersonaDesdeSistema(Persona $persona): void
