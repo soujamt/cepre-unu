@@ -2,8 +2,10 @@
 
 use App\Models\Accion;
 use App\Models\Colegio;
+use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
+use App\Models\Inscripcion;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
@@ -11,13 +13,38 @@ use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
+use App\Models\Proceso;
+use App\Models\ProcesoOferta;
 use App\Models\Rol;
 use App\Models\TipoColegio;
 use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
+use Database\Seeders\CarreraSeeder;
+use Database\Seeders\ColegioSeeder;
+use Database\Seeders\ConceptoPagoSeeder;
+use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
+use Database\Seeders\EstadoCivilSeeder;
+use Database\Seeders\IdentidadEtnicaSeeder;
+use Database\Seeders\LenguaExtranjeraSeeder;
+use Database\Seeders\LenguaNativaSeeder;
+use Database\Seeders\LugarInscripcionSeeder;
+use Database\Seeders\ModalidadAdmisionSeeder;
+use Database\Seeders\ModalidadLugarInscripcionSeeder;
+use Database\Seeders\NacionalidadSeeder;
+use Database\Seeders\OfertaBaseSeeder;
+use Database\Seeders\PaisSeeder;
+use Database\Seeders\SedeCarreraSeeder;
+use Database\Seeders\SedeSeeder;
+use Database\Seeders\TipoColegioSeeder;
+use Database\Seeders\TipoDiscapacidadSeeder;
+use Database\Seeders\TipoDocumentoSeeder;
+use Database\Seeders\TipoExpedienteSeeder;
+use Database\Seeders\TurnoSeeder;
+use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -156,6 +183,36 @@ function crearCatalogosPasoPersonal(): array
         'tipoColegio',
         'colegio',
     );
+}
+
+function sembrarConfiguracionAcademicaParaInscripcion(): void
+{
+    foreach ([
+        TurnoSeeder::class,
+        TipoExpedienteSeeder::class,
+        ConceptoPagoSeeder::class,
+        TipoDocumentoSeeder::class,
+        TipoDiscapacidadSeeder::class,
+        TipoColegioSeeder::class,
+        EstadoCivilSeeder::class,
+        PaisSeeder::class,
+        NacionalidadSeeder::class,
+        UbigeoSeeder::class,
+        IdentidadEtnicaSeeder::class,
+        LenguaNativaSeeder::class,
+        LenguaExtranjeraSeeder::class,
+        ColegioSeeder::class,
+        SedeSeeder::class,
+        CarreraSeeder::class,
+        LugarInscripcionSeeder::class,
+        ModalidadAdmisionSeeder::class,
+        ModalidadLugarInscripcionSeeder::class,
+        SedeCarreraSeeder::class,
+        OfertaBaseSeeder::class,
+        ConfiguracionAcademicaInicialSeeder::class,
+    ] as $seederClass) {
+        Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
+    }
 }
 
 test('authorized users can access nueva inscripcion page', function () {
@@ -613,4 +670,108 @@ test('cannot jump to postulacion step when general information is invalid', func
         ->assertSet('pasoActual', 2)
         ->assertHasErrors(['generalForm.anio_graduacion'])
         ->assertDispatched('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
+});
+
+test('users can register postulacion and create an inscripcion draft', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()
+        ->where('longitud_minima_tdo', 8)
+        ->where('longitud_maxima_tdo', 8)
+        ->firstOrFail();
+
+    $estadoCivil = EstadoCivil::query()->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $nacionalidad = Nacionalidad::query()->firstOrFail();
+    $ubigeo = Ubigeo::query()->firstOrFail();
+    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
+    $lenguaNativa = LenguaNativa::query()->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $estadoCivil->id_eci,
+        'id_pais_nacimiento' => $pais->id_pai,
+        'id_nacionalidad' => $nacionalidad->id_nac,
+        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
+        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $identidadEtnica->id_iet,
+        'id_lengua_nativa' => $lenguaNativa->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()
+        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with([
+            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+            'turno',
+        ])
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $this->actingAs($usuario);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 4)
+        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+
+    $inscripcion = Inscripcion::query()->first();
+
+    expect($inscripcion)->not->toBeNull()
+        ->and($inscripcion?->id_persona)->toBe($persona->id_per)
+        ->and($inscripcion?->id_proceso_oferta)->toBe($procesoOferta->id_pof)
+        ->and($inscripcion?->id_convenio_proceso)->toBe($convenioProceso->id_cpr)
+        ->and($inscripcion?->estado_ins?->value)->toBe('PENDIENTE')
+        ->and($inscripcion?->veces_postula_unu_ins)->toBe(0)
+        ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
+        ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
+        ->and($inscripcion?->codigo_ins)->toContain('PRO-');
+
+    Carbon\Carbon::setTestNow();
 });

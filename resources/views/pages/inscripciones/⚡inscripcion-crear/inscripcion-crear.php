@@ -1,17 +1,23 @@
-<?php
+﻿<?php
 
 use App\Enums\EstadoCatalogo;
+use App\Enums\EstadoInscripcion;
+use App\Enums\EstadoProceso;
 use App\Enums\SexoPersona;
 use App\Enums\TipoLenguaMaternaPersona;
 use App\Services\ReniecService;
+use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
+use App\Models\Inscripcion;
 use App\Models\Colegio;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\Persona;
+use App\Models\Proceso;
+use App\Models\ProcesoOferta;
 use App\Models\TipoDiscapacidad;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
@@ -125,6 +131,23 @@ class extends Component
         'observacion' => '',
     ];
 
+    /**
+     * @var array{
+     *   id_modalidad_admision:string,
+     *   id_lugar_inscripcion:string,
+     *   id_turno:string,
+     *   id_proceso_oferta:string,
+     *   id_convenio_proceso:string
+     * }
+     */
+    public array $postulacionForm = [
+        'id_modalidad_admision' => '',
+        'id_lugar_inscripcion' => '',
+        'id_turno' => '',
+        'id_proceso_oferta' => '',
+        'id_convenio_proceso' => '',
+    ];
+
     public ?int $personaId = null;
 
     public ?int $inscripcionId = null;
@@ -144,7 +167,7 @@ class extends Component
     /**
      * @var array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}|null
      */
-    public ?array $contextoProcesoPostulacionCache = null;
+    protected ?array $contextoProcesoPostulacionCache = null;
 
     public function mount(): void
     {
@@ -240,6 +263,27 @@ class extends Component
             : "{$colegio->id_col} | {$colegio->nombre_col}";
     }
 
+    public function updatedPostulacionFormIdModalidadAdmision(): void
+    {
+        $this->postulacionForm['id_lugar_inscripcion'] = '';
+        $this->postulacionForm['id_turno'] = '';
+        $this->postulacionForm['id_proceso_oferta'] = '';
+        $this->postulacionForm['id_convenio_proceso'] = '';
+    }
+
+    public function updatedPostulacionFormIdLugarInscripcion(): void
+    {
+        $this->postulacionForm['id_turno'] = '';
+        $this->postulacionForm['id_proceso_oferta'] = '';
+        $this->postulacionForm['id_convenio_proceso'] = '';
+    }
+
+    public function updatedPostulacionFormIdTurno(): void
+    {
+        $this->postulacionForm['id_proceso_oferta'] = '';
+        $this->postulacionForm['id_convenio_proceso'] = '';
+    }
+
     #[Computed]
     public function esTipoDocumentoDni(): bool
     {
@@ -260,6 +304,126 @@ class extends Component
     {
         return $this->contextoProcesoPostulacionCache
             ?? $this->refrescarContextoProcesoPostulacion();
+    }
+
+    #[Computed]
+    public function procesoPostulacionActivo(): ?Proceso
+    {
+        return $this->contextoProcesoPostulacion()['proceso'];
+    }
+
+    #[Computed]
+    public function ofertasProcesoDisponibles(): \Illuminate\Database\Eloquent\Collection
+    {
+        $proceso = $this->procesoPostulacionActivo();
+
+        if ($proceso === null) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return ProcesoOferta::query()
+            ->with([
+                'proceso.semestre',
+                'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+                'ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
+                'ofertaBase.sedeCarrera.sede',
+                'ofertaBase.sedeCarrera.carrera',
+                'turno',
+            ])
+            ->where('id_proceso', $proceso->id_pro)
+            ->where('estado_pof', EstadoProceso::Habilitado->value)
+            ->get();
+    }
+
+    #[Computed]
+    public function modalidadesPostulacionDisponibles(): \Illuminate\Support\Collection
+    {
+        return $this->ofertasProcesoDisponibles()
+            ->map(function (ProcesoOferta $oferta): array {
+                return [
+                    'id' => (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->id_mad,
+                    'nombre' => $oferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
+                ];
+            })
+            ->filter(fn (array $modalidad): bool => filled($modalidad['id']))
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
+    }
+
+    #[Computed]
+    public function lugaresPostulacionDisponibles(): \Illuminate\Support\Collection
+    {
+        return $this->ofertasProcesoDisponibles()
+            ->filter(fn (ProcesoOferta $oferta): bool => $this->postulacionForm['id_modalidad_admision'] !== ''
+                && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision'])
+            ->map(function (ProcesoOferta $oferta): array {
+                return [
+                    'id' => (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->id_lin,
+                    'nombre' => $oferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR',
+                ];
+            })
+            ->filter(fn (array $lugar): bool => filled($lugar['id']))
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
+    }
+
+    #[Computed]
+    public function turnosPostulacionDisponibles(): \Illuminate\Support\Collection
+    {
+        return $this->ofertasProcesoDisponibles()
+            ->filter(function (ProcesoOferta $oferta): bool {
+                return $this->postulacionForm['id_modalidad_admision'] !== ''
+                    && $this->postulacionForm['id_lugar_inscripcion'] !== ''
+                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision']
+                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion === (string) $this->postulacionForm['id_lugar_inscripcion'];
+            })
+            ->map(function (ProcesoOferta $oferta): array {
+                return [
+                    'id' => (string) $oferta->turno?->id_tur,
+                    'nombre' => $oferta->turno?->nombre_tur ?? 'SIN TURNO',
+                ];
+            })
+            ->filter(fn (array $turno): bool => filled($turno['id']))
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
+    }
+
+    #[Computed]
+    public function procesoOfertasPostulacionDisponibles(): \Illuminate\Database\Eloquent\Collection
+    {
+        return $this->ofertasProcesoDisponibles()
+            ->filter(function (ProcesoOferta $oferta): bool {
+                return $this->postulacionForm['id_modalidad_admision'] !== ''
+                    && $this->postulacionForm['id_lugar_inscripcion'] !== ''
+                    && $this->postulacionForm['id_turno'] !== ''
+                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision']
+                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion === (string) $this->postulacionForm['id_lugar_inscripcion']
+                    && (string) $oferta->id_turno === (string) $this->postulacionForm['id_turno'];
+            })
+            ->values();
+    }
+
+    #[Computed]
+    public function conveniosPostulacionDisponibles(): \Illuminate\Database\Eloquent\Collection
+    {
+        $proceso = $this->procesoPostulacionActivo();
+
+        if ($proceso === null) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        $fechaReferencia = now()->toDateString();
+
+        return ConvenioProceso::query()
+            ->with('convenio')
+            ->where('id_proceso', $proceso->id_pro)
+            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
+            ->whereDate('fecha_inicio_cpr', '<=', $fechaReferencia)
+            ->whereDate('fecha_fin_cpr', '>=', $fechaReferencia)
+            ->get();
     }
 
     /**
@@ -436,6 +600,87 @@ class extends Component
             'generalForm.id_tipo_colegio.required' => 'El tipo de colegio es obligatorio.',
             'generalForm.veces_postula_unu.required' => 'Debe indicar cuantas veces postulo a la UNU.',
             'generalForm.veces_postula_otras.required' => 'Debe indicar cuantas veces postulo a otras universidades.',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rulesPasoPostulacion(): array
+    {
+        return [
+            'postulacionForm.id_modalidad_admision' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $valido = $this->modalidadesPostulacionDisponibles()
+                        ->contains(fn (array $modalidad): bool => $modalidad['id'] === (string) $value);
+
+                    if (! $valido) {
+                        $fail('La modalidad seleccionada no es valida para el proceso activo.');
+                    }
+                },
+            ],
+            'postulacionForm.id_lugar_inscripcion' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $valido = $this->lugaresPostulacionDisponibles()
+                        ->contains(fn (array $lugar): bool => $lugar['id'] === (string) $value);
+
+                    if (! $valido) {
+                        $fail('El lugar de inscripcion seleccionado no es valido.');
+                    }
+                },
+            ],
+            'postulacionForm.id_turno' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $valido = $this->turnosPostulacionDisponibles()
+                        ->contains(fn (array $turno): bool => $turno['id'] === (string) $value);
+
+                    if (! $valido) {
+                        $fail('El turno seleccionado no es valido.');
+                    }
+                },
+            ],
+            'postulacionForm.id_proceso_oferta' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $valido = $this->procesoOfertasPostulacionDisponibles()
+                        ->contains(fn (ProcesoOferta $oferta): bool => (string) $oferta->id_pof === (string) $value);
+
+                    if (! $valido) {
+                        $fail('La oferta seleccionada no es valida para la postulacion.');
+                    }
+                },
+            ],
+            'postulacionForm.id_convenio_proceso' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (blank($value)) {
+                        return;
+                    }
+
+                    $valido = $this->conveniosPostulacionDisponibles()
+                        ->contains(fn (ConvenioProceso $convenioProceso): bool => (string) $convenioProceso->id_cpr === (string) $value);
+
+                    if (! $valido) {
+                        $fail('El convenio seleccionado no es valido para el proceso activo.');
+                    }
+                },
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function messagesPasoPostulacion(): array
+    {
+        return [
+            'postulacionForm.id_modalidad_admision.required' => 'La modalidad es obligatoria.',
+            'postulacionForm.id_lugar_inscripcion.required' => 'El lugar de inscripcion es obligatorio.',
+            'postulacionForm.id_turno.required' => 'El turno es obligatorio.',
+            'postulacionForm.id_proceso_oferta.required' => 'La oferta es obligatoria.',
         ];
     }
 
@@ -723,11 +968,132 @@ class extends Component
         );
     }
 
+    public function guardarPasoPostulacion(): void
+    {
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible']) {
+            $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
+
+            return;
+        }
+
+        // Verificar inscripcion duplicada en el mismo proceso (excepto edicion actual)
+        $proceso = $contextoProceso['proceso'];
+
+        $inscripcionExistente = Inscripcion::query()
+            ->with(['procesoOferta.ofertaBase.sedeCarrera.carrera'])
+            ->where('id_persona', $this->personaId)
+            ->whereNotIn('estado_ins', [EstadoInscripcion::Anulado->value])
+            ->whereHas('procesoOferta', fn ($q) => $q->where('id_proceso', $proceso->id_pro))
+            ->when($this->inscripcionId, fn ($q) => $q->where('id_ins', '!=', $this->inscripcionId))
+            ->first();
+
+        if ($inscripcionExistente !== null) {
+            $carrera = $inscripcionExistente->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'otra carrera';
+            $codigo = (string) $inscripcionExistente->codigo_ins;
+
+            $this->dispatch(
+                'alert',
+                type: 'question',
+                title: 'Postulante ya inscrito',
+                message: "El postulante ya tiene una inscripcion en este proceso para \"{$carrera}\" (codigo: {$codigo}). ¿Desea continuar de todas formas?",
+                showCancel: true,
+                showConfirm: true,
+                confirmText: 'Continuar',
+                cancelText: 'Cancelar',
+                confirmEvent: 'duplicado-confirmado',
+                cancelEvent: 'duplicado-cancelado',
+            );
+
+            return;
+        }
+
+        $data = $this->validate(
+            $this->rulesPasoPostulacion(),
+            $this->messagesPasoPostulacion(),
+        );
+
+        $this->persistirPostulacion($data);
+    }
+
     public function irPasoAnterior(): void
     {
         if ($this->pasoActual > 1) {
             $this->pasoActual--;
         }
+    }
+
+    public function confirmarGuardadoDuplicado(): void
+    {
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible']) {
+            $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
+
+            return;
+        }
+
+        $data = $this->validate(
+            $this->rulesPasoPostulacion(),
+            $this->messagesPasoPostulacion(),
+        );
+
+        $this->persistirPostulacion($data);
+    }
+
+    public function cancelarDuplicadoPostulacion(): void
+    {
+        $this->resetPostulacionForm();
+        $this->resetValidation([
+            'postulacionForm.id_modalidad_admision',
+            'postulacionForm.id_lugar_inscripcion',
+            'postulacionForm.id_turno',
+            'postulacionForm.id_proceso_oferta',
+            'postulacionForm.id_convenio_proceso',
+        ]);
+        $this->pasoActual = 3;
+
+        $this->dispatch(
+            'toast',
+            message: 'Se cancelo la continuidad de la postulacion duplicada. Puede seleccionar otra oferta.',
+            type: 'info',
+        );
+    }
+
+    public function cancelarYReiniciarWizard(): void
+    {
+        $this->personaId = null;
+        $this->inscripcionId = null;
+        $this->reniecMensaje = null;
+        $this->reniecTipoMensaje = 'info';
+        $this->origenDatosPersona = null;
+        $this->ubigeoNacimientoLabel = '';
+        $this->ubigeoDomicilioLabel = '';
+        $this->colegioLabel = '';
+        $this->contextoProcesoPostulacionCache = null;
+        $this->personaForm = $this->formularioPersonaBase();
+        $this->generalForm = [
+            'anio_graduacion' => '',
+            'id_pais_colegio' => '',
+            'id_tipo_colegio' => '',
+            'id_colegio' => '',
+            'nombre_colegio_extranjero' => '',
+            'veces_postula_unu' => 0,
+            'veces_postula_otras' => 0,
+            'observacion' => '',
+        ];
+        $this->postulacionForm = [
+            'id_modalidad_admision' => '',
+            'id_lugar_inscripcion' => '',
+            'id_turno' => '',
+            'id_proceso_oferta' => '',
+            'id_convenio_proceso' => '',
+        ];
+        $this->resetErrorBag();
+        $this->pasoActual = 1;
+
+        $this->dispatch('toast', message: 'Formulario reiniciado. Puede comenzar una nueva inscripcion.', type: 'info');
     }
 
     public function irPaso(int $paso): void
@@ -768,12 +1134,80 @@ class extends Component
             }
         }
 
+        if ($paso > 3 && $this->inscripcionId === null) {
+            $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de continuar.', type: 'warning');
+
+            return;
+        }
+
         $this->pasoActual = $paso;
     }
 
     public function volverListado(): void
     {
         $this->redirect(route('inscripciones.index'), navigate: true);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function persistirPostulacion(array $data): void
+    {
+        try {
+            DB::transaction(function () use ($data): void {
+                $payload = [
+                    'id_persona' => $this->personaId,
+                    'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
+                    'id_convenio_proceso' => filled($data['postulacionForm']['id_convenio_proceso'])
+                        ? (int) $data['postulacionForm']['id_convenio_proceso']
+                        : null,
+                    'fecha_inscripcion_ins' => now(),
+                    'estado_ins' => EstadoInscripcion::Pendiente->value,
+                    'anio_graduacion_ins' => (int) $this->generalForm['anio_graduacion'],
+                    'id_pais_colegio' => (int) $this->generalForm['id_pais_colegio'],
+                    'id_colegio' => filled($this->generalForm['id_colegio']) ? $this->generalForm['id_colegio'] : null,
+                    'nombre_colegio_extranjero_ins' => $this->nullableUpper($this->generalForm['nombre_colegio_extranjero']),
+                    'id_tipo_colegio' => (int) $this->generalForm['id_tipo_colegio'],
+                    'veces_postula_unu_ins' => (int) $this->generalForm['veces_postula_unu'],
+                    'veces_postula_otras_ins' => (int) $this->generalForm['veces_postula_otras'],
+                    'observacion_ins' => $this->nullableUpper($this->generalForm['observacion']),
+                ];
+
+                if ($this->inscripcionId !== null) {
+                    $inscripcion = Inscripcion::query()->findOrFail($this->inscripcionId);
+                    $inscripcion->update($payload);
+                } else {
+                    $inscripcion = Inscripcion::query()->firstOrNew([
+                        'id_persona' => $this->personaId,
+                        'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
+                    ]);
+
+                    $inscripcion->fill($payload);
+
+                    if (! $inscripcion->exists) {
+                        $inscripcion->codigo_ins = 'TMP-'.Str::upper(Str::random(10));
+                    }
+
+                    $inscripcion->save();
+
+                    if (Str::startsWith((string) $inscripcion->codigo_ins, 'TMP-')) {
+                        $inscripcion->update([
+                            'codigo_ins' => $this->generarCodigoInscripcion($inscripcion),
+                        ]);
+                    }
+                }
+
+                $this->inscripcionId = $inscripcion->id_ins;
+            });
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
+
+            return;
+        }
+
+        $this->pasoActual = 4;
+        $this->dispatch('toast', message: 'Postulacion guardada correctamente.', type: 'success');
     }
 
     private function mayusculas(string $valor): string
@@ -890,6 +1324,40 @@ class extends Component
         return $this->contextoProcesoPostulacionCache = app(ProcesoInscripcionResolver::class)->resolver();
     }
 
+    private function generarCodigoInscripcion(Inscripcion $inscripcion): string
+    {
+        $procesoOferta = ProcesoOferta::query()
+            ->with(['proceso.semestre'])
+            ->find($inscripcion->id_proceso_oferta);
+
+        $proceso = $procesoOferta?->proceso;
+        $semestre = $proceso?->semestre;
+
+        // Extraer año y número de semestre desde codigo_sem (ej: "2026_1" → "2026", "1")
+        [$anio, $numSem] = array_pad(
+            explode('_', (string) ($semestre?->codigo_sem ?? '0_0')),
+            2,
+            '0',
+        );
+
+        // Abreviatura del proceso (max 3 chars, mayusculas)
+        $codigoPro = mb_strtoupper(
+            mb_substr((string) ($proceso?->codigo_pro ?? 'PRO'), 0, 3, 'UTF-8'),
+            'UTF-8',
+        );
+
+        // Correlativo secuencial dentro del proceso
+        $correlativo = Inscripcion::query()
+            ->whereHas(
+                'procesoOferta',
+                fn ($q) => $q->where('id_proceso', $proceso?->id_pro),
+            )
+            ->where('id_ins', '<=', $inscripcion->id_ins)
+            ->count();
+
+        return "{$anio}-{$numSem}-{$codigoPro}-".str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
+    }
+
     private function cargarPersonaDesdeSistema(Persona $persona): void
     {
         $persona->loadMissing(['ubigeoNacimiento', 'ubigeoDomicilio']);
@@ -996,6 +1464,30 @@ class extends Component
             && (string) $this->generalForm['id_pais_colegio'] === $this->paisPeruId();
     }
 
+    public function descripcionProcesoOferta(?ProcesoOferta $procesoOferta): string
+    {
+        if ($procesoOferta === null) {
+            return 'SIN OFERTA';
+        }
+
+        $carrera = $procesoOferta->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
+        $sede = $procesoOferta->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
+        $modalidad = $procesoOferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
+        $lugar = $procesoOferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
+        $turno = $procesoOferta->turno?->nombre_tur ?? 'SIN TURNO';
+
+        return "{$carrera} | {$sede} | {$modalidad} | {$lugar} | {$turno}";
+    }
+
+    public function descripcionConvenioProceso(?ConvenioProceso $convenioProceso): string
+    {
+        if ($convenioProceso === null) {
+            return 'Sin convenio';
+        }
+
+        return $convenioProceso->convenio?->nombre_con ?? 'SIN CONVENIO';
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -1041,6 +1533,17 @@ class extends Component
 
         $this->generalForm['id_colegio'] = '';
         $this->colegioLabel = '';
+    }
+
+    private function resetPostulacionForm(): void
+    {
+        $this->postulacionForm = [
+            'id_modalidad_admision' => '',
+            'id_lugar_inscripcion' => '',
+            'id_turno' => '',
+            'id_proceso_oferta' => '',
+            'id_convenio_proceso' => '',
+        ];
     }
 
     private function normalizarEstadoPersonaForm(): void

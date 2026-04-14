@@ -60,6 +60,21 @@
             init() {
                 this.syncOptionsFromDOM();
 
+                const observer = new MutationObserver((mutations) => {
+                    const hasOptionChange = mutations.some(
+                        m => m.type === 'childList' && (m.addedNodes.length > 0 || m.removedNodes.length > 0)
+                    );
+
+                    if (hasOptionChange) {
+                        this.syncOptionsFromDOM();
+                    }
+                });
+
+                const select = this.$refs.realSelect;
+                if (select) {
+                    observer.observe(select, { childList: true });
+                }
+
                 if (this.selected === null && ! this.$wire) {
                     this.loadValueFromSelect();
                 }
@@ -162,7 +177,10 @@
 
         <button
             type="button"
-            @click="syncOptionsFromDOM(); open = !open"
+            @click="
+                syncOptionsFromDOM();
+                open = !open;
+            "
             @disabled ($disabled)
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer', 'placeholder'])->class([$controlClasses, 'min-w-0']) }}
         >
