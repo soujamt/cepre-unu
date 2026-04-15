@@ -1621,6 +1621,12 @@ class extends Component
         $this->pasoActual = $paso;
     }
 
+    public function continuarPasoExpedientes(): void
+    {
+        $this->inicializarExpedientesForm();
+        $this->pasoActual = 5;
+    }
+
     public function volverListado(): void
     {
         $this->redirect(route('inscripciones.index'), navigate: true);

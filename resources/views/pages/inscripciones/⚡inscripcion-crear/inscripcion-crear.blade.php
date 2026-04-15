@@ -1555,7 +1555,7 @@
                                     <flux:button
                                         variant="primary"
                                         type="button"
-                                        wire:click="$set('pasoActual', 5)"
+                                        wire:click="continuarPasoExpedientes"
                                         class="font-normal"
                                     >
                                         <x-slot name="icon">
