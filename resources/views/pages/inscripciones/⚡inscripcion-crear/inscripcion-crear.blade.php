@@ -1642,11 +1642,11 @@
                             </flux:callout>
 
                             <div class="flex gap-3">
-                                <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                                <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
                                     Volver al paso anterior
                                 </flux:button>
 
-                                <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                                <flux:button variant="filled" wire:click="volverListado" class="font-normal">
                                     Volver al listado
                                 </flux:button>
                             </div>
@@ -1662,11 +1662,11 @@
                             </flux:callout>
 
                             <div class="flex gap-3">
-                                <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                                <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
                                     Volver al paso anterior
                                 </flux:button>
 
-                                <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                                <flux:button variant="filled" wire:click="volverListado" class="font-normal">
                                     Volver al listado
                                 </flux:button>
                             </div>
@@ -1724,29 +1724,85 @@
                                 <div class="space-y-4">
                                     @foreach ($expedientesForm as $indice => $expediente)
                                         @php ($requisito = $requisitosExpediente->firstWhere('id_tipo_expediente', (int) $expediente['id_tipo_expediente']))
+                                        @php ($esObligatorio = $requisito?->obligatorio_rex ?? false)
                                         <div
                                             wire:key="expediente-wizard-{{ $expediente['id_tipo_expediente'] }}"
-                                            class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900"
+                                            class="rounded-xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900"
                                         >
-                                            <div class="grid gap-4 lg:grid-cols-12">
-                                                <div class="space-y-1 lg:col-span-4">
-                                                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                                            {{-- Cabecera del expediente --}}
+                                            <div
+                                                class="flex items-start justify-between gap-3 rounded-t-xl border-b border-zinc-100 bg-zinc-50/60 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/30"
+                                            >
+                                                <div class="min-w-0 space-y-0.5">
+                                                    <p class="text-sm font-semibold text-zinc-800 dark:text-zinc-100">
                                                         {{ $requisito?->tipoExpediente?->nombre_tex ?? 'EXPEDIENTE' }}
                                                     </p>
                                                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
                                                         {{ $requisito?->tipoExpediente?->descripcion_tex ?? 'Sin descripcion registrada.' }}
                                                     </p>
-                                                    <div class="pt-1">
-                                                        <flux:badge
-                                                            :color="$requisito?->obligatorio_rex ? 'emerald' : 'zinc'"
-                                                            size="lg"
-                                                        >
-                                                            {{ $requisito?->obligatorio_rex ? 'OBLIGATORIO' : 'OPCIONAL' }}
-                                                        </flux:badge>
+                                                </div>
+                                                <flux:badge
+                                                    :color="$esObligatorio ? 'red' : 'zinc'"
+                                                    class="shrink-0"
+                                                >
+                                                    {{ $esObligatorio ? 'Obligatorio' : 'Opcional' }}
+                                                </flux:badge>
+                                            </div>
+
+                                            {{-- Cuerpo del expediente --}}
+                                            <div class="space-y-4 p-4">
+                                                {{-- Zona de carga de archivo --}}
+                                                <div class="space-y-2">
+                                                    <label class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                                                        Archivo PDF
+                                                        @if ($esObligatorio && ! $expediente['archivo_url'])
+                                                            <span class="text-red-500">*</span>
+                                                        @endif
+                                                    </label>
+
+                                                    <div
+                                                        @class ([
+                                                            'rounded-xl border border-dashed p-3',
+                                                            'border-red-300 bg-red-50/40 dark:border-red-500/40 dark:bg-red-500/5' => $errors->has('archivosExpediente.'.$indice),
+                                                            'border-zinc-300 bg-zinc-50/80 dark:border-white/10 dark:bg-zinc-950/40' => ! $errors->has('archivosExpediente.'.$indice),
+                                                        ])
+                                                    >
+                                                        <input
+                                                            type="file"
+                                                            wire:model="archivosExpediente.{{ $indice }}"
+                                                            accept="application/pdf,.pdf"
+                                                            class="block w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 file:me-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:file:bg-white dark:file:text-zinc-900 dark:hover:file:bg-zinc-100"
+                                                        />
                                                     </div>
+
+                                                    @if ($expediente['archivo_url'])
+                                                        <div
+                                                            class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400"
+                                                        >
+                                                            <x-ui.icon name="file-pdf" size="4" class="text-red-500" />
+                                                            <span>Archivo actual:</span>
+                                                            <a
+                                                                href="{{ asset('storage/'.$expediente['archivo_url']) }}"
+                                                                target="_blank"
+                                                                class="text-accent font-medium underline"
+                                                                >{{ $expediente['nombre_archivo'] ?: 'ver archivo' }}</a
+                                                            >
+                                                            <span class="text-zinc-400 dark:text-zinc-600"
+                                                                >— suba uno nuevo para reemplazarlo</span
+                                                            >
+                                                        </div>
+                                                    @endif
+
+                                                    @error ('archivosExpediente.'.$indice)
+                                                        <p class="flex items-center gap-1 ps-1 text-xs font-medium text-red-500 dark:text-red-400">
+                                                            <x-ui.icon name="warning-circle" size="4" />
+                                                            {{ $message }}
+                                                        </p>
+                                                    @enderror
                                                 </div>
 
-                                                <div class="lg:col-span-3">
+                                                {{-- Estado y observacion --}}
+                                                <div class="grid gap-4 lg:grid-cols-2">
                                                     <x-ui.select
                                                         label="Estado de revision"
                                                         wire:model="expedientesForm.{{ $indice }}.estado_revision"
@@ -1761,20 +1817,7 @@
                                                             </option>
                                                         @endforeach
                                                     </x-ui.select>
-                                                </div>
 
-                                                <div class="lg:col-span-5">
-                                                    <x-ui.input
-                                                        label="Referencia del documento"
-                                                        type="text"
-                                                        wire:model="expedientesForm.{{ $indice }}.nombre_archivo"
-                                                        :invalid="$errors->has('expedientesForm.'.$indice.'.nombre_archivo')"
-                                                        :error="$errors->first('expedientesForm.'.$indice.'.nombre_archivo')"
-                                                        floating
-                                                    />
-                                                </div>
-
-                                                <div class="lg:col-span-12">
                                                     <x-ui.textarea
                                                         label="Observacion"
                                                         wire:model="expedientesForm.{{ $indice }}.observacion"
@@ -1795,9 +1838,11 @@
 
                                 <div class="flex gap-3">
                                     <flux:button
-                                        variant="ghost"
+                                        variant="filled"
                                         type="button"
                                         wire:click="irPasoAnterior"
+                                        wire:loading.attr="disabled"
+                                        wire:target="guardarPasoExpedientes"
                                         class="font-normal"
                                     >
                                         Volver

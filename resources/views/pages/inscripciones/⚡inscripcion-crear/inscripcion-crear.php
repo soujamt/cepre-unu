@@ -36,11 +36,14 @@ use App\Support\ProcesoInscripcionResolver;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 new
 #[Layout('layouts.app')]
@@ -48,6 +51,7 @@ new
 class extends Component
 {
     use AuthorizesPermisos;
+    use WithFileUploads;
 
     public int $pasoActual = 1;
     public array $tiposDocumentoCatalogo = [];
@@ -188,10 +192,16 @@ class extends Component
      *   id_tipo_expediente:string,
      *   estado_revision:string,
      *   observacion:string,
-     *   nombre_archivo:string
+     *   nombre_archivo:string,
+     *   archivo_url:string
      * }>
      */
     public array $expedientesForm = [];
+
+    /**
+     * @var array<int, TemporaryUploadedFile|null>
+     */
+    public array $archivosExpediente = [];
 
     public ?int $personaId = null;
 
@@ -967,10 +977,16 @@ class extends Component
         $rules = [];
 
         foreach ($this->expedientesForm as $indice => $expediente) {
+            $requisito = $this->requisitosExpedienteWizard()->firstWhere('id_tipo_expediente', (int) $expediente['id_tipo_expediente']);
+            $esObligatorio = $requisito?->obligatorio_rex ?? false;
+            $tieneArchivoExistente = filled($expediente['archivo_url'] ?? '');
+
             $rules["expedientesForm.{$indice}.id_tipo_expediente"] = ['required', 'integer'];
             $rules["expedientesForm.{$indice}.estado_revision"] = ['required', 'in:'.collect(EstadoRevisionExpediente::cases())->pluck('value')->implode(',')];
             $rules["expedientesForm.{$indice}.observacion"] = ['nullable', 'string', 'max:255'];
-            $rules["expedientesForm.{$indice}.nombre_archivo"] = ['nullable', 'string', 'max:255'];
+            $rules["archivosExpediente.{$indice}"] = $esObligatorio && ! $tieneArchivoExistente
+                ? ['required', 'file', 'mimes:pdf', 'max:5120']
+                : ['nullable', 'file', 'mimes:pdf', 'max:5120'];
         }
 
         return $rules;
@@ -984,7 +1000,9 @@ class extends Component
         return [
             'expedientesForm.*.estado_revision.required' => 'Debe seleccionar el estado de revision del expediente.',
             'expedientesForm.*.observacion.max' => 'La observacion no debe superar los 255 caracteres.',
-            'expedientesForm.*.nombre_archivo.max' => 'La referencia del archivo no debe superar los 255 caracteres.',
+            'archivosExpediente.*.required' => 'El archivo PDF es obligatorio para este expediente.',
+            'archivosExpediente.*.mimes' => 'El archivo debe ser un PDF.',
+            'archivosExpediente.*.max' => 'El archivo PDF no debe superar los 5 MB.',
         ];
     }
 
@@ -1445,12 +1463,44 @@ class extends Component
             $this->messagesPasoExpedientes(),
         );
 
+        $todosAprobados = false;
+        $archivosNuevos = [];
+
         try {
-            DB::transaction(function () use ($inscripcion, $data): void {
-                foreach ($data['expedientesForm'] as $expediente) {
+            foreach ($this->expedientesForm as $indice => $expediente) {
+                $archivoUpload = $this->archivosExpediente[$indice] ?? null;
+
+                if ($archivoUpload instanceof TemporaryUploadedFile) {
+                    $urlActual = $this->nullableTrim($expediente['archivo_url'] ?? '');
+
+                    if ($urlActual !== null) {
+                        Storage::disk('public')->delete($urlActual);
+                    }
+
+                    $storedPath = $archivoUpload->store('expedientes/'.$inscripcion->id_ins, 'public');
+
+                    if ($storedPath === false) {
+                        throw new \RuntimeException('No se pudo guardar el archivo PDF del expediente.');
+                    }
+
+                    $archivosNuevos[$indice] = [
+                        'url' => $storedPath,
+                        'nombre' => $archivoUpload->getClientOriginalName(),
+                    ];
+                }
+            }
+
+            DB::transaction(function () use ($inscripcion, $data, $archivosNuevos, &$todosAprobados): void {
+                foreach ($data['expedientesForm'] as $indice => $expediente) {
+                    $archivoNuevo = $archivosNuevos[$indice] ?? null;
+
                     $payload = [
-                        'archivo_url_iex' => null,
-                        'nombre_archivo_iex' => $this->nullableTrim($expediente['nombre_archivo']),
+                        'archivo_url_iex' => $archivoNuevo !== null
+                            ? $archivoNuevo['url']
+                            : $this->nullableTrim($this->expedientesForm[$indice]['archivo_url'] ?? ''),
+                        'nombre_archivo_iex' => $archivoNuevo !== null
+                            ? $archivoNuevo['nombre']
+                            : $this->nullableTrim($this->expedientesForm[$indice]['nombre_archivo']),
                         'estado_revision_iex' => $expediente['estado_revision'],
                         'observacion_iex' => $this->nullableUpper($expediente['observacion']),
                         'revisado_en' => now(),
@@ -1495,7 +1545,7 @@ class extends Component
 
         unset($this->inscripcionBorrador, $this->expedientesRegistradosWizard);
 
-        $mensaje = $inscripcion->fresh()?->estado_ins === EstadoInscripcion::Activo
+        $mensaje = $todosAprobados
             ? 'Expedientes guardados correctamente. La inscripcion quedo activa.'
             : 'Expedientes guardados correctamente. La inscripcion permanece pendiente hasta completar la revision.';
 
@@ -2156,6 +2206,7 @@ class extends Component
 
         if ($requisitos->isEmpty()) {
             $this->expedientesForm = [];
+            $this->archivosExpediente = [];
 
             return;
         }
@@ -2172,10 +2223,13 @@ class extends Component
                     'estado_revision' => (string) ($expediente?->estado_revision_iex->value ?? EstadoRevisionExpediente::Pendiente->value),
                     'observacion' => (string) ($expediente?->observacion_iex ?? ''),
                     'nombre_archivo' => (string) ($expediente?->nombre_archivo_iex ?? ''),
+                    'archivo_url' => (string) ($expediente?->archivo_url_iex ?? ''),
                 ];
             })
             ->values()
             ->all();
+
+        $this->archivosExpediente = [];
     }
 
     private function normalizarEstadoPersonaForm(): void
