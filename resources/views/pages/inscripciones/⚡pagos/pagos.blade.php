@@ -27,7 +27,7 @@
     @endpermiso
 
     @permiso('pago_crear')
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="space-y-5">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div class="space-y-1">
@@ -86,7 +86,7 @@
         </div>
     @endpermiso
 
-    <div class="space-y-5 rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+    <div class="space-y-5 rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
                     <div class="w-full lg:w-xs">
                         <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar importaciones" clearable>
@@ -229,7 +229,7 @@
                 </div>
         </div>
 
-    <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+    <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
         @if ($this->detalleImportacionSeleccionada)
             @php($detalleImportacion = $this->detalleImportacionSeleccionada)
 

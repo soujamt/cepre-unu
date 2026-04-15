@@ -18,11 +18,11 @@
     </x-breadcrumbs>
 @endsection
 
-<div class="space-y-5">
+<div class="-mt-5 space-y-5">
     <div class="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
         <div class="space-y-4">
             <div
-                class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
             >
                 <div class="space-y-5">
                     <div class="space-y-1">
@@ -130,7 +130,7 @@
         <div class="space-y-5">
             @if ($pasoActual === 1)
                 <div
-                    class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 1</p>
@@ -139,12 +139,12 @@
                     </div>
                 </div>
                 <div
-                    class="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
                         wire:target="guardarPasoPersonal"
-                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-2xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
                             <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
@@ -228,7 +228,7 @@
                         "
                     >
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Identificacion</p>
@@ -277,7 +277,7 @@
                                             wire:loading.attr="disabled"
                                             wire:target="buscarDatosPersona"
                                             x-bind:disabled="!puedeBuscarDatosLocal()"
-                                            class="h-12 w-full justify-center rounded-xl"
+                                            class="h-12 w-full justify-center"
                                         >
                                             <x-slot name="icon">
                                                 <x-ui.icon
@@ -331,7 +331,7 @@
                         </section>
 
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Datos personales</p>
@@ -452,7 +452,7 @@
                         </section>
 
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Nacimiento y domicilio</p>
@@ -576,7 +576,7 @@
                         </section>
 
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Perfil complementario</p>
@@ -728,7 +728,7 @@
                 </div>
             @elseif ($pasoActual === 2)
                 <div
-                    class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 2</p>
@@ -737,12 +737,12 @@
                     </div>
                 </div>
                 <div
-                    class="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
                         wire:target="guardarPasoGeneral"
-                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-2xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
                             <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
@@ -783,7 +783,7 @@
                         "
                     >
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Procedencia educativa</p>
@@ -840,7 +840,7 @@
                         </section>
 
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Colegio de procedencia</p>
@@ -885,7 +885,7 @@
                         </section>
 
                         <section
-                            class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Historial de postulacion</p>
@@ -971,7 +971,7 @@
                 @php ($contextoProceso = $this->contextoProcesoPostulacion)
                 @php ($procesoActivo = $this->procesoPostulacionActivo)
                 <div
-                    class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 3</p>
@@ -980,12 +980,12 @@
                     </div>
                 </div>
                 <div
-                    class="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
                         wire:target="guardarPasoPostulacion"
-                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-2xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
                             <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
@@ -1024,7 +1024,7 @@
                             x-on:duplicado-cancelado.window="$wire.cancelarDuplicadoPostulacion()"
                         >
                             <section
-                                class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso vigente</p>
@@ -1063,7 +1063,7 @@
                             </section>
 
                             <section
-                                class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Seleccion de oferta</p>
@@ -1161,7 +1161,7 @@
                             </section>
 
                             <section
-                                class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Condicion especial</p>
@@ -1189,7 +1189,7 @@
                             </section>
 
                             <section
-                                class="space-y-4 rounded-2xl border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de postulacion</p>

@@ -16,7 +16,7 @@
 
 <div class="space-y-5">
     <div class="grid gap-4 lg:grid-cols-4">
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total inscritas</p>
@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activas</p>
@@ -42,7 +42,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pendientes</p>
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Anuladas</p>

@@ -1,3 +1,3 @@
-<tr {{ $attributes->class(['transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/70']) }}>
+<tr {{ $attributes->class(['']) }}>
     {{ $slot }}
 </tr>

@@ -19,7 +19,7 @@
 <div class="space-y-5">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="grid gap-4 lg:grid-cols-2">
                     <div class="min-w-0">
                         <x-ui.select
@@ -59,7 +59,7 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="grid gap-4 lg:grid-cols-3">
                     <div class="min-w-0">
                         <x-ui.input
@@ -218,7 +218,7 @@
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div>
                         <p class="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Proceso</p>

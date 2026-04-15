@@ -97,14 +97,14 @@
                 @forelse ($this->reglasPago as $reglaPago)
                     <x-table.row>
                         <x-table.cell>{{ $this->reglasPago->firstItem() + $loop->index }}</x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
-                            <div class="space-y-1">
+                        <x-table.cell class="whitespace-normal py-1">
+                            <div class="space-y-0.5">
                                 <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $reglaPago->conceptoPago?->nombre_cpg }}</div>
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $reglaPago->conceptoPago?->codigo_cpg }}</div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
-                            <div class="space-y-1">
+                        <x-table.cell class="whitespace-normal py-1">
+                            <div class="space-y-0.5">
                                 <div class="font-medium leading-5 text-zinc-800 dark:text-zinc-100">{{ $reglaPago->proceso?->nombre_pro }}</div>
                                 <div class="flex flex-wrap gap-2">
                                     <flux:badge color="zinc" size="lg">
@@ -121,17 +121,17 @@
                                 </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
-                            <div class="space-y-1">
+                        <x-table.cell class="whitespace-normal py-1">
+                            <div class="space-y-0.5">
                                 <div class="font-medium text-zinc-800 dark:text-zinc-100">S/ {{ number_format((float) $reglaPago->monto_total_rpa, 2) }}</div>
                                 @if ($reglaPago->requiere_pago_completo_rpa)
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">Exige pago completo</div>
                                 @endif
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="whitespace-normal py-1">
                             @if ($reglaPago->permite_cuotas_rpa)
-                                <div class="space-y-1">
+                                <div class="space-y-0.5">
                                     <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $reglaPago->numero_maximo_cuotas_rpa }} max.</div>
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">
                                         Min. 1ra cuota: S/ {{ number_format((float) $reglaPago->monto_minimo_primera_cuota_rpa, 2) }}
@@ -141,8 +141,8 @@
                                 <flux:badge color="zinc" size="lg">Pago unico</flux:badge>
                             @endif
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
-                            <div class="space-y-1">
+                        <x-table.cell class="whitespace-normal py-1">
+                            <div class="space-y-0.5">
                                 <div>{{ $reglaPago->vigente_desde_rpa?->format('d/m/Y') }}</div>
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">
                                     {{ $reglaPago->vigente_hasta_rpa?->format('d/m/Y') ?? 'Sin fecha final' }}

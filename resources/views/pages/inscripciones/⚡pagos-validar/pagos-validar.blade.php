@@ -19,7 +19,7 @@
 <div class="space-y-5">
     <div class="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         <div class="space-y-5">
-            <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div class="space-y-1">
                         <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">BUSCAR OBLIGACION</h3>
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">OBLIGACIONES PENDIENTES</h3>
@@ -104,7 +104,7 @@
         <div class="space-y-5">
             @if ($this->obligacionSeleccionada)
                 @php($obligacionSeleccionada = $this->obligacionSeleccionada)
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div class="space-y-2">
                             <div class="space-y-1">
@@ -132,7 +132,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                     <div class="space-y-5">
                         <div class="space-y-1">
                             <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">BUSCAR PAGO IMPORTADO</h3>
@@ -188,7 +188,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-2xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                     <div class="space-y-4">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
