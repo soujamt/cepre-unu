@@ -21,9 +21,7 @@
 <div class="-mt-5 space-y-5">
     <div class="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
         <div class="space-y-4">
-            <div
-                class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
-            >
+            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
                 <div class="space-y-5">
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso de registro</p>
@@ -42,6 +40,7 @@
                                         1 => $personaId !== null,
                                         2 => filled($generalForm['anio_graduacion']),
                                         3 => $inscripcionId !== null,
+                                        4 => $this->tienePagoValidadoWizard,
                                         default => false,
                                     };
                                     $esPendiente = ! $esActivo && ! $esCompletado;
@@ -119,7 +118,7 @@
 
                     <flux:button variant="filled" class="w-full font-normal" wire:click="volverListado">
                         <x-slot name="icon">
-                            <x-ui.icon name="arrow-left" size="5" class="text-current" />
+                            <x-ui.icon name="caret-circle-left" size="5" class="text-current" />
                         </x-slot>
                         Volver al listado
                     </flux:button>
@@ -168,7 +167,7 @@
 
                     <form
                         wire:submit="guardarPasoPersonal"
-                        class="space-y-6"
+                        class="space-y-5"
                         x-data="{
                             tipoDocumentoId: @js($personaForm['id_tipo_documento']),
                             numeroDocumento: @js($personaForm['numero_documento']),
@@ -705,20 +704,7 @@
 
                             <flux:button variant="primary" type="submit" class="font-normal">
                                 <x-slot name="icon">
-                                    <x-ui.icon
-                                        wire:loading.remove
-                                        wire:target="guardarPasoPersonal"
-                                        name="arrow-right"
-                                        size="5"
-                                        class="text-white"
-                                    />
-                                    <x-ui.icon
-                                        wire:loading
-                                        wire:target="guardarPasoPersonal"
-                                        name="spinner-gap"
-                                        size="5"
-                                        class="animate-spin text-white"
-                                    />
+                                    <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
                                 </x-slot>
                                 <span wire:loading.remove wire:target="guardarPasoPersonal">Guardar y continuar</span>
                                 <span wire:loading wire:target="guardarPasoPersonal">Guardando...</span>
@@ -755,7 +741,7 @@
 
                     <form
                         wire:submit="guardarPasoGeneral"
-                        class="space-y-6"
+                        class="space-y-5"
                         x-data="{
                             paisColegioId: @js($generalForm['id_pais_colegio']),
                             paisPeruId: @js($this->paisPeruId),
@@ -933,7 +919,7 @@
 
                             <div class="flex gap-3">
                                 <flux:button
-                                    variant="ghost"
+                                    variant="filled"
                                     type="button"
                                     wire:click="irPasoAnterior"
                                     class="font-normal"
@@ -943,20 +929,7 @@
 
                                 <flux:button variant="primary" type="submit" class="font-normal">
                                     <x-slot name="icon">
-                                        <x-ui.icon
-                                            wire:loading.remove
-                                            wire:target="guardarPasoGeneral"
-                                            name="arrow-right"
-                                            size="5"
-                                            class="text-white"
-                                        />
-                                        <x-ui.icon
-                                            wire:loading
-                                            wire:target="guardarPasoGeneral"
-                                            name="spinner-gap"
-                                            size="5"
-                                            class="animate-spin text-white"
-                                        />
+                                        <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
                                     </x-slot>
                                     <span wire:loading.remove wire:target="guardarPasoGeneral"
                                         >Guardar y continuar</span
@@ -997,7 +970,7 @@
                     </div>
 
                     @if (! $contextoProceso['disponible'])
-                        <div class="space-y-6">
+                        <div class="space-y-5">
                             <flux:callout
                                 variant="warning"
                                 icon="exclamation-circle"
@@ -1007,11 +980,11 @@
                             </flux:callout>
 
                             <div class="flex gap-3">
-                                <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                                <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
                                     Volver al paso anterior
                                 </flux:button>
 
-                                <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                                <flux:button variant="filled" wire:click="volverListado" class="font-normal">
                                     Volver al listado
                                 </flux:button>
                             </div>
@@ -1019,7 +992,7 @@
                     @else
                         <form
                             wire:submit="guardarPasoPostulacion"
-                            class="space-y-6"
+                            class="space-y-5"
                             x-on:duplicado-confirmado.window="$wire.confirmarGuardadoDuplicado()"
                             x-on:duplicado-cancelado.window="$wire.cancelarDuplicadoPostulacion()"
                         >
@@ -1218,6 +1191,610 @@
 
                                 <div class="flex gap-3">
                                     <flux:button
+                                        variant="filled"
+                                        type="button"
+                                        wire:click="irPasoAnterior"
+                                        class="font-normal"
+                                    >
+                                        Volver
+                                    </flux:button>
+
+                                    <flux:button variant="primary" type="submit" class="font-normal">
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                        </x-slot>
+                                        <span wire:loading.remove wire:target="guardarPasoPostulacion"
+                                            >Guardar y continuar</span
+                                        >
+                                        <span wire:loading wire:target="guardarPasoPostulacion">Guardando...</span>
+                                    </flux:button>
+                                </div>
+                            </div>
+                        </form>
+                    @endif
+                </div>
+            @elseif ($pasoActual === 4)
+                @php ($inscripcionBorrador = $this->inscripcionBorrador)
+                @php ($reglaPagoSeleccionada = $this->reglaPagoSeleccionada)
+                @php ($obligacionPagoSeleccionada = $this->obligacionPagoSeleccionada)
+                <div
+                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                >
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 4</p>
+                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Pago</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la regla de pago, busque la operacion bancaria y valide el abono del postulante.</p>
+                    </div>
+                </div>
+                <div
+                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                >
+                    <div
+                        wire:loading.flex
+                        wire:target="buscarPagosPasoPago,confirmarPasoPago"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                    >
+                        <div class="flex flex-col items-center gap-3 text-center">
+                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <div>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Procesando validacion de pago</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($inscripcionBorrador === null)
+                        <div class="space-y-5">
+                            <flux:callout
+                                variant="warning"
+                                icon="exclamation-circle"
+                                heading="No existe una inscripcion borrador para validar pagos."
+                            >
+                                <p class="text-sm">Primero debemos guardar la postulacion para poder asociar una regla de pago y validar la operacion bancaria.</p>
+                            </flux:callout>
+
+                            <div class="flex gap-3">
+                                <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
+                                    Volver al paso anterior
+                                </flux:button>
+
+                                <flux:button variant="filled" wire:click="volverListado" class="font-normal">
+                                    Volver al listado
+                                </flux:button>
+                            </div>
+                        </div>
+                    @elseif ($this->reglasPagoDisponibles->isEmpty())
+                        <div class="space-y-5">
+                            <flux:callout
+                                variant="warning"
+                                icon="exclamation-circle"
+                                heading="No hay reglas de pago vigentes para esta postulacion."
+                            >
+                                <p class="text-sm">Revise la configuracion de reglas de pago del proceso actual antes de continuar con la validacion bancaria.</p>
+                            </flux:callout>
+
+                            <div class="flex gap-3">
+                                <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
+                                    Volver al paso anterior
+                                </flux:button>
+
+                                <flux:button variant="filled" wire:click="volverListado" class="font-normal">
+                                    Volver al listado
+                                </flux:button>
+                            </div>
+                        </div>
+                    @else
+                        <div class="space-y-5">
+                            <section
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            >
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Contexto de inscripcion</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Validaremos el pago sobre la inscripcion borrador ya creada en el paso anterior.</p>
+                                </div>
+
+                                <div class="grid gap-4 lg:grid-cols-12">
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Codigo inscripcion"
+                                            :value="$inscripcionBorrador->codigo_ins"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Postulante"
+                                            :value="trim(implode(' ', array_filter([
+                                                $inscripcionBorrador->persona?->apellido_paterno_per,
+                                                $inscripcionBorrador->persona?->apellido_materno_per,
+                                                $inscripcionBorrador->persona?->nombres_per,
+                                            ])))"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Oferta seleccionada"
+                                            :value="$this->descripcionProcesoOferta($inscripcionBorrador->procesoOferta)"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            >
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Regla de pago</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la tarifa que corresponde a esta inscripcion antes de buscar el pago del banco.</p>
+                                </div>
+
+                                <div class="grid gap-4 lg:grid-cols-12">
+                                    <div class="lg:col-span-12">
+                                        <x-ui.select
+                                            label="Regla de pago"
+                                            wire:model.live="pagoForm.id_regla_pago"
+                                            :invalid="$errors->has('pagoForm.id_regla_pago')"
+                                            :error="$errors->first('pagoForm.id_regla_pago')"
+                                            required
+                                            floating
+                                        >
+                                            <option value="">Seleccionar regla</option>
+                                            @foreach ($this->reglasPagoDisponibles as $reglaPago)
+                                                <option value="{{ $reglaPago->id_rpa }}">
+                                                    {{ $this->descripcionReglaPago($reglaPago) }}
+                                                </option>
+                                            @endforeach
+                                        </x-ui.select>
+                                    </div>
+                                </div>
+
+                                @if ($reglaPagoSeleccionada)
+                                    <flux:callout
+                                        variant="secondary"
+                                        icon="information-circle"
+                                        heading="Resumen de la regla seleccionada"
+                                    >
+                                        <div class="grid gap-3 text-sm lg:grid-cols-2">
+                                            <p><span class="font-medium">Concepto:</span> {{ $reglaPagoSeleccionada->conceptoPago?->nombre_cpg }}</p>
+                                            <p><span class="font-medium">Monto total:</span> S/ {{ number_format((float) $reglaPagoSeleccionada->monto_total_rpa, 2) }}</p>
+                                            <p><span class="font-medium">Cuotas:</span> {{ $reglaPagoSeleccionada->permite_cuotas_rpa ? 'Hasta '.$reglaPagoSeleccionada->numero_maximo_cuotas_rpa : 'Pago unico' }}</p>
+                                            <p><span class="font-medium">Primera cuota minima:</span> S/ {{ number_format((float) $reglaPagoSeleccionada->monto_minimo_primera_cuota_rpa, 2) }}</p>
+                                        </div>
+                                    </flux:callout>
+                                @endif
+
+                                @if ($obligacionPagoSeleccionada)
+                                    <flux:callout
+                                        variant="{{ $obligacionPagoSeleccionada->estado_iop->value === 'PAGADO' ? 'success' : 'warning' }}"
+                                        icon="{{ $obligacionPagoSeleccionada->estado_iop->value === 'PAGADO' ? 'check-circle' : 'clock' }}"
+                                        heading="Estado actual de la obligacion"
+                                    >
+                                        <div class="grid gap-3 text-sm lg:grid-cols-3">
+                                            <p><span class="font-medium">Pagado:</span> S/ {{ number_format((float) $obligacionPagoSeleccionada->monto_pagado_iop, 2) }}</p>
+                                            <p><span class="font-medium">Saldo:</span> S/ {{ number_format((float) $obligacionPagoSeleccionada->saldo_iop, 2) }}</p>
+                                            <p><span class="font-medium">Estado:</span> {{ $obligacionPagoSeleccionada->estado_iop->value }}</p>
+                                        </div>
+                                    </flux:callout>
+                                @endif
+                            </section>
+
+                            <section
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            >
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Busqueda de pago bancario</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Busque la operacion usando DNI, operacion visible y fecha del abono importado del banco.</p>
+                                </div>
+
+                                <div class="grid gap-4 lg:grid-cols-12">
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Numero documento"
+                                            wire:model="pagoForm.numero_documento"
+                                            disabled
+                                            :invalid="$errors->has('pagoForm.numero_documento')"
+                                            :error="$errors->first('pagoForm.numero_documento')"
+                                            floating
+                                        />
+                                    </div>
+
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Operacion visible"
+                                            type="text"
+                                            wire:model="pagoForm.numero_operacion"
+                                            :invalid="$errors->has('pagoForm.numero_operacion')"
+                                            :error="$errors->first('pagoForm.numero_operacion')"
+                                            required
+                                            floating
+                                        />
+                                    </div>
+
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Fecha de pago"
+                                            type="date"
+                                            wire:model="pagoForm.fecha_pago"
+                                            :invalid="$errors->has('pagoForm.fecha_pago')"
+                                            :error="$errors->first('pagoForm.fecha_pago')"
+                                            required
+                                            floating
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-end">
+                                    <flux:button
+                                        type="button"
+                                        variant="primary"
+                                        color="purple"
+                                        wire:click="buscarPagosPasoPago"
+                                        wire:loading.attr="disabled"
+                                        wire:target="buscarPagosPasoPago"
+                                    >
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="magnifying-glass" size="5" class="text-white" />
+                                        </x-slot>
+                                        <span wire:loading.remove wire:target="buscarPagosPasoPago">Buscar pago</span>
+                                        <span wire:loading wire:target="buscarPagosPasoPago">Buscando...</span>
+                                    </flux:button>
+                                </div>
+                            </section>
+
+                            @if ($busquedaPagoRealizada)
+                                <section
+                                    class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                >
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resultados importados</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione el pago correcto antes de confirmar la validacion de la obligacion.</p>
+                                    </div>
+
+                                    @if ($this->detallesPagoEncontrados->isEmpty())
+                                        <flux:callout
+                                            variant="warning"
+                                            icon="exclamation-circle"
+                                            heading="No se encontraron pagos pendientes con esos datos."
+                                        >
+                                            <p class="text-sm">Revise la operacion visible, la fecha o confirme que el TXT del banco ya fue importado.</p>
+                                        </flux:callout>
+                                    @else
+                                        <div class="grid gap-3">
+                                            @foreach ($this->detallesPagoEncontrados as $detallePago)
+                                                <button
+                                                    type="button"
+                                                    wire:key="detalle-pago-{{ $detallePago->id_ibd }}"
+                                                    wire:click="seleccionarDetallePago({{ $detallePago->id_ibd }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="buscarPagosPasoPago,confirmarPasoPago,seleccionarDetallePago"
+                                                    @class ([
+                                                        'w-full rounded-xl border px-4 py-3 text-left transition',
+                                                        'border-green-500 bg-green-50/70 dark:border-green-400 dark:bg-green-500/10' => (string) $pagoForm['id_detalle_banco'] === (string) $detallePago->id_ibd,
+                                                        'border-zinc-200 bg-white hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20' => (string) $pagoForm['id_detalle_banco'] !== (string) $detallePago->id_ibd,
+                                                    ])
+                                                >
+                                                    <div
+                                                        class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"
+                                                    >
+                                                        <div class="space-y-1">
+                                                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                                                                {{ $this->resumenDetallePago($detallePago) }}
+                                                            </p>
+                                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                                Depositante: {{ $detallePago->nombre_depositante_ibd ?: 'SIN NOMBRE' }}
+                                                            </p>
+                                                            <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                                Operacion banco: {{ $detallePago->numero_operacion_raw_ibd ?: $detallePago->numero_operacion_ibd ?: 'SIN OPERACION' }}
+                                                            </p>
+                                                        </div>
+
+                                                        <span
+                                                            class="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                                                        >
+                                                            {{ $detallePago->estado_ibd->value }}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </section>
+                            @endif
+
+                            @if ($obligacionPagoSeleccionada && $obligacionPagoSeleccionada->pagos->isNotEmpty())
+                                <section
+                                    class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                >
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pagos ya validados</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Esta obligacion ya tiene cuotas registradas. Aqui puede revisar el historial acumulado.</p>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        @foreach ($obligacionPagoSeleccionada->pagos as $pagoRegistrado)
+                                            <div
+                                                class="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-zinc-900"
+                                            >
+                                                <div
+                                                    class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between"
+                                                >
+                                                    <div class="space-y-1">
+                                                        <p class="font-medium text-zinc-800 dark:text-zinc-100">
+                                                            Cuota {{ $pagoRegistrado->numero_cuota_ipa }} | S/ {{ number_format((float) $pagoRegistrado->monto_ipa, 2) }}
+                                                        </p>
+                                                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                            {{ $pagoRegistrado->numero_operacion_ipa ?: 'SIN OPERACION' }} | {{ $pagoRegistrado->fecha_pago_ipa?->format('d/m/Y') }}
+                                                        </p>
+                                                    </div>
+                                                    <span
+                                                        class="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 dark:bg-green-500/10 dark:text-green-300"
+                                                    >
+                                                        {{ $pagoRegistrado->estado_validacion_ipa->value }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </section>
+                            @endif
+
+                            @if ($this->tienePagoValidadoWizard)
+                                <flux:callout
+                                    variant="success"
+                                    icon="check-circle"
+                                    heading="Pago validado correctamente"
+                                >
+                                    <p class="text-sm">Esta inscripcion ya tiene un pago verificado. Puede continuar directamente al paso de expedientes.</p>
+                                </flux:callout>
+                                <div class="flex justify-end">
+                                    <flux:button
+                                        variant="primary"
+                                        type="button"
+                                        wire:click="$set('pasoActual', 5)"
+                                        class="font-normal"
+                                    >
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                        </x-slot>
+                                        Continuar a expedientes
+                                    </flux:button>
+                                </div>
+                            @else
+                                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Cuando confirmemos el pago, quedara asociado a la inscripcion y el wizard avanzara al paso de expedientes.</p>
+
+                                    <div class="flex gap-3">
+                                        <flux:button
+                                            variant="filled"
+                                            type="button"
+                                            wire:click="irPasoAnterior"
+                                            wire:loading.attr="disabled"
+                                            wire:target="buscarPagosPasoPago,confirmarPasoPago"
+                                            class="font-normal"
+                                        >
+                                            Volver
+                                        </flux:button>
+
+                                        <flux:button
+                                            variant="primary"
+                                            type="button"
+                                            wire:click="confirmarPasoPago"
+                                            wire:loading.attr="disabled"
+                                            wire:target="confirmarPasoPago"
+                                            class="font-normal"
+                                        >
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="check" size="5" class="text-white" />
+                                            </x-slot>
+                                            <span wire:loading.remove wire:target="confirmarPasoPago"
+                                                >Confirmar pago y continuar</span
+                                            >
+                                            <span wire:loading wire:target="confirmarPasoPago">Validando...</span>
+                                        </flux:button>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @elseif ($pasoActual === 5)
+                @php ($inscripcionBorrador = $this->inscripcionBorrador)
+                @php ($requisitosExpediente = $this->requisitosExpedienteWizard)
+                <div
+                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                >
+                    <div class="space-y-1">
+                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 5</p>
+                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Expedientes</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Revise los requisitos del proceso y registre el estado de cada expediente presentado por el postulante.</p>
+                    </div>
+                </div>
+                <div
+                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                >
+                    <div
+                        wire:loading.flex
+                        wire:target="guardarPasoExpedientes"
+                        class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
+                    >
+                        <div class="flex flex-col items-center gap-3 text-center">
+                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <div>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando expedientes</p>
+                                <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if ($inscripcionBorrador === null)
+                        <div class="space-y-6">
+                            <flux:callout
+                                variant="warning"
+                                icon="exclamation-circle"
+                                heading="No existe una inscripcion borrador para registrar expedientes."
+                            >
+                                <p class="text-sm">Primero debemos completar los pasos previos del wizard antes de cerrar la revision documental.</p>
+                            </flux:callout>
+
+                            <div class="flex gap-3">
+                                <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                                    Volver al paso anterior
+                                </flux:button>
+
+                                <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                                    Volver al listado
+                                </flux:button>
+                            </div>
+                        </div>
+                    @elseif ($requisitosExpediente->isEmpty())
+                        <div class="space-y-6">
+                            <flux:callout
+                                variant="warning"
+                                icon="exclamation-circle"
+                                heading="No hay requisitos de expediente configurados para este proceso."
+                            >
+                                <p class="text-sm">Revise el mantenedor de requisitos antes de intentar finalizar la inscripcion.</p>
+                            </flux:callout>
+
+                            <div class="flex gap-3">
+                                <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                                    Volver al paso anterior
+                                </flux:button>
+
+                                <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                                    Volver al listado
+                                </flux:button>
+                            </div>
+                        </div>
+                    @else
+                        <form wire:submit="guardarPasoExpedientes" class="space-y-6">
+                            <section
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            >
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de cierre</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">La inscripcion se activara solo si todos los expedientes obligatorios quedan aprobados.</p>
+                                </div>
+
+                                <div class="grid gap-4 lg:grid-cols-12">
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Codigo inscripcion"
+                                            :value="$inscripcionBorrador->codigo_ins"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Estado actual"
+                                            :value="$inscripcionBorrador->estado_ins->value"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                    <div class="lg:col-span-4">
+                                        <x-ui.input
+                                            label="Postulante"
+                                            :value="trim(implode(' ', array_filter([
+                                                $inscripcionBorrador->persona?->apellido_paterno_per,
+                                                $inscripcionBorrador->persona?->apellido_materno_per,
+                                                $inscripcionBorrador->persona?->nombres_per,
+                                            ])))"
+                                            disabled
+                                            floating
+                                        />
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section
+                                class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            >
+                                <div class="space-y-1">
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Revision documental</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre el estado de revision, observaciones y una referencia simple del documento recibido.</p>
+                                </div>
+
+                                <div class="space-y-4">
+                                    @foreach ($expedientesForm as $indice => $expediente)
+                                        @php ($requisito = $requisitosExpediente->firstWhere('id_tipo_expediente', (int) $expediente['id_tipo_expediente']))
+                                        <div
+                                            wire:key="expediente-wizard-{{ $expediente['id_tipo_expediente'] }}"
+                                            class="rounded-xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-900"
+                                        >
+                                            <div class="grid gap-4 lg:grid-cols-12">
+                                                <div class="space-y-1 lg:col-span-4">
+                                                    <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                                                        {{ $requisito?->tipoExpediente?->nombre_tex ?? 'EXPEDIENTE' }}
+                                                    </p>
+                                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                                        {{ $requisito?->tipoExpediente?->descripcion_tex ?? 'Sin descripcion registrada.' }}
+                                                    </p>
+                                                    <div class="pt-1">
+                                                        <flux:badge
+                                                            :color="$requisito?->obligatorio_rex ? 'emerald' : 'zinc'"
+                                                            size="lg"
+                                                        >
+                                                            {{ $requisito?->obligatorio_rex ? 'OBLIGATORIO' : 'OPCIONAL' }}
+                                                        </flux:badge>
+                                                    </div>
+                                                </div>
+
+                                                <div class="lg:col-span-3">
+                                                    <x-ui.select
+                                                        label="Estado de revision"
+                                                        wire:model="expedientesForm.{{ $indice }}.estado_revision"
+                                                        :invalid="$errors->has('expedientesForm.'.$indice.'.estado_revision')"
+                                                        :error="$errors->first('expedientesForm.'.$indice.'.estado_revision')"
+                                                        required
+                                                        floating
+                                                    >
+                                                        @foreach ($this->estadosRevisionExpediente() as $estadoRevision)
+                                                            <option value="{{ $estadoRevision->value }}">
+                                                                {{ $estadoRevision->value }}
+                                                            </option>
+                                                        @endforeach
+                                                    </x-ui.select>
+                                                </div>
+
+                                                <div class="lg:col-span-5">
+                                                    <x-ui.input
+                                                        label="Referencia del documento"
+                                                        type="text"
+                                                        wire:model="expedientesForm.{{ $indice }}.nombre_archivo"
+                                                        :invalid="$errors->has('expedientesForm.'.$indice.'.nombre_archivo')"
+                                                        :error="$errors->first('expedientesForm.'.$indice.'.nombre_archivo')"
+                                                        floating
+                                                    />
+                                                </div>
+
+                                                <div class="lg:col-span-12">
+                                                    <x-ui.textarea
+                                                        label="Observacion"
+                                                        wire:model="expedientesForm.{{ $indice }}.observacion"
+                                                        :invalid="$errors->has('expedientesForm.'.$indice.'.observacion')"
+                                                        :error="$errors->first('expedientesForm.'.$indice.'.observacion')"
+                                                        rows="2"
+                                                        floating
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </section>
+
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se registrara la revision documental y se cerrara el wizard de inscripcion.</p>
+
+                                <div class="flex gap-3">
+                                    <flux:button
                                         variant="ghost"
                                         type="button"
                                         wire:click="irPasoAnterior"
@@ -1228,25 +1805,12 @@
 
                                     <flux:button variant="primary" type="submit" class="font-normal">
                                         <x-slot name="icon">
-                                            <x-ui.icon
-                                                wire:loading.remove
-                                                wire:target="guardarPasoPostulacion"
-                                                name="arrow-right"
-                                                size="5"
-                                                class="text-white"
-                                            />
-                                            <x-ui.icon
-                                                wire:loading
-                                                wire:target="guardarPasoPostulacion"
-                                                name="spinner-gap"
-                                                size="5"
-                                                class="animate-spin text-white"
-                                            />
+                                            <x-ui.icon name="check" size="5" class="text-white" />
                                         </x-slot>
-                                        <span wire:loading.remove wire:target="guardarPasoPostulacion">
-                                            Guardar y continuar
-                                        </span>
-                                        <span wire:loading wire:target="guardarPasoPostulacion">Guardando...</span>
+                                        <span wire:loading.remove wire:target="guardarPasoExpedientes"
+                                            >Guardar y finalizar</span
+                                        >
+                                        <span wire:loading wire:target="guardarPasoExpedientes">Guardando...</span>
                                     </flux:button>
                                 </div>
                             </div>
@@ -1258,57 +1822,18 @@
                     class="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-xs dark:border-white/10 dark:bg-zinc-900"
                 >
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        @if ($pasoActual === 3)
-                            @php ($contextoProceso = $this->contextoProcesoPostulacion)
-                            <x-ui.icon
-                                :name="$contextoProceso['disponible'] ? 'graduation-cap' : 'warning-circle'"
-                                size="14"
-                                class="{{ $contextoProceso['disponible'] ? 'text-green-500 dark:text-green-400' : 'text-amber-500 dark:text-amber-400' }}"
-                            />
-                            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                                {{ $this->pasos[$pasoActual]['titulo'] }}
-                            </p>
-                            <div class="w-full max-w-2xl text-left">
-                                <flux:callout
-                                    variant="{{ $contextoProceso['disponible'] ? 'success' : 'warning' }}"
-                                    icon="{{ $contextoProceso['disponible'] ? 'check-circle' : 'exclamation-circle' }}"
-                                    heading="{{ $contextoProceso['mensaje'] }}"
-                                >
-                                    @if ($contextoProceso['proceso'])
-                                        <div class="space-y-1 text-sm">
-                                            <p>
-                                                <span class="font-medium">Proceso:</span>
-                                                {{ $contextoProceso['proceso']->nombre_pro }}
-                                            </p>
-                                            <p>
-                                                <span class="font-medium">Semestre:</span>
-                                                {{ $contextoProceso['proceso']->semestre?->nombre_sem }}
-                                            </p>
-                                            <p>
-                                                <span class="font-medium">Fechas:</span>
-                                                {{ $contextoProceso['proceso']->fecha_inicio_pro?->format('d/m/Y') }} - {{ $contextoProceso['proceso']->fecha_fin_pro?->format('d/m/Y') }}
-                                            </p>
-                                        </div>
-                                    @else
-                                        <p class="text-sm">Cuando habilitemos el detalle de postulacion, aqui solo se mostraran procesos vigentes y con ofertas activas.</p>
-                                    @endif
-                                </flux:callout>
-                            </div>
-                            <p class="max-w-2xl text-sm text-zinc-500 dark:text-zinc-400">El detalle de postulacion se habilitara en la siguiente iteracion, pero desde ahora ya estamos validando si existe un proceso disponible para inscribir.</p>
-                        @else
-                            <x-ui.icon name="stack" size="14" class="text-zinc-400 dark:text-zinc-500" />
-                            <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                                {{ $this->pasos[$pasoActual]['titulo'] }}
-                            </p>
-                            <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitara en la siguiente iteracion. La base personal ya quedo guardada y lista para continuar.</p>
-                        @endif
+                        <x-ui.icon name="stack" size="14" class="text-zinc-400 dark:text-zinc-500" />
+                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                            {{ $this->pasos[$pasoActual]['titulo'] }}
+                        </p>
+                        <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitara en la siguiente iteracion. La base del wizard ya quedo lista para continuar sin perder el avance anterior.</p>
 
                         <div class="flex gap-3">
-                            <flux:button variant="ghost" wire:click="irPasoAnterior" class="font-normal">
+                            <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">
                                 Volver al paso anterior
                             </flux:button>
 
-                            <flux:button variant="ghost" wire:click="volverListado" class="font-normal">
+                            <flux:button variant="filled" wire:click="volverListado" class="font-normal">
                                 Volver al listado
                             </flux:button>
                         </div>

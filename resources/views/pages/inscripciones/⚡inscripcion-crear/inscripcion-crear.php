@@ -1,15 +1,22 @@
 ﻿<?php
 
 use App\Enums\EstadoCatalogo;
+use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
+use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
+use App\Enums\EstadoRevisionExpediente;
+use App\Enums\EstadoValidacionPago;
 use App\Enums\SexoPersona;
 use App\Enums\TipoLenguaMaternaPersona;
 use App\Services\ReniecService;
 use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
+use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
+use App\Models\InscripcionExpediente;
+use App\Models\InscripcionObligacionPago;
 use App\Models\Colegio;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
@@ -18,12 +25,16 @@ use App\Models\Pais;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
+use App\Models\ReglaPago;
+use App\Models\RequisitoExpediente;
 use App\Models\TipoDiscapacidad;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
+use App\Support\InscripcionPagoManager;
 use App\Support\ProcesoInscripcionResolver;
 use App\Traits\AuthorizesPermisos;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -148,6 +159,40 @@ class extends Component
         'id_convenio_proceso' => '',
     ];
 
+    /**
+     * @var array{
+     *   id_regla_pago:string,
+     *   numero_documento:string,
+     *   numero_operacion:string,
+     *   fecha_pago:string,
+     *   id_detalle_banco:string
+     * }
+     */
+    public array $pagoForm = [
+        'id_regla_pago' => '',
+        'numero_documento' => '',
+        'numero_operacion' => '',
+        'fecha_pago' => '',
+        'id_detalle_banco' => '',
+    ];
+
+    /**
+     * @var array<int, int>
+     */
+    public array $resultadoPagoDetalleIds = [];
+
+    public bool $busquedaPagoRealizada = false;
+
+    /**
+     * @var array<int, array{
+     *   id_tipo_expediente:string,
+     *   estado_revision:string,
+     *   observacion:string,
+     *   nombre_archivo:string
+     * }>
+     */
+    public array $expedientesForm = [];
+
     public ?int $personaId = null;
 
     public ?int $inscripcionId = null;
@@ -173,6 +218,7 @@ class extends Component
     {
         $this->autorizarPermiso('inscripcion', 'crear');
         $this->hidratarCatalogos();
+        $this->pagoForm['fecha_pago'] = now()->subDay()->toDateString();
     }
 
     public function updatedPersonaFormIdTipoDocumento(): void
@@ -282,6 +328,16 @@ class extends Component
     {
         $this->postulacionForm['id_proceso_oferta'] = '';
         $this->postulacionForm['id_convenio_proceso'] = '';
+    }
+
+    public function updatedPagoFormIdReglaPago(): void
+    {
+        $this->limpiarBusquedaPago();
+    }
+
+    public function updatedPagoFormNumeroOperacion(string $valor): void
+    {
+        $this->pagoForm['numero_operacion'] = preg_replace('/\D+/', '', $valor) ?? '';
     }
 
     #[Computed]
@@ -423,6 +479,178 @@ class extends Component
             ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
             ->whereDate('fecha_inicio_cpr', '<=', $fechaReferencia)
             ->whereDate('fecha_fin_cpr', '>=', $fechaReferencia)
+            ->get();
+    }
+
+    #[Computed]
+    public function inscripcionBorrador(): ?Inscripcion
+    {
+        if ($this->inscripcionId === null) {
+            return null;
+        }
+
+        return Inscripcion::query()
+            ->with([
+                'persona',
+                'procesoOferta.proceso.semestre',
+                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+                'procesoOferta.ofertaBase.sedeCarrera.carrera',
+                'procesoOferta.turno',
+                'convenioProceso.convenio',
+            ])
+            ->find($this->inscripcionId);
+    }
+
+    #[Computed]
+    public function reglasPagoDisponibles(): \Illuminate\Database\Eloquent\Collection
+    {
+        $inscripcion = $this->inscripcionBorrador;
+        $procesoId = $inscripcion?->procesoOferta?->id_proceso;
+
+        if ($inscripcion === null || $procesoId === null) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
+        $convenioProcesoId = $inscripcion->id_convenio_proceso;
+        $fechaReferencia = now()->toDateString();
+
+        return ReglaPago::query()
+            ->with([
+                'conceptoPago',
+                'modalidadAdmision',
+                'convenioProceso.convenio',
+            ])
+            ->where('id_proceso', $procesoId)
+            ->where('estado_rpa', EstadoCatalogo::Habilitado->value)
+            ->whereDate('vigente_desde_rpa', '<=', $fechaReferencia)
+            ->whereDate('vigente_hasta_rpa', '>=', $fechaReferencia)
+            ->where(function ($query) use ($modalidadId): void {
+                $query->whereNull('id_modalidad_admision');
+
+                if ($modalidadId !== null) {
+                    $query->orWhere('id_modalidad_admision', $modalidadId);
+                }
+            })
+            ->where(function ($query) use ($convenioProcesoId): void {
+                $query->whereNull('id_convenio_proceso');
+
+                if ($convenioProcesoId !== null) {
+                    $query->orWhere('id_convenio_proceso', $convenioProcesoId);
+                }
+            })
+            ->orderBy('id_convenio_proceso')
+            ->orderBy('monto_total_rpa')
+            ->get();
+    }
+
+    #[Computed]
+    public function reglaPagoSeleccionada(): ?ReglaPago
+    {
+        if ($this->pagoForm['id_regla_pago'] === '') {
+            return null;
+        }
+
+        return $this->reglasPagoDisponibles()
+            ->first(fn (ReglaPago $reglaPago): bool => (string) $reglaPago->id_rpa === (string) $this->pagoForm['id_regla_pago']);
+    }
+
+    #[Computed]
+    public function obligacionPagoSeleccionada(): ?InscripcionObligacionPago
+    {
+        $inscripcion = $this->inscripcionBorrador;
+        $reglaPago = $this->reglaPagoSeleccionada;
+
+        if ($inscripcion === null || $reglaPago === null) {
+            return null;
+        }
+
+        return InscripcionObligacionPago::query()
+            ->with([
+                'reglaPago.conceptoPago',
+                'pagos.importacionBancoDetalle',
+            ])
+            ->where('id_inscripcion', $inscripcion->id_ins)
+            ->where('id_regla_pago', $reglaPago->id_rpa)
+            ->first();
+    }
+
+    #[Computed]
+    public function detallesPagoEncontrados(): \Illuminate\Database\Eloquent\Collection
+    {
+        if ($this->resultadoPagoDetalleIds === []) {
+            return ImportacionBancoDetalle::query()->whereRaw('1 = 0')->get();
+        }
+
+        return ImportacionBancoDetalle::query()
+            ->whereIn('id_ibd', $this->resultadoPagoDetalleIds)
+            ->orderByDesc('fecha_pago_ibd')
+            ->orderByDesc('id_ibd')
+            ->get();
+    }
+
+    #[Computed]
+    public function detallePagoSeleccionado(): ?ImportacionBancoDetalle
+    {
+        if ($this->pagoForm['id_detalle_banco'] === '') {
+            return null;
+        }
+
+        return ImportacionBancoDetalle::query()->find($this->pagoForm['id_detalle_banco']);
+    }
+
+    #[Computed]
+    public function tienePagoValidadoWizard(): bool
+    {
+        $inscripcion = $this->inscripcionBorrador;
+
+        if ($inscripcion === null) {
+            return false;
+        }
+
+        return InscripcionObligacionPago::query()
+            ->where('id_inscripcion', $inscripcion->id_ins)
+            ->where(function ($query): void {
+                $query->where('estado_iop', EstadoObligacionPago::Exonerado->value)
+                    ->orWhereHas('pagos', function ($pagosQuery): void {
+                        $pagosQuery->where('estado_validacion_ipa', EstadoValidacionPago::Verificado->value);
+                    });
+            })
+            ->exists();
+    }
+
+    #[Computed]
+    public function requisitosExpedienteWizard(): \Illuminate\Database\Eloquent\Collection
+    {
+        $inscripcion = $this->inscripcionBorrador;
+        $procesoId = $inscripcion?->procesoOferta?->id_proceso;
+
+        if ($inscripcion === null || $procesoId === null) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return RequisitoExpediente::query()
+            ->with('tipoExpediente')
+            ->where('id_proceso', $procesoId)
+            ->where('estado_rex', EstadoCatalogo::Habilitado->value)
+            ->orderBy('id_tipo_expediente')
+            ->get();
+    }
+
+    #[Computed]
+    public function expedientesRegistradosWizard(): \Illuminate\Database\Eloquent\Collection
+    {
+        $inscripcion = $this->inscripcionBorrador;
+
+        if ($inscripcion === null) {
+            return new \Illuminate\Database\Eloquent\Collection();
+        }
+
+        return InscripcionExpediente::query()
+            ->with('tipoExpediente')
+            ->where('id_inscripcion', $inscripcion->id_ins)
+            ->orderBy('id_tipo_expediente')
             ->get();
     }
 
@@ -681,6 +909,82 @@ class extends Component
             'postulacionForm.id_lugar_inscripcion.required' => 'El lugar de inscripcion es obligatorio.',
             'postulacionForm.id_turno.required' => 'El turno es obligatorio.',
             'postulacionForm.id_proceso_oferta.required' => 'La oferta es obligatoria.',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rulesPasoPagoBusqueda(): array
+    {
+        return [
+            'pagoForm.id_regla_pago' => [
+                'required',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $valido = $this->reglasPagoDisponibles()
+                        ->contains(fn (ReglaPago $reglaPago): bool => (string) $reglaPago->id_rpa === (string) $value);
+
+                    if (! $valido) {
+                        $fail('La regla de pago seleccionada no es valida para esta inscripcion.');
+                    }
+                },
+            ],
+            'pagoForm.numero_documento' => ['required', 'string'],
+            'pagoForm.numero_operacion' => ['required', 'string'],
+            'pagoForm.fecha_pago' => ['required', 'date'],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rulesPasoPagoConfirmacion(): array
+    {
+        return array_merge($this->rulesPasoPagoBusqueda(), [
+            'pagoForm.id_detalle_banco' => ['required', 'integer'],
+        ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function messagesPasoPago(): array
+    {
+        return [
+            'pagoForm.id_regla_pago.required' => 'Debe seleccionar una regla de pago.',
+            'pagoForm.numero_documento.required' => 'El numero de documento es obligatorio.',
+            'pagoForm.numero_operacion.required' => 'La operacion es obligatoria para buscar pagos.',
+            'pagoForm.fecha_pago.required' => 'La fecha de pago es obligatoria.',
+            'pagoForm.id_detalle_banco.required' => 'Debe seleccionar un pago importado antes de continuar.',
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function rulesPasoExpedientes(): array
+    {
+        $rules = [];
+
+        foreach ($this->expedientesForm as $indice => $expediente) {
+            $rules["expedientesForm.{$indice}.id_tipo_expediente"] = ['required', 'integer'];
+            $rules["expedientesForm.{$indice}.estado_revision"] = ['required', 'in:'.collect(EstadoRevisionExpediente::cases())->pluck('value')->implode(',')];
+            $rules["expedientesForm.{$indice}.observacion"] = ['nullable', 'string', 'max:255'];
+            $rules["expedientesForm.{$indice}.nombre_archivo"] = ['nullable', 'string', 'max:255'];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function messagesPasoExpedientes(): array
+    {
+        return [
+            'expedientesForm.*.estado_revision.required' => 'Debe seleccionar el estado de revision del expediente.',
+            'expedientesForm.*.observacion.max' => 'La observacion no debe superar los 255 caracteres.',
+            'expedientesForm.*.nombre_archivo.max' => 'La referencia del archivo no debe superar los 255 caracteres.',
         ];
     }
 
@@ -1042,6 +1346,163 @@ class extends Component
         $this->persistirPostulacion($data);
     }
 
+    public function buscarPagosPasoPago(InscripcionPagoManager $manager): void
+    {
+        $this->prepararPasoPago();
+
+        if ($this->inscripcionId === null) {
+            $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de buscar pagos.', type: 'warning');
+
+            return;
+        }
+
+        $data = $this->validate(
+            $this->rulesPasoPagoBusqueda(),
+            $this->messagesPasoPago(),
+        );
+
+        $this->resultadoPagoDetalleIds = $manager
+            ->buscarDetallesDisponibles(
+                $data['pagoForm']['numero_documento'],
+                $data['pagoForm']['numero_operacion'],
+                $data['pagoForm']['fecha_pago'],
+            )
+            ->pluck('id_ibd')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->all();
+
+        $this->pagoForm['id_detalle_banco'] = '';
+        $this->busquedaPagoRealizada = true;
+    }
+
+    public function seleccionarDetallePago(int $idDetalle): void
+    {
+        $this->pagoForm['id_detalle_banco'] = (string) $idDetalle;
+    }
+
+    public function confirmarPasoPago(InscripcionPagoManager $manager): void
+    {
+        $this->prepararPasoPago();
+
+        if ($this->inscripcionId === null) {
+            $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de validar pagos.', type: 'warning');
+
+            return;
+        }
+
+        $data = $this->validate(
+            $this->rulesPasoPagoConfirmacion(),
+            $this->messagesPasoPago(),
+        );
+
+        $detalle = ImportacionBancoDetalle::query()->find($data['pagoForm']['id_detalle_banco']);
+        $reglaPago = $this->reglaPagoSeleccionada;
+
+        if ($detalle === null || $reglaPago === null) {
+            $this->dispatch('toast', message: 'No se pudo cargar el pago o la regla seleccionada.', type: 'error');
+
+            return;
+        }
+
+        $obligacion = $this->resolverObligacionPagoSeleccionada($reglaPago);
+
+        try {
+            $manager->asociarDetalleAObligacion($obligacion, $detalle);
+        } catch (\DomainException $exception) {
+            $this->dispatch('toast', message: $exception->getMessage(), type: 'error');
+
+            return;
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo validar el pago seleccionado.', type: 'error');
+
+            return;
+        }
+
+        unset($this->obligacionPagoSeleccionada, $this->detallePagoSeleccionado, $this->detallesPagoEncontrados, $this->tienePagoValidadoWizard);
+
+        $this->limpiarBusquedaPago();
+        $this->pasoActual = 5;
+        $this->inicializarExpedientesForm();
+        $this->dispatch('toast', message: 'Pago validado correctamente. Puede continuar con los expedientes.', type: 'success');
+    }
+
+    public function guardarPasoExpedientes(): void
+    {
+        $inscripcion = $this->inscripcionBorrador;
+
+        if ($inscripcion === null) {
+            $this->dispatch('toast', message: 'No existe una inscripcion borrador para registrar expedientes.', type: 'warning');
+
+            return;
+        }
+
+        if ($this->expedientesForm === []) {
+            $this->inicializarExpedientesForm();
+        }
+        $data = $this->validate(
+            $this->rulesPasoExpedientes(),
+            $this->messagesPasoExpedientes(),
+        );
+
+        try {
+            DB::transaction(function () use ($inscripcion, $data): void {
+                foreach ($data['expedientesForm'] as $expediente) {
+                    $payload = [
+                        'archivo_url_iex' => null,
+                        'nombre_archivo_iex' => $this->nullableTrim($expediente['nombre_archivo']),
+                        'estado_revision_iex' => $expediente['estado_revision'],
+                        'observacion_iex' => $this->nullableUpper($expediente['observacion']),
+                        'revisado_en' => now(),
+                        'id_usuario_revisor' => Auth::id(),
+                    ];
+
+                    InscripcionExpediente::query()->updateOrCreate(
+                        [
+                            'id_inscripcion' => $inscripcion->id_ins,
+                            'id_tipo_expediente' => (int) $expediente['id_tipo_expediente'],
+                        ],
+                        $payload,
+                    );
+                }
+
+                $requisitosObligatorios = $this->requisitosExpedienteWizard()
+                    ->where('obligatorio_rex', true)
+                    ->pluck('id_tipo_expediente')
+                    ->map(fn (int|string $id): int => (int) $id)
+                    ->all();
+
+                $estadosAprobadosFormulario = collect($data['expedientesForm'])
+                    ->filter(function (array $expediente) use ($requisitosObligatorios): bool {
+                        return in_array((int) $expediente['id_tipo_expediente'], $requisitosObligatorios, true)
+                            && $expediente['estado_revision'] === EstadoRevisionExpediente::Aprobado->value;
+                    })
+                    ->count();
+
+                $todosAprobados = $requisitosObligatorios !== []
+                    && $estadosAprobadosFormulario === count($requisitosObligatorios);
+
+                $inscripcion->update([
+                    'estado_ins' => $todosAprobados ? EstadoInscripcion::Activo->value : EstadoInscripcion::Pendiente->value,
+                ]);
+            });
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudieron guardar los expedientes. Intente nuevamente.', type: 'error');
+
+            return;
+        }
+
+        unset($this->inscripcionBorrador, $this->expedientesRegistradosWizard);
+
+        $mensaje = $inscripcion->fresh()?->estado_ins === EstadoInscripcion::Activo
+            ? 'Expedientes guardados correctamente. La inscripcion quedo activa.'
+            : 'Expedientes guardados correctamente. La inscripcion permanece pendiente hasta completar la revision.';
+
+        $this->dispatch('toast', message: $mensaje, type: 'success');
+        $this->redirect(route('inscripciones.index'), navigate: true);
+    }
+
     public function cancelarDuplicadoPostulacion(): void
     {
         $this->resetPostulacionForm();
@@ -1090,6 +1551,9 @@ class extends Component
             'id_proceso_oferta' => '',
             'id_convenio_proceso' => '',
         ];
+        $this->pagoForm = $this->formularioPagoBase();
+        $this->resultadoPagoDetalleIds = [];
+        $this->busquedaPagoRealizada = false;
         $this->resetErrorBag();
         $this->pasoActual = 1;
 
@@ -1138,6 +1602,20 @@ class extends Component
             $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de continuar.', type: 'warning');
 
             return;
+        }
+
+        if ($paso > 3) {
+            $this->prepararPasoPago();
+        }
+
+        if ($paso > 4 && ! $this->tienePagoValidadoWizard) {
+            $this->dispatch('toast', message: 'Primero debe validar al menos un pago antes de continuar.', type: 'warning');
+
+            return;
+        }
+
+        if ($paso === 5) {
+            $this->inicializarExpedientesForm();
         }
 
         $this->pasoActual = $paso;
@@ -1207,7 +1685,39 @@ class extends Component
         }
 
         $this->pasoActual = 4;
+        $this->prepararPasoPago();
         $this->dispatch('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+    }
+
+    public function descripcionReglaPago(ReglaPago $reglaPago): string
+    {
+        $partes = [
+            $reglaPago->conceptoPago?->nombre_cpg ?? 'REGLA DE PAGO',
+            'S/ '.number_format((float) $reglaPago->monto_total_rpa, 2),
+        ];
+
+        if ($reglaPago->permite_cuotas_rpa) {
+            $partes[] = 'hasta '.$reglaPago->numero_maximo_cuotas_rpa.' cuotas';
+        } else {
+            $partes[] = 'pago unico';
+        }
+
+        return implode(' | ', $partes);
+    }
+
+    public function resumenDetallePago(ImportacionBancoDetalle $detalle): string
+    {
+        return collect([
+            $detalle->numero_documento_ibd ?: 'SIN DOCUMENTO',
+            $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd ?: 'SIN OPERACION',
+            $detalle->fecha_pago_ibd?->format('d/m/Y'),
+            'S/ '.number_format((float) $detalle->monto_ibd, 2),
+        ])->filter()->implode(' | ');
+    }
+
+    public function estadosRevisionExpediente(): array
+    {
+        return EstadoRevisionExpediente::cases();
     }
 
     private function mayusculas(string $valor): string
@@ -1544,6 +2054,122 @@ class extends Component
             'id_proceso_oferta' => '',
             'id_convenio_proceso' => '',
         ];
+    }
+
+    /**
+     * @return array{
+     *   id_regla_pago:string,
+     *   numero_documento:string,
+     *   numero_operacion:string,
+     *   fecha_pago:string,
+     *   id_detalle_banco:string
+     * }
+     */
+    private function formularioPagoBase(): array
+    {
+        return [
+            'id_regla_pago' => '',
+            'numero_documento' => '',
+            'numero_operacion' => '',
+            'fecha_pago' => now()->subDay()->toDateString(),
+            'id_detalle_banco' => '',
+        ];
+    }
+
+    private function limpiarBusquedaPago(): void
+    {
+        $numeroDocumento = $this->pagoForm['numero_documento'];
+        $fechaPago = $this->pagoForm['fecha_pago'];
+        $idReglaPago = $this->pagoForm['id_regla_pago'];
+
+        $this->pagoForm = array_merge($this->formularioPagoBase(), [
+            'id_regla_pago' => $idReglaPago,
+            'numero_documento' => $numeroDocumento,
+            'fecha_pago' => $fechaPago !== '' ? $fechaPago : now()->subDay()->toDateString(),
+        ]);
+        $this->resultadoPagoDetalleIds = [];
+        $this->busquedaPagoRealizada = false;
+    }
+
+    private function prepararPasoPago(): void
+    {
+        $inscripcion = $this->inscripcionBorrador;
+
+        if ($inscripcion === null) {
+            return;
+        }
+
+        $this->pagoForm['numero_documento'] = (string) ($inscripcion->persona?->numero_documento_per ?? '');
+        $this->pagoForm['fecha_pago'] = $this->pagoForm['fecha_pago'] !== ''
+            ? $this->pagoForm['fecha_pago']
+            : now()->subDay()->toDateString();
+    }
+
+    private function resolverObligacionPagoSeleccionada(ReglaPago $reglaPago): InscripcionObligacionPago
+    {
+        $inscripcion = $this->inscripcionBorrador;
+
+        if ($inscripcion === null) {
+            throw new \RuntimeException('No existe una inscripcion en borrador para registrar el pago.');
+        }
+
+        InscripcionObligacionPago::query()
+            ->where('id_inscripcion', $inscripcion->id_ins)
+            ->where('id_regla_pago', '!=', $reglaPago->id_rpa)
+            ->whereDoesntHave('pagos')
+            ->delete();
+
+        $obligacion = InscripcionObligacionPago::query()
+            ->firstOrNew([
+                'id_inscripcion' => $inscripcion->id_ins,
+                'id_regla_pago' => $reglaPago->id_rpa,
+            ]);
+
+        $montoPagadoActual = $obligacion->exists ? (float) $obligacion->monto_pagado_iop : 0;
+        $montoTotal = round((float) $reglaPago->monto_total_rpa, 2);
+        $saldo = round(max($montoTotal - $montoPagadoActual, 0), 2);
+
+        $obligacion->monto_total_iop = $montoTotal;
+        $obligacion->monto_pagado_iop = $montoPagadoActual;
+        $obligacion->saldo_iop = $saldo;
+        $obligacion->numero_cuotas_iop = max(1, (int) $reglaPago->numero_maximo_cuotas_rpa);
+        $obligacion->estado_iop = $saldo <= 0
+            ? EstadoObligacionPago::Pagado
+            : ($montoPagadoActual > 0 ? EstadoObligacionPago::Parcial : EstadoObligacionPago::Pendiente);
+        $obligacion->save();
+
+        return $obligacion->fresh([
+            'reglaPago.conceptoPago',
+            'pagos.importacionBancoDetalle',
+        ]);
+    }
+
+    private function inicializarExpedientesForm(): void
+    {
+        $requisitos = $this->requisitosExpedienteWizard();
+
+        if ($requisitos->isEmpty()) {
+            $this->expedientesForm = [];
+
+            return;
+        }
+
+        $existentes = $this->expedientesRegistradosWizard()
+            ->keyBy(fn (InscripcionExpediente $expediente): string => (string) $expediente->id_tipo_expediente);
+
+        $this->expedientesForm = $requisitos
+            ->map(function (RequisitoExpediente $requisito) use ($existentes): array {
+                $expediente = $existentes->get((string) $requisito->id_tipo_expediente);
+
+                return [
+                    'id_tipo_expediente' => (string) $requisito->id_tipo_expediente,
+                    'estado_revision' => (string) ($expediente?->estado_revision_iex->value ?? EstadoRevisionExpediente::Pendiente->value),
+                    'observacion' => (string) ($expediente?->observacion_iex ?? ''),
+                    'nombre_archivo' => (string) ($expediente?->nombre_archivo_iex ?? ''),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function normalizarEstadoPersonaForm(): void
