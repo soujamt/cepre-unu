@@ -15,7 +15,7 @@
 /** Colors **/
 :root {
     /** Color **/
-    --color-50: oklch(98.6% 0.017 120);
+    /* --color-50: oklch(98.6% 0.017 120);
     --color-100: oklch(96.7% 0.036 121);
     --color-200: oklch(93.8% 0.068 123);
     --color-300: oklch(89.7% 0.105 125);
@@ -25,13 +25,25 @@
     --color-700: oklch(53.2% 0.084 130);
     --color-800: oklch(45.3% 0.066 130);
     --color-900: oklch(40.5% 0.054 130);
-    --color-950: oklch(27.4% 0.038 131);
+    --color-950: oklch(27.4% 0.038 131); */
+
+    --color-50: oklch(0.959378608662244 0.01081240814287505 256.6953453044165);
+    --color-100: oklch(0.8969908187325617 0.02790825431801468 258.3661672691939);
+    --color-200: oklch(0.8036420126492401 0.05554489948201315 256.14551441862545);
+    --color-300: oklch(0.7189330716025822 0.08270741041762415 251.76598253925368);
+    --color-400: oklch(0.6394125165170067 0.07704514110640337 252.69787544824982);
+    --color-500: oklch(0.5627337963690715 0.06719639629512195 251.9286533622343);
+    --color-600: oklch(0.5050979108205124 0.06108509123030715 252.31084474123512);
+    --color-700: oklch(0.4244589086547716 0.051379634506993545 253.09018278278796);
+    --color-800: oklch(0.33467932982799065 0.0404464232943546 251.78659456800472);
+    --color-900: oklch(0.2348881821487389 0.028107121231776944 251.2019629911607);
+    --color-950: oklch(0.17982687197101246 0.021596279920977287 254.99756081256604);
 
     /** Base Styles **/
     --border: var(--color-zinc-200);
     --input: var(--color-zinc-200);
     --ring: var(--color-zinc-400);
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 }
 
 .dark {
@@ -139,20 +151,20 @@
     --color-blue-950: oklch(28.3% 0.058 263);
 
     /** Color Scale: Zinc **/
-    --color-zinc-50: var(--color-neutral-50);
-    --color-zinc-100: var(--color-neutral-100);
-    --color-zinc-200: var(--color-neutral-200);
-    --color-zinc-300: var(--color-neutral-300);
-    --color-zinc-400: var(--color-neutral-400);
-    --color-zinc-500: var(--color-neutral-500);
-    --color-zinc-600: var(--color-neutral-600);
-    --color-zinc-700: var(--color-neutral-700);
-    --color-zinc-800: var(--color-neutral-800);
-    --color-zinc-900: var(--color-neutral-900);
-    --color-zinc-950: var(--color-neutral-950);
+    --color-zinc-50: var(--color-mist-50);
+    --color-zinc-100: var(--color-mist-100);
+    --color-zinc-200: var(--color-mist-200);
+    --color-zinc-300: var(--color-mist-300);
+    --color-zinc-400: var(--color-mist-400);
+    --color-zinc-500: var(--color-mist-500);
+    --color-zinc-600: var(--color-mist-600);
+    --color-zinc-700: var(--color-mist-700);
+    --color-zinc-800: var(--color-mist-800);
+    --color-zinc-900: var(--color-mist-900);
+    --color-zinc-950: var(--color-mist-950);
 
-    --color-accent: var(--color-index-500);
-    --color-accent-content: var(--color-index-600);
+    --color-accent: var(--color-index-400);
+    --color-accent-content: var(--color-index-500);
     --color-accent-foreground: var(--color-white);
 
     --color-border: var(--border);
@@ -168,7 +180,7 @@
 @layer theme {
     .dark {
         --color-accent: var(--color-index-500);
-        --color-accent-content: var(--color-index-400);
+        --color-accent-content: var(--color-index-600);
         --color-accent-foreground: var(--color-white);
     }
 }
