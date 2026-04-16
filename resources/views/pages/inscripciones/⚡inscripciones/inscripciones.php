@@ -7,6 +7,7 @@ use App\Models\Inscripcion;
 use App\Models\Proceso;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -26,6 +27,8 @@ class extends Component
 
     public string $idProceso = '';
 
+    public int $porPagina = 10;
+
     /**
      * @var array<string, bool>
      */
@@ -42,6 +45,11 @@ class extends Component
     }
 
     public function updatedIdProceso(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -67,7 +75,7 @@ class extends Component
     }
 
     #[Computed]
-    public function procesosDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
@@ -103,7 +111,7 @@ class extends Component
                 'expedientes',
             ])
             ->orderByDesc('id_ins')
-            ->paginate(10);
+            ->paginate($this->porPagina);
     }
 
     public function limpiarFiltroEstado(): void

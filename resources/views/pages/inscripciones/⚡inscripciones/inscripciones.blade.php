@@ -23,7 +23,9 @@
                     <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['total'] }}</p>
                 </div>
 
-                <div class="flex size-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300">
+                <div
+                    class="flex size-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300"
+                >
                     <x-ui.icon name="users-three" size="6" />
                 </div>
             </div>
@@ -36,7 +38,9 @@
                     <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['activas'] }}</p>
                 </div>
 
-                <div class="flex size-12 items-center justify-center rounded-2xl bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-300">
+                <div
+                    class="flex size-12 items-center justify-center rounded-2xl bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-300"
+                >
                     <x-ui.icon name="check-circle" size="6" />
                 </div>
             </div>
@@ -49,7 +53,9 @@
                     <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['pendientes'] }}</p>
                 </div>
 
-                <div class="flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                <div
+                    class="flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
+                >
                     <x-ui.icon name="clock" size="6" />
                 </div>
             </div>
@@ -62,7 +68,9 @@
                     <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['anuladas'] }}</p>
                 </div>
 
-                <div class="flex size-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-300">
+                <div
+                    class="flex size-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-300"
+                >
                     <x-ui.icon name="x-circle" size="6" />
                 </div>
             </div>
@@ -79,7 +87,7 @@
         </div>
 
         <div class="w-full xl:w-md">
-            <x-ui.select label="Proceso" wire:model.live="idProceso" floating>
+            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
                     <option wire:key="proceso-inscripcion-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
@@ -104,8 +112,14 @@
                 <flux:menu keep-open class="dark:bg-zinc-800">
                     @foreach ($this->estados() as $estado)
                         <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                            <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
+                            <div
+                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                            >
+                                <x-ui.icon
+                                    :name="$estado->getIcon()"
+                                    size="4"
+                                    class="text-{{ $estado->getColor() }}-500"
+                                />
                             </div>
                             {{ ucfirst(strtolower($estado->getNombre())) }}
                         </flux:menu.checkbox>
@@ -113,22 +127,24 @@
 
                     @if ($idProceso !== '' || count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-
                         @if ($idProceso !== '')
                             <flux:menu.item wire:click="limpiarFiltroProceso" class="font-normal!">
                                 <x-slot name="icon">
-                                    <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
                                         <x-ui.icon name="x" size="4" />
                                     </div>
                                 </x-slot>
                                 Limpiar proceso
                             </flux:menu.item>
                         @endif
-
                         @if (count($this->estadosSeleccionados) > 0)
                             <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                                 <x-slot name="icon">
-                                    <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
                                         <x-ui.icon name="trash" size="4" />
                                     </div>
                                 </x-slot>
@@ -140,8 +156,13 @@
             </flux:dropdown>
         </div>
 
-        @permiso('inscripcion_crear')
-            <flux:button variant="primary" href="{{ route('inscripciones.crear') }}" wire:navigate class="ms-auto w-full font-normal xl:w-auto">
+        @permiso ('inscripcion_crear')
+            <flux:button
+                variant="primary"
+                href="{{ route('inscripciones.crear') }}"
+                wire:navigate
+                class="ms-auto w-full font-normal xl:w-auto"
+            >
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
                 </x-slot>
@@ -157,9 +178,8 @@
                     <x-table.heading class="min-w-32">CODIGO</x-table.heading>
                     <x-table.heading class="min-w-72">POSTULANTE</x-table.heading>
                     <x-table.heading class="min-w-80">POSTULACION</x-table.heading>
-                    <x-table.heading class="min-w-28">PAGO</x-table.heading>
-                    <x-table.heading class="min-w-32">EXPEDIENTES</x-table.heading>
                     <x-table.heading class="min-w-30">ESTADO</x-table.heading>
+                    <x-table.heading class="min-w-52">TRÁMITE</x-table.heading>
                     <x-table.heading class="min-w-35">REGISTRO</x-table.heading>
                     <x-table.heading class="w-24"></x-table.heading>
                 </x-table.row>
@@ -167,21 +187,22 @@
 
             <x-table.body>
                 @forelse ($this->inscripciones as $inscripcion)
-                    @php($resumenPago = $this->resumenPago($inscripcion))
-                    @php($resumenExpedientes = $this->resumenExpedientes($inscripcion))
-
+                    @php
+                        $resumenPago = $this->resumenPago($inscripcion);
+                        $resumenExpedientes = $this->resumenExpedientes($inscripcion);
+                    @endphp
                     <x-table.row wire:key="inscripcion-{{ $inscripcion->id_ins }}">
                         <x-table.cell class="font-medium text-zinc-800 dark:text-zinc-100">
                             {{ $inscripcion->codigo_ins }}
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal">
-                            <div class="space-y-1">
+                            <div class="space-y-0.5">
                                 <p class="font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ trim(implode(' ', array_filter([
-                                        $inscripcion->persona?->apellido_paterno_per,
-                                        $inscripcion->persona?->apellido_materno_per,
-                                        $inscripcion->persona?->nombres_per,
-                                    ]))) }}
+                                            $inscripcion->persona?->apellido_paterno_per,
+                                            $inscripcion->persona?->apellido_materno_per,
+                                            $inscripcion->persona?->nombres_per,
+                                        ]))) }}
                                 </p>
                                 <div class="space-y-0.5 text-sm text-zinc-500 dark:text-zinc-400">
                                     <p>DNI: {{ $inscripcion->persona?->numero_documento_per ?? 'SIN DOCUMENTO' }}</p>
@@ -190,24 +211,11 @@
                             </div>
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal">
-                            <div class="space-y-1">
+                            <div class="space-y-0.5">
                                 <p class="font-medium text-zinc-800 dark:text-zinc-100">{{ $this->descripcionPostulacion($inscripcion) }}</p>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                                     {{ $inscripcion->procesoOferta?->proceso?->semestre?->nombre_sem ?? 'SIN SEMESTRE' }}
                                 </p>
-                            </div>
-                        </x-table.cell>
-                        <x-table.cell>
-                            <flux:badge color="{{ $resumenPago['color'] }}" size="lg">
-                                {{ $resumenPago['label'] }}
-                            </flux:badge>
-                        </x-table.cell>
-                        <x-table.cell>
-                            <div class="space-y-1">
-                                <flux:badge color="{{ $resumenExpedientes['color'] }}" size="lg">
-                                    {{ $resumenExpedientes['label'] }}
-                                </flux:badge>
-                                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $resumenExpedientes['detalle'] }}</p>
                             </div>
                         </x-table.cell>
                         <x-table.cell>
@@ -218,15 +226,33 @@
                                 {{ $inscripcion->estado_ins->getNombre() }}
                             </flux:badge>
                         </x-table.cell>
+                        <x-table.cell class="py-3 whitespace-normal">
+                            <div class="space-y-2">
+                                <flux:badge color="{{ $resumenPago['color'] }}" size="lg">
+                                    Pago: {{ $resumenPago['label'] }}
+                                </flux:badge>
+                                <div class="flex items-center gap-1.5">
+                                    <flux:badge color="{{ $resumenExpedientes['color'] }}" size="lg">
+                                        Docs: {{ $resumenExpedientes['label'] }}
+                                    </flux:badge>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $resumenExpedientes['detalle'] }}</p>
+                                </div>
+                            </div>
+                        </x-table.cell>
                         <x-table.cell>{{ $inscripcion->fecha_inscripcion_ins?->format('d M Y, h:i a') }}</x-table.cell>
                         <x-table.cell align="end">
                             <flux:dropdown>
-                                <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
+                                <flux:button
+                                    icon:trailing="chevron-down"
+                                    size="sm"
+                                    variant="filled"
+                                    class="font-normal"
+                                >
                                     Acciones
                                 </flux:button>
 
                                 <flux:menu>
-                                    @permiso('pago_crear')
+                                    @permiso ('pago_crear')
                                         <flux:menu.item href="{{ route('pagos.validar') }}" wire:navigate>
                                             <x-slot name="icon">
                                                 <x-ui.icon name="shield-check" size="4" class="me-2" />
@@ -247,7 +273,7 @@
                     </x-table.row>
                 @empty
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
-                        <x-table.cell colspan="8" class="h-auto py-10 text-center whitespace-normal">
+                        <x-table.cell colspan="7" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <x-ui.icon name="clipboard-text" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron inscripciones.</p>
@@ -261,20 +287,27 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, filtroEstado, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, filtroEstado, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
     </div>
 
-    <div class="flex w-full justify-between">
-        <div class="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
-            Mostrando {{ $this->inscripciones->firstItem() ?? 0 }} - {{ $this->inscripciones->lastItem() ?? 0 }} de {{ $this->inscripciones->total() }} registros
+    <div class="flex w-full flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-zinc-500 dark:text-zinc-400">
+                Mostrando {{ $this->inscripciones->firstItem() ?? 0 }} - {{ $this->inscripciones->lastItem() ?? 0 }} de {{ $this->inscripciones->total() }} registros
+            </span>
+            <x-ui.select wire:model.live="porPagina" size="sm" class="w-20">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </x-ui.select>
         </div>
         {{ $this->inscripciones->links() }}
     </div>
