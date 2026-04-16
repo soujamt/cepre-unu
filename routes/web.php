@@ -80,6 +80,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_crear')
         ->name('inscripciones.crear');
 
+    Route::livewire('/inscripciones/{inscripcion}/continuar', 'pages::inscripciones.inscripcion-crear')
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.continuar');
+
+    Route::livewire('/inscripciones/{inscripcion}/detalle', 'pages::inscripciones.inscripcion-detalle')
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.detalle');
+
     Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos')
         ->middleware('permiso:pago_indice')
         ->name('pagos.index');
