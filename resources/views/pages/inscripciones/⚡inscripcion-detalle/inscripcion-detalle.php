@@ -7,9 +7,11 @@ use App\Models\InscripcionExpediente;
 use App\Models\InscripcionPago;
 use App\Models\Ubigeo;
 use App\Traits\AuthorizesPermisos;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 new
@@ -224,6 +226,91 @@ class extends Component
         }
 
         return Storage::disk('public')->url($expediente->archivo_url_iex);
+    }
+
+    public ?int $idExpedienteRevisar = null;
+
+    public string $estadoRevision = '';
+
+    #[Validate('required|string|min:5|max:500')]
+    public string $observacionRevision = '';
+
+    public function aprobarExpediente(int $idExpediente): void
+    {
+        $this->autorizarPermiso('inscripcion', 'editar');
+
+        $expediente = InscripcionExpediente::query()->findOrFail($idExpediente);
+
+        $expediente->update([
+            'estado_revision_iex' => EstadoRevisionExpediente::Aprobado->value,
+            'observacion_iex' => null,
+            'revisado_en' => now(),
+            'id_usuario_revisor' => Auth::id(),
+        ]);
+
+        $this->inscripcionActual->load('expedientes.tipoExpediente', 'expedientes.usuarioRevisor');
+        $this->dispatch('toast', message: 'Expediente aprobado.', type: 'success');
+    }
+
+    public function abrirModalRevision(int $idExpediente, string $estado): void
+    {
+        $this->idExpedienteRevisar = $idExpediente;
+        $this->estadoRevision = $estado;
+        $this->observacionRevision = '';
+        $this->resetValidation('observacionRevision');
+
+        $this->modal('modal-revisar-expediente')->show();
+    }
+
+    public function confirmarRevision(): void
+    {
+        $this->autorizarPermiso('inscripcion', 'editar');
+
+        $this->validate([
+            'observacionRevision' => 'required|string|min:5|max:500',
+        ], [
+            'observacionRevision.required' => 'La observación es obligatoria.',
+            'observacionRevision.min' => 'La observación debe tener al menos 5 caracteres.',
+            'observacionRevision.max' => 'La observación no puede exceder 500 caracteres.',
+        ]);
+
+        $estadoEnum = match ($this->estadoRevision) {
+            'OBSERVADO' => EstadoRevisionExpediente::Observado,
+            'RECHAZADO' => EstadoRevisionExpediente::Rechazado,
+            default => null,
+        };
+
+        if ($estadoEnum === null) {
+            $this->dispatch('toast', message: 'Estado de revisión no válido.', type: 'error');
+
+            return;
+        }
+
+        try {
+            $expediente = InscripcionExpediente::query()->findOrFail($this->idExpedienteRevisar);
+
+            $expediente->update([
+                'estado_revision_iex' => $estadoEnum->value,
+                'observacion_iex' => $this->observacionRevision,
+                'revisado_en' => now(),
+                'id_usuario_revisor' => Auth::id(),
+            ]);
+        } catch (\Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo actualizar el expediente.', type: 'error');
+
+            return;
+        }
+
+        $this->modal('modal-revisar-expediente')->close();
+        $this->idExpedienteRevisar = null;
+        $this->estadoRevision = '';
+        $this->observacionRevision = '';
+
+        $this->inscripcionActual->load('expedientes.tipoExpediente', 'expedientes.usuarioRevisor');
+
+        $label = $estadoEnum === EstadoRevisionExpediente::Observado ? 'observado' : 'rechazado';
+        $this->dispatch('toast', message: "Expediente marcado como {$label}.", type: 'success');
     }
 
     public function volverListado(): void

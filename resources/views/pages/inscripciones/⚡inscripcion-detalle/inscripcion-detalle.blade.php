@@ -370,6 +370,44 @@
                                     @endif
                                 </p>
                             </div>
+
+                            @permiso ('inscripcion_editar')
+                                <div
+                                    class="mt-3 flex items-center gap-2 border-t border-zinc-200 pt-3 dark:border-white/10"
+                                >
+                                    <flux:button
+                                        size="xs"
+                                        variant="filled"
+                                        wire:click="aprobarExpediente({{ $expediente->id_iex }})"
+                                        :disabled="$expediente->estado_revision_iex === \App\Enums\EstadoRevisionExpediente::Aprobado"
+                                    >
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="check-circle" size="3.5" />
+                                        </x-slot>
+                                        Aprobar
+                                    </flux:button>
+                                    <flux:button
+                                        size="xs"
+                                        variant="filled"
+                                        wire:click="abrirModalRevision({{ $expediente->id_iex }}, 'OBSERVADO')"
+                                    >
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="info" size="3.5" />
+                                        </x-slot>
+                                        Observar
+                                    </flux:button>
+                                    <flux:button
+                                        size="xs"
+                                        variant="danger"
+                                        wire:click="abrirModalRevision({{ $expediente->id_iex }}, 'RECHAZADO')"
+                                    >
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="x-circle" size="3.5" />
+                                        </x-slot>
+                                        Rechazar
+                                    </flux:button>
+                                </div>
+                            @endpermiso
                         </div>
                     @empty
                         <div
@@ -382,4 +420,44 @@
             </div>
         </div>
     </div>
+
+    <flux:modal name="modal-revisar-expediente" class="md:w-md!">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">
+                    {{ $estadoRevision === 'OBSERVADO' ? 'Observar expediente' : 'Rechazar expediente' }}
+                </flux:heading>
+                <flux:text class="mt-1">
+                    {{ $estadoRevision === 'OBSERVADO'
+                        ? 'Indique la observacion para que el postulante corrija el documento.'
+                        : 'Indique el motivo del rechazo del documento.' }}
+                </flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ $estadoRevision === 'OBSERVADO' ? 'Observacion' : 'Motivo de rechazo' }}</flux:label>
+                <flux:textarea
+                    wire:model="observacionRevision"
+                    placeholder="Describa el motivo (minimo 5 caracteres)"
+                    rows="3"
+                />
+                <flux:error name="observacionRevision" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3">
+                <flux:button variant="ghost" x-on:click="$flux.modal('modal-revisar-expediente').close()">
+                    Cancelar
+                </flux:button>
+                <flux:button
+                    variant="{{ $estadoRevision === 'RECHAZADO' ? 'danger' : 'primary' }}"
+                    wire:click="confirmarRevision"
+                >
+                    <x-slot name="icon">
+                        <x-ui.icon name="check-square-offset" size="4" />
+                    </x-slot>
+                    Confirmar
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
