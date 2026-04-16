@@ -13,6 +13,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -151,6 +152,58 @@ class extends Component
     public function limpiarFiltroProceso(): void
     {
         $this->idProceso = '';
+    }
+
+    public ?int $idInscripcionAnular = null;
+
+    #[Validate('required|string|min:10|max:500')]
+    public string $motivoAnulacion = '';
+
+    public function abrirModalAnular(int $idInscripcion): void
+    {
+        $this->idInscripcionAnular = $idInscripcion;
+        $this->motivoAnulacion = '';
+        $this->resetValidation('motivoAnulacion');
+
+        $this->modal('modal-anular-inscripcion')->show();
+    }
+
+    public function anularInscripcion(): void
+    {
+        $this->autorizarPermiso('inscripcion', 'estado');
+
+        $this->validate([
+            'motivoAnulacion' => 'required|string|min:10|max:500',
+        ], [
+            'motivoAnulacion.required' => 'El motivo de anulación es obligatorio.',
+            'motivoAnulacion.min' => 'El motivo debe tener al menos 10 caracteres.',
+            'motivoAnulacion.max' => 'El motivo no puede exceder 500 caracteres.',
+        ]);
+
+        try {
+            $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAnular);
+
+            if ($inscripcion->estado_ins !== EstadoInscripcion::Activo) {
+                throw new \RuntimeException('Solo se pueden anular inscripciones activas.');
+            }
+
+            $inscripcion->update([
+                'estado_ins' => EstadoInscripcion::Anulado->value,
+                'motivo_anulacion_ins' => $this->motivoAnulacion,
+            ]);
+        } catch (\Throwable $throwable) {
+            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo anular la inscripción.', type: 'error');
+
+            return;
+        }
+
+        $this->modal('modal-anular-inscripcion')->close();
+        $this->idInscripcionAnular = null;
+        $this->motivoAnulacion = '';
+
+        unset($this->inscripciones, $this->resumen);
+        $this->dispatch('toast', message: 'Inscripción anulada correctamente.', type: 'success');
     }
 
     public function puedeContinuarRegistro(Inscripcion $inscripcion): bool

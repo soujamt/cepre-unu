@@ -306,6 +306,19 @@
                                             </x-slot>
                                             Ver detalle
                                         </flux:menu.item>
+
+                                        @permiso ('inscripcion_estado')
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                variant="danger"
+                                                wire:click="abrirModalAnular({{ $inscripcion->id_ins }})"
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="x-circle" size="4" class="me-2" />
+                                                </x-slot>
+                                                Anular inscripcion
+                                            </flux:menu.item>
+                                        @endpermiso
                                     @elseif ($this->puedeContinuarRegistro($inscripcion))
                                         <flux:menu.item
                                             href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
@@ -345,12 +358,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -369,4 +382,41 @@
         </div>
         {{ $this->inscripciones->links() }}
     </div>
+
+    <flux:modal name="modal-anular-inscripcion" class="md:w-md!">
+        <div class="space-y-5">
+            <div>
+                <flux:heading size="lg">Anular inscripcion</flux:heading>
+                <flux:text class="mt-1">Esta accion cambiara el estado de la inscripcion a anulado y no se podra revertir.</flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>Motivo de anulacion</flux:label>
+                <flux:textarea
+                    wire:model="motivoAnulacion"
+                    placeholder="Describa el motivo de la anulacion (minimo 10 caracteres)"
+                    rows="3"
+                />
+                <flux:error name="motivoAnulacion" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3">
+                <flux:button
+                    variant="ghost"
+                    x-on:click="$flux.modal('modal-anular-inscripcion').close()"
+                >
+                    Cancelar
+                </flux:button>
+                <flux:button
+                    variant="danger"
+                    wire:click="anularInscripcion"
+                    wire:loading.attr="disabled"
+                    wire:target="anularInscripcion"
+                >
+                    <span wire:loading.remove wire:target="anularInscripcion">Confirmar anulacion</span>
+                    <span wire:loading wire:target="anularInscripcion">Anulando...</span>
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
