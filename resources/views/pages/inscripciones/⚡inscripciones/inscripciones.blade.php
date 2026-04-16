@@ -186,13 +186,13 @@
         <x-table>
             <x-table.head>
                 <x-table.row>
-                    <x-table.heading class="min-w-32">CODIGO</x-table.heading>
-                    <x-table.heading class="min-w-72">POSTULANTE</x-table.heading>
-                    <x-table.heading class="min-w-80">POSTULACION</x-table.heading>
-                    <x-table.heading class="min-w-30">ESTADO</x-table.heading>
-                    <x-table.heading class="min-w-44">TRAMITE</x-table.heading>
-                    <x-table.heading class="min-w-35">REGISTRO</x-table.heading>
-                    <x-table.heading class="w-24"></x-table.heading>
+                    <x-table.heading class="min-w-28">CODIGO</x-table.heading>
+                    <x-table.heading class="min-w-56">POSTULANTE</x-table.heading>
+                    <x-table.heading class="min-w-56">POSTULACION</x-table.heading>
+                    <x-table.heading class="min-w-24">ESTADO</x-table.heading>
+                    <x-table.heading class="min-w-36">TRAMITE</x-table.heading>
+                    <x-table.heading class="min-w-32">REGISTRO</x-table.heading>
+                    <x-table.heading class="w-20"></x-table.heading>
                 </x-table.row>
             </x-table.head>
 
@@ -223,9 +223,11 @@
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal">
                             <div class="space-y-0.5">
-                                <p class="font-medium text-zinc-800 dark:text-zinc-100">{{ $this->descripcionPostulacion($inscripcion) }}</p>
+                                <p class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
+                                </p>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ $inscripcion->procesoOferta?->proceso?->semestre?->nombre_sem ?? 'SIN SEMESTRE' }}
+                                    {{ $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE' }}
                                 </p>
                                 @php
                                     $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;

@@ -153,15 +153,6 @@ class extends Component
         $this->idProceso = '';
     }
 
-    public function descripcionPostulacion(Inscripcion $inscripcion): string
-    {
-        $proceso = $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO';
-        $carrera = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
-        $sede = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-
-        return "{$proceso} | {$carrera} | {$sede}";
-    }
-
     public function puedeContinuarRegistro(Inscripcion $inscripcion): bool
     {
         return $inscripcion->estado_ins === EstadoInscripcion::Pendiente;
