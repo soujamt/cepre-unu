@@ -1906,6 +1906,9 @@ class extends Component
             '0',
         );
 
+        // Obtenemos los 2 ultimos numeros del año para el codigo (ej: "2026" → "26")
+        $anio = substr($anio, -2);
+
         // Abreviatura del proceso (max 3 chars, mayusculas)
         $codigoPro = mb_strtoupper(
             mb_substr((string) ($proceso?->codigo_pro ?? 'PRO'), 0, 3, 'UTF-8'),
@@ -1921,7 +1924,7 @@ class extends Component
             ->where('id_ins', '<=', $inscripcion->id_ins)
             ->count();
 
-        return "{$anio}-{$numSem}-{$codigoPro}-".str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
+        return "{$anio}{$numSem}{$codigoPro}".str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
     }
 
     private function cargarPersonaDesdeSistema(Persona $persona): void
