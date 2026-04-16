@@ -306,7 +306,6 @@
                                             </x-slot>
                                             Ver detalle
                                         </flux:menu.item>
-
                                         @permiso ('inscripcion_estado')
                                             <flux:menu.separator />
                                             <flux:menu.item
@@ -387,7 +386,9 @@
         <div class="space-y-5">
             <div>
                 <flux:heading size="lg">Anular inscripcion</flux:heading>
-                <flux:text class="mt-1">Esta accion cambiara el estado de la inscripcion a anulado y no se podra revertir.</flux:text>
+                <flux:text class="mt-1"
+                    >Esta accion cambiara el estado de la inscripcion a anulado y no se podra revertir.</flux:text
+                >
             </div>
 
             <flux:field>
@@ -401,10 +402,7 @@
             </flux:field>
 
             <div class="flex justify-end gap-3">
-                <flux:button
-                    variant="ghost"
-                    x-on:click="$flux.modal('modal-anular-inscripcion').close()"
-                >
+                <flux:button variant="filled" x-on:click="$flux.modal('modal-anular-inscripcion').close()">
                     Cancelar
                 </flux:button>
                 <flux:button
@@ -413,8 +411,10 @@
                     wire:loading.attr="disabled"
                     wire:target="anularInscripcion"
                 >
-                    <span wire:loading.remove wire:target="anularInscripcion">Confirmar anulacion</span>
-                    <span wire:loading wire:target="anularInscripcion">Anulando...</span>
+                    <x-slot name="icon">
+                        <x-ui.icon name="check-square-offset" size="4" />
+                    </x-slot>
+                    Confirmar anulacion
                 </flux:button>
             </div>
         </div>
