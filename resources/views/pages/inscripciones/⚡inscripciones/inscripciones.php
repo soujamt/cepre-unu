@@ -92,6 +92,18 @@ class extends Component
             'total' => (clone $query)->count(),
             'activas' => (clone $query)->where('estado_ins', EstadoInscripcion::Activo->value)->count(),
             'pendientes' => (clone $query)->where('estado_ins', EstadoInscripcion::Pendiente->value)->count(),
+            'pago_pendiente' => (clone $query)
+                ->whereHas('obligacionesPago', fn (Builder $q) => $q->whereIn('estado_iop', [
+                    EstadoObligacionPago::Pendiente->value,
+                    EstadoObligacionPago::Parcial->value,
+                ]))
+                ->count(),
+            'docs_observados' => (clone $query)
+                ->whereHas('expedientes', fn (Builder $q) => $q->whereIn('estado_revision_iex', [
+                    EstadoRevisionExpediente::Observado->value,
+                    EstadoRevisionExpediente::Rechazado->value,
+                ]))
+                ->count(),
             'anuladas' => (clone $query)->where('estado_ins', EstadoInscripcion::Anulado->value)->count(),
         ];
     }

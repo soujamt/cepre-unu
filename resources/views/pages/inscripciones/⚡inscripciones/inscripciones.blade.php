@@ -21,6 +21,9 @@
                 <div class="space-y-1">
                     <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total inscritas</p>
                     <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['total'] }}</p>
+                    <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                        {{ $this->resumen['activas'] }} activas · {{ $this->resumen['pendientes'] }} pendientes
+                    </p>
                 </div>
 
                 <div
@@ -34,14 +37,14 @@
         <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Activas</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['activas'] }}</p>
+                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pago pendiente</p>
+                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['pago_pendiente'] }}</p>
                 </div>
 
                 <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-300"
+                    class="flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
                 >
-                    <x-ui.icon name="check-circle" size="6" />
+                    <x-ui.icon name="currency-circle-dollar" size="6" />
                 </div>
             </div>
         </div>
@@ -49,14 +52,14 @@
         <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pendientes</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['pendientes'] }}</p>
+                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Docs observados</p>
+                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['docs_observados'] }}</p>
                 </div>
 
                 <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
+                    class="flex size-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300"
                 >
-                    <x-ui.icon name="clock" size="6" />
+                    <x-ui.icon name="warning" size="6" />
                 </div>
             </div>
         </div>
@@ -299,7 +302,7 @@
                                             Continuar registro
                                         </flux:menu.item>
                                     @else
-                                        @php($accionEstado = $this->accionEstadoRegistro($inscripcion))
+                                        @php ($accionEstado = $this->accionEstadoRegistro($inscripcion))
                                         <flux:menu.item disabled>
                                             <x-slot name="icon">
                                                 <x-ui.icon :name="$accionEstado['icon']" size="4" class="me-2" />
