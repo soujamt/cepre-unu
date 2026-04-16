@@ -1,7 +1,6 @@
 ﻿<?php
 
 use App\Enums\EstadoCatalogo;
-use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
@@ -9,7 +8,7 @@ use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoValidacionPago;
 use App\Enums\SexoPersona;
 use App\Enums\TipoLenguaMaternaPersona;
-use App\Services\ReniecService;
+use App\Models\Colegio;
 use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
@@ -17,7 +16,6 @@ use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
 use App\Models\InscripcionExpediente;
 use App\Models\InscripcionObligacionPago;
-use App\Models\Colegio;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
@@ -27,17 +25,20 @@ use App\Models\Proceso;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\RequisitoExpediente;
-use App\Models\TipoDiscapacidad;
 use App\Models\TipoColegio;
+use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
+use App\Services\ReniecService;
 use App\Support\InscripcionPagoManager;
 use App\Support\ProcesoInscripcionResolver;
 use App\Traits\AuthorizesPermisos;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -54,14 +55,23 @@ class extends Component
     use WithFileUploads;
 
     public int $pasoActual = 1;
+
     public array $tiposDocumentoCatalogo = [];
+
     public array $estadosCivilesCatalogo = [];
+
     public array $paisesCatalogo = [];
+
     public array $nacionalidadesCatalogo = [];
+
     public array $identidadesEtnicasCatalogo = [];
+
     public array $lenguasNativasCatalogo = [];
+
     public array $lenguasExtranjerasCatalogo = [];
+
     public array $tiposDiscapacidadCatalogo = [];
+
     public array $tiposColegioCatalogo = [];
 
     /**
@@ -220,7 +230,7 @@ class extends Component
     public string $colegioLabel = '';
 
     /**
-     * @var array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}|null
+     * @var array{disponible:bool,mensaje:string,proceso:?Proceso}|null
      */
     protected ?array $contextoProcesoPostulacionCache = null;
 
@@ -404,7 +414,6 @@ class extends Component
 
     public function updatedGeneralFormIdPaisColegio(): void
     {
-        $this->generalForm['id_colegio'] = '';
         $this->generalForm['nombre_colegio_extranjero'] = '';
         $this->colegioLabel = '';
         $this->dispatch(
@@ -474,7 +483,7 @@ class extends Component
     }
 
     /**
-     * @return array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}
+     * @return array{disponible:bool,mensaje:string,proceso:?Proceso}
      */
     #[Computed]
     public function contextoProcesoPostulacion(): array
@@ -490,12 +499,12 @@ class extends Component
     }
 
     #[Computed]
-    public function ofertasProcesoDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function ofertasProcesoDisponibles(): Illuminate\Database\Eloquent\Collection
     {
         $proceso = $this->procesoPostulacionActivo();
 
         if ($proceso === null) {
-            return new \Illuminate\Database\Eloquent\Collection();
+            return new Illuminate\Database\Eloquent\Collection;
         }
 
         return ProcesoOferta::query()
@@ -513,7 +522,7 @@ class extends Component
     }
 
     #[Computed]
-    public function modalidadesPostulacionDisponibles(): \Illuminate\Support\Collection
+    public function modalidadesPostulacionDisponibles(): Collection
     {
         return $this->ofertasProcesoDisponibles()
             ->map(function (ProcesoOferta $oferta): array {
@@ -529,7 +538,7 @@ class extends Component
     }
 
     #[Computed]
-    public function lugaresPostulacionDisponibles(): \Illuminate\Support\Collection
+    public function lugaresPostulacionDisponibles(): Collection
     {
         return $this->ofertasProcesoDisponibles()
             ->filter(fn (ProcesoOferta $oferta): bool => $this->postulacionForm['id_modalidad_admision'] !== ''
@@ -547,7 +556,7 @@ class extends Component
     }
 
     #[Computed]
-    public function turnosPostulacionDisponibles(): \Illuminate\Support\Collection
+    public function turnosPostulacionDisponibles(): Collection
     {
         return $this->ofertasProcesoDisponibles()
             ->filter(function (ProcesoOferta $oferta): bool {
@@ -569,7 +578,7 @@ class extends Component
     }
 
     #[Computed]
-    public function procesoOfertasPostulacionDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function procesoOfertasPostulacionDisponibles(): Illuminate\Database\Eloquent\Collection
     {
         return $this->ofertasProcesoDisponibles()
             ->filter(function (ProcesoOferta $oferta): bool {
@@ -584,12 +593,12 @@ class extends Component
     }
 
     #[Computed]
-    public function conveniosPostulacionDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function conveniosPostulacionDisponibles(): Illuminate\Database\Eloquent\Collection
     {
         $proceso = $this->procesoPostulacionActivo();
 
         if ($proceso === null) {
-            return new \Illuminate\Database\Eloquent\Collection();
+            return new Illuminate\Database\Eloquent\Collection;
         }
 
         $fechaReferencia = now()->toDateString();
@@ -624,13 +633,13 @@ class extends Component
     }
 
     #[Computed]
-    public function reglasPagoDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function reglasPagoDisponibles(): Illuminate\Database\Eloquent\Collection
     {
         $inscripcion = $this->inscripcionBorrador;
         $procesoId = $inscripcion?->procesoOferta?->id_proceso;
 
         if ($inscripcion === null || $procesoId === null) {
-            return new \Illuminate\Database\Eloquent\Collection();
+            return new Illuminate\Database\Eloquent\Collection;
         }
 
         $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
@@ -698,7 +707,7 @@ class extends Component
     }
 
     #[Computed]
-    public function detallesPagoEncontrados(): \Illuminate\Database\Eloquent\Collection
+    public function detallesPagoEncontrados(): Illuminate\Database\Eloquent\Collection
     {
         if ($this->resultadoPagoDetalleIds === []) {
             return ImportacionBancoDetalle::query()->whereRaw('1 = 0')->get();
@@ -742,13 +751,13 @@ class extends Component
     }
 
     #[Computed]
-    public function requisitosExpedienteWizard(): \Illuminate\Database\Eloquent\Collection
+    public function requisitosExpedienteWizard(): Illuminate\Database\Eloquent\Collection
     {
         $inscripcion = $this->inscripcionBorrador;
         $procesoId = $inscripcion?->procesoOferta?->id_proceso;
 
         if ($inscripcion === null || $procesoId === null) {
-            return new \Illuminate\Database\Eloquent\Collection();
+            return new Illuminate\Database\Eloquent\Collection;
         }
 
         return RequisitoExpediente::query()
@@ -760,12 +769,12 @@ class extends Component
     }
 
     #[Computed]
-    public function expedientesRegistradosWizard(): \Illuminate\Database\Eloquent\Collection
+    public function expedientesRegistradosWizard(): Illuminate\Database\Eloquent\Collection
     {
         $inscripcion = $this->inscripcionBorrador;
 
         if ($inscripcion === null) {
-            return new \Illuminate\Database\Eloquent\Collection();
+            return new Illuminate\Database\Eloquent\Collection;
         }
 
         return InscripcionExpediente::query()
@@ -786,7 +795,7 @@ class extends Component
                 'required',
                 'string',
                 'max:25',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $tipoDocumento = $this->tipoDocumentoSeleccionado();
 
                     if ($tipoDocumento === null || blank($value)) {
@@ -813,7 +822,7 @@ class extends Component
                 'nullable',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (! $this->personaForm['solo_un_apellido'] && blank($value)) {
                         $fail('El segundo apellido es obligatorio cuando no se marca solo un apellido.');
                     }
@@ -823,7 +832,7 @@ class extends Component
                 'nullable',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->personaForm['tiene_apellido_casada'] && blank($value)) {
                         $fail('Debe registrar el apellido de casado(a).');
                     }
@@ -846,7 +855,7 @@ class extends Component
                 'nullable',
                 'integer',
                 'exists:tbl_tipo_discapacidad,id_tdi',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->personaForm['discapacidad'] && blank($value)) {
                         $fail('Debe seleccionar el tipo de discapacidad.');
                     }
@@ -858,7 +867,7 @@ class extends Component
                 'nullable',
                 'integer',
                 'exists:tbl_lengua_nativa,id_lna',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->personaForm['tipo_lengua_materna'] === TipoLenguaMaternaPersona::Nativa->value && blank($value)) {
                         $fail('Debe seleccionar la lengua nativa.');
                     }
@@ -868,7 +877,7 @@ class extends Component
                 'nullable',
                 'integer',
                 'exists:tbl_lengua_extranjera,id_lex',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->personaForm['tipo_lengua_materna'] === TipoLenguaMaternaPersona::Extranjera->value && blank($value)) {
                         $fail('Debe seleccionar la lengua extranjera.');
                     }
@@ -891,7 +900,7 @@ class extends Component
                 'nullable',
                 'string',
                 'exists:tbl_colegio,id_col',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->esPaisPeruSeleccionado() && blank($value)) {
                         $fail('Debe seleccionar el colegio de procedencia.');
                     }
@@ -901,7 +910,7 @@ class extends Component
                 'nullable',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (! $this->esPaisPeruSeleccionado() && blank($value)) {
                         $fail('Debe registrar el nombre del colegio extranjero.');
                     }
@@ -960,7 +969,7 @@ class extends Component
         return [
             'postulacionForm.id_modalidad_admision' => [
                 'required',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $valido = $this->modalidadesPostulacionDisponibles()
                         ->contains(fn (array $modalidad): bool => $modalidad['id'] === (string) $value);
 
@@ -971,7 +980,7 @@ class extends Component
             ],
             'postulacionForm.id_lugar_inscripcion' => [
                 'required',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $valido = $this->lugaresPostulacionDisponibles()
                         ->contains(fn (array $lugar): bool => $lugar['id'] === (string) $value);
 
@@ -982,7 +991,7 @@ class extends Component
             ],
             'postulacionForm.id_turno' => [
                 'required',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $valido = $this->turnosPostulacionDisponibles()
                         ->contains(fn (array $turno): bool => $turno['id'] === (string) $value);
 
@@ -993,7 +1002,7 @@ class extends Component
             ],
             'postulacionForm.id_proceso_oferta' => [
                 'required',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $valido = $this->procesoOfertasPostulacionDisponibles()
                         ->contains(fn (ProcesoOferta $oferta): bool => (string) $oferta->id_pof === (string) $value);
 
@@ -1004,7 +1013,7 @@ class extends Component
             ],
             'postulacionForm.id_convenio_proceso' => [
                 'nullable',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($value)) {
                         return;
                     }
@@ -1041,7 +1050,7 @@ class extends Component
         return [
             'pagoForm.id_regla_pago' => [
                 'required',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $valido = $this->reglasPagoDisponibles()
                         ->contains(fn (ReglaPago $reglaPago): bool => (string) $reglaPago->id_rpa === (string) $value);
 
@@ -1130,91 +1139,91 @@ class extends Component
     }
 
     #[Computed]
-    public function tiposDocumento(): \Illuminate\Database\Eloquent\Collection
+    public function tiposDocumento(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->tiposDocumentoCatalogo)
-                ->map(fn (array $tipoDocumento): TipoDocumento => tap(new TipoDocumento(), fn (TipoDocumento $model) => $model->forceFill($tipoDocumento)))
+                ->map(fn (array $tipoDocumento): TipoDocumento => tap(new TipoDocumento, fn (TipoDocumento $model) => $model->forceFill($tipoDocumento)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function estadosCiviles(): \Illuminate\Database\Eloquent\Collection
+    public function estadosCiviles(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->estadosCivilesCatalogo)
-                ->map(fn (array $estadoCivil): EstadoCivil => tap(new EstadoCivil(), fn (EstadoCivil $model) => $model->forceFill($estadoCivil)))
+                ->map(fn (array $estadoCivil): EstadoCivil => tap(new EstadoCivil, fn (EstadoCivil $model) => $model->forceFill($estadoCivil)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function paises(): \Illuminate\Database\Eloquent\Collection
+    public function paises(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->paisesCatalogo)
-                ->map(fn (array $pais): Pais => tap(new Pais(), fn (Pais $model) => $model->forceFill($pais)))
+                ->map(fn (array $pais): Pais => tap(new Pais, fn (Pais $model) => $model->forceFill($pais)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function nacionalidades(): \Illuminate\Database\Eloquent\Collection
+    public function nacionalidades(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->nacionalidadesCatalogo)
-                ->map(fn (array $nacionalidad): Nacionalidad => tap(new Nacionalidad(), fn (Nacionalidad $model) => $model->forceFill($nacionalidad)))
+                ->map(fn (array $nacionalidad): Nacionalidad => tap(new Nacionalidad, fn (Nacionalidad $model) => $model->forceFill($nacionalidad)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function identidadesEtnicas(): \Illuminate\Database\Eloquent\Collection
+    public function identidadesEtnicas(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->identidadesEtnicasCatalogo)
-                ->map(fn (array $identidadEtnica): IdentidadEtnica => tap(new IdentidadEtnica(), fn (IdentidadEtnica $model) => $model->forceFill($identidadEtnica)))
+                ->map(fn (array $identidadEtnica): IdentidadEtnica => tap(new IdentidadEtnica, fn (IdentidadEtnica $model) => $model->forceFill($identidadEtnica)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function lenguasNativas(): \Illuminate\Database\Eloquent\Collection
+    public function lenguasNativas(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->lenguasNativasCatalogo)
-                ->map(fn (array $lenguaNativa): LenguaNativa => tap(new LenguaNativa(), fn (LenguaNativa $model) => $model->forceFill($lenguaNativa)))
+                ->map(fn (array $lenguaNativa): LenguaNativa => tap(new LenguaNativa, fn (LenguaNativa $model) => $model->forceFill($lenguaNativa)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function lenguasExtranjeras(): \Illuminate\Database\Eloquent\Collection
+    public function lenguasExtranjeras(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->lenguasExtranjerasCatalogo)
-                ->map(fn (array $lenguaExtranjera): LenguaExtranjera => tap(new LenguaExtranjera(), fn (LenguaExtranjera $model) => $model->forceFill($lenguaExtranjera)))
+                ->map(fn (array $lenguaExtranjera): LenguaExtranjera => tap(new LenguaExtranjera, fn (LenguaExtranjera $model) => $model->forceFill($lenguaExtranjera)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function tiposDiscapacidad(): \Illuminate\Database\Eloquent\Collection
+    public function tiposDiscapacidad(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->tiposDiscapacidadCatalogo)
-                ->map(fn (array $tipoDiscapacidad): TipoDiscapacidad => tap(new TipoDiscapacidad(), fn (TipoDiscapacidad $model) => $model->forceFill($tipoDiscapacidad)))
+                ->map(fn (array $tipoDiscapacidad): TipoDiscapacidad => tap(new TipoDiscapacidad, fn (TipoDiscapacidad $model) => $model->forceFill($tipoDiscapacidad)))
                 ->all(),
         );
     }
 
     #[Computed]
-    public function tiposColegio(): \Illuminate\Database\Eloquent\Collection
+    public function tiposColegio(): Illuminate\Database\Eloquent\Collection
     {
-        return new \Illuminate\Database\Eloquent\Collection(
+        return new Illuminate\Database\Eloquent\Collection(
             collect($this->tiposColegioCatalogo)
-                ->map(fn (array $tipoColegio): TipoColegio => tap(new TipoColegio(), fn (TipoColegio $model) => $model->forceFill($tipoColegio)))
+                ->map(fn (array $tipoColegio): TipoColegio => tap(new TipoColegio, fn (TipoColegio $model) => $model->forceFill($tipoColegio)))
                 ->all(),
         );
     }
@@ -1294,7 +1303,7 @@ class extends Component
 
                 $this->personaId = $persona->id_per;
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar la informacion personal.', type: 'error');
 
@@ -1537,11 +1546,11 @@ class extends Component
 
         try {
             $manager->asociarDetalleAObligacion($obligacion, $detalle);
-        } catch (\DomainException $exception) {
+        } catch (DomainException $exception) {
             $this->dispatch('toast', message: $exception->getMessage(), type: 'error');
 
             return;
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo validar el pago seleccionado.', type: 'error');
 
@@ -1591,7 +1600,7 @@ class extends Component
                     $storedPath = $archivoUpload->store('expedientes/'.$inscripcion->id_ins, 'public');
 
                     if ($storedPath === false) {
-                        throw new \RuntimeException('No se pudo guardar el archivo PDF del expediente.');
+                        throw new RuntimeException('No se pudo guardar el archivo PDF del expediente.');
                     }
 
                     $archivosNuevos[$indice] = [
@@ -1647,7 +1656,7 @@ class extends Component
                     'estado_ins' => $todosAprobados ? EstadoInscripcion::Activo->value : EstadoInscripcion::Pendiente->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudieron guardar los expedientes. Intente nuevamente.', type: 'error');
 
@@ -1741,7 +1750,7 @@ class extends Component
                     $this->rulesPasoGeneral(),
                     $this->messagesPasoGeneral(),
                 );
-            } catch (\Illuminate\Validation\ValidationException $exception) {
+            } catch (ValidationException $exception) {
                 $this->setErrorBag($exception->validator->errors());
                 $this->dispatch('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
 
@@ -1844,7 +1853,7 @@ class extends Component
 
                 $this->inscripcionId = $inscripcion->id_ins;
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
 
@@ -1940,7 +1949,7 @@ class extends Component
         $this->paisesCatalogo = Pais::query()
             ->where('estado_pai', EstadoCatalogo::Habilitado->value)
             ->orderBy('nombre_pai')
-            ->get(['id_pai', 'nombre_pai'])
+            ->get(['id_pai', 'codigo_pai', 'nombre_pai'])
             ->map(fn (Pais $pais): array => $pais->toArray())
             ->all();
 
@@ -1994,7 +2003,7 @@ class extends Component
     }
 
     /**
-     * @return array{disponible:bool,mensaje:string,proceso:?App\Models\Proceso}
+     * @return array{disponible:bool,mensaje:string,proceso:?Proceso}
      */
     private function refrescarContextoProcesoPostulacion(): array
     {
@@ -2295,7 +2304,7 @@ class extends Component
         $inscripcion = $this->inscripcionBorrador;
 
         if ($inscripcion === null) {
-            throw new \RuntimeException('No existe una inscripcion en borrador para registrar el pago.');
+            throw new RuntimeException('No existe una inscripcion en borrador para registrar el pago.');
         }
 
         InscripcionObligacionPago::query()
