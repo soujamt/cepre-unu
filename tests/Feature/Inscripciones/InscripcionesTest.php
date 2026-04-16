@@ -279,3 +279,32 @@ test('inscripciones summary shows counts by state', function () {
         ->assertSee('3')
         ->assertSee('1');
 });
+
+test('authorized users can access inscripcion detail page', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    $contextoActivo = crearContextoListadoInscripcion(4, 'ACTIVO');
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.detalle', encode($contextoActivo['inscripcion']->id_ins)))
+        ->assertOk()
+        ->assertSee('DETALLE DE INSCRIPCION')
+        ->assertSee($contextoActivo['inscripcion']->codigo_ins)
+        ->assertSee($contextoActivo['persona']->numero_documento_per)
+        ->assertSee($contextoActivo['proceso']->nombre_pro);
+});
+
+test('list shows detail action for active inscripciones and continue action for pending ones', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    crearContextoListadoInscripcion(5, 'ACTIVO');
+    crearContextoListadoInscripcion(6, 'PENDIENTE');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->assertSee('Ver detalle')
+        ->assertSee('Continuar registro');
+});

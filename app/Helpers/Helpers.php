@@ -2,11 +2,11 @@
 
 use Hashids\Hashids;
 
-if (!function_exists('encode')) {
+if (! function_exists('encode')) {
     /**
      * Codifica un ID usando Hashids.
      */
-    function encode(int $codigo)
+    function encode(int $codigo): string
     {
         $hashids = new Hashids(config('app.key'), 10);
 
@@ -14,18 +14,20 @@ if (!function_exists('encode')) {
     }
 }
 
-if (!function_exists('decode')) {
+if (! function_exists('decode')) {
     /**
      * Decodifica un ID usando Hashids.
      */
-    function decode(?string $hash)
+    function decode(?string $hash): ?int
     {
-        if (!$hash) { return null; }
+        if (! $hash) {
+            return null;
+        }
 
         $hashids = new Hashids(config('app.key'), 10);
 
         $decoded = $hashids->decode($hash);
 
-        return !empty($decoded) ? $decoded[0] : null;
+        return ! empty($decoded) ? $decoded[0] : null;
     }
 }

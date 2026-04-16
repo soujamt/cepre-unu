@@ -179,7 +179,7 @@
                     <x-table.heading class="min-w-72">POSTULANTE</x-table.heading>
                     <x-table.heading class="min-w-80">POSTULACION</x-table.heading>
                     <x-table.heading class="min-w-30">ESTADO</x-table.heading>
-                    <x-table.heading class="min-w-52">TRÁMITE</x-table.heading>
+                    <x-table.heading class="min-w-44">TRAMITE</x-table.heading>
                     <x-table.heading class="min-w-35">REGISTRO</x-table.heading>
                     <x-table.heading class="w-24"></x-table.heading>
                 </x-table.row>
@@ -216,6 +216,15 @@
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
                                     {{ $inscripcion->procesoOferta?->proceso?->semestre?->nombre_sem ?? 'SIN SEMESTRE' }}
                                 </p>
+                                @php
+                                    $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
+                                    $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
+                                @endphp
+                                @if ($modalidad || $turno)
+                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                                        {{ implode(' · ', array_filter([$modalidad, $turno])) }}
+                                    </p>
+                                @endif
                             </div>
                         </x-table.cell>
                         <x-table.cell>
@@ -227,16 +236,24 @@
                             </flux:badge>
                         </x-table.cell>
                         <x-table.cell class="py-3 whitespace-normal">
-                            <div class="space-y-2">
-                                <flux:badge color="{{ $resumenPago['color'] }}" size="lg">
-                                    Pago: {{ $resumenPago['label'] }}
-                                </flux:badge>
+                            <div class="flex flex-col gap-1.5">
                                 <div class="flex items-center gap-1.5">
-                                    <flux:badge color="{{ $resumenExpedientes['color'] }}" size="lg">
-                                        Docs: {{ $resumenExpedientes['label'] }}
+                                    <flux:badge color="{{ $resumenPago['color'] }}" size="sm">
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="currency-circle-dollar" size="3" class="me-0.5" />
+                                        </x-slot>
+                                        {{ $resumenPago['label'] }}
                                     </flux:badge>
-                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ $resumenExpedientes['detalle'] }}</p>
+                                    <flux:badge color="{{ $resumenExpedientes['color'] }}" size="sm">
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="files" size="3" class="me-0.5" />
+                                        </x-slot>
+                                        {{ $resumenExpedientes['label'] }}
+                                    </flux:badge>
                                 </div>
+                                <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                                    Docs: {{ $resumenExpedientes['detalle'] }}
+                                </p>
                             </div>
                         </x-table.cell>
                         <x-table.cell>{{ $inscripcion->fecha_inscripcion_ins?->format('d M Y, h:i a') }}</x-table.cell>
@@ -261,12 +278,35 @@
                                         </flux:menu.item>
                                     @endpermiso
 
-                                    <flux:menu.item disabled>
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="note-pencil" size="4" class="me-2" />
-                                        </x-slot>
-                                        Continuar registro
-                                    </flux:menu.item>
+                                    @if ($this->puedeVerDetalleRegistro($inscripcion))
+                                        <flux:menu.item
+                                            href="{{ route('inscripciones.detalle', encode($inscripcion->id_ins)) }}"
+                                            wire:navigate
+                                        >
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="eye" size="4" class="me-2" />
+                                            </x-slot>
+                                            Ver detalle
+                                        </flux:menu.item>
+                                    @elseif ($this->puedeContinuarRegistro($inscripcion))
+                                        <flux:menu.item
+                                            href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
+                                            wire:navigate
+                                        >
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="note-pencil" size="4" class="me-2" />
+                                            </x-slot>
+                                            Continuar registro
+                                        </flux:menu.item>
+                                    @else
+                                        @php($accionEstado = $this->accionEstadoRegistro($inscripcion))
+                                        <flux:menu.item disabled>
+                                            <x-slot name="icon">
+                                                <x-ui.icon :name="$accionEstado['icon']" size="4" class="me-2" />
+                                            </x-slot>
+                                            {{ $accionEstado['label'] }}
+                                        </flux:menu.item>
+                                    @endif
                                 </flux:menu>
                             </flux:dropdown>
                         </x-table.cell>

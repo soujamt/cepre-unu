@@ -56,9 +56,11 @@ use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
@@ -734,7 +736,7 @@ test('users can register postulacion and create an inscripcion draft', function 
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->where('codigo_pro', 'ordinario_2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -783,9 +785,124 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->and($inscripcion?->veces_postula_unu_ins)->toBe(0)
         ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
         ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
-        ->and($inscripcion?->codigo_ins)->toContain('PRO-');
+        ->and($inscripcion?->codigo_ins)->toStartWith('261ORD');
 
     Carbon\Carbon::setTestNow();
+});
+
+test('users can continue an existing inscripcion with the wizard preloaded', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()
+        ->where('longitud_minima_tdo', 8)
+        ->where('longitud_maxima_tdo', 8)
+        ->firstOrFail();
+
+    $estadoCivil = EstadoCivil::query()->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $nacionalidad = Nacionalidad::query()->firstOrFail();
+    $ubigeo = Ubigeo::query()->firstOrFail();
+    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
+    $lenguaNativa = LenguaNativa::query()->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $estadoCivil->id_eci,
+        'id_pais_nacimiento' => $pais->id_pai,
+        'id_nacionalidad' => $nacionalidad->id_nac,
+        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
+        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $identidadEtnica->id_iet,
+        'id_lengua_nativa' => $lenguaNativa->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => 'REGISTRO EXISTENTE',
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()
+        ->where('codigo_pro', 'ordinario_2026_1')
+        ->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with([
+            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+            'turno',
+        ])
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $inscripcion = Inscripcion::query()->create([
+        'codigo_ins' => '26IPRO0001',
+        'id_persona' => $persona->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'fecha_inscripcion_ins' => '2026-04-15 10:00:00',
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+        'anio_graduacion_ins' => 2025,
+        'id_pais_colegio' => $pais->id_pai,
+        'id_colegio' => $colegio->id_col,
+        'nombre_colegio_extranjero_ins' => null,
+        'id_tipo_colegio' => $tipoColegio->id_tco,
+        'veces_postula_unu_ins' => 1,
+        'veces_postula_otras_ins' => 2,
+        'observacion_ins' => 'OBSERVACION GENERAL',
+    ]);
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.continuar', $inscripcion->id_ins))
+        ->assertOk()
+        ->assertSee('NUEVA INSCRIPCION');
+
+    $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
+    $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col}";
+
+    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => $inscripcion->id_ins])
+        ->assertSet('inscripcionId', $inscripcion->id_ins)
+        ->assertSet('personaId', $persona->id_per)
+        ->assertSet('pasoActual', 4)
+        ->assertSet('personaForm.id_tipo_documento', (string) $tipoDocumento->id_tdo)
+        ->assertSet('personaForm.numero_documento', '46027897')
+        ->assertSet('personaForm.nombres', 'ROXANA KARINA')
+        ->assertSet('ubigeoNacimientoLabel', $ubigeoLabel)
+        ->assertSet('ubigeoDomicilioLabel', $ubigeoLabel)
+        ->assertSet('generalForm.anio_graduacion', '2025')
+        ->assertSet('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->assertSet('generalForm.id_colegio', $colegio->id_col)
+        ->assertSet('generalForm.veces_postula_unu', 1)
+        ->assertSet('generalForm.veces_postula_otras', 2)
+        ->assertSet('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->assertSet('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->assertSet('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->assertSet('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->assertSet('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
+        ->assertSet('pagoForm.numero_documento', '46027897')
+        ->assertSet('colegioLabel', $colegioLabel)
+        ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: $colegio->id_col, label: $colegioLabel);
 });
 
 test('users can validate a bank payment from the payment step and continue to expedientes', function () {
@@ -838,7 +955,7 @@ test('users can validate a bank payment from the payment step and continue to ex
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->where('codigo_pro', 'ordinario_2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -934,6 +1051,7 @@ test('users can save expediente review and activate the inscripcion when all req
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
     sembrarConfiguracionAcademicaParaInscripcion();
+    Storage::fake('public');
 
     $tipoDocumento = TipoDocumento::query()
         ->where('longitud_minima_tdo', 8)
@@ -979,7 +1097,7 @@ test('users can save expediente review and activate the inscripcion when all req
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->where('codigo_pro', 'ordinario_2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -1054,7 +1172,8 @@ test('users can save expediente review and activate the inscripcion when all req
         $component
             ->set("expedientesForm.{$indice}.estado_revision", EstadoRevisionExpediente::Aprobado->value)
             ->set("expedientesForm.{$indice}.nombre_archivo", 'REV-'.$indice)
-            ->set("expedientesForm.{$indice}.observacion", 'DOCUMENTO APROBADO');
+            ->set("expedientesForm.{$indice}.observacion", 'DOCUMENTO APROBADO')
+            ->set("archivosExpediente.{$indice}", UploadedFile::fake()->create("expediente-{$indice}.pdf", 120, 'application/pdf'));
     }
 
     $component

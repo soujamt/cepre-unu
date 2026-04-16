@@ -107,6 +107,7 @@ class extends Component
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
                 'procesoOferta.ofertaBase.sedeCarrera.sede',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+                'procesoOferta.turno',
                 'obligacionesPago',
                 'expedientes',
             ])
@@ -131,6 +132,37 @@ class extends Component
         $sede = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
 
         return "{$proceso} | {$carrera} | {$sede}";
+    }
+
+    public function puedeContinuarRegistro(Inscripcion $inscripcion): bool
+    {
+        return $inscripcion->estado_ins === EstadoInscripcion::Pendiente;
+    }
+
+    public function puedeVerDetalleRegistro(Inscripcion $inscripcion): bool
+    {
+        return $inscripcion->estado_ins === EstadoInscripcion::Activo;
+    }
+
+    /**
+     * @return array{label:string,icon:string}
+     */
+    public function accionEstadoRegistro(Inscripcion $inscripcion): array
+    {
+        return match ($inscripcion->estado_ins) {
+            EstadoInscripcion::Activo => [
+                'label' => 'Disponible en detalle',
+                'icon' => 'eye',
+            ],
+            EstadoInscripcion::Anulado => [
+                'label' => 'Inscripcion anulada',
+                'icon' => 'x-circle',
+            ],
+            default => [
+                'label' => 'Registro en proceso',
+                'icon' => 'clock',
+            ],
+        };
     }
 
     /**

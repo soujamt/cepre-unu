@@ -224,11 +224,122 @@ class extends Component
      */
     protected ?array $contextoProcesoPostulacionCache = null;
 
-    public function mount(): void
+    public function mount(?string $inscripcion = null): void
     {
         $this->autorizarPermiso('inscripcion', 'crear');
         $this->hidratarCatalogos();
         $this->pagoForm['fecha_pago'] = now()->subDay()->toDateString();
+
+        if ($inscripcion !== null) {
+            $idInscripcion = decode($inscripcion);
+
+            abort_unless($idInscripcion !== null, 404);
+
+            $this->cargarInscripcionExistente($idInscripcion);
+        }
+    }
+
+    private function cargarInscripcionExistente(int $idInscripcion): void
+    {
+        $inscripcion = Inscripcion::query()
+            ->with([
+                'persona.ubigeoNacimiento',
+                'persona.ubigeoDomicilio',
+                'procesoOferta.proceso.semestre',
+                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+                'procesoOferta.turno',
+                'convenioProceso.convenio',
+                'paisColegio',
+                'colegio',
+                'obligacionesPago.reglaPago.conceptoPago',
+                'obligacionesPago.pagos.importacionBancoDetalle',
+                'expedientes.tipoExpediente',
+            ])
+            ->findOrFail($idInscripcion);
+
+        $persona = $inscripcion->persona;
+
+        if ($persona === null) {
+            abort(404);
+        }
+
+        $this->inscripcionId = $inscripcion->id_ins;
+        $this->personaId = $persona->id_per;
+        $this->cargarPersonaDesdeSistema($persona);
+        $this->cargarInformacionGeneralExistente($inscripcion);
+        $this->cargarPostulacionExistente($inscripcion);
+        $this->cargarPagoExistente($inscripcion);
+        $this->pasoActual = $this->resolverPasoActualDesdeInscripcion($inscripcion);
+
+        if ($this->pasoActual >= 5) {
+            $this->inicializarExpedientesForm();
+        }
+    }
+
+    private function cargarInformacionGeneralExistente(Inscripcion $inscripcion): void
+    {
+        $this->generalForm = [
+            'anio_graduacion' => (string) ($inscripcion->anio_graduacion_ins ?? ''),
+            'id_pais_colegio' => (string) ($inscripcion->id_pais_colegio ?? ''),
+            'id_tipo_colegio' => (string) ($inscripcion->id_tipo_colegio ?? ''),
+            'id_colegio' => (string) ($inscripcion->id_colegio ?? ''),
+            'nombre_colegio_extranjero' => (string) ($inscripcion->nombre_colegio_extranjero_ins ?? ''),
+            'veces_postula_unu' => (int) ($inscripcion->veces_postula_unu_ins ?? 0),
+            'veces_postula_otras' => (int) ($inscripcion->veces_postula_otras_ins ?? 0),
+            'observacion' => (string) ($inscripcion->observacion_ins ?? ''),
+        ];
+
+        $this->normalizarEstadoGeneralForm();
+        $this->sincronizarEtiquetaColegio($inscripcion->colegio);
+    }
+
+    private function cargarPostulacionExistente(Inscripcion $inscripcion): void
+    {
+        $procesoOferta = $inscripcion->procesoOferta;
+
+        $this->postulacionForm = [
+            'id_modalidad_admision' => (string) ($procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision ?? ''),
+            'id_lugar_inscripcion' => (string) ($procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion ?? ''),
+            'id_turno' => (string) ($procesoOferta?->id_turno ?? ''),
+            'id_proceso_oferta' => (string) ($procesoOferta?->id_pof ?? ''),
+            'id_convenio_proceso' => (string) ($inscripcion->id_convenio_proceso ?? ''),
+        ];
+    }
+
+    private function cargarPagoExistente(Inscripcion $inscripcion): void
+    {
+        $obligacion = $inscripcion->obligacionesPago
+            ->sortByDesc('id_iop')
+            ->first();
+
+        $detalle = $obligacion?->pagos
+            ?->sortByDesc('id_ipa')
+            ->first()
+            ?->importacionBancoDetalle;
+
+        $this->pagoForm = array_merge($this->formularioPagoBase(), [
+            'id_regla_pago' => (string) ($obligacion?->id_regla_pago ?? ''),
+            'numero_documento' => (string) ($inscripcion->persona?->numero_documento_per ?? ''),
+            'numero_operacion' => (string) ($detalle?->numero_operacion_visible_ibd ?? ''),
+            'fecha_pago' => $detalle?->fecha_pago_ibd?->format('Y-m-d')
+                ?? now()->subDay()->toDateString(),
+            'id_detalle_banco' => (string) ($detalle?->id_ibd ?? ''),
+        ]);
+
+        $this->resultadoPagoDetalleIds = $detalle !== null
+            ? [$detalle->id_ibd]
+            : [];
+        $this->busquedaPagoRealizada = $detalle !== null;
+    }
+
+    private function resolverPasoActualDesdeInscripcion(Inscripcion $inscripcion): int
+    {
+        if ($inscripcion->expedientes->isNotEmpty() || $this->tienePagoValidadoWizard) {
+            return 5;
+        }
+
+        return 4;
     }
 
     public function updatedPersonaFormIdTipoDocumento(): void
@@ -1933,6 +2044,7 @@ class extends Component
 
         $this->origenDatosPersona = 'sistema';
         $this->personaId = $persona->id_per;
+        $this->personaForm['id_tipo_documento'] = (string) $persona->id_tipo_documento;
         $this->personaForm['numero_documento'] = (string) $persona->numero_documento_per;
         $this->personaForm['solo_un_apellido'] = (bool) $persona->solo_un_apellido_per;
         $this->personaForm['tiene_apellido_casada'] = filled($persona->apellido_casada_per);
@@ -2015,6 +2127,20 @@ class extends Component
             name: 'personaForm.id_ubigeo_domicilio',
             value: $this->personaForm['id_ubigeo_domicilio'],
             label: $this->ubigeoDomicilioLabel,
+        );
+    }
+
+    private function sincronizarEtiquetaColegio(?Colegio $colegio): void
+    {
+        $this->colegioLabel = $colegio === null
+            ? ''
+            : "{$colegio->id_col} | {$colegio->nombre_col}";
+
+        $this->dispatch(
+            'ui-select-search-filled',
+            name: 'generalForm.id_colegio',
+            value: (string) ($colegio?->id_col ?? ''),
+            label: $this->colegioLabel,
         );
     }
 
