@@ -43,6 +43,10 @@ class extends Component
     {
         $this->autorizarPermiso('pago', 'crear');
         $this->fechaPagoBusqueda = now()->subDay()->toDateString();
+
+        if (filled(request()->query('codigo'))) {
+            $this->buscarObligacion = (string) request()->query('codigo');
+        }
     }
 
     public function updatedBuscarObligacion(): void

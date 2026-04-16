@@ -12,6 +12,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,15 +24,19 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $buscar = '';
 
+    #[Url(as: 'proceso')]
     public string $idProceso = '';
 
+    #[Url(as: 'pagina')]
     public int $porPagina = 10;
 
     /**
      * @var array<string, bool>
      */
+    #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
     public function mount(): void
@@ -88,10 +93,21 @@ class extends Component
     {
         $query = $this->baseInscripcionesQuery();
 
+        $counts = (clone $query)->selectRaw('
+            COUNT(*) as total,
+            SUM(estado_ins = ?) as activas,
+            SUM(estado_ins = ?) as pendientes,
+            SUM(estado_ins = ?) as anuladas
+        ', [
+            EstadoInscripcion::Activo->value,
+            EstadoInscripcion::Pendiente->value,
+            EstadoInscripcion::Anulado->value,
+        ])->first();
+
         return [
-            'total' => (clone $query)->count(),
-            'activas' => (clone $query)->where('estado_ins', EstadoInscripcion::Activo->value)->count(),
-            'pendientes' => (clone $query)->where('estado_ins', EstadoInscripcion::Pendiente->value)->count(),
+            'total' => (int) $counts->total,
+            'activas' => (int) $counts->activas,
+            'pendientes' => (int) $counts->pendientes,
             'pago_pendiente' => (clone $query)
                 ->whereHas('obligacionesPago', fn (Builder $q) => $q->whereIn('estado_iop', [
                     EstadoObligacionPago::Pendiente->value,
@@ -104,7 +120,7 @@ class extends Component
                     EstadoRevisionExpediente::Rechazado->value,
                 ]))
                 ->count(),
-            'anuladas' => (clone $query)->where('estado_ins', EstadoInscripcion::Anulado->value)->count(),
+            'anuladas' => (int) $counts->anuladas,
         ];
     }
 
@@ -154,6 +170,13 @@ class extends Component
     public function puedeVerDetalleRegistro(Inscripcion $inscripcion): bool
     {
         return $inscripcion->estado_ins === EstadoInscripcion::Activo;
+    }
+
+    public function tienePagoPorValidar(Inscripcion $inscripcion): bool
+    {
+        return $inscripcion->obligacionesPago->contains(
+            fn ($obligacion) => in_array($obligacion->estado_iop, [EstadoObligacionPago::Pendiente, EstadoObligacionPago::Parcial], true)
+        );
     }
 
     /**
@@ -277,6 +300,10 @@ class extends Component
 
         $normalizado = preg_replace('/\s+/u', ' ', trim($valor));
 
-        return filled($normalizado) ? $normalizado : null;
+        if (! filled($normalizado)) {
+            return null;
+        }
+
+        return str_replace(['%', '_'], ['\%', '\_'], $normalizado);
     }
 };

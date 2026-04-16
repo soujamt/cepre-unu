@@ -15,7 +15,11 @@
 @endsection
 
 <div class="space-y-5">
-    <div class="grid gap-4 lg:grid-cols-4">
+    <div
+        class="grid gap-4 transition-opacity duration-200 lg:grid-cols-4"
+        wire:loading.class="opacity-50"
+        wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado"
+    >
         <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
                 <div class="space-y-1">
@@ -114,7 +118,11 @@
 
                 <flux:menu keep-open class="dark:bg-zinc-800">
                     @foreach ($this->estados() as $estado)
-                        <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
+                        <flux:menu.checkbox
+                            wire:key="estado-{{ $estado->value }}"
+                            wire:model.live="filtroEstado.{{ $estado->value }}"
+                            class="font-normal"
+                        >
                             <div
                                 class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
                             >
@@ -273,12 +281,17 @@
 
                                 <flux:menu>
                                     @permiso ('pago_crear')
-                                        <flux:menu.item href="{{ route('pagos.validar') }}" wire:navigate>
-                                            <x-slot name="icon">
-                                                <x-ui.icon name="shield-check" size="4" class="me-2" />
-                                            </x-slot>
-                                            Validar pago
-                                        </flux:menu.item>
+                                        @if ($this->tienePagoPorValidar($inscripcion))
+                                            <flux:menu.item
+                                                href="{{ route('pagos.validar', ['codigo' => $inscripcion->codigo_ins]) }}"
+                                                wire:navigate
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="shield-check" size="4" class="me-2" />
+                                                </x-slot>
+                                                Validar pago
+                                            </flux:menu.item>
+                                        @endif
                                     @endpermiso
 
                                     @if ($this->puedeVerDetalleRegistro($inscripcion))
