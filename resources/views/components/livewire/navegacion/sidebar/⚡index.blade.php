@@ -72,9 +72,12 @@ new class extends Component
                 'icon' => 'chart-bar',
                 'active' => $this->routeIs('reportes.*'),
                 'items' => [
-                    ['label' => 'REPORTES GENERALES', 'href' => '#', 'active' => $this->routeIs('reportes.generales.*')],
-                    ['label' => 'REPORTES DE PAGOS', 'href' => '#', 'active' => $this->routeIs('reportes.pagos.*')],
-                    ['label' => 'REPORTES ACADEMICOS', 'href' => '#', 'active' => $this->routeIs('reportes.academicos.*')],
+                    [
+                        'label' => 'REP. INSCRIPCIONES',
+                        'href' => route('reportes.inscripciones.index'),
+                        'active' => $this->routeIs('reportes.inscripciones.*'),
+                        'permiso' => 'reporte_inscripcion_indice',
+                    ],
                 ],
             ],
         ];
@@ -101,21 +104,22 @@ new class extends Component
             wire:key="menu-inicio" icon="house-simple" />
 
         @foreach ($this->gruposMenu() as $grupo)
-            @php
-                $itemsVisibles = collect($grupo['items'])
-                    ->filter(fn (array $item): bool => ! isset($item['permiso']) || auth()->user()?->hasPermisoAccion($item['permiso']))
-                    ->values();
-            @endphp
+        @php
+        $itemsVisibles = collect($grupo['items'])
+        ->filter(fn (array $item): bool => ! isset($item['permiso']) ||
+        auth()->user()?->hasPermisoAccion($item['permiso']))
+        ->values();
+        @endphp
 
-            @if ($itemsVisibles->isNotEmpty())
-                <x-sidebar.group :label="$grupo['label']" :active="$grupo['active']" :icon="$grupo['icon']"
-                    wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}">
-                    @foreach ($itemsVisibles as $item)
-                        <x-sidebar.sub-item :label="$item['label']" :href="$item['href']" :active="$item['active']"
-                            wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}" />
-                    @endforeach
-                </x-sidebar.group>
-            @endif
+        @if ($itemsVisibles->isNotEmpty())
+        <x-sidebar.group :label="$grupo['label']" :active="$grupo['active']" :icon="$grupo['icon']"
+            wire:key="{{ 'grupo-'.str($grupo['label'])->slug() }}">
+            @foreach ($itemsVisibles as $item)
+            <x-sidebar.sub-item :label="$item['label']" :href="$item['href']" :active="$item['active']"
+                wire:key="{{ 'item-'.str($grupo['label'].'-'.$item['label'])->slug() }}" />
+            @endforeach
+        </x-sidebar.group>
+        @endif
         @endforeach
 
         <x-slot:footer>

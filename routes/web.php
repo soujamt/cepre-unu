@@ -95,4 +95,9 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/inscripciones/pagos/validar', 'pages::inscripciones.pagos-validar')
         ->middleware('permiso:pago_crear')
         ->name('pagos.validar');
+
+    // Reportes
+    Route::livewire('/reportes/inscripciones', 'pages::reportes.inscripciones')
+        ->middleware('permiso:reporte_inscripcion_indice')
+        ->name('reportes.inscripciones.index');
 });

@@ -121,6 +121,11 @@ class PermisoModuloSeeder extends Seeder
                 'nombre_permiso' => 'INSCRIPCIONES',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar', 'exportar_excel'],
             ],
+            [
+                'clave_permiso' => 'reporte_inscripcion',
+                'nombre_permiso' => 'REPORTES DE INSCRIPCIONES',
+                'acciones' => ['indice', 'exportar_excel'],
+            ],
         ];
     }
 }
