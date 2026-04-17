@@ -1,10 +1,13 @@
 <?php
 
+use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
+use App\Enums\EstadoValidacionPago;
 use App\Models\Inscripcion;
 use App\Models\InscripcionExpediente;
 use App\Models\InscripcionPago;
+use App\Models\RequisitoExpediente;
 use App\Models\Ubigeo;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Support\Facades\Auth;
@@ -249,6 +252,7 @@ class extends Component
         ]);
 
         $this->inscripcionActual->load('expedientes.tipoExpediente', 'expedientes.usuarioRevisor');
+        $this->recalcularEstadoInscripcion();
         $this->dispatch('toast', message: 'Expediente aprobado.', type: 'success');
     }
 
@@ -316,5 +320,54 @@ class extends Component
     public function volverListado(): void
     {
         $this->redirect(route('inscripciones.index'), navigate: true);
+    }
+
+    private function recalcularEstadoInscripcion(): void
+    {
+        $inscripcion = $this->inscripcionActual;
+
+        if ($inscripcion->estado_ins !== EstadoInscripcion::Pendiente) {
+            return;
+        }
+
+        $procesoId = $inscripcion->procesoOferta?->id_proceso;
+
+        if ($procesoId === null) {
+            return;
+        }
+
+        $requisitosObligatorios = RequisitoExpediente::query()
+            ->where('id_proceso', $procesoId)
+            ->where('obligatorio_rex', true)
+            ->pluck('id_tipo_expediente')
+            ->map(fn (int|string $id): int => (int) $id)
+            ->all();
+
+        if ($requisitosObligatorios === []) {
+            return;
+        }
+
+        $aprobados = $inscripcion->expedientes
+            ->filter(fn ($expediente): bool => in_array((int) $expediente->id_tipo_expediente, $requisitosObligatorios, true)
+                && $expediente->estado_revision_iex === EstadoRevisionExpediente::Aprobado)
+            ->count();
+
+        if ($aprobados !== count($requisitosObligatorios)) {
+            return;
+        }
+
+        $tienePagoValido = $inscripcion->obligacionesPago->contains(
+            fn ($obligacion): bool => $obligacion->estado_iop === EstadoObligacionPago::Exonerado
+                || $obligacion->pagos->contains(
+                    fn ($pago): bool => $pago->estado_validacion_ipa === EstadoValidacionPago::Verificado
+                )
+        );
+
+        if (! $tienePagoValido) {
+            return;
+        }
+
+        $inscripcion->update(['estado_ins' => EstadoInscripcion::Activo->value]);
+        $this->dispatch('toast', message: 'Todos los expedientes obligatorios aprobados. La inscripcion quedo activa.', type: 'success');
     }
 };
