@@ -18,7 +18,7 @@
     <div
         class="grid gap-4 transition-opacity duration-200 lg:grid-cols-4"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado"
+        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado"
     >
         <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
@@ -171,6 +171,29 @@
             </x-ui.select>
         </div>
 
+        <div class="w-full sm:w-40">
+            <x-ui.select wire:model.live="filtroPago" placeholder="Filtrar por pago">
+                <option value="">Todos los pagos</option>
+                @foreach (App\Enums\EstadoObligacionPago::cases() as $estadoPago)
+                    <option wire:key="pago-{{ $estadoPago->value }}" value="{{ $estadoPago->value }}">
+                        {{ ucfirst(strtolower($estadoPago->getNombre())) }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <div class="w-full sm:w-44">
+            <x-ui.select wire:model.live="filtroExpediente" placeholder="Filtrar por expedientes">
+                <option value="">Todos los expedientes</option>
+                <option value="sin_carga">Sin carga</option>
+                @foreach (App\Enums\EstadoRevisionExpediente::cases() as $estadoExpediente)
+                    <option wire:key="expediente-{{ $estadoExpediente->value }}" value="{{ $estadoExpediente->value }}">
+                        {{ ucfirst(strtolower($estadoExpediente->getNombre())) }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <flux:dropdown>
             <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
@@ -202,7 +225,7 @@
                     </flux:menu.checkbox>
                 @endforeach
 
-                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0)
+                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0 || $filtroPago !== '' || $filtroExpediente !== '')
                     <flux:menu.separator />
                     @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '')
                         <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
@@ -226,6 +249,30 @@
                                 </div>
                             </x-slot>
                             Limpiar estados
+                        </flux:menu.item>
+                    @endif
+                    @if ($filtroPago !== '')
+                        <flux:menu.item variant="danger" wire:click="limpiarFiltroPago" class="font-normal!">
+                            <x-slot name="icon">
+                                <div
+                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                >
+                                    <x-ui.icon name="trash" size="4" />
+                                </div>
+                            </x-slot>
+                            Limpiar pago
+                        </flux:menu.item>
+                    @endif
+                    @if ($filtroExpediente !== '')
+                        <flux:menu.item variant="danger" wire:click="limpiarFiltroExpediente" class="font-normal!">
+                            <x-slot name="icon">
+                                <div
+                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                >
+                                    <x-ui.icon name="trash" size="4" />
+                                </div>
+                            </x-slot>
+                            Limpiar expedientes
                         </flux:menu.item>
                     @endif
                 @endif
@@ -410,12 +457,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

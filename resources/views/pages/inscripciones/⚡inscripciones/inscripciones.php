@@ -55,6 +55,12 @@ class extends Component
     #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
+    #[Url(as: 'pago')]
+    public string $filtroPago = '';
+
+    #[Url(as: 'docs')]
+    public string $filtroExpediente = '';
+
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'indice');
@@ -96,6 +102,16 @@ class extends Component
     }
 
     public function updatedFiltroEstado(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroPago(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroExpediente(): void
     {
         $this->resetPage();
     }
@@ -221,6 +237,16 @@ class extends Component
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
+    }
+
+    public function limpiarFiltroPago(): void
+    {
+        $this->filtroPago = '';
+    }
+
+    public function limpiarFiltroExpediente(): void
+    {
+        $this->filtroExpediente = '';
     }
 
     public function limpiarFiltroProceso(): void
@@ -431,6 +457,16 @@ class extends Component
             })
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_ins', $this->estadosSeleccionados);
+            })
+            ->when(filled($this->filtroPago), function (Builder $query): void {
+                $query->whereHas('obligacionesPago', fn (Builder $q) => $q->where('estado_iop', $this->filtroPago));
+            })
+            ->when(filled($this->filtroExpediente), function (Builder $query): void {
+                if ($this->filtroExpediente === 'sin_carga') {
+                    $query->whereDoesntHave('expedientes');
+                } else {
+                    $query->whereHas('expedientes', fn (Builder $q) => $q->where('estado_revision_iex', $this->filtroExpediente));
+                }
             });
     }
 
