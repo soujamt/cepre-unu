@@ -18,7 +18,7 @@
     <div
         class="grid gap-4 transition-opacity duration-200 lg:grid-cols-4"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado"
+        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado"
     >
         <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
             <div class="flex items-start justify-between gap-3">
@@ -84,8 +84,9 @@
         </div>
     </div>
 
-    <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div class="w-full xl:w-sm">
+    {{-- Fila 1: Buscador + Acciones --}}
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex-1">
             <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar inscripciones" clearable>
                 <x-slot name="icon">
                     <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
@@ -93,7 +94,51 @@
             </flux:input>
         </div>
 
-        <div class="w-full xl:w-md">
+        <div class="flex shrink-0 gap-3">
+            @permiso ('inscripcion_exportar_excel')
+                <flux:button
+                    variant="primary"
+                    color="green"
+                    wire:click="exportarExcel"
+                    wire:loading.attr="disabled"
+                    wire:target="exportarExcel"
+                >
+                    <x-slot name="icon">
+                        <x-ui.icon name="file-xls" size="5" />
+                    </x-slot>
+                    Exportar Excel
+                </flux:button>
+            @endpermiso
+
+            @permiso ('inscripcion_crear')
+                <flux:button
+                    variant="primary"
+                    href="{{ route('inscripciones.crear') }}"
+                    wire:navigate
+                >
+                    <x-slot name="icon">
+                        <x-ui.icon name="plus" size="5" class="text-white" />
+                    </x-slot>
+                    Nueva inscripcion
+                </flux:button>
+            @endpermiso
+        </div>
+    </div>
+
+    {{-- Fila 2: Filtros --}}
+    <div class="flex flex-wrap items-center gap-3">
+        <div class="w-full sm:w-40">
+            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+                <option value="">Todos los semestres</option>
+                @foreach ($this->semestresDisponibles as $semestre)
+                    <option wire:key="semestre-inscripcion-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
+                        {{ $semestre->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <div class="w-full sm:w-48">
             <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
@@ -104,82 +149,88 @@
             </x-ui.select>
         </div>
 
-        <div class="w-full xl:w-auto">
-            <flux:dropdown>
-                <flux:button class="w-full font-normal" icon:trailing="chevron-down">
-                    <x-slot name="icon">
-                        <x-ui.icon name="funnel" size="5" />
-                    </x-slot>
-                    Estado
-                    @if (count($this->estadosSeleccionados) > 0)
-                        <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
-                    @endif
-                </flux:button>
-
-                <flux:menu keep-open class="dark:bg-zinc-800">
-                    @foreach ($this->estados() as $estado)
-                        <flux:menu.checkbox
-                            wire:key="estado-{{ $estado->value }}"
-                            wire:model.live="filtroEstado.{{ $estado->value }}"
-                            class="font-normal"
-                        >
-                            <div
-                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                            >
-                                <x-ui.icon
-                                    :name="$estado->getIcon()"
-                                    size="4"
-                                    class="text-{{ $estado->getColor() }}-500"
-                                />
-                            </div>
-                            {{ ucfirst(strtolower($estado->getNombre())) }}
-                        </flux:menu.checkbox>
-                    @endforeach
-
-                    @if ($idProceso !== '' || count($this->estadosSeleccionados) > 0)
-                        <flux:menu.separator />
-                        @if ($idProceso !== '')
-                            <flux:menu.item wire:click="limpiarFiltroProceso" class="font-normal!">
-                                <x-slot name="icon">
-                                    <div
-                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                    >
-                                        <x-ui.icon name="x" size="4" />
-                                    </div>
-                                </x-slot>
-                                Limpiar proceso
-                            </flux:menu.item>
-                        @endif
-                        @if (count($this->estadosSeleccionados) > 0)
-                            <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
-                                <x-slot name="icon">
-                                    <div
-                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                    >
-                                        <x-ui.icon name="trash" size="4" />
-                                    </div>
-                                </x-slot>
-                                Limpiar estados
-                            </flux:menu.item>
-                        @endif
-                    @endif
-                </flux:menu>
-            </flux:dropdown>
+        <div class="w-full sm:w-44">
+            <x-ui.select wire:model.live="idModalidad" placeholder="Filtrar por modalidad">
+                <option value="">Todas las modalidades</option>
+                @foreach ($this->modalidadesDisponibles as $modalidad)
+                    <option wire:key="modalidad-inscripcion-{{ $modalidad->id_mad }}" value="{{ $modalidad->id_mad }}">
+                        {{ $modalidad->nombre_mad }}
+                    </option>
+                @endforeach
+            </x-ui.select>
         </div>
 
-        @permiso ('inscripcion_crear')
-            <flux:button
-                variant="primary"
-                href="{{ route('inscripciones.crear') }}"
-                wire:navigate
-                class="ms-auto w-full font-normal xl:w-auto"
-            >
+        <div class="w-full sm:w-44">
+            <x-ui.select wire:model.live="idLugarInscripcion" placeholder="Filtrar por lugar">
+                <option value="">Todos los lugares</option>
+                @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
+                    <option wire:key="lugar-inscripcion-{{ $lugarInscripcion->id_lin }}" value="{{ $lugarInscripcion->id_lin }}">
+                        {{ $lugarInscripcion->nombre_lin }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <flux:dropdown>
+            <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
-                    <x-ui.icon name="plus" size="5" class="text-white" />
+                    <x-ui.icon name="funnel" size="5" />
                 </x-slot>
-                Nueva inscripcion
+                Estado
+                @if (count($this->estadosSeleccionados) > 0)
+                    <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
+                @endif
             </flux:button>
-        @endpermiso
+
+            <flux:menu keep-open class="dark:bg-zinc-800">
+                @foreach ($this->estados() as $estado)
+                    <flux:menu.checkbox
+                        wire:key="estado-{{ $estado->value }}"
+                        wire:model.live="filtroEstado.{{ $estado->value }}"
+                        class="font-normal"
+                    >
+                        <div
+                            class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                        >
+                            <x-ui.icon
+                                :name="$estado->getIcon()"
+                                size="4"
+                                class="text-{{ $estado->getColor() }}-500"
+                            />
+                        </div>
+                        {{ ucfirst(strtolower($estado->getNombre())) }}
+                    </flux:menu.checkbox>
+                @endforeach
+
+                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0)
+                    <flux:menu.separator />
+                    @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '')
+                        <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
+                            <x-slot name="icon">
+                                <div
+                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                >
+                                    <x-ui.icon name="x" size="4" />
+                                </div>
+                            </x-slot>
+                            Limpiar filtros academicos
+                        </flux:menu.item>
+                    @endif
+                    @if (count($this->estadosSeleccionados) > 0)
+                        <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
+                            <x-slot name="icon">
+                                <div
+                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                >
+                                    <x-ui.icon name="trash" size="4" />
+                                </div>
+                            </x-slot>
+                            Limpiar estados
+                        </flux:menu.item>
+                    @endif
+                @endif
+            </flux:menu>
+        </flux:dropdown>
     </div>
 
     <div class="relative">
@@ -319,15 +370,17 @@
                                             </flux:menu.item>
                                         @endpermiso
                                     @elseif ($this->puedeContinuarRegistro($inscripcion))
-                                        <flux:menu.item
-                                            href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
-                                            wire:navigate
-                                        >
-                                            <x-slot name="icon">
-                                                <x-ui.icon name="note-pencil" size="4" class="me-2" />
-                                            </x-slot>
-                                            Continuar registro
-                                        </flux:menu.item>
+                                        @permiso ('pago_crear')
+                                            <flux:menu.item
+                                                href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
+                                                wire:navigate
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="note-pencil" size="4" class="me-2" />
+                                                </x-slot>
+                                                Continuar registro
+                                            </flux:menu.item>
+                                        @endpermiso
                                     @else
                                         @php ($accionEstado = $this->accionEstadoRegistro($inscripcion))
                                         <flux:menu.item disabled>
@@ -357,12 +410,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
