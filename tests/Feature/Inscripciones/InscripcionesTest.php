@@ -1,5 +1,6 @@
 <?php
 
+use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Accion;
 use App\Models\Carrera;
 use App\Models\EstadoCivil;
@@ -24,8 +25,10 @@ use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
 
@@ -40,8 +43,16 @@ function otorgarPermisosInscripcion(Usuario $usuario, array $claves): void
     $usuario->roles()->attach($rol->id_rol);
 
     foreach ($claves as $clave) {
-        $permisoClave = Str::beforeLast($clave, '_');
-        $accionClave = Str::afterLast($clave, '_');
+        $accionClave = Accion::query()
+            ->pluck('clave_accion')
+            ->sortByDesc(fn (string $accion): int => mb_strlen($accion, 'UTF-8'))
+            ->first(fn (string $accion): bool => str_ends_with($clave, "_{$accion}"));
+
+        if (! is_string($accionClave)) {
+            throw new RuntimeException("No se pudo resolver la accion para la clave {$clave}.");
+        }
+
+        $permisoClave = Str::beforeLast($clave, "_{$accionClave}");
 
         $permiso = Permiso::query()->firstOrCreate(
             ['clave_permiso' => $permisoClave],
@@ -250,6 +261,7 @@ test('users can filter inscripciones by search process and state', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
         ->assertSee('INS-1')
         ->assertSee('INS-2')
         ->set('buscar', $contextoPendiente['persona']->numero_documento_per)
@@ -265,6 +277,47 @@ test('users can filter inscripciones by search process and state', function () {
         ->assertDontSee('INS-1');
 });
 
+test('list defaults to current semester and can filter by semester modalidad and lugar', function () {
+    Carbon::setTestNow('2026-04-17 09:30:00');
+
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    $contextoSemestreActual = crearContextoListadoInscripcion(9, 'ACTIVO');
+    $contextoOtroSemestre = crearContextoListadoInscripcion(10, 'ACTIVO');
+
+    $contextoSemestreActual['proceso']->semestre->update([
+        'fecha_inicio_inscripcion_sem' => '2026-04-01',
+        'fecha_fin_inscripcion_sem' => '2026-04-30',
+        'nombre_sem' => 'SEMESTRE ACTUAL',
+    ]);
+
+    $contextoOtroSemestre['proceso']->semestre->update([
+        'fecha_inicio_inscripcion_sem' => '2026-01-01',
+        'fecha_fin_inscripcion_sem' => '2026-02-28',
+        'nombre_sem' => 'SEMESTRE ANTERIOR',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->assertSet('idSemestre', (string) $contextoSemestreActual['proceso']->id_semestre)
+        ->assertSee('INS-9')
+        ->assertDontSee('INS-10')
+        ->set('idSemestre', (string) $contextoOtroSemestre['proceso']->id_semestre)
+        ->assertSee('INS-10')
+        ->assertDontSee('INS-9')
+        ->set('idSemestre', (string) $contextoSemestreActual['proceso']->id_semestre)
+        ->set('idModalidad', (string) $contextoSemestreActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->assertSee('INS-9')
+        ->assertDontSee('INS-10')
+        ->set('idLugarInscripcion', (string) $contextoSemestreActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->assertSee('INS-9')
+        ->assertDontSee('INS-10');
+
+    Carbon::setTestNow();
+});
+
 test('inscripciones summary shows counts by state', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
@@ -276,6 +329,7 @@ test('inscripciones summary shows counts by state', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
         ->assertSee('3')
         ->assertSee('1');
 });
@@ -305,6 +359,76 @@ test('list shows detail action for active inscripciones and continue action for 
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
         ->assertSee('Ver detalle')
         ->assertSee('Continuar registro');
+});
+
+test('users can export inscripciones to excel preserving current filters', function () {
+    Carbon::setTestNow('2026-04-17 09:30:00');
+    Excel::fake();
+
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_exportar_excel']);
+
+    $contextoPendiente = crearContextoListadoInscripcion(7, 'PENDIENTE');
+    $contextoActivo = crearContextoListadoInscripcion(8, 'ACTIVO');
+
+    $contextoPendiente['persona']->update([
+        'solo_un_apellido_per' => true,
+        'apellido_materno_per' => null,
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'discapacidad_per' => false,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'direccion_per' => 'JR. LOS LAURELES 123',
+        'celular_per' => '987654321',
+    ]);
+
+    $contextoPendiente['inscripcion']->update([
+        'anio_graduacion_ins' => 2024,
+        'veces_postula_unu_ins' => 1,
+        'veces_postula_otras_ins' => 2,
+        'observacion_ins' => 'Registro exportable',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
+        ->set('filtroEstado.PENDIENTE', true)
+        ->call('exportarExcel');
+
+    Excel::assertDownloaded('inscripciones-cepre-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export): bool {
+        $rows = $export->collection();
+
+        expect($rows)->toHaveCount(1)
+            ->and($rows->first()[1])->toBe('7450007')
+            ->and($rows->first()[2])->toBe(1)
+            ->and($rows->first()[8])->toBe('F')
+            ->and($rows->first()[20])->toBe(2024)
+            ->and($rows->first()[25])->toBe(1)
+            ->and($rows->first()[26])->toBe(2)
+            ->and($rows->first()[33])->toBe('Registro exportable');
+
+        return true;
+    });
+
+    Carbon::setTestNow();
+});
+
+test('users without export permiso cannot export inscripciones to excel', function () {
+    Excel::fake();
+
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    crearContextoListadoInscripcion(11, 'ACTIVO');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
+        ->call('exportarExcel')
+        ->assertForbidden();
 });

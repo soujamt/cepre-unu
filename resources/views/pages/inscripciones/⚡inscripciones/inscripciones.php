@@ -1,10 +1,14 @@
 <?php
 
+use App\Exports\InscripcionesFormatoCepreExport;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
 use App\Models\Inscripcion;
+use App\Models\LugarInscripcion;
+use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
+use App\Models\Semestre;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -16,6 +20,8 @@ use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 new
 #[Layout('layouts.app')]
@@ -31,6 +37,15 @@ class extends Component
     #[Url(as: 'proceso')]
     public string $idProceso = '';
 
+    #[Url(as: 'semestre')]
+    public string $idSemestre = '';
+
+    #[Url(as: 'modalidad')]
+    public string $idModalidad = '';
+
+    #[Url(as: 'lugar')]
+    public string $idLugarInscripcion = '';
+
     #[Url(as: 'pagina')]
     public int $porPagina = 10;
 
@@ -43,6 +58,10 @@ class extends Component
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'indice');
+
+        if ($this->idSemestre === '') {
+            $this->idSemestre = $this->resolverSemestreActualPorDefecto();
+        }
     }
 
     public function updatedBuscar(): void
@@ -50,7 +69,23 @@ class extends Component
         $this->resetPage();
     }
 
+    public function updatedIdSemestre(): void
+    {
+        $this->idProceso = '';
+        $this->resetPage();
+    }
+
     public function updatedIdProceso(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdModalidad(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdLugarInscripcion(): void
     {
         $this->resetPage();
     }
@@ -81,11 +116,45 @@ class extends Component
     }
 
     #[Computed]
+    public function semestresDisponibles(): Collection
+    {
+        return Semestre::query()
+            ->whereHas('procesos.procesosOferta.inscripciones')
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->get();
+    }
+
+    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
+            ->whereHas('procesosOferta.inscripciones')
             ->orderByDesc('id_pro')
+            ->get();
+    }
+
+    #[Computed]
+    public function modalidadesDisponibles(): Collection
+    {
+        return ModalidadAdmision::query()
+            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+                $this->aplicarFiltrosRelacionados($query);
+            })
+            ->orderBy('nombre_mad')
+            ->get();
+    }
+
+    #[Computed]
+    public function lugaresInscripcionDisponibles(): Collection
+    {
+        return LugarInscripcion::query()
+            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+                $this->aplicarFiltrosRelacionados($query);
+            })
+            ->orderBy('nombre_lin')
             ->get();
     }
 
@@ -129,19 +198,24 @@ class extends Component
     public function inscripciones(): LengthAwarePaginator
     {
         return $this->baseInscripcionesQuery()
-            ->with([
-                'persona',
-                'procesoOferta.proceso.semestre',
-                'procesoOferta.proceso.requisitosExpediente',
-                'procesoOferta.ofertaBase.sedeCarrera.carrera',
-                'procesoOferta.ofertaBase.sedeCarrera.sede',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'procesoOferta.turno',
-                'obligacionesPago',
-                'expedientes',
-            ])
+            ->with($this->relacionesListado())
             ->orderByDesc('id_ins')
             ->paginate($this->porPagina);
+    }
+
+    public function exportarExcel(): BinaryFileResponse
+    {
+        $this->autorizarPermiso('inscripcion', 'exportar_excel');
+
+        $inscripciones = $this->baseInscripcionesQuery()
+            ->with($this->relacionesExportacion())
+            ->orderByDesc('id_ins')
+            ->get();
+
+        return Excel::download(
+            new InscripcionesFormatoCepreExport($inscripciones),
+            $this->nombreArchivoExportacion(),
+        );
     }
 
     public function limpiarFiltroEstado(): void
@@ -152,6 +226,15 @@ class extends Component
     public function limpiarFiltroProceso(): void
     {
         $this->idProceso = '';
+    }
+
+    public function limpiarFiltrosAcademicos(): void
+    {
+        $this->idSemestre = $this->resolverSemestreActualPorDefecto();
+        $this->idProceso = '';
+        $this->idModalidad = '';
+        $this->idLugarInscripcion = '';
+        $this->resetPage();
     }
 
     public ?int $idInscripcionAnular = null;
@@ -328,12 +411,104 @@ class extends Component
                             ->where('nombre_car', 'like', "%{$texto}%"));
                 });
             })
+            ->when(filled($this->idSemestre), function (Builder $query): void {
+                $query->whereHas('procesoOferta.proceso', fn (Builder $builder) => $builder->where('id_semestre', (int) $this->idSemestre));
+            })
             ->when(filled($this->idProceso), function (Builder $query): void {
                 $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+            })
+            ->when(filled($this->idModalidad), function (Builder $query): void {
+                $query->whereHas(
+                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
+                    fn (Builder $builder) => $builder->where('id_modalidad_admision', (int) $this->idModalidad)
+                );
+            })
+            ->when(filled($this->idLugarInscripcion), function (Builder $query): void {
+                $query->whereHas(
+                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
+                    fn (Builder $builder) => $builder->where('id_lugar_inscripcion', (int) $this->idLugarInscripcion)
+                );
             })
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_ins', $this->estadosSeleccionados);
             });
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function relacionesListado(): array
+    {
+        return [
+            'persona',
+            'procesoOferta.proceso.semestre',
+            'procesoOferta.proceso.requisitosExpediente',
+            'procesoOferta.ofertaBase.sedeCarrera.carrera',
+            'procesoOferta.ofertaBase.sedeCarrera.sede',
+            'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+            'procesoOferta.turno',
+            'obligacionesPago',
+            'expedientes',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function relacionesExportacion(): array
+    {
+        return [
+            'persona.tipoDocumento',
+            'persona.estadoCivil',
+            'persona.paisNacimiento',
+            'persona.nacionalidad',
+            'persona.ubigeoNacimiento',
+            'persona.ubigeoDomicilio',
+            'persona.tipoDiscapacidad',
+            'persona.identidadEtnica',
+            'persona.lenguaNativa',
+            'persona.lenguaExtranjera',
+            'paisColegio',
+            'colegio',
+            'tipoColegio',
+            'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+        ];
+    }
+
+    private function nombreArchivoExportacion(): string
+    {
+        return 'inscripciones-cepre-'.now()->format('Ymd-His').'.xlsx';
+    }
+
+    private function resolverSemestreActualPorDefecto(): string
+    {
+        $semestre = Semestre::query()
+            ->whereDate('fecha_inicio_inscripcion_sem', '<=', now()->toDateString())
+            ->whereDate('fecha_fin_inscripcion_sem', '>=', now()->toDateString())
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->first();
+
+        if ($semestre !== null) {
+            return (string) $semestre->id_sem;
+        }
+
+        return (string) (Semestre::query()
+            ->whereHas('procesos.procesosOferta.inscripciones')
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->value('id_sem') ?? '');
+    }
+
+    private function aplicarFiltrosRelacionados(Builder $query): void
+    {
+        if (filled($this->idSemestre)) {
+            $query->whereHas('procesoOferta.proceso', fn (Builder $builder) => $builder->where('id_semestre', (int) $this->idSemestre));
+        }
+
+        if (filled($this->idProceso)) {
+            $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+        }
     }
 
     private function normalizarTexto(?string $valor): ?string
