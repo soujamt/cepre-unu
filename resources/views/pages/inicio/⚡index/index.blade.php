@@ -18,14 +18,14 @@
         <h1 class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
             Bienvenido, {{ Auth::user()?->nombres_usu ?? 'Usuario' }}
         </h1>
-        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Sistema de Gestión de Inscripciones — Centro Preuniversitario UNU
-        </p>
+        <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Sistema de Gestión de Inscripciones — Centro Preuniversitario UNU</p>
     </div>
 
     {{-- Proceso activo --}}
     @if ($this->procesoActual)
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5">
+        <div
+            class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/5"
+        >
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-3">
                     <div
@@ -34,9 +34,7 @@
                         <x-ui.icon name="calendar-check" size="5" />
                     </div>
                     <div>
-                        <p class="text-xs font-medium uppercase tracking-widest text-emerald-600 dark:text-emerald-500">
-                            Proceso activo
-                        </p>
+                        <p class="text-xs font-medium tracking-widest text-emerald-600 uppercase dark:text-emerald-500">Proceso activo</p>
                         <p class="font-semibold text-zinc-900 dark:text-white">
                             {{ $this->procesoActual->nombre_pro }}
                         </p>
@@ -66,7 +64,6 @@
                 </div>
             </div>
         </div>
-
         {{-- Estadísticas del proceso --}}
         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
@@ -77,8 +74,7 @@
                             {{ $this->estadisticas['total'] }}
                         </p>
                         <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                            {{ $this->estadisticas['activas'] }} activas
-                            · {{ $this->estadisticas['pendientes'] }} pendientes
+                            {{ $this->estadisticas['activas'] }} activas · {{ $this->estadisticas['pendientes'] }} pendientes
                         </p>
                     </div>
                     <div
@@ -144,9 +140,7 @@
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/5">
             <div class="flex items-center gap-3">
                 <x-ui.icon name="warning" size="5" class="text-amber-500 dark:text-amber-400" />
-                <p class="text-sm font-medium text-amber-700 dark:text-amber-400">
-                    No hay ningún proceso habilitado en este momento.
-                </p>
+                <p class="text-sm font-medium text-amber-700 dark:text-amber-400">No hay ningún proceso habilitado en este momento.</p>
             </div>
         </div>
     @endif
@@ -207,9 +201,7 @@
 
     @if ($modulos->isNotEmpty())
         <div>
-            <p class="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                Accesos rápidos
-            </p>
+            <p class="mb-3 text-xs font-semibold tracking-widest text-zinc-400 uppercase dark:text-zinc-500">Accesos rápidos</p>
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 @foreach ($modulos as $modulo)
                     <a
@@ -217,13 +209,13 @@
                         wire:navigate
                         class="group flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 shadow-xs transition hover:border-zinc-300 hover:shadow-sm dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20"
                     >
-                        <div class="flex size-10 shrink-0 items-center justify-center rounded-xl {{ $modulo['icon_class'] }}">
+                        <div
+                            class="flex size-10 shrink-0 items-center justify-center rounded-xl {{ $modulo['icon_class'] }}"
+                        >
                             <x-ui.icon :name="$modulo['icon']" size="5" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">
-                                {{ $modulo['label'] }}
-                            </p>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">{{ $modulo['label'] }}</p>
                             <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">
                                 {{ $modulo['descripcion'] }}
                             </p>
