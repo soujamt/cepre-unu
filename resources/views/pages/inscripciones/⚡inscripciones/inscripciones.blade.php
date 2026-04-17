@@ -111,11 +111,7 @@
             @endpermiso
 
             @permiso ('inscripcion_crear')
-                <flux:button
-                    variant="primary"
-                    href="{{ route('inscripciones.crear') }}"
-                    wire:navigate
-                >
+                <flux:button variant="primary" href="{{ route('inscripciones.crear') }}" wire:navigate>
                     <x-slot name="icon">
                         <x-ui.icon name="plus" size="5" class="text-white" />
                     </x-slot>
@@ -164,7 +160,10 @@
             <x-ui.select wire:model.live="idLugarInscripcion" placeholder="Filtrar por lugar">
                 <option value="">Todos los lugares</option>
                 @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                    <option wire:key="lugar-inscripcion-{{ $lugarInscripcion->id_lin }}" value="{{ $lugarInscripcion->id_lin }}">
+                    <option
+                        wire:key="lugar-inscripcion-{{ $lugarInscripcion->id_lin }}"
+                        value="{{ $lugarInscripcion->id_lin }}"
+                    >
                         {{ $lugarInscripcion->nombre_lin }}
                     </option>
                 @endforeach
@@ -215,11 +214,7 @@
                         <div
                             class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
                         >
-                            <x-ui.icon
-                                :name="$estado->getIcon()"
-                                size="4"
-                                class="text-{{ $estado->getColor() }}-500"
-                            />
+                            <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
                         </div>
                         {{ ucfirst(strtolower($estado->getNombre())) }}
                     </flux:menu.checkbox>
