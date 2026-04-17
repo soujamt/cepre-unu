@@ -1500,6 +1500,14 @@ class extends Component
     {
         $this->prepararPasoPago();
 
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible']) {
+            $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
+
+            return;
+        }
+
         if ($this->inscripcionId === null) {
             $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de buscar pagos.', type: 'warning');
 
@@ -1533,6 +1541,14 @@ class extends Component
     public function confirmarPasoPago(InscripcionPagoManager $manager): void
     {
         $this->prepararPasoPago();
+
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible']) {
+            $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
+
+            return;
+        }
 
         if ($this->inscripcionId === null) {
             $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de validar pagos.', type: 'warning');
@@ -1579,6 +1595,14 @@ class extends Component
 
     public function guardarPasoExpedientes(): void
     {
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible']) {
+            $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
+
+            return;
+        }
+
         $inscripcion = $this->inscripcionBorrador;
 
         if ($inscripcion === null) {

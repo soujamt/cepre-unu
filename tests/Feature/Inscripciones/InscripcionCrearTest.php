@@ -1330,3 +1330,156 @@ test('inscripcion with convenio without cupo_maximo is always allowed', function
 
     Carbon\Carbon::setTestNow();
 });
+
+test('buscarPagosPasoPago is blocked when proceso is no longer active', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase.modalidadLugarInscripcion'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $procesoOferta->id_proceso)
+        ->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '11223355',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'PEREZ',
+        'apellido_materno_per' => 'LARA',
+        'nombres_per' => 'ANA',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $inscripcion = Inscripcion::query()->create([
+        'codigo_ins' => 'TEST-PAGO-001',
+        'id_persona' => $persona->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+    ]);
+
+    Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('inscripcionId', $inscripcion->id_ins)
+        ->set('pasoActual', 4)
+        ->call('buscarPagosPasoPago')
+        ->assertDispatched('toast', type: 'warning');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('confirmarPasoPago is blocked when proceso is no longer active', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase.modalidadLugarInscripcion'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $procesoOferta->id_proceso)
+        ->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '11223366',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'SOTO',
+        'apellido_materno_per' => 'CRUZ',
+        'nombres_per' => 'LUIS',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $inscripcion = Inscripcion::query()->create([
+        'codigo_ins' => 'TEST-PAGO-002',
+        'id_persona' => $persona->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+    ]);
+
+    Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('inscripcionId', $inscripcion->id_ins)
+        ->set('pasoActual', 4)
+        ->call('confirmarPasoPago')
+        ->assertDispatched('toast', type: 'warning');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('guardarPasoExpedientes is blocked when proceso is no longer active', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase.modalidadLugarInscripcion'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $procesoOferta->id_proceso)
+        ->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '11223377',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'VARGAS',
+        'apellido_materno_per' => 'RIOS',
+        'nombres_per' => 'SARA',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $inscripcion = Inscripcion::query()->create([
+        'codigo_ins' => 'TEST-EXP-001',
+        'id_persona' => $persona->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+    ]);
+
+    Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('inscripcionId', $inscripcion->id_ins)
+        ->set('pasoActual', 5)
+        ->call('guardarPasoExpedientes')
+        ->assertDispatched('toast', type: 'warning');
+
+    Carbon\Carbon::setTestNow();
+});
