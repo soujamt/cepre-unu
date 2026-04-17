@@ -1193,3 +1193,140 @@ test('users can save expediente review and activate the inscripcion when all req
 
     Carbon\Carbon::setTestNow();
 });
+
+test('inscripcion is rejected when convenio cupo is already full at validation step', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase.modalidadLugarInscripcion'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $procesoOferta->id_proceso)
+        ->firstOrFail();
+
+    $convenioProceso->update(['cupo_maximo_cpr' => 1]);
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '12345678',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'TORRES',
+        'apellido_materno_per' => 'GARCIA',
+        'nombres_per' => 'JUAN',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $personaExistente = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '87654321',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'LOPEZ',
+        'apellido_materno_per' => 'VERA',
+        'nombres_per' => 'MARIA',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    Inscripcion::query()->create([
+        'codigo_ins' => 'TEST-001',
+        'id_persona' => $personaExistente->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => 'ACTIVO',
+    ]);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
+        ->call('guardarPasoPostulacion')
+        ->assertHasErrors('postulacionForm.id_convenio_proceso');
+
+    expect(Inscripcion::query()->count())->toBe(1);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('inscripcion with convenio without cupo_maximo is always allowed', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase.modalidadLugarInscripcion'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $convenioProceso = ConvenioProceso::query()
+        ->where('id_proceso', $procesoOferta->id_proceso)
+        ->firstOrFail();
+
+    $convenioProceso->update(['cupo_maximo_cpr' => 100]);
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '11223344',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'ROJAS',
+        'apellido_materno_per' => 'LIMA',
+        'nombres_per' => 'CARLOS',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 4);
+
+    Carbon\Carbon::setTestNow();
+});

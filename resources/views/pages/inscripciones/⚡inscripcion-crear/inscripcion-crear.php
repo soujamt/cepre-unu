@@ -1018,11 +1018,23 @@ class extends Component
                         return;
                     }
 
-                    $valido = $this->conveniosPostulacionDisponibles()
-                        ->contains(fn (ConvenioProceso $convenioProceso): bool => (string) $convenioProceso->id_cpr === (string) $value);
+                    $convenioProceso = $this->conveniosPostulacionDisponibles()
+                        ->first(fn (ConvenioProceso $convenioProceso): bool => (string) $convenioProceso->id_cpr === (string) $value);
 
-                    if (! $valido) {
+                    if ($convenioProceso === null) {
                         $fail('El convenio seleccionado no es valido para el proceso activo.');
+
+                        return;
+                    }
+
+                    $inscritosEnConvenio = Inscripcion::query()
+                        ->where('id_convenio_proceso', $convenioProceso->id_cpr)
+                        ->whereNot('estado_ins', EstadoInscripcion::Anulado->value)
+                        ->when($this->inscripcionId !== null, fn ($query) => $query->whereNot('id_ins', $this->inscripcionId))
+                        ->count();
+
+                    if ($inscritosEnConvenio >= $convenioProceso->cupo_maximo_cpr) {
+                        $fail("El convenio seleccionado ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos).");
                     }
                 },
             ],
@@ -1809,12 +1821,30 @@ class extends Component
     {
         try {
             DB::transaction(function () use ($data): void {
+                $idConvenioProceso = filled($data['postulacionForm']['id_convenio_proceso'])
+                    ? (int) $data['postulacionForm']['id_convenio_proceso']
+                    : null;
+
+                if ($idConvenioProceso !== null) {
+                    $convenioProceso = ConvenioProceso::query()
+                        ->lockForUpdate()
+                        ->findOrFail($idConvenioProceso);
+
+                    $inscritos = Inscripcion::query()
+                        ->where('id_convenio_proceso', $idConvenioProceso)
+                        ->whereNot('estado_ins', EstadoInscripcion::Anulado->value)
+                        ->when($this->inscripcionId !== null, fn ($query) => $query->whereNot('id_ins', $this->inscripcionId))
+                        ->count();
+
+                    if ($inscritos >= $convenioProceso->cupo_maximo_cpr) {
+                        throw new \RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
+                    }
+                }
+
                 $payload = [
                     'id_persona' => $this->personaId,
                     'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
-                    'id_convenio_proceso' => filled($data['postulacionForm']['id_convenio_proceso'])
-                        ? (int) $data['postulacionForm']['id_convenio_proceso']
-                        : null,
+                    'id_convenio_proceso' => $idConvenioProceso,
                     'fecha_inscripcion_ins' => now(),
                     'estado_ins' => EstadoInscripcion::Pendiente->value,
                     'anio_graduacion_ins' => (int) $this->generalForm['anio_graduacion'],
@@ -1854,8 +1884,8 @@ class extends Component
                 $this->inscripcionId = $inscripcion->id_ins;
             });
         } catch (Throwable $throwable) {
-            report($throwable);
-            $this->dispatch('toast', message: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
+            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
 
             return;
         }
