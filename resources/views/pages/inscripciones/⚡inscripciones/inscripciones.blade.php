@@ -293,9 +293,9 @@
                                                 </x-slot>
                                                 Validar pago
                                             </flux:menu.item>
+                                            <flux:menu.separator />
                                         @endif
                                     @endpermiso
-
                                     @if ($this->puedeVerDetalleRegistro($inscripcion))
                                         <flux:menu.item
                                             href="{{ route('inscripciones.detalle', encode($inscripcion->id_ins)) }}"
