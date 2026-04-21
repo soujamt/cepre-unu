@@ -30,6 +30,28 @@
             </flux:input>
         </div>
 
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+                <option value="">Todos los semestres</option>
+                @foreach ($this->semestresDisponibles as $semestre)
+                    <option wire:key="semestre-regla-pago-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
+                        {{ $semestre->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+                <option value="">Todos los procesos</option>
+                @foreach ($this->procesosDisponibles as $proceso)
+                    <option wire:key="proceso-regla-pago-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
+                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <div class="w-full lg:w-auto">
             <flux:dropdown>
                 <flux:button class="w-full font-normal" icon:trailing="chevron-down">
@@ -45,29 +67,51 @@
                 <flux:menu keep-open class="dark:bg-zinc-800">
                     @foreach ($this->estados() as $estado)
                         <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                            <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
+                            <div
+                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                            >
+                                <x-ui.icon
+                                    :name="$estado->getIcon()"
+                                    size="4"
+                                    class="text-{{ $estado->getColor() }}-500"
+                                />
                             </div>
                             {{ ucfirst(strtolower($estado->getNombre())) }}
                         </flux:menu.checkbox>
                     @endforeach
 
-                    @if (count($this->estadosSeleccionados) > 0)
+                    @if ($idSemestre !== '' || $idProceso !== '' || count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
-                            <x-slot name="icon">
-                                <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar filtros
-                        </flux:menu.item>
+                        @if ($idSemestre !== '' || $idProceso !== '')
+                            <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="x" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar filtros academicos
+                            </flux:menu.item>
+                        @endif
+                        @if (count($this->estadosSeleccionados) > 0)
+                            <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="trash" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar estados
+                            </flux:menu.item>
+                        @endif
                     @endif
                 </flux:menu>
             </flux:dropdown>
         </div>
 
-        @permiso('regla_pago_crear')
+        @permiso ('regla_pago_crear')
             <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarReglaPago">
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
@@ -97,15 +141,21 @@
                 @forelse ($this->reglasPago as $reglaPago)
                     <x-table.row>
                         <x-table.cell>{{ $this->reglasPago->firstItem() + $loop->index }}</x-table.cell>
-                        <x-table.cell class="whitespace-normal py-1">
+                        <x-table.cell class="py-1 whitespace-normal">
                             <div class="space-y-0.5">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $reglaPago->conceptoPago?->nombre_cpg }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $reglaPago->conceptoPago?->codigo_cpg }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $reglaPago->conceptoPago?->nombre_cpg }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $reglaPago->conceptoPago?->codigo_cpg }}
+                                </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-1">
+                        <x-table.cell class="py-1 whitespace-normal">
                             <div class="space-y-0.5">
-                                <div class="font-medium leading-5 text-zinc-800 dark:text-zinc-100">{{ $reglaPago->proceso?->nombre_pro }}</div>
+                                <div class="leading-5 font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $reglaPago->proceso?->nombre_pro }}
+                                </div>
                                 <div class="flex flex-wrap gap-2">
                                     <flux:badge color="zinc" size="lg">
                                         {{ $reglaPago->modalidadAdmision?->nombre_mad ?? 'TODAS LAS MODALIDADES' }}
@@ -121,18 +171,22 @@
                                 </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-1">
+                        <x-table.cell class="py-1 whitespace-normal">
                             <div class="space-y-0.5">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">S/ {{ number_format((float) $reglaPago->monto_total_rpa, 2) }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    S/ {{ number_format((float) $reglaPago->monto_total_rpa, 2) }}
+                                </div>
                                 @if ($reglaPago->requiere_pago_completo_rpa)
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">Exige pago completo</div>
                                 @endif
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-1">
+                        <x-table.cell class="py-1 whitespace-normal">
                             @if ($reglaPago->permite_cuotas_rpa)
                                 <div class="space-y-0.5">
-                                    <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $reglaPago->numero_maximo_cuotas_rpa }} max.</div>
+                                    <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                        {{ $reglaPago->numero_maximo_cuotas_rpa }} max.
+                                    </div>
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">
                                         Min. 1ra cuota: S/ {{ number_format((float) $reglaPago->monto_minimo_primera_cuota_rpa, 2) }}
                                     </div>
@@ -141,7 +195,7 @@
                                 <flux:badge color="zinc" size="lg">Pago unico</flux:badge>
                             @endif
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-1">
+                        <x-table.cell class="py-1 whitespace-normal">
                             <div class="space-y-0.5">
                                 <div>{{ $reglaPago->vigente_desde_rpa?->format('d/m/Y') }}</div>
                                 <div class="text-xs text-zinc-500 dark:text-zinc-400">
@@ -161,11 +215,16 @@
                         <x-table.cell align="end">
                             @if ($puedeGestionarAcciones)
                                 <flux:dropdown>
-                                    <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
+                                    <flux:button
+                                        icon:trailing="chevron-down"
+                                        size="sm"
+                                        variant="filled"
+                                        class="font-normal"
+                                    >
                                         Acciones
                                     </flux:button>
                                     <flux:menu>
-                                        @permiso('regla_pago_editar')
+                                        @permiso ('regla_pago_editar')
                                             <flux:menu.item wire:click="cargarReglaPago({{ $reglaPago->id_rpa }})">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="pencil" size="4" class="me-2" />
@@ -174,8 +233,10 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('regla_pago_estado')
-                                            <flux:menu.item wire:click="$js.cargarAlertaEstado({{ $reglaPago->id_rpa }}, '{{ $reglaPago->conceptoPago?->nombre_cpg }}')">
+                                        @permiso ('regla_pago_estado')
+                                            <flux:menu.item
+                                                wire:click="$js.cargarAlertaEstado({{ $reglaPago->id_rpa }}, '{{ $reglaPago->conceptoPago?->nombre_cpg }}')"
+                                            >
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
                                                 </x-slot>
@@ -183,7 +244,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('regla_pago_eliminar')
+                                        @permiso ('regla_pago_eliminar')
                                             <flux:menu.item
                                                 variant="danger"
                                                 wire:click="$js.cargarAlertaEliminar({{ $reglaPago->id_rpa }}, '{{ $reglaPago->conceptoPago?->nombre_cpg }}')"
@@ -215,12 +276,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -234,169 +295,239 @@
     </div>
 
     @if (auth()->user()?->hasPermisoAccion('regla_pago_crear') || auth()->user()?->hasPermisoAccion('regla_pago_editar'))
-        <flux:modal flyout variant="floating" name="modal-regla-pago" class="px-0! py-5! md:w-lg!">
+        <flux:modal flyout variant="floating" name="modal-regla-pago" class="px-0! py-5! md:w-2xl!">
             <div class="space-y-5">
-                <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>
+                <div class="space-y-2 px-5">
+                    <flux:heading size="lg">{{ $tituloModal }}</flux:heading>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Configure el contexto, condiciones de pago y vigencia de la regla.</p>
+                </div>
                 <flux:separator variant="subtle" />
 
                 <form wire:submit="guardar" class="space-y-5">
                     <div class="space-y-5 px-5">
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.select
-                                label="Concepto de pago"
-                                wire:model.live="reglaPagoForm.id_concepto_pago"
-                                :invalid="$errors->has('reglaPagoForm.id_concepto_pago')"
-                                :error="$errors->first('reglaPagoForm.id_concepto_pago')"
-                                required
-                                floating
-                            >
-                                <option value="">Seleccionar concepto</option>
-                                @foreach ($this->conceptosPagoDisponibles as $conceptoPago)
-                                    <option wire:key="concepto-pago-{{ $conceptoPago->id_cpg }}" value="{{ $conceptoPago->id_cpg }}">
-                                        {{ $conceptoPago->nombre_cpg }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
+                        <div
+                            class="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-white/10 dark:bg-white/4"
+                        >
+                            <div class="mb-4 space-y-1">
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Contexto</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina el concepto y el alcance de la regla de pago.</p>
+                            </div>
 
-                            <x-ui.select
-                                label="Proceso"
-                                wire:model.live="reglaPagoForm.id_proceso"
-                                :invalid="$errors->has('reglaPagoForm.id_proceso')"
-                                :error="$errors->first('reglaPagoForm.id_proceso')"
-                                required
-                                floating
-                            >
-                                <option value="">Seleccionar proceso</option>
-                                @foreach ($this->procesosDisponibles as $proceso)
-                                    <option wire:key="regla-proceso-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
-                        </div>
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <x-ui.select
+                                    label="Concepto de pago"
+                                    wire:model.live="reglaPagoForm.id_concepto_pago"
+                                    :invalid="$errors->has('reglaPagoForm.id_concepto_pago')"
+                                    :error="$errors->first('reglaPagoForm.id_concepto_pago')"
+                                    required
+                                    floating
+                                >
+                                    <option value="">Seleccionar concepto</option>
+                                    @foreach ($this->conceptosPagoDisponibles as $conceptoPago)
+                                        <option
+                                            wire:key="concepto-pago-{{ $conceptoPago->id_cpg }}"
+                                            value="{{ $conceptoPago->id_cpg }}"
+                                        >
+                                            {{ $conceptoPago->nombre_cpg }}
+                                        </option>
+                                    @endforeach
+                                </x-ui.select>
 
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.select
-                                label="Modalidad"
-                                wire:model.live="reglaPagoForm.id_modalidad_admision"
-                                :invalid="$errors->has('reglaPagoForm.id_modalidad_admision')"
-                                :error="$errors->first('reglaPagoForm.id_modalidad_admision')"
-                                hint="Opcional. Si queda vacio, aplica a todas las modalidades."
-                                floating
-                            >
-                                <option value="">Todas las modalidades</option>
-                                @foreach ($this->modalidadesDisponibles as $modalidad)
-                                    <option wire:key="regla-modalidad-{{ $modalidad->id_mad }}" value="{{ $modalidad->id_mad }}">
-                                        {{ $modalidad->nombre_mad }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
-
-                            <x-ui.select
-                                label="Convenio"
-                                wire:model.live="reglaPagoForm.id_convenio_proceso"
-                                :invalid="$errors->has('reglaPagoForm.id_convenio_proceso')"
-                                :error="$errors->first('reglaPagoForm.id_convenio_proceso')"
-                                hint="Opcional. Se filtra segun el proceso elegido."
-                                floating
-                            >
-                                <option value="">Sin convenio</option>
-                                @foreach ($this->conveniosProcesoDisponibles as $convenioProceso)
-                                    <option wire:key="regla-convenio-{{ $convenioProceso->id_cpr }}" value="{{ $convenioProceso->id_cpr }}">
-                                        {{ $convenioProceso->convenio?->nombre_con }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
-                        </div>
-
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.input
-                                label="Monto total"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                wire:model="reglaPagoForm.monto_total"
-                                :invalid="$errors->has('reglaPagoForm.monto_total')"
-                                :error="$errors->first('reglaPagoForm.monto_total')"
-                                required
-                                floating
-                            />
-
-                            <x-ui.input
-                                label="Numero maximo de cuotas"
-                                type="number"
-                                min="1"
-                                step="1"
-                                wire:model="reglaPagoForm.numero_maximo_cuotas"
-                                :invalid="$errors->has('reglaPagoForm.numero_maximo_cuotas')"
-                                :error="$errors->first('reglaPagoForm.numero_maximo_cuotas')"
-                                required
-                                :disabled="! $reglaPagoForm['permite_cuotas']"
-                                floating
-                            />
-                        </div>
-
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.input
-                                label="Monto minimo primera cuota"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                wire:model="reglaPagoForm.monto_minimo_primera_cuota"
-                                :invalid="$errors->has('reglaPagoForm.monto_minimo_primera_cuota')"
-                                :error="$errors->first('reglaPagoForm.monto_minimo_primera_cuota')"
-                                :disabled="! $reglaPagoForm['permite_cuotas']"
-                                hint="Solo se usa cuando la regla permite cuotas."
-                                floating
-                            />
-
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <label class="flex items-center gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700">
-                                    <input
-                                        type="checkbox"
-                                        wire:model.live="reglaPagoForm.permite_cuotas"
-                                        class="size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-900"
-                                    />
-                                    <div class="space-y-1">
-                                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Permite cuotas</p>
-                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Habilita pagos parciales.</p>
-                                    </div>
-                                </label>
-
-                                <label class="flex items-center gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700">
-                                    <input
-                                        type="checkbox"
-                                        wire:model.live="reglaPagoForm.requiere_pago_completo"
-                                        class="size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-900"
-                                    />
-                                    <div class="space-y-1">
-                                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Exige pago completo</p>
-                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Para habilitar la inscripcion.</p>
-                                    </div>
-                                </label>
+                                <x-ui.select
+                                    label="Proceso"
+                                    wire:model.live="reglaPagoForm.id_proceso"
+                                    :invalid="$errors->has('reglaPagoForm.id_proceso')"
+                                    :error="$errors->first('reglaPagoForm.id_proceso')"
+                                    required
+                                    floating
+                                >
+                                    <option value="">Seleccionar proceso</option>
+                                    @foreach ($this->procesosDisponibles as $proceso)
+                                        <option
+                                            wire:key="regla-proceso-{{ $proceso->id_pro }}"
+                                            value="{{ $proceso->id_pro }}"
+                                        >
+                                            {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                        </option>
+                                    @endforeach
+                                </x-ui.select>
                             </div>
                         </div>
 
                         <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.input
-                                label="Vigente desde"
-                                type="date"
-                                wire:model="reglaPagoForm.vigente_desde"
-                                :invalid="$errors->has('reglaPagoForm.vigente_desde')"
-                                :error="$errors->first('reglaPagoForm.vigente_desde')"
-                                required
-                                floating
-                            />
+                            <div
+                                class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-950/30"
+                            >
+                                <div class="space-y-4">
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Aplicación</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Permite acotar la regla por modalidad o convenio.</p>
+                                    </div>
 
-                            <x-ui.input
-                                label="Vigente hasta"
-                                type="date"
-                                wire:model="reglaPagoForm.vigente_hasta"
-                                :invalid="$errors->has('reglaPagoForm.vigente_hasta')"
-                                :error="$errors->first('reglaPagoForm.vigente_hasta')"
-                                hint="Opcional. Dejalo vacio si no tiene fecha final."
-                                floating
-                            />
+                                    <x-ui.select
+                                        label="Modalidad"
+                                        wire:model.live="reglaPagoForm.id_modalidad_admision"
+                                        :invalid="$errors->has('reglaPagoForm.id_modalidad_admision')"
+                                        :error="$errors->first('reglaPagoForm.id_modalidad_admision')"
+                                        hint="Opcional. Si queda vacio, aplica a todas las modalidades."
+                                        floating
+                                    >
+                                        <option value="">Todas las modalidades</option>
+                                        @foreach ($this->modalidadesDisponibles as $modalidad)
+                                            <option
+                                                wire:key="regla-modalidad-{{ $modalidad->id_mad }}"
+                                                value="{{ $modalidad->id_mad }}"
+                                            >
+                                                {{ $modalidad->nombre_mad }}
+                                            </option>
+                                        @endforeach
+                                    </x-ui.select>
+
+                                    <x-ui.select
+                                        label="Convenio"
+                                        wire:model.live="reglaPagoForm.id_convenio_proceso"
+                                        :invalid="$errors->has('reglaPagoForm.id_convenio_proceso')"
+                                        :error="$errors->first('reglaPagoForm.id_convenio_proceso')"
+                                        hint="Opcional. Se filtra segun el proceso elegido."
+                                        floating
+                                    >
+                                        <option value="">Sin convenio</option>
+                                        @foreach ($this->conveniosProcesoDisponibles as $convenioProceso)
+                                            <option
+                                                wire:key="regla-convenio-{{ $convenioProceso->id_cpr }}"
+                                                value="{{ $convenioProceso->id_cpr }}"
+                                            >
+                                                {{ $convenioProceso->convenio?->nombre_con }}
+                                            </option>
+                                        @endforeach
+                                    </x-ui.select>
+                                </div>
+                            </div>
+
+                            <div
+                                class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-950/30"
+                            >
+                                <div class="space-y-4">
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Condiciones</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina si la regla admite cuotas o exige pago completo.</p>
+                                    </div>
+
+                                    <div class="grid gap-3">
+                                        <label
+                                            class="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-4 transition-colors hover:bg-zinc-100/80 dark:border-white/10 dark:bg-white/4 dark:hover:bg-white/7"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                wire:model.live="reglaPagoForm.permite_cuotas"
+                                                @disabled ($reglaPagoForm['requiere_pago_completo'])
+                                                class="mt-0.5 size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-900"
+                                            />
+                                            <div class="space-y-1">
+                                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Permite cuotas</p>
+                                                <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">Habilita pagos parciales y activa la configuración de cuotas.</p>
+                                            </div>
+                                        </label>
+
+                                        <label
+                                            class="flex items-start gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-4 transition-colors hover:bg-zinc-100/80 dark:border-white/10 dark:bg-white/4 dark:hover:bg-white/7"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                wire:model.live="reglaPagoForm.requiere_pago_completo"
+                                                @disabled ($reglaPagoForm['permite_cuotas'])
+                                                class="mt-0.5 size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-900"
+                                            />
+                                            <div class="space-y-1">
+                                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Exige pago completo</p>
+                                                <p class="text-sm leading-6 text-zinc-500 dark:text-zinc-400">Solicita el pago total para habilitar la inscripción.</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-2xl border border-zinc-200 bg-zinc-50/70 p-4 dark:border-white/10 dark:bg-white/4"
+                        >
+                            <div class="mb-4 space-y-1">
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Montos y cuotas</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Configure el monto total y, si corresponde, el esquema de pagos parciales.</p>
+                            </div>
+
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <x-ui.input
+                                    label="Monto total"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    wire:model="reglaPagoForm.monto_total"
+                                    :invalid="$errors->has('reglaPagoForm.monto_total')"
+                                    :error="$errors->first('reglaPagoForm.monto_total')"
+                                    required
+                                    floating
+                                />
+
+                                <x-ui.input
+                                    label="Numero maximo de cuotas"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    wire:model="reglaPagoForm.numero_maximo_cuotas"
+                                    :invalid="$errors->has('reglaPagoForm.numero_maximo_cuotas')"
+                                    :error="$errors->first('reglaPagoForm.numero_maximo_cuotas')"
+                                    required
+                                    :disabled="! $reglaPagoForm['permite_cuotas']"
+                                    floating
+                                />
+                            </div>
+
+                            <div class="mt-5 grid gap-5 md:grid-cols-2">
+                                <x-ui.input
+                                    label="Monto minimo primera cuota"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    wire:model="reglaPagoForm.monto_minimo_primera_cuota"
+                                    :invalid="$errors->has('reglaPagoForm.monto_minimo_primera_cuota')"
+                                    :error="$errors->first('reglaPagoForm.monto_minimo_primera_cuota')"
+                                    :disabled="! $reglaPagoForm['permite_cuotas']"
+                                    hint="Solo se usa cuando la regla permite cuotas."
+                                    floating
+                                />
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-zinc-950/30"
+                        >
+                            <div class="mb-4 space-y-1">
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Vigencia</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Indique desde cuándo aplica la regla y, si corresponde, cuándo deja de estar vigente.</p>
+                            </div>
+
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <x-ui.input
+                                    label="Vigente desde"
+                                    type="date"
+                                    wire:model="reglaPagoForm.vigente_desde"
+                                    :invalid="$errors->has('reglaPagoForm.vigente_desde')"
+                                    :error="$errors->first('reglaPagoForm.vigente_desde')"
+                                    required
+                                    floating
+                                />
+
+                                <x-ui.input
+                                    label="Vigente hasta"
+                                    type="date"
+                                    wire:model="reglaPagoForm.vigente_hasta"
+                                    :invalid="$errors->has('reglaPagoForm.vigente_hasta')"
+                                    :error="$errors->first('reglaPagoForm.vigente_hasta')"
+                                    hint="Opcional. Dejalo vacio si no tiene fecha final."
+                                    floating
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -437,7 +568,10 @@
             this.$dispatch('alert', {
                 type: 'error',
                 title: 'Atencion',
-                message: 'Â¿Esta seguro de que desea eliminar la regla de pago "' + nombre + '"? Esta accion es irreversible.',
+                message:
+                    'Â¿Esta seguro de que desea eliminar la regla de pago "' +
+                    nombre +
+                    '"? Esta accion es irreversible.',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Eliminar',

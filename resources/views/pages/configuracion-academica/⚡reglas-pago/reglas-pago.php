@@ -4,17 +4,20 @@ use App\Enums\EstadoCatalogo;
 use App\Models\ConceptoPago;
 use App\Models\ConvenioProceso;
 use App\Models\ModalidadAdmision;
-use App\Models\ReglaPago;
 use App\Models\Proceso;
+use App\Models\ReglaPago;
+use App\Models\Semestre;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,11 +29,19 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $buscar = '';
+
+    #[Url(as: 'semestre')]
+    public string $idSemestre = '';
+
+    #[Url(as: 'proceso')]
+    public string $idProceso = '';
 
     /**
      * @var array<string, bool>
      */
+    #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
     /**
@@ -78,6 +89,17 @@ class extends Component
         $this->resetPage();
     }
 
+    public function updatedIdSemestre(): void
+    {
+        $this->idProceso = '';
+        $this->resetPage();
+    }
+
+    public function updatedIdProceso(): void
+    {
+        $this->resetPage();
+    }
+
     public function updatedFiltroEstado(): void
     {
         $this->resetPage();
@@ -98,7 +120,22 @@ class extends Component
         if (! $value) {
             $this->reglaPagoForm['numero_maximo_cuotas'] = '1';
             $this->reglaPagoForm['monto_minimo_primera_cuota'] = '';
+
+            return;
         }
+
+        $this->reglaPagoForm['requiere_pago_completo'] = false;
+    }
+
+    public function updatedReglaPagoFormRequierePagoCompleto(bool $value): void
+    {
+        if (! $value) {
+            return;
+        }
+
+        $this->reglaPagoForm['permite_cuotas'] = false;
+        $this->reglaPagoForm['numero_maximo_cuotas'] = '1';
+        $this->reglaPagoForm['monto_minimo_primera_cuota'] = '';
     }
 
     /**
@@ -186,6 +223,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.monto_minimo_primera_cuota' => [
+                Rule::excludeIf(! $this->reglaPagoForm['permite_cuotas']),
                 'nullable',
                 'numeric',
                 'gt:0',
@@ -206,6 +244,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.numero_maximo_cuotas' => [
+                Rule::excludeIf(! $this->reglaPagoForm['permite_cuotas']),
                 'required',
                 'integer',
                 'min:1',
@@ -220,8 +259,85 @@ class extends Component
                 },
             ],
             'reglaPagoForm.requiere_pago_completo' => ['boolean'],
-            'reglaPagoForm.vigente_desde' => ['required', 'date'],
-            'reglaPagoForm.vigente_hasta' => ['nullable', 'date', 'after_or_equal:reglaPagoForm.vigente_desde'],
+            'reglaPagoForm.vigente_desde' => [
+                'required',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (blank($value)) {
+                        return;
+                    }
+
+                    $proceso = $this->procesoSeleccionadoFormulario();
+
+                    if ($proceso !== null) {
+                        $fechaInicioProceso = $proceso->fecha_inicio_pro?->format('Y-m-d');
+                        $fechaFinProceso = $proceso->fecha_fin_pro?->format('Y-m-d');
+
+                        if ($fechaInicioProceso !== null && (string) $value < $fechaInicioProceso) {
+                            $fail('La vigencia inicial no puede ser menor que la fecha de inicio del proceso.');
+                        }
+
+                        if ($fechaFinProceso !== null && (string) $value > $fechaFinProceso) {
+                            $fail('La vigencia inicial no puede ser mayor que la fecha final del proceso.');
+                        }
+                    }
+
+                    $convenioProceso = $this->convenioProcesoSeleccionadoFormulario();
+
+                    if ($convenioProceso !== null) {
+                        $fechaInicioConvenio = $convenioProceso->fecha_inicio_cpr?->format('Y-m-d');
+                        $fechaFinConvenio = $convenioProceso->fecha_fin_cpr?->format('Y-m-d');
+
+                        if ($fechaInicioConvenio !== null && (string) $value < $fechaInicioConvenio) {
+                            $fail('La vigencia inicial no puede ser menor que la fecha de inicio del convenio.');
+                        }
+
+                        if ($fechaFinConvenio !== null && (string) $value > $fechaFinConvenio) {
+                            $fail('La vigencia inicial no puede ser mayor que la fecha final del convenio.');
+                        }
+                    }
+                },
+            ],
+            'reglaPagoForm.vigente_hasta' => [
+                'nullable',
+                'date',
+                'after_or_equal:reglaPagoForm.vigente_desde',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (blank($value)) {
+                        return;
+                    }
+
+                    $proceso = $this->procesoSeleccionadoFormulario();
+
+                    if ($proceso !== null) {
+                        $fechaInicioProceso = $proceso->fecha_inicio_pro?->format('Y-m-d');
+                        $fechaFinProceso = $proceso->fecha_fin_pro?->format('Y-m-d');
+
+                        if ($fechaInicioProceso !== null && (string) $value < $fechaInicioProceso) {
+                            $fail('La vigencia final no puede ser menor que la fecha de inicio del proceso.');
+                        }
+
+                        if ($fechaFinProceso !== null && (string) $value > $fechaFinProceso) {
+                            $fail('La vigencia final no puede ser mayor que la fecha final del proceso.');
+                        }
+                    }
+
+                    $convenioProceso = $this->convenioProcesoSeleccionadoFormulario();
+
+                    if ($convenioProceso !== null) {
+                        $fechaInicioConvenio = $convenioProceso->fecha_inicio_cpr?->format('Y-m-d');
+                        $fechaFinConvenio = $convenioProceso->fecha_fin_cpr?->format('Y-m-d');
+
+                        if ($fechaInicioConvenio !== null && (string) $value < $fechaInicioConvenio) {
+                            $fail('La vigencia final no puede ser menor que la fecha de inicio del convenio.');
+                        }
+
+                        if ($fechaFinConvenio !== null && (string) $value > $fechaFinConvenio) {
+                            $fail('La vigencia final no puede ser mayor que la fecha final del convenio.');
+                        }
+                    }
+                },
+            ],
         ];
     }
 
@@ -268,10 +384,22 @@ class extends Component
     }
 
     #[Computed]
+    public function semestresDisponibles(): Collection
+    {
+        return Semestre::query()
+            ->whereHas('procesos.reglasPago')
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->get();
+    }
+
+    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
+            ->whereHas('reglasPago')
             ->where('estado_pro', EstadoCatalogo::Habilitado->value)
             ->orderByDesc('id_pro')
             ->get();
@@ -301,6 +429,13 @@ class extends Component
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
+    }
+
+    public function limpiarFiltrosAcademicos(): void
+    {
+        $this->idSemestre = '';
+        $this->idProceso = '';
+        $this->resetPage();
     }
 
     public function cargarReglaPago(?int $id = null): void
@@ -526,6 +661,10 @@ class extends Component
                             ->where('nombre_con', 'like', "%{$search}%"));
                 });
             })
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query
+                ->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
+                    ->where('id_semestre', (int) $this->idSemestre)))
+            ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
             ->when($this->estadosSeleccionados !== [], fn (Builder $query) => $query->whereIn('estado_rpa', $this->estadosSeleccionados))
             ->orderByDesc('id_rpa')
             ->paginate(10);
@@ -549,5 +688,23 @@ class extends Component
         $normalizado = preg_replace('/\s+/u', ' ', trim($valor));
 
         return filled($normalizado) ? $normalizado : null;
+    }
+
+    private function procesoSeleccionadoFormulario(): ?Proceso
+    {
+        if (blank($this->reglaPagoForm['id_proceso'])) {
+            return null;
+        }
+
+        return Proceso::query()->find((int) $this->reglaPagoForm['id_proceso']);
+    }
+
+    private function convenioProcesoSeleccionadoFormulario(): ?ConvenioProceso
+    {
+        if (blank($this->reglaPagoForm['id_convenio_proceso'])) {
+            return null;
+        }
+
+        return ConvenioProceso::query()->find((int) $this->reglaPagoForm['id_convenio_proceso']);
     }
 };
