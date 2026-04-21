@@ -30,6 +30,28 @@
             </flux:input>
         </div>
 
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+                <option value="">Todos los semestres</option>
+                @foreach ($this->semestresDisponibles as $semestre)
+                    <option wire:key="semestre-requisito-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
+                        {{ $semestre->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+                <option value="">Todos los procesos</option>
+                @foreach ($this->procesosDisponibles as $proceso)
+                    <option wire:key="proceso-requisito-filtro-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
+                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <div class="w-full lg:w-auto">
             <flux:dropdown>
                 <flux:button class="w-full font-normal" icon:trailing="chevron-down">
@@ -45,29 +67,51 @@
                 <flux:menu keep-open class="dark:bg-zinc-800">
                     @foreach ($this->estados() as $estado)
                         <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                            <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
+                            <div
+                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                            >
+                                <x-ui.icon
+                                    :name="$estado->getIcon()"
+                                    size="4"
+                                    class="text-{{ $estado->getColor() }}-500"
+                                />
                             </div>
                             {{ ucfirst(strtolower($estado->getNombre())) }}
                         </flux:menu.checkbox>
                     @endforeach
 
-                    @if (count($this->estadosSeleccionados) > 0)
+                    @if ($idSemestre !== '' || $idProceso !== '' || count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
-                            <x-slot name="icon">
-                                <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar filtros
-                        </flux:menu.item>
+                        @if ($idSemestre !== '' || $idProceso !== '')
+                            <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="x" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar filtros academicos
+                            </flux:menu.item>
+                        @endif
+                        @if (count($this->estadosSeleccionados) > 0)
+                            <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="trash" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar estados
+                            </flux:menu.item>
+                        @endif
                     @endif
                 </flux:menu>
             </flux:dropdown>
         </div>
 
-        @permiso('requisito_expediente_crear')
+        @permiso ('requisito_expediente_crear')
             <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarRequisito">
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
@@ -97,14 +141,22 @@
                         <x-table.cell>{{ $this->requisitos->firstItem() + $loop->index }}</x-table.cell>
                         <x-table.cell class="whitespace-normal">
                             <div class="space-y-0">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $requisito->proceso?->nombre_pro }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $requisito->proceso?->semestre?->nombre_sem }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $requisito->proceso?->nombre_pro }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $requisito->proceso?->semestre?->nombre_sem }}
+                                </div>
                             </div>
                         </x-table.cell>
                         <x-table.cell class="whitespace-normal">
                             <div class="space-y-0">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $requisito->tipoExpediente?->nombre_tex }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $requisito->tipoExpediente?->codigo_tex }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $requisito->tipoExpediente?->nombre_tex }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $requisito->tipoExpediente?->codigo_tex }}
+                                </div>
                             </div>
                         </x-table.cell>
                         <x-table.cell>
@@ -124,11 +176,16 @@
                         <x-table.cell align="end">
                             @if ($puedeGestionarAcciones)
                                 <flux:dropdown>
-                                    <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
+                                    <flux:button
+                                        icon:trailing="chevron-down"
+                                        size="sm"
+                                        variant="filled"
+                                        class="font-normal"
+                                    >
                                         Acciones
                                     </flux:button>
                                     <flux:menu>
-                                        @permiso('requisito_expediente_editar')
+                                        @permiso ('requisito_expediente_editar')
                                             <flux:menu.item wire:click="cargarRequisito({{ $requisito->id_rex }})">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="pencil" size="4" class="me-2" />
@@ -137,8 +194,10 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('requisito_expediente_estado')
-                                            <flux:menu.item wire:click="$js.cargarAlertaEstado({{ $requisito->id_rex }}, '{{ $requisito->tipoExpediente?->nombre_tex }}')">
+                                        @permiso ('requisito_expediente_estado')
+                                            <flux:menu.item
+                                                wire:click="$js.cargarAlertaEstado({{ $requisito->id_rex }}, '{{ $requisito->tipoExpediente?->nombre_tex }}')"
+                                            >
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
                                                 </x-slot>
@@ -146,7 +205,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('requisito_expediente_eliminar')
+                                        @permiso ('requisito_expediente_eliminar')
                                             <flux:menu.item
                                                 variant="danger"
                                                 wire:click="$js.cargarAlertaEliminar({{ $requisito->id_rex }}, '{{ $requisito->tipoExpediente?->nombre_tex }}')"
@@ -178,12 +237,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -214,7 +273,10 @@
                         >
                             <option value="">Seleccionar proceso</option>
                             @foreach ($this->procesosDisponibles as $proceso)
-                                <option wire:key="requisito-proceso-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
+                                <option
+                                    wire:key="requisito-proceso-{{ $proceso->id_pro }}"
+                                    value="{{ $proceso->id_pro }}"
+                                >
                                     {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
                                 </option>
                             @endforeach
@@ -230,13 +292,18 @@
                         >
                             <option value="">Seleccionar tipo de expediente</option>
                             @foreach ($this->tiposExpedienteDisponibles as $tipoExpediente)
-                                <option wire:key="requisito-tipo-expediente-{{ $tipoExpediente->id_tex }}" value="{{ $tipoExpediente->id_tex }}">
+                                <option
+                                    wire:key="requisito-tipo-expediente-{{ $tipoExpediente->id_tex }}"
+                                    value="{{ $tipoExpediente->id_tex }}"
+                                >
                                     {{ $tipoExpediente->nombre_tex }}
                                 </option>
                             @endforeach
                         </x-ui.select>
 
-                        <label class="flex items-center gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                        <label
+                            class="flex items-center gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700"
+                        >
                             <input
                                 type="checkbox"
                                 wire:model.live="requisitoForm.obligatorio"
@@ -244,9 +311,7 @@
                             />
                             <div class="space-y-1">
                                 <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Requisito obligatorio</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    Si esta opcion esta activa, el expediente debe presentarse en la inscripcion.
-                                </p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Si esta opcion esta activa, el expediente debe presentarse en la inscripcion.</p>
                             </div>
                         </label>
                     </div>
@@ -288,7 +353,8 @@
             this.$dispatch('alert', {
                 type: 'error',
                 title: 'Atencion',
-                message: 'Â¿Esta seguro de que desea eliminar el requisito "' + nombre + '"? Esta accion es irreversible.',
+                message:
+                    'Â¿Esta seguro de que desea eliminar el requisito "' + nombre + '"? Esta accion es irreversible.',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Eliminar',
