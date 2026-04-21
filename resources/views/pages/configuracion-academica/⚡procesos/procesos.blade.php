@@ -30,6 +30,17 @@
             </flux:input>
         </div>
 
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+                <option value="">Todos los semestres</option>
+                @foreach ($this->semestresDisponibles as $semestre)
+                    <option wire:key="semestre-proceso-filtro-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
+                        {{ $semestre->nombre_sem }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <div class="w-full lg:w-auto">
             <flux:dropdown>
                 <flux:button class="w-full font-normal" icon:trailing="chevron-down">
@@ -58,18 +69,33 @@
                         </flux:menu.checkbox>
                     @endforeach
 
-                    @if (count($this->estadosSeleccionados) > 0)
+                    @if ($idSemestre !== '' || count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
-                            <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar filtros
-                        </flux:menu.item>
+                        @if ($idSemestre !== '')
+                            <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="x" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar filtro academico
+                            </flux:menu.item>
+                        @endif
+
+                        @if (count($this->estadosSeleccionados) > 0)
+                            <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
+                                <x-slot name="icon">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
+                                        <x-ui.icon name="trash" size="4" />
+                                    </div>
+                                </x-slot>
+                                Limpiar estados
+                            </flux:menu.item>
+                        @endif
                     @endif
                 </flux:menu>
             </flux:dropdown>
@@ -178,12 +204,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

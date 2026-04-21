@@ -12,6 +12,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -23,11 +24,16 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $buscar = '';
+
+    #[Url(as: 'semestre')]
+    public string $idSemestre = '';
 
     /**
      * @var array<string, bool>
      */
+    #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
     /**
@@ -52,6 +58,11 @@ class extends Component
     }
 
     public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdSemestre(): void
     {
         $this->resetPage();
     }
@@ -194,6 +205,12 @@ class extends Component
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
+    }
+
+    public function limpiarFiltrosAcademicos(): void
+    {
+        $this->idSemestre = '';
+        $this->resetPage();
     }
 
     public function cargarProceso(?int $id = null): void
@@ -382,6 +399,7 @@ class extends Component
                             ->where('nombre_sem', 'like', "%{$search}%"));
                 });
             })
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_pro', $this->estadosSeleccionados);
             })
