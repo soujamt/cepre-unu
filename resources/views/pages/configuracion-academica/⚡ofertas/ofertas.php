@@ -5,6 +5,7 @@ use App\Enums\EstadoProceso;
 use App\Models\OfertaBase;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
+use App\Models\Semestre;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,11 +28,25 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $buscar = '';
+
+    #[Url(as: 'semestre')]
+    public string $idSemestre = '';
+
+    #[Url(as: 'proceso')]
+    public string $idProceso = '';
+
+    #[Url(as: 'turno')]
+    public string $idTurno = '';
+
+    #[Url(as: 'pagina')]
+    public int $porPagina = 10;
 
     /**
      * @var array<string, bool>
      */
+    #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
     /**
@@ -54,6 +70,27 @@ class extends Component
     }
 
     public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdSemestre(): void
+    {
+        $this->idProceso = '';
+        $this->resetPage();
+    }
+
+    public function updatedIdProceso(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdTurno(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPorPagina(): void
     {
         $this->resetPage();
     }
@@ -131,10 +168,22 @@ class extends Component
     }
 
     #[Computed]
+    public function semestresDisponibles(): Collection
+    {
+        return Semestre::query()
+            ->whereHas('procesos.procesosOferta')
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->get();
+    }
+
+    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
+            ->whereHas('procesosOferta')
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->orderByDesc('id_pro')
             ->get();
@@ -159,6 +208,9 @@ class extends Component
     public function turnosDisponibles(): Collection
     {
         return Turno::query()
+            ->whereHas('procesosOferta', function (Builder $query): void {
+                $this->aplicarFiltrosRelacionados($query);
+            })
             ->where('estado_tur', EstadoCatalogo::Habilitado->value)
             ->orderBy('nombre_tur')
             ->get();
@@ -167,6 +219,14 @@ class extends Component
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
+    }
+
+    public function limpiarFiltrosAcademicos(): void
+    {
+        $this->idSemestre = '';
+        $this->idProceso = '';
+        $this->idTurno = '';
+        $this->resetPage();
     }
 
     public function cargarOferta(?int $id = null): void
@@ -314,6 +374,13 @@ class extends Component
     #[Computed]
     public function ofertas(): LengthAwarePaginator
     {
+        return $this->baseOfertasQuery()
+            ->orderByDesc('id_pof')
+            ->paginate($this->porPagina);
+    }
+
+    private function baseOfertasQuery(): Builder
+    {
         return ProcesoOferta::query()
             ->with([
                 'proceso.semestre',
@@ -347,11 +414,15 @@ class extends Component
                         ->where('nombre_tur', 'like', "%{$search}%"));
                 });
             })
+            ->when(filled($this->idSemestre), function (Builder $query): void {
+                $query->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
+                    ->where('id_semestre', (int) $this->idSemestre));
+            })
+            ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
+            ->when(filled($this->idTurno), fn (Builder $query) => $query->where('id_turno', (int) $this->idTurno))
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_pof', $this->estadosSeleccionados);
-            })
-            ->orderByDesc('id_pof')
-            ->paginate(10);
+            });
     }
 
     public function descripcionOfertaBase(?OfertaBase $ofertaBase): string
@@ -368,6 +439,30 @@ class extends Component
         return "{$modalidad} | {$carrera} | {$sede} | {$lugar}";
     }
 
+    /**
+     * @return array{modalidad: string, carrera: string, sede: string, lugar: string, codigo_externo: string}
+     */
+    public function resumenOfertaBase(?OfertaBase $ofertaBase): array
+    {
+        if ($ofertaBase === null) {
+            return [
+                'modalidad' => 'SIN MODALIDAD',
+                'carrera' => 'SIN CARRERA',
+                'sede' => 'SIN SEDE',
+                'lugar' => 'SIN LUGAR',
+                'codigo_externo' => 'N/A',
+            ];
+        }
+
+        return [
+            'modalidad' => $ofertaBase->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
+            'carrera' => $ofertaBase->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA',
+            'sede' => $ofertaBase->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE',
+            'lugar' => $ofertaBase->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR',
+            'codigo_externo' => $ofertaBase->codigo_externo_ofb ?? 'N/A',
+        ];
+    }
+
     private function normalizarTexto(?string $valor): ?string
     {
         if ($valor === null) {
@@ -377,5 +472,13 @@ class extends Component
         $normalizado = preg_replace('/\s+/u', ' ', trim($valor));
 
         return filled($normalizado) ? $normalizado : null;
+    }
+
+    private function aplicarFiltrosRelacionados(Builder $query): void
+    {
+        $query->when(filled($this->idSemestre), fn (Builder $builder) => $builder
+            ->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
+                ->where('id_semestre', (int) $this->idSemestre)))
+            ->when(filled($this->idProceso), fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
     }
 };
