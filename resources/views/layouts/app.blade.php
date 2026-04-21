@@ -17,7 +17,17 @@
     @fluxAppearance
 </head>
 <body class="flex h-screen bg-white antialiased dark:bg-zinc-800/75" x-data="{ sidebarOpen: false }">
-    <div class="bg-unia-pattern fixed inset-0 -z-10"></div>
+    <div class="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+            class="absolute inset-x-0 top-0 h-64 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.12),transparent)] dark:bg-[linear-gradient(to_bottom,rgba(9,9,11,0.25),transparent)]"
+        ></div>
+        <div
+            class="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(to_right,rgba(0,0,0,0.7)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.7)_1px,transparent_1px)] [background-size:48px_48px] dark:opacity-[0.12]"
+        ></div>
+        <div
+            class="absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(156,163,175,0.5),transparent)] dark:bg-[linear-gradient(to_right,transparent,rgba(255,255,255,0.1),transparent)]"
+        ></div>
+    </div>
 
     <livewire:livewire.navegacion.sidebar.index />
 
