@@ -299,7 +299,7 @@
                         <x-table.cell class="font-medium text-zinc-800 dark:text-zinc-100">
                             {{ $inscripcion->codigo_ins }}
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal">
+                        <x-table.cell class="whitespace-normal py-2">
                             <div class="space-y-0.5">
                                 <p class="font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ trim(implode(' ', array_filter([
@@ -314,7 +314,7 @@
                                 </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal">
+                        <x-table.cell class="whitespace-normal py-2">
                             <div class="space-y-0.5">
                                 <p class="font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
