@@ -5,6 +5,7 @@ use App\Enums\TipoBeneficioConvenio;
 use App\Models\Convenio;
 use App\Models\ConvenioProceso;
 use App\Models\Proceso;
+use App\Models\Semestre;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -14,6 +15,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -25,11 +27,19 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    #[Url(as: 'q')]
     public string $buscar = '';
+
+    #[Url(as: 'semestre')]
+    public string $idSemestre = '';
+
+    #[Url(as: 'proceso')]
+    public string $idProceso = '';
 
     /**
      * @var array<string, bool>
      */
+    #[Url(as: 'estado')]
     public array $filtroEstado = [];
 
     /**
@@ -73,6 +83,17 @@ class extends Component
     }
 
     public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdSemestre(): void
+    {
+        $this->idProceso = '';
+        $this->resetPage();
+    }
+
+    public function updatedIdProceso(): void
     {
         $this->resetPage();
     }
@@ -284,10 +305,22 @@ class extends Component
     }
 
     #[Computed]
+    public function semestresDisponibles(): Collection
+    {
+        return Semestre::query()
+            ->whereHas('procesos.conveniosProceso')
+            ->orderByDesc('fecha_inicio_inscripcion_sem')
+            ->orderByDesc('id_sem')
+            ->get();
+    }
+
+    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
+            ->whereHas('conveniosProceso')
             ->where('estado_pro', EstadoCatalogo::Habilitado->value)
             ->orderByDesc('id_pro')
             ->get();
@@ -296,6 +329,13 @@ class extends Component
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
+    }
+
+    public function limpiarFiltrosAcademicos(): void
+    {
+        $this->idSemestre = '';
+        $this->idProceso = '';
+        $this->resetPage();
     }
 
     public function cargarConvenio(?int $id = null): void
@@ -521,6 +561,10 @@ class extends Component
                                 ->where('nombre_sem', 'like', "%{$search}%")));
                 });
             })
+            ->when(filled($this->idSemestre), fn (Builder $query) => $query
+                ->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
+                    ->where('id_semestre', (int) $this->idSemestre)))
+            ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
             ->when($this->estadosSeleccionados !== [], fn (Builder $query) => $query->whereIn('estado_cpr', $this->estadosSeleccionados))
             ->orderByDesc('id_cpr')
             ->paginate(10);
