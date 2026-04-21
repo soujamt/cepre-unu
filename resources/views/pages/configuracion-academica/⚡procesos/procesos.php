@@ -104,8 +104,51 @@ class extends Component
                     }
                 },
             ],
-            'procesoForm.fecha_inicio' => ['required', 'date'],
-            'procesoForm.fecha_fin' => ['required', 'date', 'after_or_equal:procesoForm.fecha_inicio'],
+            'procesoForm.fecha_inicio' => [
+                'required',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $semestre = $this->semestreSeleccionado();
+
+                    if ($semestre === null || blank($value)) {
+                        return;
+                    }
+
+                    $fechaInicioSemestre = $semestre->fecha_inicio_inscripcion_sem?->format('Y-m-d');
+                    $fechaFinSemestre = $semestre->fecha_fin_inscripcion_sem?->format('Y-m-d');
+
+                    if ($fechaInicioSemestre !== null && (string) $value < $fechaInicioSemestre) {
+                        $fail('La fecha de inicio del proceso no puede ser menor que la fecha de inicio del semestre.');
+                    }
+
+                    if ($fechaFinSemestre !== null && (string) $value > $fechaFinSemestre) {
+                        $fail('La fecha de inicio del proceso no puede ser mayor que la fecha final del semestre.');
+                    }
+                },
+            ],
+            'procesoForm.fecha_fin' => [
+                'required',
+                'date',
+                'after_or_equal:procesoForm.fecha_inicio',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $semestre = $this->semestreSeleccionado();
+
+                    if ($semestre === null || blank($value)) {
+                        return;
+                    }
+
+                    $fechaInicioSemestre = $semestre->fecha_inicio_inscripcion_sem?->format('Y-m-d');
+                    $fechaFinSemestre = $semestre->fecha_fin_inscripcion_sem?->format('Y-m-d');
+
+                    if ($fechaInicioSemestre !== null && (string) $value < $fechaInicioSemestre) {
+                        $fail('La fecha final del proceso no puede ser menor que la fecha de inicio del semestre.');
+                    }
+
+                    if ($fechaFinSemestre !== null && (string) $value > $fechaFinSemestre) {
+                        $fail('La fecha final del proceso no puede ser mayor que la fecha final del semestre.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -365,5 +408,14 @@ class extends Component
     private function mayusculas(string $valor): string
     {
         return mb_strtoupper($valor, 'UTF-8');
+    }
+
+    private function semestreSeleccionado(): ?Semestre
+    {
+        if (blank($this->procesoForm['id_semestre'])) {
+            return null;
+        }
+
+        return Semestre::query()->find((int) $this->procesoForm['id_semestre']);
     }
 };

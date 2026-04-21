@@ -196,8 +196,51 @@ class extends Component
                     }
                 },
             ],
-            'convenioForm.fecha_inicio' => ['required', 'date'],
-            'convenioForm.fecha_fin' => ['required', 'date', 'after_or_equal:convenioForm.fecha_inicio'],
+            'convenioForm.fecha_inicio' => [
+                'required',
+                'date',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $proceso = $this->procesoSeleccionado();
+
+                    if ($proceso === null || blank($value)) {
+                        return;
+                    }
+
+                    $fechaInicioProceso = $proceso->fecha_inicio_pro?->format('Y-m-d');
+                    $fechaFinProceso = $proceso->fecha_fin_pro?->format('Y-m-d');
+
+                    if ($fechaInicioProceso !== null && (string) $value < $fechaInicioProceso) {
+                        $fail('La fecha de inicio del convenio no puede ser menor que la fecha de inicio del proceso.');
+                    }
+
+                    if ($fechaFinProceso !== null && (string) $value > $fechaFinProceso) {
+                        $fail('La fecha de inicio del convenio no puede ser mayor que la fecha final del proceso.');
+                    }
+                },
+            ],
+            'convenioForm.fecha_fin' => [
+                'required',
+                'date',
+                'after_or_equal:convenioForm.fecha_inicio',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $proceso = $this->procesoSeleccionado();
+
+                    if ($proceso === null || blank($value)) {
+                        return;
+                    }
+
+                    $fechaInicioProceso = $proceso->fecha_inicio_pro?->format('Y-m-d');
+                    $fechaFinProceso = $proceso->fecha_fin_pro?->format('Y-m-d');
+
+                    if ($fechaInicioProceso !== null && (string) $value < $fechaInicioProceso) {
+                        $fail('La fecha final del convenio no puede ser menor que la fecha de inicio del proceso.');
+                    }
+
+                    if ($fechaFinProceso !== null && (string) $value > $fechaFinProceso) {
+                        $fail('La fecha final del convenio no puede ser mayor que la fecha final del proceso.');
+                    }
+                },
+            ],
             'convenioForm.cupo_maximo' => ['required', 'integer', 'min:1'],
         ];
     }
@@ -504,5 +547,14 @@ class extends Component
     private function mayusculas(string $valor): string
     {
         return mb_strtoupper($valor, 'UTF-8');
+    }
+
+    private function procesoSeleccionado(): ?Proceso
+    {
+        if (blank($this->convenioForm['id_proceso'])) {
+            return null;
+        }
+
+        return Proceso::query()->find((int) $this->convenioForm['id_proceso']);
     }
 };
