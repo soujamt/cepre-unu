@@ -13,6 +13,8 @@ class ProcesoInscripcionResolver
      */
     public function resolver(?CarbonInterface $fecha = null): array
     {
+        app(EstadoAcademicoSynchronizer::class)->sync($fecha);
+
         $fechaReferencia = ($fecha ?? now())->toDateString();
 
         $proceso = Proceso::query()

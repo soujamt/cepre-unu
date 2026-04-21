@@ -6,11 +6,20 @@ use App\Models\PermisoAccion;
 use App\Models\Rol;
 use App\Models\Semestre;
 use App\Models\Usuario;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    Carbon::setTestNow('2026-02-01 09:00:00');
+});
+
+afterEach(function (): void {
+    Carbon::setTestNow();
+});
 
 function otorgarPermisosSemestre(Usuario $usuario, array $claves): void
 {
@@ -153,6 +162,59 @@ test('authorized users can change state of a semestre', function () {
         'estado_sem' => 'DESHABILITADO',
         'id_usuario_actualizador' => $usuario->id_usu,
     ]);
+});
+
+test('expired semestre is synchronized as cerrado when listing page is loaded', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosSemestre($usuario, ['semestre_indice']);
+
+    Carbon::setTestNow('2026-04-21 09:00:00');
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => '2026-I',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-04-20',
+        'estado_sem' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.semestres')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('tbl_semestre', [
+        'id_sem' => $semestre->id_sem,
+        'estado_sem' => 'CERRADO',
+    ]);
+
+});
+
+test('expired semestre cannot be reenabled manually', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosSemestre($usuario, ['semestre_indice', 'semestre_estado']);
+
+    Carbon::setTestNow('2026-04-21 09:00:00');
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => '2026-I',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-04-20',
+        'estado_sem' => 'DESHABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.semestres')
+        ->call('cambiarEstado', $semestre->id_sem)
+        ->assertDispatched('toast', message: 'El semestre ya venció por fecha y ahora se encuentra cerrado.', type: 'error');
+
+    $this->assertDatabaseHas('tbl_semestre', [
+        'id_sem' => $semestre->id_sem,
+        'estado_sem' => 'CERRADO',
+    ]);
+
 });
 
 test('authorized users can delete a semestre without procesos', function () {

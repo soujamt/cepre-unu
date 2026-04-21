@@ -3,6 +3,7 @@
 use App\Enums\EstadoProceso;
 use App\Models\Proceso;
 use App\Models\Semestre;
+use App\Support\EstadoAcademicoSynchronizer;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -196,6 +197,8 @@ class extends Component
     #[Computed]
     public function semestresDisponibles(): Collection
     {
+        app(EstadoAcademicoSynchronizer::class)->sync();
+
         return Semestre::query()
             ->where('estado_sem', EstadoProceso::Habilitado->value)
             ->orderByDesc('id_sem')
@@ -300,11 +303,25 @@ class extends Component
 
         try {
             DB::transaction(function () use ($id_proceso): void {
+                $synchronizer = app(EstadoAcademicoSynchronizer::class);
+
+                $synchronizer->sync();
+
                 $proceso = Proceso::query()->findOrFail($id_proceso);
+
+                if ($proceso->estado_pro === EstadoProceso::Cerrado || $synchronizer->procesoEstaVencido($proceso)) {
+                    if ($proceso->estado_pro !== EstadoProceso::Cerrado) {
+                        $proceso->update([
+                            'estado_pro' => EstadoProceso::Cerrado->value,
+                        ]);
+                    }
+
+                    throw new \RuntimeException('El proceso ya venció por fecha y ahora se encuentra cerrado.');
+                }
 
                 $nuevoEstado = match ($proceso->estado_pro) {
                     EstadoProceso::Habilitado => EstadoProceso::Deshabilitado->value,
-                    EstadoProceso::Deshabilitado, EstadoProceso::Cerrado => EstadoProceso::Habilitado->value,
+                    EstadoProceso::Deshabilitado => EstadoProceso::Habilitado->value,
                 };
 
                 $proceso->update([
@@ -312,8 +329,12 @@ class extends Component
                 ]);
             });
         } catch (\Throwable $throwable) {
-            report($throwable);
-            $this->dispatch('toast', message: 'No se pudo cambiar el estado del proceso.', type: 'error');
+            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            $this->dispatch(
+                'toast',
+                message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del proceso.',
+                type: 'error'
+            );
 
             return;
         }
@@ -386,6 +407,8 @@ class extends Component
     #[Computed]
     public function procesos(): LengthAwarePaginator
     {
+        app(EstadoAcademicoSynchronizer::class)->sync();
+
         return Proceso::query()
             ->with('semestre')
             ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])

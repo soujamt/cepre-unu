@@ -7,11 +7,20 @@ use App\Models\Proceso;
 use App\Models\Rol;
 use App\Models\Semestre;
 use App\Models\Usuario;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function (): void {
+    Carbon::setTestNow('2026-02-01 09:00:00');
+});
+
+afterEach(function (): void {
+    Carbon::setTestNow();
+});
 
 function otorgarPermisosProceso(Usuario $usuario, array $claves): void
 {
@@ -184,6 +193,77 @@ test('authorized users can change state of a proceso', function () {
         'estado_pro' => 'DESHABILITADO',
         'id_usuario_actualizador' => $usuario->id_usu,
     ]);
+});
+
+test('expired proceso is synchronized as cerrado when listing page is loaded', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosProceso($usuario, ['proceso_indice']);
+
+    Carbon::setTestNow('2026-04-21 09:00:00');
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_i',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-04-30',
+        'estado_sem' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()->create([
+        'id_semestre' => $semestre->id_sem,
+        'codigo_pro' => 'proceso_ordinario_2026_i',
+        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-04-20',
+        'estado_pro' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.procesos')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('tbl_proceso', [
+        'id_pro' => $proceso->id_pro,
+        'estado_pro' => 'CERRADO',
+    ]);
+
+});
+
+test('expired proceso cannot be reenabled manually', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_estado']);
+
+    Carbon::setTestNow('2026-04-21 09:00:00');
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_i',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-04-30',
+        'estado_sem' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()->create([
+        'id_semestre' => $semestre->id_sem,
+        'codigo_pro' => 'proceso_ordinario_2026_i',
+        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-04-20',
+        'estado_pro' => 'DESHABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.procesos')
+        ->call('cambiarEstado', $proceso->id_pro)
+        ->assertDispatched('toast', message: 'El proceso ya venció por fecha y ahora se encuentra cerrado.', type: 'error');
+
+    $this->assertDatabaseHas('tbl_proceso', [
+        'id_pro' => $proceso->id_pro,
+        'estado_pro' => 'CERRADO',
+    ]);
+
 });
 
 test('authorized users can delete a proceso without configuraciones relacionadas', function () {

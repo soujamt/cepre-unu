@@ -52,7 +52,7 @@ test('resolver returns the active process when the inscription window is open', 
     expect($contexto['disponible'])->toBeTrue()
         ->and($contexto['mensaje'])->toBe('Proceso disponible para continuar con la postulacion.')
         ->and($contexto['proceso'])->not->toBeNull()
-        ->and($contexto['proceso']?->codigo_pro)->toBe('proceso_ordinario_2026_i');
+        ->and($contexto['proceso']?->codigo_pro)->toBe('ordinario_2026_1');
 
     Carbon::setTestNow();
 });
@@ -68,6 +68,9 @@ test('resolver indicates when there is no active process for the current date', 
         ->and($contexto['mensaje'])->toBe('No hay un proceso de inscripcion activo en este momento.')
         ->and($contexto['proceso'])->toBeNull();
 
+    expect(Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail()->estado_pro)
+        ->toBe(EstadoProceso::Cerrado);
+
     Carbon::setTestNow();
 });
 
@@ -77,7 +80,7 @@ test('resolver indicates when the active process has no enabled offers', functio
     Carbon::setTestNow('2026-04-15 09:00:00');
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->where('codigo_pro', 'ordinario_2026_1')
         ->firstOrFail();
 
     ProcesoOferta::query()

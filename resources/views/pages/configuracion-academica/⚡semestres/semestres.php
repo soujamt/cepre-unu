@@ -2,6 +2,7 @@
 
 use App\Enums\EstadoProceso;
 use App\Models\Semestre;
+use App\Support\EstadoAcademicoSynchronizer;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -223,11 +224,25 @@ class extends Component
 
         try {
             DB::transaction(function () use ($id_semestre): void {
+                $synchronizer = app(EstadoAcademicoSynchronizer::class);
+
+                $synchronizer->sync();
+
                 $semestre = Semestre::query()->findOrFail($id_semestre);
+
+                if ($semestre->estado_sem === EstadoProceso::Cerrado || $synchronizer->semestreEstaVencido($semestre)) {
+                    if ($semestre->estado_sem !== EstadoProceso::Cerrado) {
+                        $semestre->update([
+                            'estado_sem' => EstadoProceso::Cerrado->value,
+                        ]);
+                    }
+
+                    throw new \RuntimeException('El semestre ya venció por fecha y ahora se encuentra cerrado.');
+                }
 
                 $nuevoEstado = match ($semestre->estado_sem) {
                     EstadoProceso::Habilitado => EstadoProceso::Deshabilitado->value,
-                    EstadoProceso::Deshabilitado, EstadoProceso::Cerrado => EstadoProceso::Habilitado->value,
+                    EstadoProceso::Deshabilitado => EstadoProceso::Habilitado->value,
                 };
 
                 $semestre->update([
@@ -235,8 +250,12 @@ class extends Component
                 ]);
             });
         } catch (\Throwable $throwable) {
-            report($throwable);
-            $this->dispatch('toast', message: 'No se pudo cambiar el estado del semestre.', type: 'error');
+            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            $this->dispatch(
+                'toast',
+                message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del semestre.',
+                type: 'error'
+            );
 
             return;
         }
@@ -303,6 +322,8 @@ class extends Component
     #[Computed]
     public function semestres(): LengthAwarePaginator
     {
+        app(EstadoAcademicoSynchronizer::class)->sync();
+
         return Semestre::query()
             ->withCount('procesos')
             ->when(filled($this->buscar), function (Builder $query): void {
