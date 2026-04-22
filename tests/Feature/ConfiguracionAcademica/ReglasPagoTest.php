@@ -106,8 +106,8 @@ function crearContextoReglaPago(int $indice, bool $permiteCuotasConcepto = true)
     $convenioProceso = ConvenioProceso::query()->create([
         'id_convenio' => $convenio->id_con,
         'id_proceso' => $proceso->id_pro,
-        'fecha_inicio_cpr' => '2026-01-01',
-        'fecha_fin_cpr' => '2026-03-31',
+        'fecha_inicio_cpr' => '2026-01-10',
+        'fecha_fin_cpr' => '2026-03-15',
         'cupo_maximo_cpr' => 100,
         'estado_cpr' => 'HABILITADO',
     ]);
@@ -151,8 +151,8 @@ test('authorized users can register a regla de pago', function () {
         ->set('reglaPagoForm.monto_minimo_primera_cuota', '275.00')
         ->set('reglaPagoForm.numero_maximo_cuotas', '3')
         ->set('reglaPagoForm.requiere_pago_completo', false)
-        ->set('reglaPagoForm.vigente_desde', '2026-01-01')
-        ->set('reglaPagoForm.vigente_hasta', '2026-03-31')
+        ->set('reglaPagoForm.vigente_desde', '2026-01-10')
+        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
         ->call('guardar')
         ->assertHasNoErrors();
 
@@ -189,7 +189,7 @@ test('authorized users can update a regla de pago', function () {
         'monto_minimo_primera_cuota_rpa' => 0,
         'numero_maximo_cuotas_rpa' => 1,
         'requiere_pago_completo_rpa' => true,
-        'vigente_desde_rpa' => '2026-01-01',
+        'vigente_desde_rpa' => '2026-01-10',
         'estado_rpa' => 'HABILITADO',
     ]);
 
@@ -207,7 +207,7 @@ test('authorized users can update a regla de pago', function () {
         ->set('reglaPagoForm.monto_minimo_primera_cuota', '')
         ->set('reglaPagoForm.requiere_pago_completo', true)
         ->set('reglaPagoForm.vigente_desde', '2026-02-01')
-        ->set('reglaPagoForm.vigente_hasta', '2026-03-20')
+        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
         ->call('guardar')
         ->assertHasNoErrors();
 

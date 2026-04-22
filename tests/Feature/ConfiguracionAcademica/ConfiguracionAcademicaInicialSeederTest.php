@@ -37,11 +37,11 @@ test('academic initial seeder creates a usable base configuration', function () 
     }
 
     $semestreId = DB::table('tbl_semestre')
-        ->where('codigo_sem', 'semestre_2026_i')
+        ->where('codigo_sem', '2026_1')
         ->value('id_sem');
 
     $procesoId = DB::table('tbl_proceso')
-        ->where('codigo_pro', 'proceso_ordinario_2026_i')
+        ->where('codigo_pro', 'ordinario_2026_1')
         ->value('id_pro');
 
     expect($semestreId)->not->toBeNull();

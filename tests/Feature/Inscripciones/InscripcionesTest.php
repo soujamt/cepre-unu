@@ -351,7 +351,7 @@ test('authorized users can access inscripcion detail page', function () {
 
 test('list shows detail action for active inscripciones and continue action for pending ones', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'pago_crear']);
 
     crearContextoListadoInscripcion(5, 'ACTIVO');
     crearContextoListadoInscripcion(6, 'PENDIENTE');

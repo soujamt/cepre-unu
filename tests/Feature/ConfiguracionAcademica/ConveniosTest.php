@@ -108,8 +108,8 @@ test('authorized users can register a convenio', function () {
         ->set('convenioForm.tipo_beneficio', 'DESCUENTO')
         ->set('convenioForm.monto_descuento', '300.00')
         ->set('convenioForm.id_proceso', (string) $proceso->id_pro)
-        ->set('convenioForm.fecha_inicio', '2026-01-01')
-        ->set('convenioForm.fecha_fin', '2026-03-31')
+        ->set('convenioForm.fecha_inicio', '2026-01-10')
+        ->set('convenioForm.fecha_fin', '2026-03-15')
         ->set('convenioForm.cupo_maximo', '100')
         ->call('guardar')
         ->assertHasNoErrors();
@@ -157,8 +157,8 @@ test('authorized users can update a convenio', function () {
     $convenioProceso = ConvenioProceso::query()->create([
         'id_convenio' => $convenio->id_con,
         'id_proceso' => $procesoA->id_pro,
-        'fecha_inicio_cpr' => '2026-01-01',
-        'fecha_fin_cpr' => '2026-03-31',
+        'fecha_inicio_cpr' => '2026-01-10',
+        'fecha_fin_cpr' => '2026-03-15',
         'cupo_maximo_cpr' => 50,
         'cupo_usado_cpr' => 0,
         'estado_cpr' => 'HABILITADO',
@@ -176,7 +176,7 @@ test('authorized users can update a convenio', function () {
         ->set('convenioForm.monto_descuento', '')
         ->set('convenioForm.id_proceso', (string) $procesoB->id_pro)
         ->set('convenioForm.fecha_inicio', '2026-02-01')
-        ->set('convenioForm.fecha_fin', '2026-03-20')
+        ->set('convenioForm.fecha_fin', '2026-03-15')
         ->set('convenioForm.cupo_maximo', '80')
         ->call('guardar')
         ->assertHasNoErrors();
