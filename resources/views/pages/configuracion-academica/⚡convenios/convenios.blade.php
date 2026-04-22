@@ -298,23 +298,38 @@
     </div>
 
     @if (auth()->user()?->hasPermisoAccion('convenio_crear') || auth()->user()?->hasPermisoAccion('convenio_editar'))
-        <flux:modal flyout variant="floating" name="modal-convenio" class="px-0! py-5! md:w-lg!">
+        <flux:modal flyout variant="floating" name="modal-convenio" class="px-0! py-5! md:w-2xl!">
             <div class="space-y-5">
                 <flux:heading size="lg" class="px-5">{{ $tituloModal }}</flux:heading>
                 <flux:separator variant="subtle" />
 
                 <form wire:submit="guardar" class="space-y-5">
                     <div class="space-y-5 px-5">
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.input
-                                label="Codigo"
-                                type="text"
-                                wire:model="convenioForm.codigo"
-                                :invalid="$errors->has('convenioForm.codigo')"
-                                :error="$errors->first('convenioForm.codigo')"
-                                required
-                                floating
-                            />
+                        <div class="rounded-2xl border border-zinc-200 bg-linear-to-r from-zinc-50 to-slate-50 px-4 py-3 dark:border-zinc-700 dark:from-zinc-900/70 dark:to-slate-900/60">
+                            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div class="max-w-xl space-y-1">
+                                    <p class="text-[11px] font-semibold tracking-[0.28em] text-zinc-500 uppercase dark:text-zinc-400">
+                                        Codigo
+                                    </p>
+                                    <p class="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                                        {{ $isEdit ? 'Este codigo se mantiene fijo para conservar la trazabilidad.' : 'Se genera automaticamente al guardar con 6 digitos y prefijo anual.' }}
+                                    </p>
+                                </div>
+                                <div class="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-base font-semibold tracking-[0.18em] text-slate-700 shadow-sm dark:border-slate-700 dark:bg-zinc-950 dark:text-slate-200">
+                                    {{ $this->codigoConvenioVisible }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 rounded-2xl border border-zinc-200 px-4 py-3.5 dark:border-zinc-700">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold tracking-[0.28em] text-zinc-500 uppercase dark:text-zinc-400">
+                                    Informacion General
+                                </p>
+                                <p class="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                                    Nombre y descripcion breve para identificar el convenio.
+                                </p>
+                            </div>
 
                             <x-ui.input
                                 label="Nombre"
@@ -325,112 +340,145 @@
                                 required
                                 floating
                             />
-                        </div>
 
-                        <x-ui.textarea
-                            label="Descripcion"
-                            wire:model="convenioForm.descripcion"
-                            :invalid="$errors->has('convenioForm.descripcion')"
-                            :error="$errors->first('convenioForm.descripcion')"
-                            autoResize
-                            floating
-                        />
-
-                        <div class="grid gap-5 md:grid-cols-3">
-                            <x-ui.select
-                                label="Tipo de beneficio"
-                                wire:model.live="convenioForm.tipo_beneficio"
-                                :invalid="$errors->has('convenioForm.tipo_beneficio')"
-                                :error="$errors->first('convenioForm.tipo_beneficio')"
-                                required
-                                floating
-                            >
-                                @foreach ($this->tiposBeneficio() as $tipoBeneficio)
-                                    <option value="{{ $tipoBeneficio->value }}">
-                                        {{ $tipoBeneficio->getNombre() }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
-
-                            <x-ui.input
-                                label="Monto descuento"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                wire:model="convenioForm.monto_descuento"
-                                :invalid="$errors->has('convenioForm.monto_descuento')"
-                                :error="$errors->first('convenioForm.monto_descuento')"
-                                :disabled="$convenioForm['tipo_beneficio'] === \App\Enums\TipoBeneficioConvenio::ExoneracionTotal->value"
-                                floating
-                            />
-
-                            <x-ui.input
-                                label="Porcentaje descuento"
-                                type="number"
-                                min="0"
-                                max="100"
-                                step="0.01"
-                                wire:model="convenioForm.porcentaje_descuento"
-                                :invalid="$errors->has('convenioForm.porcentaje_descuento')"
-                                :error="$errors->first('convenioForm.porcentaje_descuento')"
-                                :disabled="$convenioForm['tipo_beneficio'] === \App\Enums\TipoBeneficioConvenio::ExoneracionTotal->value"
+                            <x-ui.textarea
+                                label="Descripcion"
+                                wire:model="convenioForm.descripcion"
+                                :invalid="$errors->has('convenioForm.descripcion')"
+                                :error="$errors->first('convenioForm.descripcion')"
+                                autoResize
                                 floating
                             />
                         </div>
 
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.select
-                                label="Proceso"
-                                wire:model="convenioForm.id_proceso"
-                                :invalid="$errors->has('convenioForm.id_proceso')"
-                                :error="$errors->first('convenioForm.id_proceso')"
-                                required
-                                floating
-                            >
-                                <option value="">Seleccionar proceso</option>
-                                @foreach ($this->procesosFormularioDisponibles as $proceso)
-                                    <option
-                                        wire:key="convenio-proceso-{{ $proceso->id_pro }}"
-                                        value="{{ $proceso->id_pro }}"
-                                    >
-                                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
-                                    </option>
-                                @endforeach
-                            </x-ui.select>
+                        <div class="space-y-4 rounded-2xl border border-zinc-200 px-4 py-3.5 dark:border-zinc-700">
+                            <div class="space-y-1">
+                                <p class="text-[11px] font-semibold tracking-[0.28em] text-zinc-500 uppercase dark:text-zinc-400">
+                                    Beneficio
+                                </p>
+                                <p class="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                                    Defina el tipo de ayuda y el valor a aplicar.
+                                </p>
+                            </div>
 
-                            <x-ui.input
-                                label="Cupo maximo"
-                                type="number"
-                                min="1"
-                                step="1"
-                                wire:model="convenioForm.cupo_maximo"
-                                :invalid="$errors->has('convenioForm.cupo_maximo')"
-                                :error="$errors->first('convenioForm.cupo_maximo')"
-                                required
-                                floating
-                            />
+                            <div class="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)_minmax(0,0.9fr)]">
+                                <x-ui.select
+                                    label="Tipo de beneficio"
+                                    wire:model.live="convenioForm.tipo_beneficio"
+                                    :invalid="$errors->has('convenioForm.tipo_beneficio')"
+                                    :error="$errors->first('convenioForm.tipo_beneficio')"
+                                    required
+                                    floating
+                                >
+                                    @foreach ($this->tiposBeneficio() as $tipoBeneficio)
+                                        <option value="{{ $tipoBeneficio->value }}">
+                                            {{ $tipoBeneficio->getNombre() }}
+                                        </option>
+                                    @endforeach
+                                </x-ui.select>
+
+                                <x-ui.input
+                                    label="Monto descuento"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    wire:model="convenioForm.monto_descuento"
+                                    :invalid="$errors->has('convenioForm.monto_descuento')"
+                                    :error="$errors->first('convenioForm.monto_descuento')"
+                                    :disabled="$convenioForm['tipo_beneficio'] === \App\Enums\TipoBeneficioConvenio::ExoneracionTotal->value"
+                                    floating
+                                />
+
+                                <x-ui.input
+                                    label="Porcentaje descuento"
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    wire:model="convenioForm.porcentaje_descuento"
+                                    :invalid="$errors->has('convenioForm.porcentaje_descuento')"
+                                    :error="$errors->first('convenioForm.porcentaje_descuento')"
+                                    :disabled="$convenioForm['tipo_beneficio'] === \App\Enums\TipoBeneficioConvenio::ExoneracionTotal->value"
+                                    floating
+                                />
+                            </div>
                         </div>
 
-                        <div class="grid gap-5 md:grid-cols-2">
-                            <x-ui.input
-                                label="Fecha inicio"
-                                type="date"
-                                wire:model="convenioForm.fecha_inicio"
-                                :invalid="$errors->has('convenioForm.fecha_inicio')"
-                                :error="$errors->first('convenioForm.fecha_inicio')"
-                                required
-                                floating
-                            />
+                        <div class="grid items-start gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,0.75fr)]">
+                            <div class="space-y-4 rounded-2xl border border-zinc-200 px-4 py-3.5 dark:border-zinc-700">
+                                <div class="space-y-1">
+                                    <p class="text-[11px] font-semibold tracking-[0.28em] text-zinc-500 uppercase dark:text-zinc-400">
+                                        Vigencia
+                                    </p>
+                                    <p class="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                                        Seleccione el proceso y el rango de fechas valido.
+                                    </p>
+                                </div>
 
-                            <x-ui.input
-                                label="Fecha fin"
-                                type="date"
-                                wire:model="convenioForm.fecha_fin"
-                                :invalid="$errors->has('convenioForm.fecha_fin')"
-                                :error="$errors->first('convenioForm.fecha_fin')"
-                                required
-                                floating
-                            />
+                                <x-ui.select
+                                    label="Proceso"
+                                    wire:model="convenioForm.id_proceso"
+                                    :invalid="$errors->has('convenioForm.id_proceso')"
+                                    :error="$errors->first('convenioForm.id_proceso')"
+                                    required
+                                    floating
+                                >
+                                    <option value="">Seleccionar proceso</option>
+                                    @foreach ($this->procesosFormularioDisponibles as $proceso)
+                                        <option
+                                            wire:key="convenio-proceso-{{ $proceso->id_pro }}"
+                                            value="{{ $proceso->id_pro }}"
+                                        >
+                                            {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                        </option>
+                                    @endforeach
+                                </x-ui.select>
+
+                                <div class="grid gap-4 md:grid-cols-2">
+                                    <x-ui.input
+                                        label="Fecha inicio"
+                                        type="date"
+                                        wire:model="convenioForm.fecha_inicio"
+                                        :invalid="$errors->has('convenioForm.fecha_inicio')"
+                                        :error="$errors->first('convenioForm.fecha_inicio')"
+                                        required
+                                        floating
+                                    />
+
+                                    <x-ui.input
+                                        label="Fecha fin"
+                                        type="date"
+                                        wire:model="convenioForm.fecha_fin"
+                                        :invalid="$errors->has('convenioForm.fecha_fin')"
+                                        :error="$errors->first('convenioForm.fecha_fin')"
+                                        required
+                                        floating
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="space-y-4 rounded-2xl border border-zinc-200 px-4 py-3.5 dark:border-zinc-700">
+                                <div class="space-y-1">
+                                    <p class="text-[11px] font-semibold tracking-[0.28em] text-zinc-500 uppercase dark:text-zinc-400">
+                                        Cupos
+                                    </p>
+                                    <p class="text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                                        Limite de beneficiarios disponibles para este convenio.
+                                    </p>
+                                </div>
+
+                                <x-ui.input
+                                    label="Cupo maximo"
+                                    type="number"
+                                    min="1"
+                                    step="1"
+                                    wire:model="convenioForm.cupo_maximo"
+                                    :invalid="$errors->has('convenioForm.cupo_maximo')"
+                                    :error="$errors->first('convenioForm.cupo_maximo')"
+                                    required
+                                    floating
+                                />
+                            </div>
                         </div>
                     </div>
 

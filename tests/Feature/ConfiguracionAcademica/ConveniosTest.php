@@ -102,7 +102,6 @@ test('authorized users can register a convenio', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.convenios')
-        ->set('convenioForm.codigo', 'HIJO_UNU')
         ->set('convenioForm.nombre', 'Hijo trabajador UNU')
         ->set('convenioForm.descripcion', 'Beneficio por hijo de trabajador')
         ->set('convenioForm.tipo_beneficio', 'DESCUENTO')
@@ -114,12 +113,13 @@ test('authorized users can register a convenio', function () {
         ->call('guardar')
         ->assertHasNoErrors();
 
-    $convenio = Convenio::query()->where('codigo_con', 'HIJO_UNU')->first();
+    $convenio = Convenio::query()->first();
 
     expect($convenio)->not->toBeNull();
+    expect($convenio?->codigo_con)->toMatch('/^26\d{4}$/');
 
     $this->assertDatabaseHas('tbl_convenio', [
-        'codigo_con' => 'HIJO_UNU',
+        'id_con' => $convenio?->id_con,
         'nombre_con' => 'HIJO TRABAJADOR UNU',
         'tipo_beneficio_con' => 'DESCUENTO',
         'monto_descuento_con' => 300.00,
@@ -253,7 +253,6 @@ test('authorized users can update a convenio', function () {
 
     Livewire::test('pages::configuracion-academica.convenios')
         ->call('cargarConvenio', $convenioProceso->id_cpr)
-        ->set('convenioForm.codigo', 'CONV_B')
         ->set('convenioForm.nombre', 'Convenio B')
         ->set('convenioForm.descripcion', 'Nueva descripcion')
         ->set('convenioForm.tipo_beneficio', 'EXONERACION_PARCIAL')
@@ -268,7 +267,7 @@ test('authorized users can update a convenio', function () {
 
     $this->assertDatabaseHas('tbl_convenio', [
         'id_con' => $convenio->id_con,
-        'codigo_con' => 'CONV_B',
+        'codigo_con' => 'CONV_A',
         'nombre_con' => 'CONVENIO B',
         'tipo_beneficio_con' => 'EXONERACION_PARCIAL',
         'porcentaje_descuento_con' => 50.00,
@@ -354,7 +353,7 @@ test('authorized users can delete a convenio without related records', function 
     expect($convenioProcesoEliminado?->id_usuario_eliminador)->toBe($usuario->id_usu);
 });
 
-test('convenio validates duplicate code and duplicate process assignment', function () {
+test('convenio validates duplicate name', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConvenio($usuario, ['convenio_indice', 'convenio_crear']);
 
@@ -381,8 +380,7 @@ test('convenio validates duplicate code and duplicate process assignment', funct
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.convenios')
-        ->set('convenioForm.codigo', 'CONV_A')
-        ->set('convenioForm.nombre', 'Convenio nuevo')
+        ->set('convenioForm.nombre', 'Convenio A')
         ->set('convenioForm.tipo_beneficio', 'DESCUENTO')
         ->set('convenioForm.monto_descuento', '50')
         ->set('convenioForm.id_proceso', (string) $proceso->id_pro)
@@ -390,5 +388,48 @@ test('convenio validates duplicate code and duplicate process assignment', funct
         ->set('convenioForm.fecha_fin', '2026-03-31')
         ->set('convenioForm.cupo_maximo', '10')
         ->call('guardar')
-        ->assertHasErrors(['convenioForm.codigo']);
+        ->assertHasErrors(['convenioForm.nombre']);
+});
+
+test('convenio generates sequential automatic code with year prefix', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosConvenio($usuario, ['convenio_indice', 'convenio_crear']);
+
+    $procesoA = crearProcesoConvenio(20);
+    $procesoB = crearProcesoConvenio(21);
+
+    Convenio::query()->create([
+        'codigo_con' => '260007',
+        'nombre_con' => 'CONVENIO BASE',
+        'tipo_beneficio_con' => 'DESCUENTO',
+        'monto_descuento_con' => 100,
+        'estado_con' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.convenios')
+        ->set('convenioForm.nombre', 'Convenio secuencial A')
+        ->set('convenioForm.tipo_beneficio', 'DESCUENTO')
+        ->set('convenioForm.monto_descuento', '80')
+        ->set('convenioForm.id_proceso', (string) $procesoA->id_pro)
+        ->set('convenioForm.fecha_inicio', '2026-01-10')
+        ->set('convenioForm.fecha_fin', '2026-03-15')
+        ->set('convenioForm.cupo_maximo', '25')
+        ->call('guardar')
+        ->assertHasNoErrors();
+
+    Livewire::test('pages::configuracion-academica.convenios')
+        ->set('convenioForm.nombre', 'Convenio secuencial B')
+        ->set('convenioForm.tipo_beneficio', 'DESCUENTO')
+        ->set('convenioForm.monto_descuento', '90')
+        ->set('convenioForm.id_proceso', (string) $procesoB->id_pro)
+        ->set('convenioForm.fecha_inicio', '2026-01-10')
+        ->set('convenioForm.fecha_fin', '2026-03-15')
+        ->set('convenioForm.cupo_maximo', '30')
+        ->call('guardar')
+        ->assertHasNoErrors();
+
+    expect(Convenio::query()->orderBy('id_con')->pluck('codigo_con')->all())
+        ->toContain('260008', '260009');
 });

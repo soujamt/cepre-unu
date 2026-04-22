@@ -44,7 +44,6 @@ class extends Component
 
     /**
      * @var array{
-     *     codigo:string,
      *     nombre:string,
      *     descripcion:string,
      *     tipo_beneficio:string,
@@ -57,7 +56,6 @@ class extends Component
      * }
      */
     public array $convenioForm = [
-        'codigo' => '',
         'nombre' => '',
         'descripcion' => '',
         'tipo_beneficio' => TipoBeneficioConvenio::Descuento->value,
@@ -117,30 +115,6 @@ class extends Component
     protected function rules(): array
     {
         return [
-            'convenioForm.codigo' => [
-                'required',
-                'string',
-                'max:50',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    $codigo = $this->normalizarCodigo((string) $value);
-
-                    if ($codigo === '') {
-                        $fail('El codigo es obligatorio.');
-
-                        return;
-                    }
-
-                    $exists = Convenio::query()
-                        ->withTrashed()
-                        ->where('codigo_con', $codigo)
-                        ->when($this->editingConvenioId, fn (Builder $query) => $query->where('id_con', '!=', $this->editingConvenioId))
-                        ->exists();
-
-                    if ($exists) {
-                        $fail('Ya existe un convenio con ese codigo.');
-                    }
-                },
-            ],
             'convenioForm.nombre' => [
                 'required',
                 'string',
@@ -272,7 +246,6 @@ class extends Component
     protected function messages(): array
     {
         return [
-            'convenioForm.codigo.required' => 'El codigo es obligatorio.',
             'convenioForm.nombre.required' => 'El nombre es obligatorio.',
             'convenioForm.tipo_beneficio.required' => 'El tipo de beneficio es obligatorio.',
             'convenioForm.id_proceso.required' => 'El proceso es obligatorio.',
@@ -354,6 +327,16 @@ class extends Component
             ->get();
     }
 
+    #[Computed]
+    public function codigoConvenioVisible(): string
+    {
+        if ($this->editingConvenioId !== null) {
+            return (string) Convenio::query()->whereKey($this->editingConvenioId)->value('codigo_con');
+        }
+
+        return Convenio::generarCodigoCorrelativo();
+    }
+
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
@@ -387,7 +370,6 @@ class extends Component
         $this->editingId = $convenioProceso->id_cpr;
         $this->editingConvenioId = $convenioProceso->id_convenio;
         $this->convenioForm = [
-            'codigo' => $convenioProceso->convenio?->codigo_con ?? '',
             'nombre' => $convenioProceso->convenio?->nombre_con ?? '',
             'descripcion' => $convenioProceso->convenio?->descripcion_con ?? '',
             'tipo_beneficio' => $convenioProceso->convenio?->tipo_beneficio_con?->value ?? TipoBeneficioConvenio::Descuento->value,
@@ -418,7 +400,6 @@ class extends Component
                 $tipoBeneficio = $data['convenioForm']['tipo_beneficio'];
 
                 $payloadConvenio = [
-                    'codigo_con' => $this->normalizarCodigo($data['convenioForm']['codigo']),
                     'nombre_con' => $this->mayusculas($this->normalizarTexto($data['convenioForm']['nombre']) ?? ''),
                     'descripcion_con' => $this->normalizarTexto($data['convenioForm']['descripcion']),
                     'tipo_beneficio_con' => $tipoBeneficio,
@@ -445,6 +426,7 @@ class extends Component
 
                 $convenio = Convenio::query()->create([
                     ...$payloadConvenio,
+                    'codigo_con' => Convenio::generarCodigoCorrelativo(),
                     'estado_con' => EstadoCatalogo::Habilitado->value,
                 ]);
 
@@ -556,7 +538,6 @@ class extends Component
         $this->reset(['editingId', 'editingConvenioId', 'isEdit']);
         $this->tituloModal = 'Nuevo convenio';
         $this->convenioForm = [
-            'codigo' => '',
             'nombre' => '',
             'descripcion' => '',
             'tipo_beneficio' => TipoBeneficioConvenio::Descuento->value,
@@ -596,13 +577,6 @@ class extends Component
             ->when($this->estadosSeleccionados !== [], fn (Builder $query) => $query->whereIn('estado_cpr', $this->estadosSeleccionados))
             ->orderByDesc('id_cpr')
             ->paginate(10);
-    }
-
-    private function normalizarCodigo(string $valor): string
-    {
-        $codigo = preg_replace('/\s+/u', '_', trim($valor));
-
-        return mb_strtoupper($codigo ?? '', 'UTF-8');
     }
 
     private function normalizarTexto(?string $valor): ?string
