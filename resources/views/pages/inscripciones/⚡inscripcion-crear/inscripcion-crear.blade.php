@@ -58,7 +58,7 @@
             <div class="space-y-5">
                 <div class="overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-xs dark:border-white/10 dark:bg-zinc-900">
                     <div class="relative border-b border-zinc-200/80 px-6 py-5 dark:border-white/10">
-                        <div class="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-amber-100/80 to-transparent dark:from-amber-500/10"></div>
+                        <div class="absolute inset-y-0 right-0 w-40 bg-linear-to-l from-amber-100/80 to-transparent dark:from-amber-500/10"></div>
                         <div class="relative space-y-2">
                             <p class="text-xs font-semibold tracking-[0.22em] text-zinc-500 uppercase dark:text-zinc-400">Control de vigencia</p>
                             <h3 class="max-w-2xl text-xl font-semibold text-zinc-900 dark:text-white">El formulario se habilita solo cuando exista un proceso activo y listo para inscripciones.</h3>
