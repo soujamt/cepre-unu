@@ -1577,10 +1577,33 @@ class extends Component
         );
 
         $detalle = ImportacionBancoDetalle::query()->find($data['pagoForm']['id_detalle_banco']);
-        $reglaPago = $this->reglaPagoSeleccionada;
 
-        if ($detalle === null || $reglaPago === null) {
+        if ($detalle === null) {
             $this->dispatch('toast', message: 'No se pudo cargar el pago o la regla seleccionada.', type: 'error');
+
+            return;
+        }
+
+        try {
+            $inscripcion = Inscripcion::query()
+                ->with([
+                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
+                    'convenioProceso.convenio',
+                ])
+                ->findOrFail($this->inscripcionId);
+
+            $this->validarInscripcionBorradorVigente($inscripcion);
+            $reglaPago = $this->validarReglaPagoSeleccionadaVigente(
+                (int) $data['pagoForm']['id_regla_pago'],
+                $inscripcion,
+            );
+        } catch (RuntimeException $exception) {
+            $this->dispatch('toast', message: $exception->getMessage(), type: 'warning');
+
+            return;
+        } catch (Throwable $throwable) {
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo validar la vigencia de la inscripción antes de registrar el pago.', type: 'error');
 
             return;
         }
@@ -1870,14 +1893,22 @@ class extends Component
     {
         try {
             DB::transaction(function () use ($data): void {
+                $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
+                $this->validarOfertaSeleccionadaVigente(
+                    (int) $data['postulacionForm']['id_proceso_oferta'],
+                    $procesoActivo,
+                );
+
                 $idConvenioProceso = filled($data['postulacionForm']['id_convenio_proceso'])
                     ? (int) $data['postulacionForm']['id_convenio_proceso']
                     : null;
 
                 if ($idConvenioProceso !== null) {
-                    $convenioProceso = ConvenioProceso::query()
-                        ->lockForUpdate()
-                        ->findOrFail($idConvenioProceso);
+                    $convenioProceso = $this->validarConvenioSeleccionadoVigente(
+                        $idConvenioProceso,
+                        $procesoActivo,
+                        true,
+                    );
 
                     $inscritos = Inscripcion::query()
                         ->where('id_convenio_proceso', $idConvenioProceso)
@@ -2430,6 +2461,112 @@ class extends Component
             'reglaPago.conceptoPago',
             'pagos.importacionBancoDetalle',
         ]);
+    }
+
+    private function obtenerProcesoActivoVigenteOrFail(): Proceso
+    {
+        $contextoProceso = $this->refrescarContextoProcesoPostulacion();
+
+        if (! $contextoProceso['disponible'] || $contextoProceso['proceso'] === null) {
+            throw new RuntimeException($contextoProceso['mensaje']);
+        }
+
+        return $contextoProceso['proceso'];
+    }
+
+    private function validarOfertaSeleccionadaVigente(int $idProcesoOferta, Proceso $procesoActivo): ProcesoOferta
+    {
+        $procesoOferta = ProcesoOferta::query()
+            ->with(['ofertaBase.modalidadLugarInscripcion'])
+            ->where('id_pof', $idProcesoOferta)
+            ->where('id_proceso', $procesoActivo->id_pro)
+            ->where('estado_pof', EstadoProceso::Habilitado->value)
+            ->first();
+
+        if ($procesoOferta === null) {
+            throw new RuntimeException('La oferta seleccionada ya no se encuentra disponible para el proceso activo.');
+        }
+
+        return $procesoOferta;
+    }
+
+    private function validarConvenioSeleccionadoVigente(?int $idConvenioProceso, Proceso $procesoActivo, bool $lock = false): ?ConvenioProceso
+    {
+        if ($idConvenioProceso === null) {
+            return null;
+        }
+
+        $query = ConvenioProceso::query()
+            ->with('convenio')
+            ->where('id_cpr', $idConvenioProceso)
+            ->where('id_proceso', $procesoActivo->id_pro)
+            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
+            ->whereDate('fecha_inicio_cpr', '<=', now()->toDateString())
+            ->whereDate('fecha_fin_cpr', '>=', now()->toDateString());
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $convenioProceso = $query->first();
+
+        if ($convenioProceso === null) {
+            throw new RuntimeException('El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo.');
+        }
+
+        return $convenioProceso;
+    }
+
+    private function validarInscripcionBorradorVigente(Inscripcion $inscripcion): void
+    {
+        $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
+
+        $this->validarOfertaSeleccionadaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
+        $this->validarConvenioSeleccionadoVigente($inscripcion->id_convenio_proceso, $procesoActivo);
+    }
+
+    private function validarReglaPagoSeleccionadaVigente(int $idReglaPago, Inscripcion $inscripcion): ReglaPago
+    {
+        $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
+        $convenioProcesoId = $inscripcion->id_convenio_proceso;
+        $procesoId = $inscripcion->procesoOferta?->id_proceso;
+
+        if ($procesoId === null) {
+            throw new RuntimeException('La inscripción ya no tiene un proceso válido para continuar con el pago.');
+        }
+
+        $reglaPago = ReglaPago::query()
+            ->with([
+                'conceptoPago',
+                'modalidadAdmision',
+                'convenioProceso.convenio',
+            ])
+            ->where('id_rpa', $idReglaPago)
+            ->where('id_proceso', $procesoId)
+            ->where('estado_rpa', EstadoCatalogo::Habilitado->value)
+            ->whereDate('vigente_desde_rpa', '<=', now()->toDateString())
+            ->whereDate('vigente_hasta_rpa', '>=', now()->toDateString())
+            ->where(function ($query) use ($modalidadId): void {
+                $query->whereNull('id_modalidad_admision');
+
+                if ($modalidadId !== null) {
+                    $query->orWhere('id_modalidad_admision', $modalidadId);
+                }
+            })
+            ->where(function ($query) use ($convenioProcesoId): void {
+                $query->whereNull('id_convenio_proceso');
+
+                if ($convenioProcesoId !== null) {
+                    $query->orWhere('id_convenio_proceso', $convenioProcesoId);
+                }
+            })
+            ->first();
+
+        if ($reglaPago === null) {
+            throw new RuntimeException('La regla de pago seleccionada ya no se encuentra vigente para esta inscripción.');
+        }
+
+        return $reglaPago;
     }
 
     private function inicializarExpedientesForm(): void
