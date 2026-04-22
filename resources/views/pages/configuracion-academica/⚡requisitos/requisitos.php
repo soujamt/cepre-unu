@@ -141,23 +141,51 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresDisponibles(): Collection
+    public function semestresFiltroDisponibles(): Collection
     {
         return Semestre::query()
-            ->whereHas('procesos.requisitosExpediente')
+            ->where(function (Builder $query): void {
+                $query->whereHas('procesos.requisitosExpediente')
+                    ->orWhere(function (Builder $builder): void {
+                        $builder->where('estado_sem', EstadoCatalogo::Habilitado->value)
+                            ->whereHas('procesos', fn (Builder $procesoQuery) => $procesoQuery->where('estado_pro', EstadoCatalogo::Habilitado->value));
+                    });
+            })
             ->orderByDesc('fecha_inicio_inscripcion_sem')
             ->orderByDesc('id_sem')
             ->get();
     }
 
     #[Computed]
-    public function procesosDisponibles(): Collection
+    public function procesosFiltroDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
             ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
-            ->whereHas('requisitosExpediente')
-            ->where('estado_pro', EstadoCatalogo::Habilitado->value)
+            ->where(function (Builder $query): void {
+                $query->whereHas('requisitosExpediente')
+                    ->orWhere('estado_pro', EstadoCatalogo::Habilitado->value);
+            })
+            ->orderByDesc('id_pro')
+            ->get();
+    }
+
+    #[Computed]
+    public function procesosFormularioDisponibles(): Collection
+    {
+        $procesoSeleccionado = filled($this->requisitoForm['id_proceso'])
+            ? (int) $this->requisitoForm['id_proceso']
+            : null;
+
+        return Proceso::query()
+            ->with('semestre')
+            ->where(function (Builder $query) use ($procesoSeleccionado): void {
+                $query->where('estado_pro', EstadoCatalogo::Habilitado->value);
+
+                if ($procesoSeleccionado !== null) {
+                    $query->orWhere('id_pro', $procesoSeleccionado);
+                }
+            })
             ->orderByDesc('id_pro')
             ->get();
     }

@@ -33,7 +33,7 @@
         <div class="w-full sm:w-52">
             <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
                 <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
+                @foreach ($this->semestresFiltroDisponibles as $semestre)
                     <option wire:key="semestre-regla-pago-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
                         {{ $semestre->nombre_sem }}
                     </option>
@@ -42,9 +42,9 @@
         </div>
 
         <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+            <x-ui.select wire:model.live="idProceso" wire:key="reglas-proceso-filtro-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
-                @foreach ($this->procesosDisponibles as $proceso)
+                @foreach ($this->procesosFiltroDisponibles as $proceso)
                     <option wire:key="proceso-regla-pago-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
                         {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
                     </option>
@@ -342,7 +342,7 @@
                                     floating
                                 >
                                     <option value="">Seleccionar proceso</option>
-                                    @foreach ($this->procesosDisponibles as $proceso)
+                                    @foreach ($this->procesosFormularioDisponibles as $proceso)
                                         <option
                                             wire:key="regla-proceso-{{ $proceso->id_pro }}"
                                             value="{{ $proceso->id_pro }}"

@@ -130,6 +130,61 @@ test('authorized users can register a requisito', function () {
     ]);
 });
 
+test('new enabled procesos are available in requisito form even without requisitos registrados', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosRequisito($usuario, ['requisito_expediente_indice', 'requisito_expediente_crear']);
+
+    $proceso = crearProcesoRequisito(9);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.requisitos')
+        ->call('cargarRequisito')
+        ->assertSee($proceso->nombre_pro);
+});
+
+test('requisito filters include historical semesters and enabled current semesters', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosRequisito($usuario, ['requisito_expediente_indice']);
+
+    $semestreHistorico = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_1',
+        'nombre_sem' => '2026-1',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-03-31',
+        'estado_sem' => 'CERRADO',
+    ]);
+
+    $procesoHistorico = Proceso::query()->create([
+        'id_semestre' => $semestreHistorico->id_sem,
+        'codigo_pro' => 'ordinario_2026_1',
+        'nombre_pro' => 'ORDINARIO',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-03-15',
+        'estado_pro' => 'CERRADO',
+    ]);
+
+    $tipoExpediente = crearTipoExpedienteRequisito(7);
+
+    RequisitoExpediente::query()->create([
+        'id_proceso' => $procesoHistorico->id_pro,
+        'id_tipo_expediente' => $tipoExpediente->id_tex,
+        'obligatorio_rex' => true,
+        'estado_rex' => 'HABILITADO',
+    ]);
+
+    $procesoActual = crearProcesoRequisito(2);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.requisitos')
+        ->assertSee($semestreHistorico->nombre_sem)
+        ->assertSee($procesoHistorico->nombre_pro)
+        ->assertSee($procesoActual->semestre->nombre_sem)
+        ->set('idSemestre', (string) $semestreHistorico->id_sem)
+        ->assertSee($procesoHistorico->nombre_pro);
+});
+
 test('authorized users can update a requisito', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosRequisito($usuario, ['requisito_expediente_indice', 'requisito_expediente_editar']);

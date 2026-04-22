@@ -172,6 +172,53 @@ test('authorized users can register a regla de pago', function () {
     ]);
 });
 
+test('new enabled procesos are available in regla pago form even without reglas registradas', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReglaPago($usuario, ['regla_pago_indice', 'regla_pago_crear']);
+
+    $contexto = crearContextoReglaPago(9);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.reglas-pago')
+        ->call('cargarReglaPago')
+        ->assertSee($contexto['proceso']->nombre_pro);
+});
+
+test('regla pago filters include current enabled semestre and historical semestre with reglas', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReglaPago($usuario, ['regla_pago_indice']);
+
+    $contextoHistorico = crearContextoReglaPago(10);
+    $contextoHistorico['semestre']->update(['estado_sem' => 'CERRADO']);
+    $contextoHistorico['proceso']->update(['estado_pro' => 'CERRADO']);
+
+    ReglaPago::query()->create([
+        'id_concepto_pago' => $contextoHistorico['conceptoPago']->id_cpg,
+        'id_proceso' => $contextoHistorico['proceso']->id_pro,
+        'id_modalidad_admision' => null,
+        'id_convenio_proceso' => null,
+        'monto_total_rpa' => 500,
+        'permite_cuotas_rpa' => false,
+        'monto_minimo_primera_cuota_rpa' => 0,
+        'numero_maximo_cuotas_rpa' => 1,
+        'requiere_pago_completo_rpa' => true,
+        'vigente_desde_rpa' => '2026-01-10',
+        'vigente_hasta_rpa' => '2026-03-15',
+        'estado_rpa' => 'HABILITADO',
+    ]);
+
+    $contextoActual = crearContextoReglaPago(11);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.reglas-pago')
+        ->assertSee($contextoHistorico['semestre']->nombre_sem)
+        ->assertSee($contextoActual['semestre']->nombre_sem)
+        ->set('idSemestre', (string) $contextoActual['semestre']->id_sem)
+        ->assertSee($contextoActual['proceso']->nombre_pro);
+});
+
 test('authorized users can update a regla de pago', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosReglaPago($usuario, ['regla_pago_indice', 'regla_pago_editar']);
