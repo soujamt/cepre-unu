@@ -139,6 +139,91 @@ test('authorized users can register a convenio', function () {
     ]);
 });
 
+test('new enabled procesos are available in convenio form even without convenios registrados', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosConvenio($usuario, ['convenio_indice', 'convenio_crear']);
+
+    $proceso = crearProcesoConvenio(9);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.convenios')
+        ->call('cargarConvenio')
+        ->assertSee($proceso->nombre_pro);
+});
+
+test('historical convenio filters include closed semestre and its proceso', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosConvenio($usuario, ['convenio_indice']);
+
+    $proceso = crearProcesoConvenio(10);
+    $proceso->semestre->update(['estado_sem' => 'CERRADO']);
+    $proceso->update(['estado_pro' => 'CERRADO']);
+
+    $convenio = Convenio::query()->create([
+        'codigo_con' => 'CONV_HIST',
+        'nombre_con' => 'CONVENIO HISTORICO',
+        'tipo_beneficio_con' => 'DESCUENTO',
+        'monto_descuento_con' => 100,
+        'estado_con' => 'HABILITADO',
+    ]);
+
+    ConvenioProceso::query()->create([
+        'id_convenio' => $convenio->id_con,
+        'id_proceso' => $proceso->id_pro,
+        'fecha_inicio_cpr' => '2026-01-10',
+        'fecha_fin_cpr' => '2026-03-15',
+        'cupo_maximo_cpr' => 50,
+        'cupo_usado_cpr' => 0,
+        'estado_cpr' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.convenios')
+        ->assertSee($proceso->semestre->nombre_sem)
+        ->assertSee($proceso->nombre_pro)
+        ->set('idSemestre', (string) $proceso->id_semestre)
+        ->assertSee($proceso->nombre_pro);
+});
+
+test('convenio filters include current enabled semestre even without convenios and historical semestre with records', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosConvenio($usuario, ['convenio_indice']);
+
+    $procesoHistorico = crearProcesoConvenio(11);
+    $procesoHistorico->semestre->update(['estado_sem' => 'CERRADO']);
+    $procesoHistorico->update(['estado_pro' => 'CERRADO']);
+
+    $convenio = Convenio::query()->create([
+        'codigo_con' => 'CONV_MIX',
+        'nombre_con' => 'CONVENIO MIXTO',
+        'tipo_beneficio_con' => 'DESCUENTO',
+        'monto_descuento_con' => 100,
+        'estado_con' => 'HABILITADO',
+    ]);
+
+    ConvenioProceso::query()->create([
+        'id_convenio' => $convenio->id_con,
+        'id_proceso' => $procesoHistorico->id_pro,
+        'fecha_inicio_cpr' => '2026-01-10',
+        'fecha_fin_cpr' => '2026-03-15',
+        'cupo_maximo_cpr' => 50,
+        'cupo_usado_cpr' => 0,
+        'estado_cpr' => 'HABILITADO',
+    ]);
+
+    $procesoActual = crearProcesoConvenio(12);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.convenios')
+        ->assertSee($procesoHistorico->semestre->nombre_sem)
+        ->assertSee($procesoActual->semestre->nombre_sem)
+        ->set('idSemestre', (string) $procesoActual->id_semestre)
+        ->assertSee($procesoActual->nombre_pro);
+});
+
 test('authorized users can update a convenio', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConvenio($usuario, ['convenio_indice', 'convenio_editar']);

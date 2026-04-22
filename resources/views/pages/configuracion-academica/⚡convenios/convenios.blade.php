@@ -33,7 +33,7 @@
         <div class="w-full sm:w-52">
             <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
                 <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
+                @foreach ($this->semestresFiltroDisponibles as $semestre)
                     <option wire:key="semestre-convenio-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
                         {{ $semestre->nombre_sem }}
                     </option>
@@ -42,9 +42,13 @@
         </div>
 
         <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+            <x-ui.select
+                wire:model.live="idProceso"
+                wire:key="convenios-proceso-filtro-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}"
+                placeholder="Filtrar por proceso"
+            >
                 <option value="">Todos los procesos</option>
-                @foreach ($this->procesosDisponibles as $proceso)
+                @foreach ($this->procesosFiltroDisponibles as $proceso)
                     <option wire:key="proceso-convenio-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
                         {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
                     </option>
@@ -67,8 +71,14 @@
                 <flux:menu keep-open class="dark:bg-zinc-800">
                     @foreach ($this->estados() as $estado)
                         <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                            <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
-                                <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
+                            <div
+                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                            >
+                                <x-ui.icon
+                                    :name="$estado->getIcon()"
+                                    size="4"
+                                    class="text-{{ $estado->getColor() }}-500"
+                                />
                             </div>
                             {{ ucfirst(strtolower($estado->getNombre())) }}
                         </flux:menu.checkbox>
@@ -79,18 +89,21 @@
                         @if ($idSemestre !== '' || $idProceso !== '')
                             <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
                                 <x-slot name="icon">
-                                    <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
                                         <x-ui.icon name="x" size="4" />
                                     </div>
                                 </x-slot>
                                 Limpiar filtros academicos
                             </flux:menu.item>
                         @endif
-
                         @if (count($this->estadosSeleccionados) > 0)
                             <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                                 <x-slot name="icon">
-                                    <div class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black">
+                                    <div
+                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
+                                    >
                                         <x-ui.icon name="trash" size="4" />
                                     </div>
                                 </x-slot>
@@ -102,7 +115,7 @@
             </flux:dropdown>
         </div>
 
-        @permiso('convenio_crear')
+        @permiso ('convenio_crear')
             <flux:button class="ms-auto w-full font-normal lg:w-auto" variant="primary" wire:click="cargarConvenio">
                 <x-slot name="icon">
                     <x-ui.icon name="plus" size="5" class="text-white" />
@@ -133,43 +146,66 @@
                 @forelse ($this->convenios as $convenioProceso)
                     <x-table.row>
                         <x-table.cell>{{ $this->convenios->firstItem() + $loop->index }}</x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="py-3 whitespace-normal">
                             <div class="space-y-1">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $convenioProceso->convenio?->nombre_con }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $convenioProceso->convenio?->codigo_con }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $convenioProceso->convenio?->nombre_con }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $convenioProceso->convenio?->codigo_con }}
+                                </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="py-3 whitespace-normal">
                             <div class="space-y-1">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $convenioProceso->proceso?->nombre_pro }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $convenioProceso->proceso?->semestre?->nombre_sem }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $convenioProceso->proceso?->nombre_pro }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $convenioProceso->proceso?->semestre?->nombre_sem }}
+                                </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="py-3 whitespace-normal">
                             <div class="space-y-2">
-                                <flux:badge color="{{ $convenioProceso->convenio?->tipo_beneficio_con?->getColor() ?? 'zinc' }}" size="lg">
+                                <flux:badge
+                                    color="{{ $convenioProceso->convenio?->tipo_beneficio_con?->getColor() ?? 'zinc' }}"
+                                    size="lg"
+                                >
                                     {{ $convenioProceso->convenio?->tipo_beneficio_con?->getNombre() ?? 'SIN BENEFICIO' }}
                                 </flux:badge>
                                 @if ($convenioProceso->convenio?->monto_descuento_con)
-                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">Monto: S/ {{ number_format((float) $convenioProceso->convenio->monto_descuento_con, 2) }}</div>
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                        Monto: S/ {{ number_format((float) $convenioProceso->convenio->monto_descuento_con, 2) }}
+                                    </div>
                                 @elseif ($convenioProceso->convenio?->porcentaje_descuento_con)
-                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">Porcentaje: {{ number_format((float) $convenioProceso->convenio->porcentaje_descuento_con, 2) }} %</div>
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                        Porcentaje: {{ number_format((float) $convenioProceso->convenio->porcentaje_descuento_con, 2) }} %
+                                    </div>
                                 @endif
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="py-3 whitespace-normal">
                             <div class="space-y-1">
-                                <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $convenioProceso->cupo_maximo_cpr }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">Usado: {{ $convenioProceso->cupo_usado_cpr }}</div>
+                                <div class="font-medium text-zinc-800 dark:text-zinc-100">
+                                    {{ $convenioProceso->cupo_maximo_cpr }}
+                                </div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    Usado: {{ $convenioProceso->cupo_usado_cpr }}
+                                </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-3">
+                        <x-table.cell class="py-3 whitespace-normal">
                             <div class="space-y-1">
                                 <div>{{ $convenioProceso->fecha_inicio_cpr?->format('d/m/Y') }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $convenioProceso->fecha_fin_cpr?->format('d/m/Y') }}</div>
+                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
+                                    {{ $convenioProceso->fecha_fin_cpr?->format('d/m/Y') }}
+                                </div>
                             </div>
                         </x-table.cell>
-                        <x-table.cell>{{ $convenioProceso->inscripciones_count + $convenioProceso->reglas_pago_count }}</x-table.cell>
+                        <x-table.cell>
+                            {{ $convenioProceso->inscripciones_count + $convenioProceso->reglas_pago_count }}</x-table.cell
+                        >
                         <x-table.cell>
                             <flux:badge color="{{ $convenioProceso->estado_cpr->getColor() }}" size="lg">
                                 <x-slot name="icon">
@@ -182,11 +218,16 @@
                         <x-table.cell align="end">
                             @if ($puedeGestionarAcciones)
                                 <flux:dropdown>
-                                    <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
+                                    <flux:button
+                                        icon:trailing="chevron-down"
+                                        size="sm"
+                                        variant="filled"
+                                        class="font-normal"
+                                    >
                                         Acciones
                                     </flux:button>
                                     <flux:menu>
-                                        @permiso('convenio_editar')
+                                        @permiso ('convenio_editar')
                                             <flux:menu.item wire:click="cargarConvenio({{ $convenioProceso->id_cpr }})">
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="pencil" size="4" class="me-2" />
@@ -195,8 +236,10 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('convenio_estado')
-                                            <flux:menu.item wire:click="$js.cargarAlertaEstado({{ $convenioProceso->id_cpr }}, '{{ $convenioProceso->convenio?->nombre_con }}')">
+                                        @permiso ('convenio_estado')
+                                            <flux:menu.item
+                                                wire:click="$js.cargarAlertaEstado({{ $convenioProceso->id_cpr }}, '{{ $convenioProceso->convenio?->nombre_con }}')"
+                                            >
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
                                                 </x-slot>
@@ -204,7 +247,7 @@
                                             </flux:menu.item>
                                         @endpermiso
 
-                                        @permiso('convenio_eliminar')
+                                        @permiso ('convenio_eliminar')
                                             <flux:menu.item
                                                 variant="danger"
                                                 wire:click="$js.cargarAlertaEliminar({{ $convenioProceso->id_cpr }}, '{{ $convenioProceso->convenio?->nombre_con }}')"
@@ -303,7 +346,9 @@
                                 floating
                             >
                                 @foreach ($this->tiposBeneficio() as $tipoBeneficio)
-                                    <option value="{{ $tipoBeneficio->value }}">{{ $tipoBeneficio->getNombre() }}</option>
+                                    <option value="{{ $tipoBeneficio->value }}">
+                                        {{ $tipoBeneficio->getNombre() }}
+                                    </option>
                                 @endforeach
                             </x-ui.select>
 
@@ -343,8 +388,11 @@
                                 floating
                             >
                                 <option value="">Seleccionar proceso</option>
-                                @foreach ($this->procesosDisponibles as $proceso)
-                                    <option wire:key="convenio-proceso-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
+                                @foreach ($this->procesosFormularioDisponibles as $proceso)
+                                    <option
+                                        wire:key="convenio-proceso-{{ $proceso->id_pro }}"
+                                        value="{{ $proceso->id_pro }}"
+                                    >
                                         {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
                                     </option>
                                 @endforeach
@@ -423,7 +471,8 @@
             this.$dispatch('alert', {
                 type: 'error',
                 title: 'Atencion',
-                message: 'Â¿Esta seguro de que desea eliminar el convenio "' + nombre + '"? Esta accion es irreversible.',
+                message:
+                    'Â¿Esta seguro de que desea eliminar el convenio "' + nombre + '"? Esta accion es irreversible.',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Eliminar',
