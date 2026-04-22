@@ -65,7 +65,7 @@ test('resolver indicates when there is no active process for the current date', 
     $contexto = app(ProcesoInscripcionResolver::class)->resolver();
 
     expect($contexto['disponible'])->toBeFalse()
-        ->and($contexto['mensaje'])->toBe('No hay un proceso de inscripcion activo en este momento.')
+        ->and($contexto['mensaje'])->toBe('El ultimo proceso de inscripcion cerro el 30/04/2026.')
         ->and($contexto['proceso'])->toBeNull();
 
     expect(Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail()->estado_pro)

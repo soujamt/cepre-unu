@@ -2511,6 +2511,17 @@ class extends Component
         $convenioProceso = $query->first();
 
         if ($convenioProceso === null) {
+            $convenioVencido = ConvenioProceso::query()
+                ->with('convenio')
+                ->where('id_cpr', $idConvenioProceso)
+                ->first();
+
+            if ($convenioVencido?->fecha_fin_cpr !== null) {
+                throw new RuntimeException(
+                    'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el '.$convenioVencido->fecha_fin_cpr->format('d/m/Y').'.'
+                );
+            }
+
             throw new RuntimeException('El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo.');
         }
 
@@ -2563,6 +2574,16 @@ class extends Component
             ->first();
 
         if ($reglaPago === null) {
+            $reglaVencida = ReglaPago::query()
+                ->where('id_rpa', $idReglaPago)
+                ->first();
+
+            if ($reglaVencida?->vigente_hasta_rpa !== null) {
+                throw new RuntimeException(
+                    'La regla de pago seleccionada ya no se encuentra vigente para esta inscripción. Su vigencia terminó el '.$reglaVencida->vigente_hasta_rpa->format('d/m/Y').'.'
+                );
+            }
+
             throw new RuntimeException('La regla de pago seleccionada ya no se encuentra vigente para esta inscripción.');
         }
 

@@ -34,6 +34,35 @@ class ProcesoInscripcionResolver
             ->first();
 
         if ($proceso === null) {
+            $ultimoProcesoCerrado = Proceso::query()
+                ->with('semestre')
+                ->whereDate('fecha_fin_pro', '<', $fechaReferencia)
+                ->orderByDesc('fecha_fin_pro')
+                ->first();
+
+            if ($ultimoProcesoCerrado?->fecha_fin_pro !== null) {
+                return [
+                    'disponible' => false,
+                    'mensaje' => 'El ultimo proceso de inscripcion cerro el '.$ultimoProcesoCerrado->fecha_fin_pro->format('d/m/Y').'.',
+                    'proceso' => null,
+                ];
+            }
+
+            $proximoProceso = Proceso::query()
+                ->with('semestre')
+                ->where('estado_pro', EstadoProceso::Habilitado->value)
+                ->whereDate('fecha_inicio_pro', '>', $fechaReferencia)
+                ->orderBy('fecha_inicio_pro')
+                ->first();
+
+            if ($proximoProceso?->fecha_inicio_pro !== null) {
+                return [
+                    'disponible' => false,
+                    'mensaje' => 'El proximo proceso de inscripcion inicia el '.$proximoProceso->fecha_inicio_pro->format('d/m/Y').'.',
+                    'proceso' => null,
+                ];
+            }
+
             return [
                 'disponible' => false,
                 'mensaje' => 'No hay un proceso de inscripcion activo en este momento.',

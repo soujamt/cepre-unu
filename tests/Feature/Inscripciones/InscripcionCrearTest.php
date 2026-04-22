@@ -1546,7 +1546,7 @@ test('confirmarPasoPago is blocked when convenio is no longer active for the ins
         ->set('pagoForm.fecha_pago', '2026-04-14')
         ->set('pagoForm.id_detalle_banco', (string) $detalle->id_ibd)
         ->call('confirmarPasoPago')
-        ->assertDispatched('toast', message: 'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo.', type: 'warning');
+        ->assertDispatched('toast', message: 'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el 10/04/2026.', type: 'warning');
 
     Carbon\Carbon::setTestNow();
 });
