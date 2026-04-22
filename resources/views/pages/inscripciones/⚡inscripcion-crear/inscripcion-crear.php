@@ -499,6 +499,13 @@ class extends Component
     }
 
     #[Computed]
+    public function inicioInscripcionBloqueado(): bool
+    {
+        return $this->inscripcionId === null
+            && ! $this->contextoProcesoPostulacion()['disponible'];
+    }
+
+    #[Computed]
     public function ofertasProcesoDisponibles(): Illuminate\Database\Eloquent\Collection
     {
         $proceso = $this->procesoPostulacionActivo();
@@ -1261,6 +1268,10 @@ class extends Component
 
     public function guardarPasoPersonal(): void
     {
+        if (! $this->validarInicioInscripcionDisponible()) {
+            return;
+        }
+
         $this->normalizarEstadoPersonaForm();
         $data = $this->validate();
 
@@ -1397,6 +1408,10 @@ class extends Component
 
     public function guardarPasoGeneral(): void
     {
+        if (! $this->validarInicioInscripcionDisponible()) {
+            return;
+        }
+
         $this->normalizarEstadoGeneralForm();
 
         $data = $this->validate(
@@ -1772,6 +1787,16 @@ class extends Component
             return;
         }
 
+        if ($this->inicioInscripcionBloqueado && $paso > 1) {
+            $this->dispatch(
+                'toast',
+                message: 'No hay un proceso de inscripcion activo en este momento. No se puede iniciar una nueva inscripcion.',
+                type: 'warning'
+            );
+
+            return;
+        }
+
         if ($paso > 1 && $this->personaId === null) {
             $this->dispatch('toast', message: 'Primero debe guardar la informacion personal.', type: 'warning');
 
@@ -2062,6 +2087,21 @@ class extends Component
     private function refrescarContextoProcesoPostulacion(): array
     {
         return $this->contextoProcesoPostulacionCache = app(ProcesoInscripcionResolver::class)->resolver();
+    }
+
+    private function validarInicioInscripcionDisponible(): bool
+    {
+        if (! $this->inicioInscripcionBloqueado) {
+            return true;
+        }
+
+        $this->dispatch(
+            'toast',
+            message: 'No hay un proceso de inscripcion activo en este momento. No se puede iniciar una nueva inscripcion.',
+            type: 'warning'
+        );
+
+        return false;
     }
 
     private function generarCodigoInscripcion(Inscripcion $inscripcion): string

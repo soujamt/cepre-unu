@@ -243,7 +243,18 @@ test('users can register personal information for a new inscripcion draft', func
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
-    $catalogos = crearCatalogosPasoPersonal();
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $catalogos = [
+        'tipoDocumento' => TipoDocumento::query()->where('codigo_tdo', '1')->firstOrFail(),
+        'estadoCivil' => EstadoCivil::query()->orderBy('id_eci')->firstOrFail(),
+        'pais' => Pais::query()->orderBy('id_pai')->firstOrFail(),
+        'nacionalidad' => Nacionalidad::query()->orderBy('id_nac')->firstOrFail(),
+        'ubigeo' => Ubigeo::query()->where('id_ubi', '250101')->firstOrFail(),
+        'identidadEtnica' => IdentidadEtnica::query()->orderBy('id_iet')->firstOrFail(),
+        'lenguaNativa' => LenguaNativa::query()->orderBy('id_lna')->firstOrFail(),
+        'tipoDiscapacidad' => TipoDiscapacidad::query()->orderBy('id_tdi')->firstOrFail(),
+    ];
 
     $this->actingAs($usuario);
 
@@ -579,9 +590,9 @@ test('users can register general information and receive a warning when there is
         ->set('generalForm.observacion', 'OBSERVACION GENERAL')
         ->call('guardarPasoGeneral')
         ->assertHasNoErrors()
-        ->assertSet('pasoActual', 3)
+        ->assertSet('pasoActual', 2)
         ->assertSet('generalForm.nombre_colegio_extranjero', '')
-        ->assertDispatched('toast', message: 'Informacion general guardada. No hay un proceso de inscripcion activo en este momento.', type: 'warning');
+        ->assertDispatched('toast', message: 'No hay un proceso de inscripcion activo en este momento. No se puede iniciar una nueva inscripcion.', type: 'warning');
 });
 
 test('general information validates future graduation year and required postulation counts', function () {
@@ -623,6 +634,7 @@ test('general information validates future graduation year and required postulat
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
+        ->set('inscripcionId', 1)
         ->set('pasoActual', 2)
         ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 1))
         ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
@@ -678,6 +690,7 @@ test('cannot jump to postulacion step when general information is invalid', func
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
+        ->set('inscripcionId', 1)
         ->set('pasoActual', 2)
         ->set('generalForm.anio_graduacion', '')
         ->call('irPaso', 3)
@@ -874,14 +887,14 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     ]);
 
     $this->actingAs($usuario)
-        ->get(route('inscripciones.continuar', $inscripcion->id_ins))
+        ->get(route('inscripciones.continuar', encode($inscripcion->id_ins)))
         ->assertOk()
         ->assertSee('NUEVA INSCRIPCION');
 
     $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
     $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col}";
 
-    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => $inscripcion->id_ins])
+    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
         ->assertSet('inscripcionId', $inscripcion->id_ins)
         ->assertSet('personaId', $persona->id_per)
         ->assertSet('pasoActual', 4)
@@ -903,6 +916,17 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->assertSet('pagoForm.numero_documento', '46027897')
         ->assertSet('colegioLabel', $colegioLabel)
         ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: $colegio->id_col, label: $colegioLabel);
+});
+
+test('new inscripcion page shows blocked state when there is no active process', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.crear'))
+        ->assertOk()
+        ->assertSee('Registro temporalmente no disponible')
+        ->assertSee('No hay un proceso de inscripcion activo en este momento.');
 });
 
 test('users can validate a bank payment from the payment step and continue to expedientes', function () {
