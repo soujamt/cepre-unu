@@ -58,7 +58,7 @@
         </div>
 
         <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+            <x-ui.select wire:model.live="idProceso" wire:key="ofertas-proceso-select-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
                     <option wire:key="proceso-oferta-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">

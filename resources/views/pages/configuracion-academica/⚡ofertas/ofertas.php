@@ -171,7 +171,7 @@ class extends Component
     public function semestresDisponibles(): Collection
     {
         return Semestre::query()
-            ->whereHas('procesos.procesosOferta')
+            ->whereHas('procesos')
             ->orderByDesc('fecha_inicio_inscripcion_sem')
             ->orderByDesc('id_sem')
             ->get();
@@ -183,8 +183,6 @@ class extends Component
         return Proceso::query()
             ->with('semestre')
             ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
-            ->whereHas('procesosOferta')
-            ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->orderByDesc('id_pro')
             ->get();
     }

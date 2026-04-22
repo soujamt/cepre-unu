@@ -209,6 +209,35 @@ test('users can filter ofertas base by modalidad and lugar de inscripcion', func
         ->assertDontSee((string) $contextoA['ofertaBase']->codigo_externo_ofb);
 });
 
+test('closed semester loads its procesos in ofertas filters', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosOferta($usuario, ['oferta_indice']);
+
+    $semestre = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_i',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-03-31',
+        'estado_sem' => 'CERRADO',
+    ]);
+
+    $proceso = Proceso::query()->create([
+        'id_semestre' => $semestre->id_sem,
+        'codigo_pro' => 'proceso_ordinario_2026_i',
+        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-03-15',
+        'estado_pro' => 'CERRADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.ofertas')
+        ->assertSee($semestre->nombre_sem)
+        ->set('idSemestre', (string) $semestre->id_sem)
+        ->assertSee($proceso->nombre_pro);
+});
+
 test('asignar ofertas page waits for modalidad and lugar before showing results', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_crear']);
