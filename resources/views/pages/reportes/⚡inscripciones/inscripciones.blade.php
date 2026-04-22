@@ -32,19 +32,21 @@
                     Limpiar filtros
                 </flux:button>
 
-                <flux:button
-                    variant="primary"
-                    color="green"
-                    wire:click="exportarExcel"
-                    wire:loading.attr="disabled"
-                    wire:target="exportarExcel"
-                    class="font-normal"
-                >
-                    <x-slot name="icon">
-                        <x-ui.icon name="file-xls" size="5" />
-                    </x-slot>
-                    Exportar Excel
-                </flux:button>
+                @permiso ('reporte_inscripcion_exportar_excel')
+                    <flux:button
+                        variant="primary"
+                        color="green"
+                        wire:click="exportarExcel"
+                        wire:loading.attr="disabled"
+                        wire:target="exportarExcel"
+                        class="font-normal"
+                    >
+                        <x-slot name="icon">
+                            <x-ui.icon name="file-xls" size="5" />
+                        </x-slot>
+                        Exportar Excel
+                    </flux:button>
+                @endpermiso
             </div>
         </div>
 

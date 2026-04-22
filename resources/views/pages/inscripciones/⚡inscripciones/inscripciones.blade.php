@@ -402,7 +402,7 @@
                                     @endif
 
                                     @if ($this->puedeContinuarRegistro($inscripcion))
-                                        @permiso ('pago_crear')
+                                        @permiso ('inscripcion_crear')
                                             <flux:menu.separator />
                                             <flux:menu.item
                                                 href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"

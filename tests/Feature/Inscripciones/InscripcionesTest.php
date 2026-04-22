@@ -371,7 +371,7 @@ test('authorized users can access inscripcion detail page even when the inscripc
 
 test('list shows detail action for active and pending inscripciones and continue action for pending ones', function () {
     $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'pago_crear']);
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_crear']);
 
     crearContextoListadoInscripcion(5, 'ACTIVO');
     crearContextoListadoInscripcion(6, 'PENDIENTE');
@@ -382,6 +382,19 @@ test('list shows detail action for active and pending inscripciones and continue
         ->set('idSemestre', '')
         ->assertSee('Ver detalle')
         ->assertSee('Continuar registro');
+});
+
+test('report list does not show continue action when user lacks inscripcion crear permiso', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    crearContextoListadoInscripcion(61, 'PENDIENTE');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idSemestre', '')
+        ->assertDontSee('Continuar registro');
 });
 
 test('users can export inscripciones to excel preserving current filters', function () {

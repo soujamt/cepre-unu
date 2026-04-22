@@ -30,6 +30,7 @@ use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
+use App\Support\InscripcionPagoManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -342,4 +343,39 @@ test('users can validate an imported payment from the validation page', function
         'saldo_iop' => 250.00,
         'estado_iop' => 'PARCIAL',
     ]);
+});
+
+test('searching imported payments returns no results when the operation does not match', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos-validar')
+        ->call('seleccionarObligacion', $contexto['obligacion']->id_iop)
+        ->set('numeroOperacionBusqueda', '99999')
+        ->set('fechaPagoBusqueda', '2026-03-19')
+        ->call('buscarPagos')
+        ->assertDontSee('41676')
+        ->assertDontSee('LUCY BETTY FALCON ROJAS');
+});
+
+test('users cannot validate an imported payment that was already associated', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+    $manager = app(InscripcionPagoManager::class);
+
+    $manager->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos-validar')
+        ->call('seleccionarObligacion', $contexto['obligacion']->fresh()->id_iop)
+        ->set('idDetalleSeleccionado', $contexto['detalle']->id_ibd)
+        ->call('confirmarPago')
+        ->assertDispatched('toast', message: 'El pago bancario seleccionado ya no se encuentra disponible.', type: 'error');
 });

@@ -154,3 +154,46 @@ test('the same txt file cannot be imported twice', function () {
     expect(ImportacionBanco::query()->count())->toBe(1);
     expect(ImportacionBanco::query()->first()?->detalles()->count())->toBe(2);
 });
+
+test('invalid txt files are rejected without creating imports', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC-INVALIDO.TXT', 'contenido invalido'))
+        ->call('importar')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'No se pudo importar el archivo TXT. Verifique el formato e intente nuevamente.', type: 'error');
+
+    expect(ImportacionBanco::query()->count())->toBe(0);
+});
+
+test('txt imports with inconsistent totals are stored as observado', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
+
+    $contenidoObservado = collect([
+        '0120154598244000PEN20260319001104410100008635',
+        '02                              00047467212                                     0000000000450000000000000450000000000000000007799041670202603190204WNET ',
+        '03000000001000000000040000000000000040000000000000000000',
+    ])
+        ->map(fn (string $line): string => str_pad($line, 152, ' '))
+        ->implode(PHP_EOL);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC-OBSERVADO.TXT', $contenidoObservado))
+        ->call('importar')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'Archivo TXT importado correctamente.', type: 'success');
+
+    $importacion = ImportacionBanco::query()->first();
+
+    expect($importacion)->not->toBeNull();
+    expect($importacion?->estado_iba->value)->toBe('OBSERVADO');
+    expect($importacion?->observacion_iba)->toBe('El archivo importado no cuadra con los totales reportados por el banco.');
+    expect($importacion?->detalles()->count())->toBe(1);
+});

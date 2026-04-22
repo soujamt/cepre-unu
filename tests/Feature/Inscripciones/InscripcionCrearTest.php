@@ -1070,6 +1070,198 @@ test('users can validate a bank payment from the payment step and continue to ex
     Carbon\Carbon::setTestNow();
 });
 
+test('users can complete a payment obligation with multiple cuotas from the wizard', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $tipoDocumento = TipoDocumento::query()
+        ->where('longitud_minima_tdo', 8)
+        ->where('longitud_maxima_tdo', 8)
+        ->firstOrFail();
+
+    $estadoCivil = EstadoCivil::query()->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $nacionalidad = Nacionalidad::query()->firstOrFail();
+    $ubigeo = Ubigeo::query()->firstOrFail();
+    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
+    $lenguaNativa = LenguaNativa::query()->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '46027897',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $estadoCivil->id_eci,
+        'id_pais_nacimiento' => $pais->id_pai,
+        'id_nacionalidad' => $nacionalidad->id_nac,
+        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
+        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => 'roxana@test.com',
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $identidadEtnica->id_iet,
+        'id_lengua_nativa' => $lenguaNativa->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $proceso = Proceso::query()
+        ->where('codigo_pro', 'ordinario_2026_1')
+        ->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with([
+            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
+            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+            'turno',
+        ])
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $reglaPago = ReglaPago::query()
+        ->where('id_proceso', $proceso->id_pro)
+        ->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))
+        ->firstOrFail();
+
+    $importacionPrimeraCuota = ImportacionBanco::query()->create([
+        'nombre_archivo_iba' => 'REC10768.TXT',
+        'hash_archivo_iba' => 'hash-cuota-1',
+        'moneda_iba' => 'PEN',
+        'fecha_importacion_iba' => '2026-04-15 08:00:00',
+        'fecha_lote_iba' => '2026-04-14',
+        'total_registros_iba' => 1,
+        'total_registros_reportado_iba' => 1,
+        'total_monto_iba' => 300.00,
+        'total_monto_reportado_iba' => 300.00,
+        'estado_iba' => EstadoImportacionBanco::Procesado,
+    ]);
+
+    $detallePrimeraCuota = ImportacionBancoDetalle::query()->create([
+        'id_importacion_banco' => $importacionPrimeraCuota->id_iba,
+        'numero_documento_ibd' => $persona->numero_documento_per,
+        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
+        'numero_operacion_raw_ibd' => '817041676',
+        'numero_operacion_visible_ibd' => '41676',
+        'numero_operacion_ibd' => '817041676',
+        'codigo_canal_ibd' => 'Y%G',
+        'codigo_oficina_ibd' => '01068',
+        'fecha_pago_ibd' => '2026-04-14',
+        'monto_ibd' => 300.00,
+        'texto_linea_ibd' => str_repeat('0', 152),
+        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
+    ]);
+
+    $importacionSegundaCuota = ImportacionBanco::query()->create([
+        'nombre_archivo_iba' => 'REC10769.TXT',
+        'hash_archivo_iba' => 'hash-cuota-2',
+        'moneda_iba' => 'PEN',
+        'fecha_importacion_iba' => '2026-04-18 08:00:00',
+        'fecha_lote_iba' => '2026-04-17',
+        'total_registros_iba' => 1,
+        'total_registros_reportado_iba' => 1,
+        'total_monto_iba' => 250.00,
+        'total_monto_reportado_iba' => 250.00,
+        'estado_iba' => EstadoImportacionBanco::Procesado,
+    ]);
+
+    $detalleSegundaCuota = ImportacionBancoDetalle::query()->create([
+        'id_importacion_banco' => $importacionSegundaCuota->id_iba,
+        'numero_documento_ibd' => $persona->numero_documento_per,
+        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
+        'numero_operacion_raw_ibd' => '817041999',
+        'numero_operacion_visible_ibd' => '41999',
+        'numero_operacion_ibd' => '817041999',
+        'codigo_canal_ibd' => 'Y%G',
+        'codigo_oficina_ibd' => '01068',
+        'fecha_pago_ibd' => '2026-04-17',
+        'monto_ibd' => 250.00,
+        'texto_linea_ibd' => str_repeat('1', 152),
+        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
+    ]);
+
+    $this->actingAs($usuario);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->call('guardarPasoPostulacion')
+        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
+        ->set('pagoForm.numero_operacion', '41676')
+        ->set('pagoForm.fecha_pago', '2026-04-14')
+        ->call('buscarPagosPasoPago')
+        ->assertSet('resultadoPagoDetalleIds', [$detallePrimeraCuota->id_ibd])
+        ->call('seleccionarDetallePago', $detallePrimeraCuota->id_ibd)
+        ->call('confirmarPasoPago')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 5);
+
+    $inscripcion = Inscripcion::query()->firstOrFail();
+    $obligacion = InscripcionObligacionPago::query()->where('id_inscripcion', $inscripcion->id_ins)->firstOrFail();
+
+    expect((float) $obligacion->monto_pagado_iop)->toBe(300.0)
+        ->and((float) $obligacion->saldo_iop)->toBe(250.0)
+        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Parcial);
+
+    Carbon\Carbon::setTestNow('2026-04-18 09:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
+        ->assertSet('pasoActual', 5)
+        ->set('pasoActual', 4)
+        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
+        ->set('pagoForm.numero_operacion', '41999')
+        ->set('pagoForm.fecha_pago', '2026-04-17')
+        ->call('buscarPagosPasoPago')
+        ->assertSet('resultadoPagoDetalleIds', [$detalleSegundaCuota->id_ibd])
+        ->call('seleccionarDetallePago', $detalleSegundaCuota->id_ibd)
+        ->call('confirmarPasoPago')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 5)
+        ->assertDispatched('toast', message: 'Pago validado correctamente. Puede continuar con los expedientes.', type: 'success');
+
+    $obligacion->refresh();
+    $pagos = InscripcionPago::query()
+        ->where('id_inscripcion_obligacion_pago', $obligacion->id_iop)
+        ->orderBy('numero_cuota_ipa')
+        ->get();
+
+    expect($pagos)->toHaveCount(2)
+        ->and($pagos->pluck('numero_cuota_ipa')->all())->toBe([1, 2])
+        ->and((float) $obligacion->monto_pagado_iop)->toBe(550.0)
+        ->and((float) $obligacion->saldo_iop)->toBe(0.0)
+        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Pagado);
+
+    expect($detallePrimeraCuota->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
+        ->and($detalleSegundaCuota->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado);
+
+    Carbon\Carbon::setTestNow();
+});
+
 test('users can save expediente review and activate the inscripcion when all required documents are approved', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);

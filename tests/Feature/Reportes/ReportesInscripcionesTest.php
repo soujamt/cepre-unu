@@ -401,3 +401,19 @@ test('users without exportar_excel permiso cannot export reporte inscripciones',
         ->call('exportarExcel')
         ->assertForbidden();
 });
+
+test('reportes page hides export button when user lacks exportar_excel permiso', function () {
+    Carbon::setTestNow('2026-04-17 09:30:00');
+
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReporteInscripcion($usuario, ['reporte_inscripcion_indice']);
+
+    crearContextoReporteInscripcion(13, 'ACTIVO');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::reportes.inscripciones')
+        ->assertDontSee('Exportar Excel');
+
+    Carbon::setTestNow();
+});
