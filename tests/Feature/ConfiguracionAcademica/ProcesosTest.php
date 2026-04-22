@@ -195,6 +195,33 @@ test('authorized users can change state of a proceso', function () {
     ]);
 });
 
+test('semester filter includes closed semestres for historical process queries', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosProceso($usuario, ['proceso_indice']);
+
+    $semestreCerrado = Semestre::query()->create([
+        'codigo_sem' => 'semestre_2026_i',
+        'nombre_sem' => 'SEMESTRE 2026-I',
+        'fecha_inicio_inscripcion_sem' => '2026-01-05',
+        'fecha_fin_inscripcion_sem' => '2026-03-31',
+        'estado_sem' => 'CERRADO',
+    ]);
+
+    Proceso::query()->create([
+        'id_semestre' => $semestreCerrado->id_sem,
+        'codigo_pro' => 'proceso_ordinario_2026_i',
+        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-03-15',
+        'estado_pro' => 'CERRADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.procesos')
+        ->assertSee($semestreCerrado->nombre_sem);
+});
+
 test('expired proceso is synchronized as cerrado when listing page is loaded', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice']);

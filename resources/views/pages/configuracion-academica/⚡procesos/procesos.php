@@ -200,7 +200,6 @@ class extends Component
         app(EstadoAcademicoSynchronizer::class)->sync();
 
         return Semestre::query()
-            ->where('estado_sem', EstadoProceso::Habilitado->value)
             ->orderByDesc('id_sem')
             ->get();
     }
