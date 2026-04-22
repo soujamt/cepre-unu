@@ -399,6 +399,24 @@
                                             </x-slot>
                                             Ver detalle
                                         </flux:menu.item>
+                                    @endif
+
+                                    @if ($this->puedeContinuarRegistro($inscripcion))
+                                        @permiso ('pago_crear')
+                                            <flux:menu.separator />
+                                            <flux:menu.item
+                                                href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
+                                                wire:navigate
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="note-pencil" size="4" class="me-2" />
+                                                </x-slot>
+                                                Continuar registro
+                                            </flux:menu.item>
+                                        @endpermiso
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
                                         @permiso ('inscripcion_estado')
                                             <flux:menu.separator />
                                             <flux:menu.item
@@ -411,20 +429,11 @@
                                                 Anular inscripcion
                                             </flux:menu.item>
                                         @endpermiso
-                                    @elseif ($this->puedeContinuarRegistro($inscripcion))
-                                        @permiso ('pago_crear')
-                                            <flux:menu.item
-                                                href="{{ route('inscripciones.continuar', encode($inscripcion->id_ins)) }}"
-                                                wire:navigate
-                                            >
-                                                <x-slot name="icon">
-                                                    <x-ui.icon name="note-pencil" size="4" class="me-2" />
-                                                </x-slot>
-                                                Continuar registro
-                                            </flux:menu.item>
-                                        @endpermiso
-                                    @else
+                                    @endif
+
+                                    @if (! $this->puedeContinuarRegistro($inscripcion) && $inscripcion->estado_ins !== App\Enums\EstadoInscripcion::Activo)
                                         @php ($accionEstado = $this->accionEstadoRegistro($inscripcion))
+                                        <flux:menu.separator />
                                         <flux:menu.item disabled>
                                             <x-slot name="icon">
                                                 <x-ui.icon :name="$accionEstado['icon']" size="4" class="me-2" />

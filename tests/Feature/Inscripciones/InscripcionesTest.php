@@ -349,7 +349,27 @@ test('authorized users can access inscripcion detail page', function () {
         ->assertSee($contextoActivo['proceso']->nombre_pro);
 });
 
-test('list shows detail action for active inscripciones and continue action for pending ones', function () {
+test('authorized users can access inscripcion detail page even when the inscripcion is pending or annulled', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    $contextoPendiente = crearContextoListadoInscripcion(41, 'PENDIENTE');
+    $contextoAnulado = crearContextoListadoInscripcion(42, 'ANULADO');
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.detalle', encode($contextoPendiente['inscripcion']->id_ins)))
+        ->assertOk()
+        ->assertSee($contextoPendiente['inscripcion']->codigo_ins)
+        ->assertSee($contextoPendiente['persona']->numero_documento_per);
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.detalle', encode($contextoAnulado['inscripcion']->id_ins)))
+        ->assertOk()
+        ->assertSee($contextoAnulado['inscripcion']->codigo_ins)
+        ->assertSee($contextoAnulado['persona']->numero_documento_per);
+});
+
+test('list shows detail action for active and pending inscripciones and continue action for pending ones', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'pago_crear']);
 

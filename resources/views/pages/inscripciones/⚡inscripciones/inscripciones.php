@@ -322,7 +322,11 @@ class extends Component
 
     public function puedeVerDetalleRegistro(Inscripcion $inscripcion): bool
     {
-        return $inscripcion->estado_ins === EstadoInscripcion::Activo;
+        return in_array($inscripcion->estado_ins, [
+            EstadoInscripcion::Activo,
+            EstadoInscripcion::Pendiente,
+            EstadoInscripcion::Anulado,
+        ], true);
     }
 
     public function tienePagoPorValidar(Inscripcion $inscripcion): bool
@@ -339,11 +343,15 @@ class extends Component
     {
         return match ($inscripcion->estado_ins) {
             EstadoInscripcion::Activo => [
-                'label' => 'Disponible en detalle',
+                'label' => 'Detalle disponible',
+                'icon' => 'eye',
+            ],
+            EstadoInscripcion::Pendiente => [
+                'label' => 'Detalle y continuación disponibles',
                 'icon' => 'eye',
             ],
             EstadoInscripcion::Anulado => [
-                'label' => 'Inscripcion anulada',
+                'label' => 'Disponible solo para consulta',
                 'icon' => 'x-circle',
             ],
             default => [
