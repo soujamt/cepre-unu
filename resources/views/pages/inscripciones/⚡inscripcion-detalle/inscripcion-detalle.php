@@ -215,11 +215,26 @@ class extends Component
         $detalle = $pago->importacionBancoDetalle;
 
         return implode(' | ', array_filter([
-            $detalle?->numero_documento_ibd,
+            $this->formatearDocumentoIdentidad($detalle?->numero_documento_ibd),
             $detalle?->numero_operacion_visible_ibd ?: $detalle?->numero_operacion_ibd,
             $pago->fecha_pago_ipa?->format('d/m/Y'),
             'S/ '.number_format((float) $pago->monto_ipa, 2),
         ]));
+    }
+
+    private function formatearDocumentoIdentidad(?string $numeroDocumento): string
+    {
+        if ($numeroDocumento === null || trim($numeroDocumento) === '') {
+            return 'SIN DOCUMENTO';
+        }
+
+        $numeroDocumento = trim($numeroDocumento);
+
+        if (preg_match('/^\d{1,8}$/', $numeroDocumento) === 1) {
+            return str_pad($numeroDocumento, 8, '0', STR_PAD_LEFT);
+        }
+
+        return $numeroDocumento;
     }
 
     public function urlArchivoExpediente(InscripcionExpediente $expediente): ?string

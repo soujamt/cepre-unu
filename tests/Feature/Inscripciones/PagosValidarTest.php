@@ -418,6 +418,38 @@ test('users can validate pending payments from a txt import by documento and pen
     expect($contexto['obligacion']->pagos()->count())->toBe(2);
 });
 
+test('pending txt payments match inscriptions when the bank document has leading zeros', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+
+    $contexto = crearContextoPagoValidar([
+        'numero_documento' => '122285',
+    ]);
+
+    $contexto['detalle']->forceFill([
+        'numero_documento_ibd' => '00122285',
+        'monto_ibd' => 550.00,
+    ])->save();
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
+        ->assertDispatched('toast', message: '1 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.', type: 'success');
+
+    $this->assertDatabaseHas('tbl_inscripcion_pago', [
+        'id_inscripcion_obligacion_pago' => $contexto['obligacion']->id_iop,
+        'id_importacion_banco_detalle' => $contexto['detalle']->id_ibd,
+        'monto_ipa' => 550.00,
+        'estado_validacion_ipa' => 'VERIFICADO',
+    ]);
+
+    $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
+        'id_ibd' => $contexto['detalle']->id_ibd,
+        'estado_ibd' => 'ASOCIADO',
+    ]);
+});
+
 test('searching imported payments returns no results when the operation does not match', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosPagoValidar($usuario, ['pago_crear']);

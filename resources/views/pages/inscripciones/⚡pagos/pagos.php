@@ -278,7 +278,7 @@ class extends Component
     public function detalleResumen(ImportacionBancoDetalle $detalle): string
     {
         $partes = [
-            $detalle->numero_documento_ibd ?: 'SIN DOCUMENTO',
+            $this->formatearDocumentoIdentidad($detalle->numero_documento_ibd),
             $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd ?: 'SIN OPERACION',
         ];
 
@@ -287,5 +287,20 @@ class extends Component
         }
 
         return Str::of(implode(' | ', $partes))->trim()->value();
+    }
+
+    private function formatearDocumentoIdentidad(?string $numeroDocumento): string
+    {
+        if ($numeroDocumento === null || trim($numeroDocumento) === '') {
+            return 'SIN DOCUMENTO';
+        }
+
+        $numeroDocumento = trim($numeroDocumento);
+
+        if (preg_match('/^\d{1,8}$/', $numeroDocumento) === 1) {
+            return str_pad($numeroDocumento, 8, '0', STR_PAD_LEFT);
+        }
+
+        return $numeroDocumento;
     }
 };

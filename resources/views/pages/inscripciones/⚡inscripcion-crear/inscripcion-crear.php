@@ -1994,7 +1994,7 @@ class extends Component
     public function resumenDetallePago(ImportacionBancoDetalle $detalle): string
     {
         return collect([
-            $detalle->numero_documento_ibd ?: 'SIN DOCUMENTO',
+            $this->formatearDocumentoIdentidad($detalle->numero_documento_ibd),
             $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd ?: 'SIN OPERACION',
             $detalle->fecha_pago_ibd?->format('d/m/Y'),
             'S/ '.number_format((float) $detalle->monto_ibd, 2),
@@ -2672,5 +2672,20 @@ class extends Component
         $valor = trim((string) $valor);
 
         return $valor !== '' ? $valor : null;
+    }
+
+    private function formatearDocumentoIdentidad(?string $numeroDocumento): string
+    {
+        if ($numeroDocumento === null || trim($numeroDocumento) === '') {
+            return 'SIN DOCUMENTO';
+        }
+
+        $numeroDocumento = trim($numeroDocumento);
+
+        if (preg_match('/^\d{1,8}$/', $numeroDocumento) === 1) {
+            return str_pad($numeroDocumento, 8, '0', STR_PAD_LEFT);
+        }
+
+        return $numeroDocumento;
     }
 };

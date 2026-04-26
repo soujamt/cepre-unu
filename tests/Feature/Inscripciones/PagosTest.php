@@ -132,6 +132,10 @@ test('authorized users can import a valid bank txt file', function () {
         'monto_ibd' => 30.00,
         'estado_ibd' => 'PENDIENTE',
     ]);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->call('verDetalle', $importacion?->id_iba)
+        ->assertSee('07450332');
 });
 
 test('the same txt file cannot be imported twice', function () {
