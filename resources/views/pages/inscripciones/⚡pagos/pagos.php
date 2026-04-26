@@ -5,6 +5,7 @@ use App\Enums\EstadoImportacionBancoDetalle;
 use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
 use App\Support\BancoTxtParser;
+use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -194,11 +196,49 @@ class extends Component
         $this->detalleImportacionId = $idImportacion;
     }
 
+    #[On('pago-validar-pendientes')]
+    public function validarPagosPendientes(?int $id_importacion = null): void
+    {
+        $this->autorizarPermiso('pago', 'crear');
+
+        if ($id_importacion === null) {
+            $this->dispatch('toast', message: 'ID de importacion no proporcionado.', type: 'error');
+
+            return;
+        }
+
+        $resultado = app(InscripcionPagoManager::class)->validarPendientesDeImportacion($id_importacion);
+
+        unset($this->importaciones);
+        unset($this->detalleImportacionSeleccionada);
+
+        if ($resultado['asociados'] === 0) {
+            $this->dispatch(
+                'toast',
+                message: 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.',
+                type: 'warning',
+            );
+
+            return;
+        }
+
+        $this->dispatch(
+            'toast',
+            message: "{$resultado['asociados']} pago(s) pendiente(s) asociado(s). {$resultado['pendientes']} quedan por revisar.",
+            type: 'success',
+        );
+    }
+
     #[Computed]
     public function importaciones(): LengthAwarePaginator
     {
         return ImportacionBanco::query()
-            ->withCount('detalles')
+            ->withCount([
+                'detalles',
+                'detalles as detalles_pendientes_count' => fn (Builder $query) => $query
+                    ->where('estado_ibd', EstadoImportacionBancoDetalle::Pendiente->value)
+                    ->whereDoesntHave('inscripcionPago'),
+            ])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = trim($this->buscar);
 

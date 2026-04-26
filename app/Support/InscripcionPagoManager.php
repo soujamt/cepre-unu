@@ -107,6 +107,49 @@ class InscripcionPagoManager
         });
     }
 
+    /**
+     * @return array{asociados: int, omitidos: int, pendientes: int}
+     */
+    public function validarPendientesDeImportacion(int $idImportacionBanco): array
+    {
+        $asociados = 0;
+        $omitidos = 0;
+
+        ImportacionBancoDetalle::query()
+            ->where('id_importacion_banco', $idImportacionBanco)
+            ->where('estado_ibd', EstadoImportacionBancoDetalle::Pendiente)
+            ->whereDoesntHave('inscripcionPago')
+            ->orderBy('id_ibd')
+            ->each(function (ImportacionBancoDetalle $detalle) use (&$asociados, &$omitidos): void {
+                $obligacion = $this->buscarObligacionPendienteParaDetalle($detalle);
+
+                if ($obligacion === null) {
+                    $omitidos++;
+
+                    return;
+                }
+
+                try {
+                    $this->asociarDetalleAObligacion($obligacion, $detalle);
+                    $asociados++;
+                } catch (DomainException) {
+                    $omitidos++;
+                }
+            });
+
+        $pendientes = ImportacionBancoDetalle::query()
+            ->where('id_importacion_banco', $idImportacionBanco)
+            ->where('estado_ibd', EstadoImportacionBancoDetalle::Pendiente)
+            ->whereDoesntHave('inscripcionPago')
+            ->count();
+
+        return [
+            'asociados' => $asociados,
+            'omitidos' => $omitidos,
+            'pendientes' => $pendientes,
+        ];
+    }
+
     private function validarDisponibilidadDetalle(ImportacionBancoDetalle $detalle): void
     {
         if ($detalle->estado_ibd !== EstadoImportacionBancoDetalle::Pendiente) {
@@ -116,6 +159,38 @@ class InscripcionPagoManager
         if ($detalle->inscripcionPago !== null) {
             throw new DomainException('El pago bancario seleccionado ya fue asociado anteriormente.');
         }
+    }
+
+    private function buscarObligacionPendienteParaDetalle(ImportacionBancoDetalle $detalle): ?InscripcionObligacionPago
+    {
+        $numeroDocumento = $this->normalizarValorNumerico($detalle->numero_documento_ibd);
+
+        if ($numeroDocumento === null) {
+            return null;
+        }
+
+        $montoDetalle = round((float) $detalle->monto_ibd, 2);
+
+        $obligaciones = InscripcionObligacionPago::query()
+            ->with(['inscripcion.persona', 'reglaPago'])
+            ->whereIn('estado_iop', [
+                EstadoObligacionPago::Pendiente->value,
+                EstadoObligacionPago::Parcial->value,
+            ])
+            ->where('saldo_iop', $montoDetalle)
+            ->whereHas('inscripcion.persona')
+            ->get()
+            ->filter(fn (InscripcionObligacionPago $obligacion): bool => $this->normalizarValorNumerico(
+                $obligacion->inscripcion?->persona?->numero_documento_per,
+            ) === $numeroDocumento)
+            ->take(2)
+            ->values();
+
+        if ($obligaciones->count() !== 1) {
+            return null;
+        }
+
+        return $obligaciones->first();
     }
 
     private function validarDocumentoTitular(InscripcionObligacionPago $obligacion, ImportacionBancoDetalle $detalle): void

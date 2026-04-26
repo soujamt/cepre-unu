@@ -186,12 +186,40 @@
                                     </x-table.cell>
                                     <x-table.cell>{{ $importacion->fecha_importacion_iba?->format('d M Y, h:i a') }}</x-table.cell>
                                     <x-table.cell align="end">
-                                        <flux:button size="sm" variant="filled" class="font-normal" wire:click="verDetalle({{ $importacion->id_iba }})">
-                                            <x-slot name="icon">
-                                                <x-ui.icon name="eye" size="4" class="me-1" />
-                                            </x-slot>
-                                            Ver
-                                        </flux:button>
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            @permiso('pago_crear')
+                                                <flux:button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    square
+                                                    tooltip="Validar pagos pendientes"
+                                                    tooltip:position="left"
+                                                    aria-label="Validar pagos pendientes"
+                                                    wire:click="$js.cargarAlertaValidarPendientes({{ $importacion->id_iba }}, '{{ $importacion->nombre_archivo_iba }}')"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="validarPagosPendientes({{ $importacion->id_iba }})"
+                                                    :disabled="$importacion->detalles_pendientes_count === 0"
+                                                >
+                                                    <x-slot name="icon">
+                                                        <x-ui.icon name="shield-check" size="4" class="text-blue-500" />
+                                                    </x-slot>
+                                                </flux:button>
+                                            @endpermiso
+
+                                            <flux:button
+                                                size="sm"
+                                                variant="filled"
+                                                square
+                                                tooltip="Ver detalle"
+                                                tooltip:position="left"
+                                                aria-label="Ver detalle"
+                                                wire:click="verDetalle({{ $importacion->id_iba }})"
+                                            >
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="eye" size="4" />
+                                                </x-slot>
+                                            </flux:button>
+                                        </div>
                                     </x-table.cell>
                                 </x-table.row>
                             @empty
@@ -210,12 +238,12 @@
                     <div
                         class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
                         wire:loading
-                        wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, verDetalle"
+                        wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, verDetalle, validarPagosPendientes"
                     ></div>
                     <div
                         class="absolute inset-0 flex items-center justify-center"
                         wire:loading.flex
-                        wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, verDetalle"
+                        wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, verDetalle, validarPagosPendientes"
                     >
                         <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
                     </div>
@@ -324,3 +352,21 @@
         @endif
     </div>
 </div>
+
+@script
+    <script>
+        this.$js.cargarAlertaValidarPendientes = (id_importacion, nombre_archivo) => {
+            this.$dispatch('alert', {
+                type: 'question',
+                title: 'Validar pagos pendientes',
+                message: 'Se asociaran solo los pagos pendientes de "' + nombre_archivo + '" que coincidan por DNI y saldo pendiente. Los pagos ya asociados no se volveran a procesar.',
+                showCancel: true,
+                showConfirm: true,
+                confirmText: 'Validar',
+                cancelText: 'Cancelar',
+                confirmEvent: 'pago-validar-pendientes',
+                confirmParams: { id_importacion: id_importacion },
+            });
+        };
+    </script>
+@endscript
