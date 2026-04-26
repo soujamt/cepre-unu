@@ -11,6 +11,7 @@ use App\Models\InscripcionPago;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DomainException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -86,7 +87,7 @@ class InscripcionPagoManager
                 'numero_operacion_ipa' => $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd,
                 'estado_validacion_ipa' => EstadoValidacionPago::Verificado,
                 'validado_en' => now(),
-                'id_usuario_validador' => auth()->id(),
+                'id_usuario_validador' => Auth::id()
             ]);
 
             $detalle->estado_ibd = EstadoImportacionBancoDetalle::Asociado;
@@ -115,25 +116,56 @@ class InscripcionPagoManager
         $asociados = 0;
         $omitidos = 0;
 
-        ImportacionBancoDetalle::query()
+        $detalles = ImportacionBancoDetalle::query()
             ->where('id_importacion_banco', $idImportacionBanco)
             ->where('estado_ibd', EstadoImportacionBancoDetalle::Pendiente)
             ->whereDoesntHave('inscripcionPago')
+            ->orderBy('fecha_pago_ibd')
             ->orderBy('id_ibd')
-            ->each(function (ImportacionBancoDetalle $detalle) use (&$asociados, &$omitidos): void {
-                $obligacion = $this->buscarObligacionPendienteParaDetalle($detalle);
+            ->get();
 
-                if ($obligacion === null) {
-                    $omitidos++;
+        $detalles
+            ->groupBy(fn (ImportacionBancoDetalle $detalle): string => $this->normalizarValorNumerico($detalle->numero_documento_ibd) ?? 'sin-documento-'.$detalle->id_ibd)
+            ->each(function (Collection $detallesDocumento) use (&$asociados, &$omitidos): void {
+                $numeroDocumento = $this->normalizarValorNumerico($detallesDocumento->first()?->numero_documento_ibd);
+
+                if ($numeroDocumento === null) {
+                    $omitidos += $detallesDocumento->count();
 
                     return;
                 }
 
-                try {
-                    $this->asociarDetalleAObligacion($obligacion, $detalle);
-                    $asociados++;
-                } catch (DomainException) {
-                    $omitidos++;
+                $obligacion = $this->buscarObligacionPendientePorDocumento($numeroDocumento);
+
+                if ($obligacion === null) {
+                    $omitidos += $detallesDocumento->count();
+
+                    return;
+                }
+
+                foreach ($detallesDocumento as $detalle) {
+                    $obligacionActual = $obligacion->fresh(['inscripcion.persona', 'reglaPago']);
+
+                    if ($obligacionActual === null) {
+                        $omitidos++;
+
+                        continue;
+                    }
+
+                    $saldoPendiente = $this->saldoPendienteActual($obligacionActual);
+
+                    if (round((float) $detalle->monto_ibd, 2) > $saldoPendiente) {
+                        $omitidos++;
+
+                        continue;
+                    }
+
+                    try {
+                        $this->asociarDetalleAObligacion($obligacionActual, $detalle);
+                        $asociados++;
+                    } catch (DomainException) {
+                        $omitidos++;
+                    }
                 }
             });
 
@@ -183,6 +215,30 @@ class InscripcionPagoManager
             ->filter(fn (InscripcionObligacionPago $obligacion): bool => $this->normalizarValorNumerico(
                 $obligacion->inscripcion?->persona?->numero_documento_per,
             ) === $numeroDocumento)
+            ->take(2)
+            ->values();
+
+        if ($obligaciones->count() !== 1) {
+            return null;
+        }
+
+        return $obligaciones->first();
+    }
+
+    private function buscarObligacionPendientePorDocumento(string $numeroDocumento): ?InscripcionObligacionPago
+    {
+        $obligaciones = InscripcionObligacionPago::query()
+            ->with(['inscripcion.persona', 'reglaPago'])
+            ->whereIn('estado_iop', [
+                EstadoObligacionPago::Pendiente->value,
+                EstadoObligacionPago::Parcial->value,
+            ])
+            ->whereHas('inscripcion.persona')
+            ->get()
+            ->filter(fn (InscripcionObligacionPago $obligacion): bool => $this->normalizarValorNumerico(
+                $obligacion->inscripcion?->persona?->numero_documento_per,
+            ) === $numeroDocumento)
+            ->filter(fn (InscripcionObligacionPago $obligacion): bool => $this->saldoPendienteActual($obligacion) > 0)
             ->take(2)
             ->values();
 
@@ -245,6 +301,15 @@ class InscripcionPagoManager
         ) {
             throw new DomainException('El pago no alcanza el monto minimo requerido para la primera cuota.');
         }
+    }
+
+    private function saldoPendienteActual(InscripcionObligacionPago $obligacion): float
+    {
+        $montoPagadoActual = (float) $obligacion->pagos()
+            ->where('estado_validacion_ipa', EstadoValidacionPago::Verificado)
+            ->sum('monto_ipa');
+
+        return round(max((float) $obligacion->monto_total_iop - $montoPagadoActual, 0), 2);
     }
 
     private function resolverEstadoObligacion(float $montoPagado, float $saldoPendiente): EstadoObligacionPago

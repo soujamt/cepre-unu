@@ -450,6 +450,125 @@ test('pending txt payments match inscriptions when the bank document has leading
     ]);
 });
 
+test('mass validation associates multiple partial payments until covering the pending balance', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+
+    $detallePrevio = ImportacionBancoDetalle::query()->create([
+        'id_importacion_banco' => $contexto['detalle']->id_importacion_banco,
+        'numero_documento_ibd' => $contexto['persona']->numero_documento_per,
+        'nombre_depositante_ibd' => 'LUCY BETTY FALCON ROJAS',
+        'numero_operacion_raw_ibd' => '817041600',
+        'numero_operacion_visible_ibd' => '41600',
+        'numero_operacion_ibd' => '817041600',
+        'codigo_canal_ibd' => 'Y%G',
+        'codigo_oficina_ibd' => '01068',
+        'fecha_pago_ibd' => '2026-03-18',
+        'monto_ibd' => 350.00,
+        'texto_linea_ibd' => str_repeat('0', 152),
+        'estado_ibd' => EstadoImportacionBancoDetalle::Asociado,
+    ]);
+
+    InscripcionPago::query()->create([
+        'id_inscripcion_obligacion_pago' => $contexto['obligacion']->id_iop,
+        'id_importacion_banco_detalle' => $detallePrevio->id_ibd,
+        'numero_cuota_ipa' => 1,
+        'monto_ipa' => 350.00,
+        'fecha_pago_ipa' => '2026-03-18',
+        'numero_operacion_ipa' => '41600',
+        'estado_validacion_ipa' => 'VERIFICADO',
+        'validado_en' => now(),
+        'id_usuario_validador' => $usuario->id_usu,
+    ]);
+
+    $contexto['obligacion']->forceFill([
+        'monto_pagado_iop' => 350.00,
+        'saldo_iop' => 200.00,
+        'estado_iop' => EstadoObligacionPago::Parcial,
+    ])->save();
+
+    $contexto['detalle']->forceFill([
+        'numero_operacion_raw_ibd' => '817041701',
+        'numero_operacion_visible_ibd' => '41701',
+        'numero_operacion_ibd' => '817041701',
+        'fecha_pago_ibd' => '2026-03-19',
+        'monto_ibd' => 100.00,
+    ])->save();
+
+    $segundoDetalle = ImportacionBancoDetalle::query()->create([
+        'id_importacion_banco' => $contexto['detalle']->id_importacion_banco,
+        'numero_documento_ibd' => $contexto['persona']->numero_documento_per,
+        'nombre_depositante_ibd' => 'LUCY BETTY FALCON ROJAS',
+        'numero_operacion_raw_ibd' => '817041702',
+        'numero_operacion_visible_ibd' => '41702',
+        'numero_operacion_ibd' => '817041702',
+        'codigo_canal_ibd' => 'Y%G',
+        'codigo_oficina_ibd' => '01068',
+        'fecha_pago_ibd' => '2026-03-20',
+        'monto_ibd' => 100.00,
+        'texto_linea_ibd' => str_repeat('0', 152),
+        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
+        ->assertDispatched('toast', message: '2 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.', type: 'success');
+
+    $this->assertDatabaseHas('tbl_inscripcion_obligacion_pago', [
+        'id_iop' => $contexto['obligacion']->id_iop,
+        'monto_pagado_iop' => 550.00,
+        'saldo_iop' => 0.00,
+        'estado_iop' => 'PAGADO',
+    ]);
+
+    $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
+        'id_ibd' => $contexto['detalle']->id_ibd,
+        'estado_ibd' => 'ASOCIADO',
+    ]);
+
+    $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
+        'id_ibd' => $segundoDetalle->id_ibd,
+        'estado_ibd' => 'ASOCIADO',
+    ]);
+
+    expect($contexto['obligacion']->pagos()->count())->toBe(3);
+});
+
+test('mass validation skips payments when the document has multiple pending obligations', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+
+    $otraObligacion = new InscripcionObligacionPago([
+        'id_inscripcion' => $contexto['inscripcion']->id_ins,
+        'id_regla_pago' => $contexto['obligacion']->id_regla_pago,
+        'monto_total_iop' => 100.00,
+        'numero_cuotas_iop' => 1,
+        'estado_iop' => EstadoObligacionPago::Pendiente,
+    ]);
+    $otraObligacion->monto_pagado_iop = 0;
+    $otraObligacion->saldo_iop = 100.00;
+    $otraObligacion->save();
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
+        ->assertDispatched('toast', message: 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.', type: 'warning');
+
+    $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
+        'id_ibd' => $contexto['detalle']->id_ibd,
+        'estado_ibd' => 'PENDIENTE',
+    ]);
+
+    expect($contexto['obligacion']->pagos()->count())->toBe(0);
+});
+
 test('searching imported payments returns no results when the operation does not match', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosPagoValidar($usuario, ['pago_crear']);
