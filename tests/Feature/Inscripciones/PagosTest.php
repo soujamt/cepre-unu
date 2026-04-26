@@ -65,6 +65,29 @@ function crearTxtBancoValido(): string
         ->implode(PHP_EOL);
 }
 
+function crearTxtBancoConDetalleExistente(): string
+{
+    return collect([
+        '0120154598244000PEN20260319001104410100008635',
+        '02                              00047467212                                     0000000000450000000000000450000000000000000007799041670202603190204WNET ',
+        '03000000001000000000045000000000000045000000000000000000',
+    ])
+        ->map(fn (string $line): string => str_pad($line, 152, ' '))
+        ->implode(PHP_EOL);
+}
+
+function crearTxtBancoConDetalleDuplicadoInterno(): string
+{
+    return collect([
+        '0120154598244000PEN20260319001104410100008635',
+        '02                              00047467212                                     0000000000450000000000000450000000000000000007799041670202603190204WNET ',
+        '02                              00047467212                                     0000000000450000000000000450000000000000000007799041670202603190204WNET ',
+        '03000000002000000000090000000000000090000000000000000000',
+    ])
+        ->map(fn (string $line): string => str_pad($line, 152, ' '))
+        ->implode(PHP_EOL);
+}
+
 test('authorized users can access pagos page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosPago($usuario, ['pago_indice']);
@@ -94,6 +117,10 @@ test('authorized users can import a valid bank txt file', function () {
     Livewire::test('pages::inscripciones.pagos')
         ->set('archivo', $archivo)
         ->call('importar')
+        ->assertHasNoErrors()
+        ->assertSet('previsualizacionImportacion.valido', true)
+        ->assertSee('El archivo cuadra con los totales reportados por el banco')
+        ->call('confirmarImportacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast');
 
@@ -147,6 +174,8 @@ test('the same txt file cannot be imported twice', function () {
     Livewire::test('pages::inscripciones.pagos')
         ->set('archivo', UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido()))
         ->call('importar')
+        ->assertHasNoErrors()
+        ->call('confirmarImportacion')
         ->assertHasNoErrors();
 
     Livewire::test('pages::inscripciones.pagos')
@@ -169,12 +198,12 @@ test('invalid txt files are rejected without creating imports', function () {
         ->set('archivo', UploadedFile::fake()->createWithContent('REC-INVALIDO.TXT', 'contenido invalido'))
         ->call('importar')
         ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'No se pudo importar el archivo TXT. Verifique el formato e intente nuevamente.', type: 'error');
+        ->assertDispatched('toast');
 
     expect(ImportacionBanco::query()->count())->toBe(0);
 });
 
-test('txt imports with inconsistent totals are stored as observado', function () {
+test('txt imports with inconsistent totals are rejected before creating imports', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
 
@@ -192,12 +221,57 @@ test('txt imports with inconsistent totals are stored as observado', function ()
         ->set('archivo', UploadedFile::fake()->createWithContent('REC-OBSERVADO.TXT', $contenidoObservado))
         ->call('importar')
         ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Archivo TXT importado correctamente.', type: 'success');
+        ->assertSet('previsualizacionImportacion.valido', false)
+        ->assertSee('El archivo tiene observaciones y no se importara')
+        ->assertSee('El monto total no cuadra')
+        ->call('confirmarImportacion')
+        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
 
-    $importacion = ImportacionBanco::query()->first();
+    expect(ImportacionBanco::query()->count())->toBe(0);
+});
 
-    expect($importacion)->not->toBeNull();
-    expect($importacion?->estado_iba->value)->toBe('OBSERVADO');
-    expect($importacion?->observacion_iba)->toBe('El archivo importado no cuadra con los totales reportados por el banco.');
-    expect($importacion?->detalles()->count())->toBe(1);
+test('txt imports with details already imported are rejected before creating duplicate payments', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido()))
+        ->call('importar')
+        ->call('confirmarImportacion')
+        ->assertHasNoErrors();
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC10769.TXT', crearTxtBancoConDetalleExistente()))
+        ->call('importar')
+        ->assertHasNoErrors()
+        ->assertSet('previsualizacionImportacion.valido', false)
+        ->assertSee('Pagos duplicados')
+        ->assertSee('Ya importado')
+        ->assertSee('41670')
+        ->call('confirmarImportacion')
+        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+
+    expect(ImportacionBanco::query()->count())->toBe(1);
+});
+
+test('txt imports with duplicate details in the same file are rejected before creating payments', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPago($usuario, ['pago_indice', 'pago_crear']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.pagos')
+        ->set('archivo', UploadedFile::fake()->createWithContent('REC-DUPLICADO.TXT', crearTxtBancoConDetalleDuplicadoInterno()))
+        ->call('importar')
+        ->assertHasNoErrors()
+        ->assertSet('previsualizacionImportacion.valido', false)
+        ->assertSee('Pagos duplicados')
+        ->assertSee('Duplicado en el TXT')
+        ->assertSee('41670')
+        ->call('confirmarImportacion')
+        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+
+    expect(ImportacionBanco::query()->count())->toBe(0);
 });

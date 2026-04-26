@@ -40,6 +40,11 @@ class extends Component
 
     public ?int $detalleImportacionId = null;
 
+    /**
+     * @var array<string, mixed>
+     */
+    public array $previsualizacionImportacion = [];
+
     public function mount(): void
     {
         $this->autorizarPermiso('pago', 'indice');
@@ -101,6 +106,7 @@ class extends Component
     {
         $this->autorizarPermiso('pago', 'crear');
         $data = $this->validate();
+        $this->previsualizacionImportacion = [];
 
         try {
             $rutaArchivo = $data['archivo']->getRealPath();
@@ -132,26 +138,61 @@ class extends Component
                 return;
             }
 
-            DB::transaction(function () use ($data, $hashArchivo, $parsed): void {
+            $this->previsualizacionImportacion = $this->crearPrevisualizacionImportacion(
+                $data['archivo']->getClientOriginalName(),
+                $hashArchivo,
+                $parsed,
+            );
+
+            $this->modal('modal-previsualizar-importacion')->show();
+        } catch (\Throwable $throwable) {
+            Log::error('Fallo al importar TXT bancario.', [
+                'archivo' => $data['archivo']?->getClientOriginalName(),
+                'mensaje' => $throwable->getMessage(),
+                'clase' => $throwable::class,
+                'linea' => $throwable->getLine(),
+                'archivo_origen' => $throwable->getFile(),
+            ]);
+            report($throwable);
+            $this->dispatch('toast', message: 'No se pudo importar el archivo TXT. '.$throwable->getMessage(), type: 'error');
+
+            return;
+        }
+    }
+
+    public function confirmarImportacion(): void
+    {
+        $this->autorizarPermiso('pago', 'crear');
+
+        if ($this->previsualizacionImportacion === []) {
+            $this->dispatch('toast', message: 'No hay una importacion lista para confirmar.', type: 'error');
+
+            return;
+        }
+
+        if (! ($this->previsualizacionImportacion['valido'] ?? false)) {
+            $this->dispatch('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+
+            return;
+        }
+
+        try {
+            DB::transaction(function (): void {
                 $importacion = ImportacionBanco::query()->create([
-                    'nombre_archivo_iba' => $data['archivo']->getClientOriginalName(),
-                    'hash_archivo_iba' => $hashArchivo,
-                    'moneda_iba' => $parsed['header']['moneda'],
+                    'nombre_archivo_iba' => $this->previsualizacionImportacion['nombre_archivo'],
+                    'hash_archivo_iba' => $this->previsualizacionImportacion['hash_archivo'],
+                    'moneda_iba' => $this->previsualizacionImportacion['moneda'],
                     'fecha_importacion_iba' => now(),
-                    'fecha_lote_iba' => $parsed['header']['fecha_lote'],
-                    'total_registros_iba' => $parsed['summary']['cantidad_detalles'],
-                    'total_registros_reportado_iba' => $parsed['trailer']['total_registros'],
-                    'total_monto_iba' => $parsed['summary']['total_detalles'],
-                    'total_monto_reportado_iba' => $parsed['trailer']['total_monto'],
-                    'estado_iba' => $parsed['summary']['cuadra_registros'] && $parsed['summary']['cuadra_montos']
-                        ? EstadoImportacionBanco::Procesado->value
-                        : EstadoImportacionBanco::Observado->value,
-                    'observacion_iba' => $parsed['summary']['cuadra_registros'] && $parsed['summary']['cuadra_montos']
-                        ? null
-                        : 'El archivo importado no cuadra con los totales reportados por el banco.',
+                    'fecha_lote_iba' => $this->previsualizacionImportacion['fecha_lote'],
+                    'total_registros_iba' => $this->previsualizacionImportacion['total_registros'],
+                    'total_registros_reportado_iba' => $this->previsualizacionImportacion['total_registros_reportado'],
+                    'total_monto_iba' => $this->previsualizacionImportacion['total_monto'],
+                    'total_monto_reportado_iba' => $this->previsualizacionImportacion['total_monto_reportado'],
+                    'estado_iba' => EstadoImportacionBanco::Procesado->value,
+                    'observacion_iba' => null,
                 ]);
 
-                collect($parsed['details'])->each(function (array $detail) use ($importacion): void {
+                collect($this->previsualizacionImportacion['detalles'])->each(function (array $detail) use ($importacion): void {
                     ImportacionBancoDetalle::query()->create([
                         'id_importacion_banco' => $importacion->id_iba,
                         'numero_documento_ibd' => $detail['numero_documento_normalizado'] ?? $detail['numero_documento'],
@@ -171,24 +212,31 @@ class extends Component
                 $this->detalleImportacionId = $importacion->id_iba;
             });
         } catch (\Throwable $throwable) {
-            Log::error('Fallo al importar TXT bancario.', [
-                'archivo' => $data['archivo']?->getClientOriginalName(),
+            Log::error('Fallo al confirmar importacion TXT bancario.', [
+                'archivo' => $this->previsualizacionImportacion['nombre_archivo'] ?? null,
                 'mensaje' => $throwable->getMessage(),
                 'clase' => $throwable::class,
                 'linea' => $throwable->getLine(),
                 'archivo_origen' => $throwable->getFile(),
             ]);
             report($throwable);
-            $this->dispatch('toast', message: 'No se pudo importar el archivo TXT. Verifique el formato e intente nuevamente.', type: 'error');
+            $this->dispatch('toast', message: 'No se pudo confirmar la importacion del TXT.', type: 'error');
 
             return;
         }
 
         unset($this->importaciones);
         unset($this->detalleImportacionSeleccionada);
-        $this->archivo = null;
+        $this->limpiarPrevisualizacionImportacion();
+        $this->modal('modal-previsualizar-importacion')->close();
 
         $this->dispatch('toast', message: 'Archivo TXT importado correctamente.', type: 'success');
+    }
+
+    public function cancelarPrevisualizacionImportacion(): void
+    {
+        $this->limpiarPrevisualizacionImportacion();
+        $this->modal('modal-previsualizar-importacion')->close();
     }
 
     public function verDetalle(int $idImportacion): void
@@ -302,5 +350,129 @@ class extends Component
         }
 
         return $numeroDocumento;
+    }
+
+    /**
+     * @param  array<string, mixed>  $parsed
+     * @return array<string, mixed>
+     */
+    private function crearPrevisualizacionImportacion(string $nombreArchivo, string $hashArchivo, array $parsed): array
+    {
+        $observaciones = [];
+        $duplicados = $this->detectarPagosDuplicados($parsed['details']);
+
+        if (! $parsed['summary']['cuadra_registros']) {
+            $observaciones[] = "La cantidad de operaciones no cuadra: se leyeron {$parsed['summary']['cantidad_detalles']} y el banco reporta {$parsed['trailer']['total_registros']}.";
+        }
+
+        if (! $parsed['summary']['cuadra_montos']) {
+            $observaciones[] = 'El monto total no cuadra: se leyo S/ '
+                .number_format((float) $parsed['summary']['total_detalles'], 2)
+                .' y el banco reporta S/ '
+                .number_format((float) $parsed['trailer']['total_monto'], 2).'.';
+        }
+
+        if ($duplicados !== []) {
+            $observaciones[] = 'Se encontraron '.count($duplicados).' pago(s) duplicado(s). Revise las operaciones marcadas antes de importar.';
+        }
+
+        return [
+            'nombre_archivo' => $nombreArchivo,
+            'hash_archivo' => $hashArchivo,
+            'moneda' => $parsed['header']['moneda'],
+            'fecha_lote' => $parsed['header']['fecha_lote'],
+            'total_registros' => $parsed['summary']['cantidad_detalles'],
+            'total_registros_reportado' => $parsed['trailer']['total_registros'],
+            'total_monto' => $parsed['summary']['total_detalles'],
+            'total_monto_reportado' => $parsed['trailer']['total_monto'],
+            'detalles' => $parsed['details'],
+            'detalles_muestra' => array_slice($parsed['details'], 0, 8),
+            'duplicados' => $duplicados,
+            'observaciones' => $observaciones,
+            'valido' => $observaciones === [],
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $detalles
+     * @return list<array{tipo: string, documento: ?string, operacion: ?string, fecha_pago: ?string, monto: float}>
+     */
+    private function detectarPagosDuplicados(array $detalles): array
+    {
+        $duplicados = [];
+        $clavesVistas = [];
+
+        foreach ($detalles as $detalle) {
+            $clave = $this->clavePagoDetalle($detalle);
+
+            if ($clave === null) {
+                continue;
+            }
+
+            if (isset($clavesVistas[$clave])) {
+                $duplicados[$clave.'|archivo'] = $this->resumenDuplicado($detalle, 'Duplicado en el TXT');
+
+                continue;
+            }
+
+            $clavesVistas[$clave] = true;
+
+            if ($this->existePagoImportado($detalle)) {
+                $duplicados[$clave.'|base'] = $this->resumenDuplicado($detalle, 'Ya importado');
+            }
+        }
+
+        return array_values($duplicados);
+    }
+
+    /**
+     * @param  array<string, mixed>  $detalle
+     */
+    private function clavePagoDetalle(array $detalle): ?string
+    {
+        $documento = (string) ($detalle['numero_documento_normalizado'] ?? $detalle['numero_documento'] ?? '');
+        $operacion = (string) ($detalle['numero_operacion_normalizado'] ?? $detalle['numero_operacion'] ?? '');
+        $fechaPago = (string) ($detalle['fecha_pago'] ?? '');
+        $monto = number_format((float) ($detalle['monto'] ?? 0), 2, '.', '');
+
+        if ($documento === '' || $operacion === '' || $fechaPago === '' || $monto === '0.00') {
+            return null;
+        }
+
+        return implode('|', [$documento, $operacion, $fechaPago, $monto]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $detalle
+     */
+    private function existePagoImportado(array $detalle): bool
+    {
+        return ImportacionBancoDetalle::query()
+            ->where('numero_documento_ibd', $detalle['numero_documento_normalizado'] ?? $detalle['numero_documento'])
+            ->where('numero_operacion_ibd', $detalle['numero_operacion_normalizado'] ?? $detalle['numero_operacion'])
+            ->whereDate('fecha_pago_ibd', (string) $detalle['fecha_pago'])
+            ->where('monto_ibd', (float) $detalle['monto'])
+            ->exists();
+    }
+
+    /**
+     * @param  array<string, mixed>  $detalle
+     * @return array{tipo: string, documento: ?string, operacion: ?string, fecha_pago: ?string, monto: float}
+     */
+    private function resumenDuplicado(array $detalle, string $tipo): array
+    {
+        return [
+            'tipo' => $tipo,
+            'documento' => $detalle['numero_documento_normalizado'] ?? $detalle['numero_documento'] ?? null,
+            'operacion' => $detalle['numero_operacion_visible'] ?? $detalle['numero_operacion_normalizado'] ?? $detalle['numero_operacion'] ?? null,
+            'fecha_pago' => $detalle['fecha_pago'] ?? null,
+            'monto' => (float) ($detalle['monto'] ?? 0),
+        ];
+    }
+
+    private function limpiarPrevisualizacionImportacion(): void
+    {
+        $this->previsualizacionImportacion = [];
+        $this->archivo = null;
     }
 };
