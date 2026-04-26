@@ -87,3 +87,14 @@ it('fails when the txt file does not contain the expected structure', function (
     expect(fn () => app(BancoTxtParser::class)->parse("01CABECERA\n03CIERRE"))
         ->toThrow(RuntimeException::class);
 });
+
+it('reports the line number when a txt line has invalid length', function () {
+    $content = implode(PHP_EOL, [
+        str_pad('0120154598244000PEN20260319001104410100008635', 152, ' '),
+        str_pad('02                              00047467212', 120, ' '),
+        str_pad('03000000001000000000045000000000000045000000000000000000', 152, ' '),
+    ]);
+
+    expect(fn () => app(BancoTxtParser::class)->parse($content))
+        ->toThrow(RuntimeException::class, 'Linea 2 (detalle): se encontraron 120 caracteres y se esperaban 152.');
+});
