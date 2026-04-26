@@ -20,7 +20,11 @@ class BancoTxtParser
         $normalizedContent = rtrim($content, "\r\n");
 
         $lines = collect(preg_split('/\r\n|\r|\n/', $normalizedContent))
-            ->filter(fn (?string $line): bool => filled($line))
+            ->map(fn (?string $line, int $index): array => [
+                'number' => $index + 1,
+                'content' => $line,
+            ])
+            ->filter(fn (array $line): bool => filled($line['content']))
             ->values();
 
         if ($lines->count() < 3) {
@@ -31,19 +35,21 @@ class BancoTxtParser
         $trailerLine = $lines->last();
         $detailLines = $lines->slice(1, $lines->count() - 2)->values();
 
-        if (! is_string($headerLine) || ! str_starts_with($headerLine, '01')) {
-            throw new RuntimeException('La cabecera del archivo TXT es invalida.');
+        if (! is_array($headerLine) || ! is_string($headerLine['content']) || ! str_starts_with($headerLine['content'], '01')) {
+            throw new RuntimeException('La cabecera del archivo TXT es invalida. Revise la linea 1.');
         }
 
-        if (! is_string($trailerLine) || ! str_starts_with($trailerLine, '03')) {
-            throw new RuntimeException('El cierre del archivo TXT es invalido.');
+        if (! is_array($trailerLine) || ! is_string($trailerLine['content']) || ! str_starts_with($trailerLine['content'], '03')) {
+            $lineaCierre = is_array($trailerLine) ? (int) $trailerLine['number'] : $lines->count();
+
+            throw new RuntimeException("El cierre del archivo TXT es invalido. Revise la linea {$lineaCierre}.");
         }
 
-        $header = $this->parseHeader($headerLine);
+        $header = $this->parseHeader($headerLine['content'], (int) $headerLine['number']);
         $details = $detailLines
-            ->map(fn (string $line): array => $this->parseDetail($line))
+            ->map(fn (array $line): array => $this->parseDetail($line['content'], (int) $line['number']))
             ->all();
-        $trailer = $this->parseTrailer($trailerLine);
+        $trailer = $this->parseTrailer($trailerLine['content'], (int) $trailerLine['number']);
 
         $summary = [
             'cantidad_detalles' => count($details),
@@ -63,9 +69,9 @@ class BancoTxtParser
     /**
      * @return array<string, mixed>
      */
-    private function parseHeader(string $line): array
+    private function parseHeader(string $line, int $lineNumber): array
     {
-        $this->ensureFixedWidthLine($line);
+        $this->ensureFixedWidthLine($line, $lineNumber, 'cabecera');
 
         return [
             'tipo_registro' => substr($line, 0, 2),
@@ -80,9 +86,9 @@ class BancoTxtParser
     /**
      * @return array<string, mixed>
      */
-    private function parseDetail(string $line): array
+    private function parseDetail(string $line, int $lineNumber): array
     {
-        $this->ensureFixedWidthLine($line);
+        $this->ensureFixedWidthLine($line, $lineNumber, 'detalle');
 
         $documentoRaw = trim(substr($line, 32, 11));
         $nombreDepositante = $this->decodeText(substr($line, 43, 35));
@@ -114,9 +120,9 @@ class BancoTxtParser
     /**
      * @return array<string, mixed>
      */
-    private function parseTrailer(string $line): array
+    private function parseTrailer(string $line, int $lineNumber): array
     {
-        $this->ensureFixedWidthLine($line);
+        $this->ensureFixedWidthLine($line, $lineNumber, 'cierre');
 
         return [
             'tipo_registro' => substr($line, 0, 2),
@@ -127,10 +133,12 @@ class BancoTxtParser
         ];
     }
 
-    private function ensureFixedWidthLine(string $line): void
+    private function ensureFixedWidthLine(string $line, int $lineNumber, string $recordType): void
     {
-        if (strlen($line) !== 152) {
-            throw new RuntimeException('El archivo TXT contiene una linea con longitud invalida.');
+        $length = strlen($line);
+
+        if ($length !== 152) {
+            throw new RuntimeException("El archivo TXT contiene una linea con longitud invalida. Linea {$lineNumber} ({$recordType}): se encontraron {$length} caracteres y se esperaban 152.");
         }
     }
 
