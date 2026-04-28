@@ -59,6 +59,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:oferta_crear')
         ->name('ofertas.asignar');
 
+    Route::livewire('/configuracion-academica/aulas', 'pages::configuracion-academica.aulas-proceso')
+        ->middleware('permiso:aula_proceso_indice')
+        ->name('aulas.index');
+
+    Route::livewire('/configuracion-academica/aulas/asignar', 'pages::configuracion-academica.aulas-proceso-asignar')
+        ->middleware('permiso:aula_proceso_crear')
+        ->name('aulas.asignar');
+
     Route::livewire('/configuracion-academica/reglas-pago', 'pages::configuracion-academica.reglas-pago')
         ->middleware('permiso:regla_pago_indice')
         ->name('reglas-pago.index');
