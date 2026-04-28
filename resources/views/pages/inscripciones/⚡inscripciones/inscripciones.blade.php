@@ -193,6 +193,28 @@
             </x-ui.select>
         </div>
 
+        <div class="w-full sm:w-36">
+            <x-ui.select wire:model.live="idTurno" placeholder="Filtrar por turno">
+                <option value="">Todos los turnos</option>
+                @foreach ($this->turnosDisponibles as $turno)
+                    <option wire:key="turno-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
+                        {{ $turno->nombre_tur }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
+        <div class="w-full sm:w-44">
+            <x-ui.select wire:model.live="idProcesoAulaFiltro" placeholder="Filtrar por aula">
+                <option value="">Todas las aulas</option>
+                @foreach ($this->aulasProcesoDisponibles as $aulaOpcion)
+                    <option wire:key="aula-proceso-{{ $aulaOpcion->id_pau }}" value="{{ $aulaOpcion->id_pau }}">
+                        {{ $aulaOpcion->aula?->nombre_aul }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <flux:dropdown>
             <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
@@ -220,9 +242,9 @@
                     </flux:menu.checkbox>
                 @endforeach
 
-                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0 || $filtroPago !== '' || $filtroExpediente !== '')
+                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0 || $filtroPago !== '' || $filtroExpediente !== '' || $idTurno !== '' || $idProcesoAulaFiltro !== '')
                     <flux:menu.separator />
-                    @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '')
+                    @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || $idTurno !== '' || $idProcesoAulaFiltro !== '')
                         <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
                             <x-slot name="icon">
                                 <div
@@ -471,12 +493,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

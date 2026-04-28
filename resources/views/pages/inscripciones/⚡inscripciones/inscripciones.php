@@ -11,6 +11,7 @@ use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Semestre;
+use App\Models\Turno;
 use App\Support\AsignadorAulaInscripcion;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,6 +66,12 @@ class extends Component
     #[Url(as: 'docs')]
     public string $filtroExpediente = '';
 
+    #[Url(as: 'turno')]
+    public string $idTurno = '';
+
+    #[Url(as: 'aula')]
+    public string $idProcesoAulaFiltro = '';
+
     public function mount(): void
     {
         $this->autorizarPermiso('inscripcion', 'indice');
@@ -116,6 +123,16 @@ class extends Component
     }
 
     public function updatedFiltroExpediente(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdTurno(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedIdProcesoAulaFiltro(): void
     {
         $this->resetPage();
     }
@@ -175,6 +192,31 @@ class extends Component
                 $this->aplicarFiltrosRelacionados($query);
             })
             ->orderBy('nombre_lin')
+            ->get();
+    }
+
+    #[Computed]
+    public function turnosDisponibles(): Collection
+    {
+        return Turno::query()
+            ->whereHas('procesosOferta.inscripciones', function (Builder $query): void {
+                $this->aplicarFiltrosRelacionados($query);
+            })
+            ->orderBy('nombre_tur')
+            ->get();
+    }
+
+    #[Computed]
+    public function aulasProcesoDisponibles(): Collection
+    {
+        return ProcesoAula::query()
+            ->with('aula')
+            ->when(filled($this->idProceso), fn (Builder $q) => $q->where('id_proceso', (int) $this->idProceso))
+            ->when(! filled($this->idProceso) && filled($this->idSemestre), function (Builder $q): void {
+                $q->whereHas('proceso', fn (Builder $p) => $p->where('id_semestre', (int) $this->idSemestre));
+            })
+            ->whereHas('inscripciones')
+            ->orderBy('id_pau')
             ->get();
     }
 
@@ -264,6 +306,8 @@ class extends Component
         $this->idProceso = '';
         $this->idModalidad = '';
         $this->idLugarInscripcion = '';
+        $this->idTurno = '';
+        $this->idProcesoAulaFiltro = '';
         $this->resetPage();
     }
 
@@ -589,6 +633,12 @@ class extends Component
                 } else {
                     $query->whereHas('expedientes', fn (Builder $q) => $q->where('estado_revision_iex', $this->filtroExpediente));
                 }
+            })
+            ->when(filled($this->idTurno), function (Builder $query): void {
+                $query->whereHas('procesoOferta', fn (Builder $q) => $q->where('id_turno', (int) $this->idTurno));
+            })
+            ->when(filled($this->idProcesoAulaFiltro), function (Builder $query): void {
+                $query->where('id_proceso_aula', (int) $this->idProcesoAulaFiltro);
             });
     }
 
