@@ -584,7 +584,7 @@ test('users can register general information and receive a warning when there is
         ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
         ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
-        ->assertSet('colegioLabel', '0915389 | AGROPECUARIO PADRE ABAD')
+        ->assertSet('colegioLabel', '0915389 | AGROPECUARIO PADRE ABAD | UCAYALI / CORONEL PORTILLO / CALLERIA')
         ->set('generalForm.veces_postula_unu', '1')
         ->set('generalForm.veces_postula_otras', '2')
         ->set('generalForm.observacion', 'OBSERVACION GENERAL')
@@ -717,7 +717,7 @@ test('users can register postulacion and create an inscripcion draft', function 
     $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
     $lenguaNativa = LenguaNativa::query()->firstOrFail();
     $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
+    $colegio = Colegio::query()->with('ubigeo')->firstOrFail();
 
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
@@ -801,6 +801,30 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->and($inscripcion?->codigo_ins)->toStartWith('261ORD');
 
     Carbon\Carbon::setTestNow();
+});
+
+test('changing school type clears selected school in general information form', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    $tipoColegioPrivado = TipoColegio::query()->create([
+        'codigo_tco' => 'PRI',
+        'nombre_tco' => 'PRIVADO',
+        'estado_tco' => 'HABILITADO',
+    ]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
+        ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
+        ->assertSet('colegioLabel', '0915389 | AGROPECUARIO PADRE ABAD | UCAYALI / CORONEL PORTILLO / CALLERIA')
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegioPrivado->id_tco)
+        ->assertSet('generalForm.id_colegio', '')
+        ->assertSet('colegioLabel', '')
+        ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: '', label: '');
 });
 
 test('users can continue an existing inscripcion with the wizard preloaded', function () {
@@ -892,7 +916,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->assertSee('NUEVA INSCRIPCION');
 
     $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
-    $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col}";
+    $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col} | {$colegio->ubigeo->nombre_departamento_ubi} / {$colegio->ubigeo->nombre_provincia_ubi} / {$colegio->ubigeo->nombre_distrito_ubi}";
 
     Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
         ->assertSet('inscripcionId', $inscripcion->id_ins)

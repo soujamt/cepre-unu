@@ -932,8 +932,12 @@
                                         label="Colegio"
                                         wire:model="generalForm.id_colegio"
                                         :action="route('api.colegio.search')"
+                                        filter-model="generalForm.id_tipo_colegio"
+                                        filter-query-name="id_tipo_colegio"
+                                        :filter-required="true"
+                                        :reset-on-filter-change="true"
                                         :selected-label="$this->colegioLabel"
-                                        placeholder="Buscar colegio por codigo o nombre"
+                                        placeholder="Seleccione el tipo y busque por codigo o nombre"
                                         :invalid="$errors->has('generalForm.id_colegio')"
                                         :error="$errors->first('generalForm.id_colegio')"
                                         required

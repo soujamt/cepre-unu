@@ -18,6 +18,7 @@ class ColegioSearchController extends Controller
 
         if ($value !== '') {
             $colegio = Colegio::query()
+                ->with('ubigeo')
                 ->where('estado_col', 'HABILITADO')
                 ->where('id_col', $value)
                 ->first();
@@ -28,7 +29,7 @@ class ColegioSearchController extends Controller
 
             return response()->json([
                 'value' => $colegio->id_col,
-                'label' => "{$colegio->id_col} | {$colegio->nombre_col}",
+                'label' => $this->formatLabel($colegio),
             ]);
         }
 
@@ -39,7 +40,12 @@ class ColegioSearchController extends Controller
         }
 
         $colegios = Colegio::query()
+            ->with('ubigeo')
             ->where('estado_col', 'HABILITADO')
+            ->when(
+                filled($request->query('id_tipo_colegio')),
+                fn ($builder) => $builder->where('id_tipo_colegio', (int) $request->query('id_tipo_colegio')),
+            )
             ->where(function ($builder) use ($query): void {
                 $builder
                     ->where('id_col', 'like', "%{$query}%")
@@ -51,13 +57,33 @@ class ColegioSearchController extends Controller
             ->get()
             ->map(fn (Colegio $colegio): array => [
                 'value' => $colegio->id_col,
-                'label' => "{$colegio->id_col} | {$colegio->nombre_col}",
-                'description' => filled($colegio->codigo_modular_col)
-                    ? "Codigo modular: {$colegio->codigo_modular_col}"
-                    : null,
+                'label' => $this->formatLabel($colegio),
+                'description' => $this->formatDescription($colegio),
             ])
             ->values();
 
         return response()->json($colegios);
+    }
+
+    private function formatLabel(Colegio $colegio): string
+    {
+        $ubigeo = $colegio->ubigeo;
+
+        if ($ubigeo === null) {
+            return "{$colegio->id_col} | {$colegio->nombre_col}";
+        }
+
+        return "{$colegio->id_col} | {$colegio->nombre_col} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
+    }
+
+    private function formatDescription(Colegio $colegio): ?string
+    {
+        if (blank($colegio->direccion_col)) {
+            return filled($colegio->codigo_modular_col)
+                ? "Codigo modular: {$colegio->codigo_modular_col}"
+                : null;
+        }
+
+        return "Direccion: {$colegio->direccion_col}";
     }
 }

@@ -38,6 +38,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -261,7 +262,7 @@ class extends Component
                 'procesoOferta.turno',
                 'convenioProceso.convenio',
                 'paisColegio',
-                'colegio',
+                'colegio.ubigeo',
                 'obligacionesPago.reglaPago.conceptoPago',
                 'obligacionesPago.pagos.importacionBancoDetalle',
                 'expedientes.tipoExpediente',
@@ -415,13 +416,12 @@ class extends Component
     public function updatedGeneralFormIdPaisColegio(): void
     {
         $this->generalForm['nombre_colegio_extranjero'] = '';
-        $this->colegioLabel = '';
-        $this->dispatch(
-            'ui-select-search-filled',
-            name: 'generalForm.id_colegio',
-            value: '',
-            label: '',
-        );
+        $this->limpiarColegioSeleccionado();
+    }
+
+    public function updatedGeneralFormIdTipoColegio(): void
+    {
+        $this->limpiarColegioSeleccionado();
     }
 
     public function updatedGeneralFormIdColegio(string $value): void
@@ -436,7 +436,7 @@ class extends Component
 
         $this->colegioLabel = $colegio === null
             ? ''
-            : "{$colegio->id_col} | {$colegio->nombre_col}";
+            : $this->formatearEtiquetaColegio($colegio);
     }
 
     public function updatedPostulacionFormIdModalidadAdmision(): void
@@ -906,10 +906,22 @@ class extends Component
             'generalForm.id_colegio' => [
                 'nullable',
                 'string',
-                'exists:tbl_colegio,id_col',
+                Rule::exists('tbl_colegio', 'id_col')
+                    ->where('id_tipo_colegio', $this->generalForm['id_tipo_colegio']),
                 function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->esPaisPeruSeleccionado() && blank($value)) {
                         $fail('Debe seleccionar el colegio de procedencia.');
+                    }
+
+                    if ($this->esPaisPeruSeleccionado() && filled($value)) {
+                        $colegioPerteneceAlTipo = Colegio::query()
+                            ->whereKey($value)
+                            ->where('id_tipo_colegio', $this->generalForm['id_tipo_colegio'])
+                            ->exists();
+
+                        if (! $colegioPerteneceAlTipo) {
+                            $fail('El colegio seleccionado no pertenece al tipo de colegio indicado.');
+                        }
                     }
                 },
             ],
@@ -2268,7 +2280,7 @@ class extends Component
     {
         $this->colegioLabel = $colegio === null
             ? ''
-            : "{$colegio->id_col} | {$colegio->nombre_col}";
+            : $this->formatearEtiquetaColegio($colegio);
 
         $this->dispatch(
             'ui-select-search-filled',
@@ -2285,6 +2297,30 @@ class extends Component
         }
 
         return "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
+    }
+
+    private function formatearEtiquetaColegio(Colegio $colegio): string
+    {
+        $colegio->loadMissing('ubigeo');
+
+        if ($colegio->ubigeo === null) {
+            return "{$colegio->id_col} | {$colegio->nombre_col}";
+        }
+
+        return "{$colegio->id_col} | {$colegio->nombre_col} | {$colegio->ubigeo->nombre_departamento_ubi} / {$colegio->ubigeo->nombre_provincia_ubi} / {$colegio->ubigeo->nombre_distrito_ubi}";
+    }
+
+    private function limpiarColegioSeleccionado(): void
+    {
+        $this->generalForm['id_colegio'] = '';
+        $this->colegioLabel = '';
+
+        $this->dispatch(
+            'ui-select-search-filled',
+            name: 'generalForm.id_colegio',
+            value: '',
+            label: '',
+        );
     }
 
     private function esPaisPeruSeleccionado(): bool

@@ -12,6 +12,10 @@
     'iconLeading' => 'magnifying-glass',
     'apiKey' => null,
     'selectedLabel' => null,
+    'filterModel' => null,
+    'filterQueryName' => null,
+    'filterRequired' => false,
+    'resetOnFilterChange' => false,
 ])
 
 @php
@@ -58,10 +62,16 @@
             selectedLabel: @js($selectedLabel),
             _lastLabel: @js($selectedLabel),
             name: @js($name),
+            filterValue: @if($filterModel) @entangle($filterModel) @else null @endif,
+            filterQueryName: @js($filterQueryName),
+            filterRequired: @js($filterRequired),
+            resetOnFilterChange: @js($resetOnFilterChange),
+            selectedFilterValue: null,
 
             init() {
                 if (this.value && this.selectedLabel) {
                     this.search = this.selectedLabel;
+                    this.selectedFilterValue = this.normalizedFilterValue();
                 } else if (this.value) {
                     this.resolveSelectedValue();
                 }
@@ -81,6 +91,7 @@
                     if (! value) {
                         this.search = '';
                         this.selectedLabel = '';
+                        this.selectedFilterValue = null;
                         return;
                     }
 
@@ -94,9 +105,34 @@
                         this.resolveSelectedValue();
                     }
                 });
+
+                this.$watch('filterValue', (value) => {
+                    const normalizedValue = this.normalizeFilterValue(value);
+                    const filterStillMatchesSelection = this.value
+                        && this.selectedFilterValue
+                        && normalizedValue === this.selectedFilterValue;
+
+                    if (this.resetOnFilterChange && ! filterStillMatchesSelection) {
+                        this.value = '';
+                        this.search = '';
+                        this.selectedLabel = '';
+                        this._lastLabel = '';
+                        this.selectedFilterValue = null;
+                        this.syncWireValue('', true);
+                    }
+
+                    this.options = [];
+                    this.show = false;
+                });
             },
 
             fetchOptions() {
+                if (this.filterRequired && ! this.filterValue) {
+                    this.options = [];
+                    this.show = false;
+                    return;
+                }
+
                 if (! this.search || this.search.length < 2) {
                     this.options = [];
                     return;
@@ -113,7 +149,7 @@
                     headers['X-API-KEY'] = this.apiKey;
                 }
 
-                fetch(this.url + '?query=' + encodeURIComponent(this.search), {
+                fetch(this.buildUrl({ query: this.search }), {
                     method: 'GET',
                     headers,
                 })
@@ -147,7 +183,7 @@
                 }
 
                 try {
-                    const response = await fetch(this.url + '?value=' + encodeURIComponent(this.value), {
+                    const response = await fetch(this.buildUrl({ value: this.value }), {
                         method: 'GET',
                         headers,
                     });
@@ -161,27 +197,49 @@
                     if (option && option.value) {
                         this.selectedLabel = option.label;
                         this.search = option.label;
+                        this.selectedFilterValue = this.normalizedFilterValue();
                     }
                 } catch {
                     this.selectedLabel = '';
+                    this.selectedFilterValue = null;
                 }
+            },
+
+            buildUrl(params) {
+                const url = new URL(this.url, window.location.origin);
+
+                Object.entries(params).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined && value !== '') {
+                        url.searchParams.set(key, value);
+                    }
+                });
+
+                if (this.filterQueryName && this.filterValue) {
+                    url.searchParams.set(this.filterQueryName, this.filterValue);
+                }
+
+                return url.toString();
             },
 
             selectOption(option) {
                 this.value = option.value;
+                this.syncWireValue(option.value, true);
                 this.search = option.label;
                 this.selectedLabel = option.label;
                 this._lastLabel = option.label;
+                this.selectedFilterValue = this.normalizedFilterValue();
                 this.show = false;
             },
 
             clear() {
-                this.value = null;
+                this.value = '';
+                this.syncWireValue('', true);
                 this.search = '';
                 this.options = [];
                 this.show = false;
                 this.selectedLabel = '';
                 this._lastLabel = '';
+                this.selectedFilterValue = null;
                 this.$refs.searchInput.focus();
             },
 
@@ -204,9 +262,26 @@
                 this.selectedLabel = detail.label ?? '';
                 this._lastLabel = this.selectedLabel;
                 this.search = this.selectedLabel;
+                this.selectedFilterValue = this.value ? this.normalizedFilterValue() : null;
                 this.options = [];
                 this.show = false;
                 this.searching = false;
+            },
+
+            normalizeFilterValue(value) {
+                return value === null || value === undefined ? '' : String(value);
+            },
+
+            normalizedFilterValue() {
+                return this.normalizeFilterValue(this.filterValue);
+            },
+
+            syncWireValue(value, live = false) {
+                if (! this.name || ! this.$wire?.set) {
+                    return;
+                }
+
+                this.$wire.set(this.name, value, live);
             },
         }"
         @click.outside="show = false"
@@ -304,9 +379,14 @@
                             'text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900/50':
                                 value != option.value,
                         }"
-                        class="flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
+                        class="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
-                        <span class="truncate" x-text="option.label"></span>
+                        <span class="min-w-0">
+                            <span class="block truncate" x-text="option.label"></span>
+                            <template x-if="option.description">
+                                <span class="mt-0.5 block truncate text-xs text-zinc-500 dark:text-zinc-400" x-text="option.description"></span>
+                            </template>
+                        </span>
                         <template x-if="value == option.value">
                             <x-ui.icon name="check-circle" size="4" class="text-accent shrink-0" />
                         </template>

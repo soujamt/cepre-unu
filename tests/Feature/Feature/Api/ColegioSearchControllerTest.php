@@ -17,6 +17,12 @@ test('authenticated users can search colegios by api', function () {
         'estado_tco' => 'HABILITADO',
     ]);
 
+    $tipoColegioPrivado = TipoColegio::query()->create([
+        'codigo_tco' => 'PRI',
+        'nombre_tco' => 'PRIVADO',
+        'estado_tco' => 'HABILITADO',
+    ]);
+
     $ubigeo = Ubigeo::query()->create([
         'id_ubi' => '250101',
         'codigo_departamento_ubi' => '25',
@@ -34,16 +40,32 @@ test('authenticated users can search colegios by api', function () {
         'nombre_col' => 'AGROPECUARIO PADRE ABAD',
         'id_tipo_colegio' => $tipoColegio->id_tco,
         'id_ubigeo' => $ubigeo->id_ubi,
+        'direccion_col' => 'AVENIDA CENTENARIO 100',
+        'estado_col' => 'HABILITADO',
+    ]);
+
+    Colegio::query()->create([
+        'id_col' => '0915390',
+        'codigo_modular_col' => '0915390',
+        'nombre_col' => 'AGROPECUARIO PADRE ABAD PRIVADO',
+        'id_tipo_colegio' => $tipoColegioPrivado->id_tco,
+        'id_ubigeo' => $ubigeo->id_ubi,
         'estado_col' => 'HABILITADO',
     ]);
 
     $this->actingAs($usuario)
-        ->getJson(route('api.colegio.search', ['query' => 'padre abad']))
+        ->getJson(route('api.colegio.search', [
+            'query' => 'padre abad',
+            'id_tipo_colegio' => $tipoColegio->id_tco,
+        ]))
         ->assertOk()
         ->assertJsonFragment([
             'value' => '0915389',
-            'label' => '0915389 | AGROPECUARIO PADRE ABAD',
-            'description' => 'Codigo modular: 0915389',
+            'label' => '0915389 | AGROPECUARIO PADRE ABAD | UCAYALI / CORONEL PORTILLO / CALLERIA',
+            'description' => 'Direccion: AVENIDA CENTENARIO 100',
+        ])
+        ->assertJsonMissing([
+            'value' => '0915390',
         ]);
 });
 
@@ -90,6 +112,6 @@ test('authenticated users can resolve a colegio by value', function () {
         ->assertOk()
         ->assertExactJson([
             'value' => '0915389',
-            'label' => '0915389 | AGROPECUARIO PADRE ABAD',
+            'label' => '0915389 | AGROPECUARIO PADRE ABAD | UCAYALI / CORONEL PORTILLO / CALLERIA',
         ]);
 });
