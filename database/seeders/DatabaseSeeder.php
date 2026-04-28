@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             LenguaExtranjeraSeeder::class,
             ColegioSeeder::class,
             SedeSeeder::class,
+            AulaSeeder::class,
             CarreraSeeder::class,
             LugarInscripcionSeeder::class,
             ModalidadAdmisionSeeder::class,
