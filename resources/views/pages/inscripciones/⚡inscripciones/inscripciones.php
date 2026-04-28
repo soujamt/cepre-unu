@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\InscripcionesFormatoCepreExport;
+use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
@@ -8,11 +9,13 @@ use App\Models\Inscripcion;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
+use App\Models\ProcesoAula;
 use App\Models\Semestre;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -264,6 +267,116 @@ class extends Component
     }
 
     public ?int $idInscripcionAnular = null;
+
+    // --- Asignar Aula ---
+
+    public ?int $idInscripcionAula = null;
+
+    public string $idProcesoAulaSeleccionada = '';
+
+    public function abrirModalAsignarAula(int $idInscripcion): void
+    {
+        $this->autorizarPermiso('inscripcion', 'editar');
+
+        $inscripcion = Inscripcion::query()
+            ->with(['procesoOferta.proceso', 'procesoAula.aula'])
+            ->findOrFail($idInscripcion);
+
+        $this->idInscripcionAula = $inscripcion->id_ins;
+        $this->idProcesoAulaSeleccionada = $inscripcion->id_proceso_aula !== null
+            ? (string) $inscripcion->id_proceso_aula
+            : '';
+
+        $aulasData = $this->aulasDisponiblesParaInscripcion->map(fn (ProcesoAula $a): array => [
+            'id' => (string) $a->id_pau,
+            'nombre' => $a->aula?->nombre_aul ?? '',
+            'piso' => $a->aula?->piso_aul?->getNombre() ?? '',
+            'lugar' => $a->aula?->lugar_aul?->getNombre() ?? '',
+            'ocupados' => $a->inscripciones_count,
+            'capacidad' => $a->capacidad_pau,
+        ])->values()->all();
+
+        $this->resetValidation('idProcesoAulaSeleccionada');
+        $this->modal('modal-asignar-aula')->show();
+
+        $json = json_encode($aulasData, JSON_THROW_ON_ERROR);
+        $this->js("window.dispatchEvent(new CustomEvent('cargar-aulas-modal', { detail: {$json} }))");
+    }
+
+    #[Computed]
+    public function aulasDisponiblesParaInscripcion(): Collection
+    {
+        if ($this->idInscripcionAula === null) {
+            return new Collection();
+        }
+
+        $inscripcion = Inscripcion::query()
+            ->with('procesoOferta')
+            ->findOrFail($this->idInscripcionAula);
+
+        $idProceso = $inscripcion->procesoOferta?->id_proceso;
+
+        if ($idProceso === null) {
+            return new Collection();
+        }
+
+        return ProcesoAula::query()
+            ->with('aula')
+            ->withCount('inscripciones')
+            ->where('id_proceso', $idProceso)
+            ->where('estado_pau', EstadoCatalogo::Habilitado->value)
+            ->get();
+    }
+
+    public function guardarAulaInscripcion(): void
+    {
+        $this->autorizarPermiso('inscripcion', 'editar');
+        $this->resetValidation('idProcesoAulaSeleccionada');
+
+        if (blank($this->idProcesoAulaSeleccionada)) {
+            $this->addError('idProcesoAulaSeleccionada', 'Debe seleccionar un aula.');
+
+            return;
+        }
+
+        try {
+            DB::transaction(function (): void {
+                /** @var ProcesoAula $procesoAula */
+                $procesoAula = ProcesoAula::query()
+                    ->lockForUpdate()
+                    ->withCount('inscripciones')
+                    ->findOrFail((int) $this->idProcesoAulaSeleccionada);
+
+                $inscripcion = Inscripcion::query()
+                    ->lockForUpdate()
+                    ->findOrFail($this->idInscripcionAula);
+
+                // Solo contar inscritos en otras inscripciones (no la propia al reasignar)
+                $ocupados = $procesoAula->inscripciones()
+                    ->where('id_ins', '!=', $inscripcion->id_ins)
+                    ->count();
+
+                if ($ocupados >= $procesoAula->capacidad_pau) {
+                    throw new \RuntimeException(
+                        "El aula '{$procesoAula->aula?->nombre_aul}' ya alcanzó su capacidad máxima ({$procesoAula->capacidad_pau} inscritos)."
+                    );
+                }
+
+                $inscripcion->update(['id_proceso_aula' => $procesoAula->id_pau]);
+            });
+        } catch (\Throwable $throwable) {
+            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo asignar el aula.', type: 'error');
+
+            return;
+        }
+
+        $this->modal('modal-asignar-aula')->close();
+        $this->idInscripcionAula = null;
+        $this->idProcesoAulaSeleccionada = '';
+        unset($this->inscripciones, $this->aulasDisponiblesParaInscripcion);
+        $this->dispatch('toast', message: 'Aula asignada correctamente.', type: 'success');
+    }
 
     #[Validate('required|string|min:10|max:500')]
     public string $motivoAnulacion = '';

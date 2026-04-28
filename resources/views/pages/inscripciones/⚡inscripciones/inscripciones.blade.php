@@ -431,8 +431,18 @@
                                         @endpermiso
                                     @endif
 
+                                    @permiso ('inscripcion_editar')
+                                        <flux:menu.separator />
+                                        <flux:menu.item wire:click="abrirModalAsignarAula({{ $inscripcion->id_ins }})">
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="building-office" size="4" class="me-2" />
+                                            </x-slot>
+                                            {{ $inscripcion->id_proceso_aula ? 'Cambiar aula' : 'Asignar aula' }}
+                                        </flux:menu.item>
+                                    @endpermiso
+
                                     @if (! $this->puedeContinuarRegistro($inscripcion) && $inscripcion->estado_ins !== App\Enums\EstadoInscripcion::Activo)
-                                        @php ($accionEstado = $this->accionEstadoRegistro($inscripcion))
+                                        @php $accionEstado = $this->accionEstadoRegistro($inscripcion) @endphp
                                         <flux:menu.separator />
                                         <flux:menu.item disabled>
                                             <x-slot name="icon">
@@ -523,4 +533,120 @@
             </div>
         </div>
     </flux:modal>
+
+    @permiso ('inscripcion_editar')
+        <flux:modal flyout variant="floating" name="modal-asignar-aula" class="px-0! py-5! md:w-lg!">
+            <div
+                class="flex h-full flex-col gap-5"
+                x-data="{
+                    selected: $wire.entangle('idProcesoAulaSeleccionada'),
+                    buscar: '',
+                    aulas: [],
+                    get filtradas() {
+                        if (this.buscar.trim() === '') return this.aulas;
+                        const q = this.buscar.toLowerCase();
+                        return this.aulas.filter(a =>
+                            a.nombre.toLowerCase().includes(q) ||
+                            a.lugar.toLowerCase().includes(q) ||
+                            a.piso.toLowerCase().includes(q)
+                        );
+                    },
+                    porcentaje(a) {
+                        return a.capacidad > 0 ? Math.round((a.ocupados / a.capacidad) * 100) : 0;
+                    },
+                    llena(a) {
+                        return a.ocupados >= a.capacidad;
+                    },
+                    barColor(a) {
+                        if (this.llena(a)) return 'bg-red-500';
+                        if (this.porcentaje(a) >= 80) return 'bg-amber-500';
+                        return this.selected === a.id ? 'bg-white dark:bg-zinc-900' : 'bg-emerald-500';
+                    },
+                    seleccionar(a) {
+                        if (this.llena(a) && this.selected !== a.id) return;
+                        this.selected = a.id;
+                    },
+                }"
+                x-on:cargar-aulas-modal.window="aulas = $event.detail; buscar = '';"
+            >
+                {{-- Cabecera fija --}}
+                <div class="shrink-0 space-y-4 px-5">
+                    <div>
+                        <flux:heading size="lg">Asignar aula</flux:heading>
+                        <flux:subheading>Seleccione el aula. La capacidad se valida al guardar.</flux:subheading>
+                    </div>
+                    <flux:input x-model="buscar" placeholder="Buscar por nombre, lugar o piso..." clearable>
+                        <x-slot name="icon">
+                            <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                        </x-slot>
+                    </flux:input>
+                </div>
+
+                <flux:separator variant="subtle" />
+
+                {{-- Lista scrolleable --}}
+                <div class="min-h-0 flex-1 overflow-y-auto px-5">
+                    <div class="space-y-2 pb-2">
+                        <template x-if="filtradas.length === 0">
+                            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-8 text-center dark:border-zinc-700">
+                                <x-ui.icon name="building-office" size="10" class="mx-auto mb-3 text-zinc-400 dark:text-zinc-500" />
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400" x-text="buscar ? 'No se encontraron aulas con ese criterio.' : 'No hay aulas configuradas para este proceso.'"></p>
+                            </div>
+                        </template>
+
+                        <template x-for="aula in filtradas" :key="aula.id">
+                            <button
+                                type="button"
+                                x-on:click="seleccionar(aula)"
+                                :disabled="llena(aula) && selected !== aula.id"
+                                :class="{
+                                    'border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100': selected === aula.id,
+                                    'cursor-not-allowed border-zinc-200 bg-zinc-50/50 opacity-50 dark:border-zinc-800 dark:bg-zinc-900/50': llena(aula) && selected !== aula.id,
+                                    'border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600': !llena(aula) && selected !== aula.id,
+                                }"
+                                class="w-full rounded-xl border p-4 text-left transition"
+                            >
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-medium" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : 'text-zinc-800 dark:text-zinc-100'">
+                                            <span x-text="aula.nombre"></span>
+                                            <span class="ml-1 text-xs font-normal" :class="selected === aula.id ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'" x-text="aula.piso + ' · ' + aula.lugar"></span>
+                                        </p>
+                                        <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full" :class="selected === aula.id ? 'bg-zinc-700 dark:bg-zinc-300' : 'bg-zinc-200 dark:bg-zinc-700'">
+                                            <div class="h-full rounded-full transition-all duration-300" :class="barColor(aula)" :style="'width: ' + Math.min(porcentaje(aula), 100) + '%'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="shrink-0 text-right">
+                                        <p class="text-sm font-semibold" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : (llena(aula) ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-200')" x-text="aula.ocupados + ' / ' + aula.capacidad"></p>
+                                        <p class="text-xs" :class="selected === aula.id ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500'" x-text="llena(aula) ? 'Llena' : (aula.capacidad - aula.ocupados) + ' libres'"></p>
+                                    </div>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <flux:separator variant="subtle" />
+
+                {{-- Footer fijo --}}
+                <div class="shrink-0 space-y-3 px-5">
+                    @error('idProcesoAulaSeleccionada')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    <div class="flex justify-end gap-3">
+                        <flux:modal.close>
+                            <flux:button variant="ghost" class="font-normal">Cancelar</flux:button>
+                        </flux:modal.close>
+                        <flux:button variant="primary" class="font-normal" wire:click="guardarAulaInscripcion" wire:loading.attr="disabled" wire:target="guardarAulaInscripcion">
+                            <x-slot name="icon">
+                                <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                            </x-slot>
+                            Guardar
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
+        </flux:modal>
+    @endpermiso
 </div>
+
