@@ -11,6 +11,7 @@ use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Semestre;
+use App\Support\AsignadorAulaInscripcion;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -321,10 +322,19 @@ class extends Component
         }
 
         return ProcesoAula::query()
+            ->select('tbl_proceso_aula.*')
+            ->join('tbl_aula', 'tbl_aula.id_aul', '=', 'tbl_proceso_aula.id_aula')
             ->with('aula')
-            ->withCount('inscripciones')
-            ->where('id_proceso', $idProceso)
-            ->where('estado_pau', EstadoCatalogo::Habilitado->value)
+            ->withCount([
+                'inscripciones as inscripciones_count' => fn (Builder $query) => $query
+                    ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value),
+            ])
+            ->where('tbl_proceso_aula.id_proceso', $idProceso)
+            ->where('tbl_proceso_aula.estado_pau', EstadoCatalogo::Habilitado->value)
+            ->where('tbl_aula.estado_aul', EstadoCatalogo::Habilitado->value)
+            ->orderBy('tbl_aula.lugar_aul')
+            ->orderBy('tbl_aula.piso_aul')
+            ->orderBy('tbl_aula.nombre_aul')
             ->get();
     }
 
@@ -351,16 +361,7 @@ class extends Component
                     ->lockForUpdate()
                     ->findOrFail($this->idInscripcionAula);
 
-                // Solo contar inscritos en otras inscripciones (no la propia al reasignar)
-                $ocupados = $procesoAula->inscripciones()
-                    ->where('id_ins', '!=', $inscripcion->id_ins)
-                    ->count();
-
-                if ($ocupados >= $procesoAula->capacidad_pau) {
-                    throw new \RuntimeException(
-                        "El aula '{$procesoAula->aula?->nombre_aul}' ya alcanzó su capacidad máxima ({$procesoAula->capacidad_pau} inscritos)."
-                    );
-                }
+                app(AsignadorAulaInscripcion::class)->validarCupo($procesoAula, $inscripcion);
 
                 $inscripcion->update(['id_proceso_aula' => $procesoAula->id_pau]);
             });

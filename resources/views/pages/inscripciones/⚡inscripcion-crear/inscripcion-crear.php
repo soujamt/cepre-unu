@@ -30,6 +30,7 @@ use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
 use App\Services\ReniecService;
+use App\Support\AsignadorAulaInscripcion;
 use App\Support\InscripcionPagoManager;
 use App\Support\ProcesoInscripcionResolver;
 use App\Traits\AuthorizesPermisos;
@@ -1971,6 +1972,17 @@ class extends Component
                             'codigo_ins' => $this->generarCodigoInscripcion($inscripcion),
                         ]);
                     }
+                }
+
+                $aulaActual = $inscripcion->procesoAula()->first();
+                $debeAsignarAula = $aulaActual === null || $aulaActual->id_proceso !== $procesoActivo->id_pro;
+
+                if ($debeAsignarAula) {
+                    if ($aulaActual !== null) {
+                        $inscripcion->update(['id_proceso_aula' => null]);
+                    }
+
+                    app(AsignadorAulaInscripcion::class)->asignarDisponible($inscripcion, $procesoActivo->id_pro);
                 }
 
                 $this->inscripcionId = $inscripcion->id_ins;

@@ -7,6 +7,7 @@ use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoValidacionPago;
 use App\Models\Accion;
+use App\Models\Aula;
 use App\Models\Colegio;
 use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
@@ -25,6 +26,7 @@ use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
+use App\Models\ProcesoAula;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\Rol;
@@ -227,6 +229,73 @@ function sembrarConfiguracionAcademicaParaInscripcion(): void
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
+}
+
+function crearPersonaParaPostulacion(string $numeroDocumento): Persona
+{
+    $tipoDocumento = TipoDocumento::query()
+        ->where('longitud_minima_tdo', 8)
+        ->where('longitud_maxima_tdo', 8)
+        ->firstOrFail();
+
+    $estadoCivil = EstadoCivil::query()->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $nacionalidad = Nacionalidad::query()->firstOrFail();
+    $ubigeo = Ubigeo::query()->firstOrFail();
+    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
+    $lenguaNativa = LenguaNativa::query()->firstOrFail();
+
+    return Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => $numeroDocumento,
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'DELGADO',
+        'apellido_materno_per' => 'HUAMANI',
+        'apellido_casada_per' => null,
+        'nombres_per' => 'ROXANA KARINA',
+        'fecha_nacimiento_per' => '2001-02-03',
+        'sexo_per' => 'FEMENINO',
+        'id_estado_civil' => $estadoCivil->id_eci,
+        'id_pais_nacimiento' => $pais->id_pai,
+        'id_nacionalidad' => $nacionalidad->id_nac,
+        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
+        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
+        'direccion_per' => 'JR LOCAL 123',
+        'celular_per' => '999111222',
+        'telefono_per' => '061999999',
+        'correo_electronico_per' => "{$numeroDocumento}@test.com",
+        'discapacidad_per' => false,
+        'id_tipo_discapacidad' => null,
+        'tipo_lengua_materna_per' => 'NATIVA',
+        'id_identidad_etnica' => $identidadEtnica->id_iet,
+        'id_lengua_nativa' => $lenguaNativa->id_lna,
+        'id_lengua_extranjera' => null,
+        'observacion_per' => null,
+        'estado_per' => 'HABILITADO',
+    ]);
+}
+
+/**
+ * @return array{aula: Aula, procesoAula: ProcesoAula}
+ */
+function crearAulaParaProcesoInscripcion(Proceso $proceso, string $nombre, string $lugar, string $piso, int $capacidad): array
+{
+    $aula = Aula::query()->create([
+        'nombre_aul' => $nombre,
+        'lugar_aul' => $lugar,
+        'piso_aul' => $piso,
+        'orden_aul' => 1,
+        'estado_aul' => 'HABILITADO',
+    ]);
+
+    $procesoAula = ProcesoAula::query()->create([
+        'id_proceso' => $proceso->id_pro,
+        'id_aula' => $aula->id_aul,
+        'capacidad_pau' => $capacidad,
+        'estado_pau' => 'HABILITADO',
+    ]);
+
+    return compact('aula', 'procesoAula');
 }
 
 test('authorized users can access nueva inscripcion page', function () {
@@ -799,6 +868,110 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
         ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
         ->and($inscripcion?->codigo_ins)->toStartWith('261ORD');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('postulacion assigns the first aula with capacity by configured order', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $persona = crearPersonaParaPostulacion('46027897');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $procesoOferta = ProcesoOferta::query()
+        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $primerAula = crearAulaParaProcesoInscripcion($proceso, 'AULA A', 'UAP', 'PISO 1', 2);
+    crearAulaParaProcesoInscripcion($proceso, 'AULA B', 'UAP', 'PISO 1', 2);
+
+    $this->actingAs($usuario);
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+
+    $inscripcion = Inscripcion::query()->firstOrFail();
+
+    expect($inscripcion->id_proceso_aula)->toBe($primerAula['procesoAula']->id_pau);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('postulacion skips full aulas and assigns the next available aula', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $personaOcupante = crearPersonaParaPostulacion('46027896');
+    $persona = crearPersonaParaPostulacion('46027897');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $procesoOferta = ProcesoOferta::query()
+        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $primerAula = crearAulaParaProcesoInscripcion($proceso, 'AULA A', 'UAP', 'PISO 1', 1);
+    $segundaAula = crearAulaParaProcesoInscripcion($proceso, 'AULA B', 'UAP', 'PISO 1', 2);
+
+    Inscripcion::query()->create([
+        'codigo_ins' => 'OCUPADO-001',
+        'id_persona' => $personaOcupante->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso_aula' => $primerAula['procesoAula']->id_pau,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+    ]);
+
+    $this->actingAs($usuario);
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+
+    $inscripcion = Inscripcion::query()
+        ->where('id_persona', $persona->id_per)
+        ->firstOrFail();
+
+    expect($inscripcion->id_proceso_aula)->toBe($segundaAula['procesoAula']->id_pau);
 
     Carbon\Carbon::setTestNow();
 });
