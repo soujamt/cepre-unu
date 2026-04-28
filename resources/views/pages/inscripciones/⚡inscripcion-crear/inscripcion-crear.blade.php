@@ -1,4 +1,4 @@
-﻿@section ('icon')
+@section ('icon')
     <x-header.icon icon="note-pencil" />
 @endsection
 
@@ -901,7 +901,7 @@
                                 <div class="lg:col-span-4">
                                     <x-ui.select
                                         label="Tipo de colegio"
-                                        wire:model="generalForm.id_tipo_colegio"
+                                        wire:model.live="generalForm.id_tipo_colegio"
                                         :invalid="$errors->has('generalForm.id_tipo_colegio')"
                                         :error="$errors->first('generalForm.id_tipo_colegio')"
                                         required

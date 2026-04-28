@@ -57,12 +57,14 @@
             value: @entangle($attributes->wire('model')),
             search: '',
             searching: false,
+            resetting: false,
             url: @js($action),
             apiKey: @js($apiKey),
             selectedLabel: @js($selectedLabel),
             _lastLabel: @js($selectedLabel),
             name: @js($name),
             filterValue: @if($filterModel) @entangle($filterModel) @else null @endif,
+            filterModelName: @js($filterModel),
             filterQueryName: @js($filterQueryName),
             filterRequired: @js($filterRequired),
             resetOnFilterChange: @js($resetOnFilterChange),
@@ -88,6 +90,10 @@
                 });
 
                 this.$watch('value', (value) => {
+                    if (this.resetting) {
+                        this.resetting = false;
+                    }
+
                     if (! value) {
                         this.search = '';
                         this.selectedLabel = '';
@@ -113,12 +119,15 @@
                         && normalizedValue === this.selectedFilterValue;
 
                     if (this.resetOnFilterChange && ! filterStillMatchesSelection) {
-                        this.value = '';
+                        this.resetting = true;
                         this.search = '';
                         this.selectedLabel = '';
                         this._lastLabel = '';
                         this.selectedFilterValue = null;
-                        this.syncWireValue('', true);
+
+                        if (! this.value) {
+                            this.$nextTick(() => { this.resetting = false; });
+                        }
                     }
 
                     this.options = [];
@@ -266,6 +275,7 @@
                 this.options = [];
                 this.show = false;
                 this.searching = false;
+                this.resetting = false;
             },
 
             normalizeFilterValue(value) {
@@ -286,6 +296,11 @@
         }"
         @click.outside="show = false"
         x-on:ui-select-search-filled.window="applyExternalSelection($event.detail)"
+        x-on:ui-select-changed.window="
+            if (filterModelName && $event.detail.name === filterModelName) {
+                filterValue = $event.detail.value ?? '';
+            }
+        "
         class="group/select relative block w-full"
     >
         @if ($iconLeading)
@@ -328,19 +343,19 @@
             @keydown.escape="show = false"
             placeholder="{{ $floating ? '' : $placeholder }}"
             autocomplete="off"
-            @disabled ($disabled)
+            x-bind:disabled="resetting || {{ $disabled ? 'true' : 'false' }}"
             {{ $attributes->except(['class', 'wire:model', 'wire:model.live', 'wire:model.blur', 'wire:model.lazy', 'wire:model.defer'])->merge(['class' => $controlClasses]) }}
         />
 
         <div
             class="absolute inset-y-0 inset-e-0 z-10 flex items-center gap-x-1.5 pe-3 text-xs text-zinc-400 dark:text-white/60"
         >
-            <div x-show="searching" x-cloak>
+            <div x-show="resetting || searching" x-cloak>
                 <x-ui.icon name="spinner-gap" size="5" class="animate-spin" />
             </div>
 
             <button
-                x-show="search && !searching"
+                x-show="search && !searching && !resetting"
                 @click="clear()"
                 type="button"
                 class="text-zinc-400 transition-colors hover:text-red-500 focus:outline-none"
@@ -349,7 +364,7 @@
                 <x-ui.icon name="x" size="5" />
             </button>
 
-            <div x-show="!search && !searching" x-cloak class="pointer-events-none">
+            <div x-show="!search && !searching && !resetting" x-cloak class="pointer-events-none">
                 <x-ui.icon name="caret-down" size="5" class="text-zinc-400 dark:text-white/60" />
             </div>
         </div>

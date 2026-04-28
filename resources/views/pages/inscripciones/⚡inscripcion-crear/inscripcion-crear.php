@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
