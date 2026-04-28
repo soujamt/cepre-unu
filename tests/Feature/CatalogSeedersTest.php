@@ -41,7 +41,7 @@ it('loads the excel master catalogs into the database', function (): void {
     expect(DB::table('tbl_identidad_etnica')->count())->toBe(9);
     expect(DB::table('tbl_lengua_nativa')->count())->toBe(48);
     expect(DB::table('tbl_lengua_extranjera')->count())->toBe(184);
-    expect(DB::table('tbl_colegio')->count())->toBe(26725);
+    expect(DB::table('tbl_colegio')->count())->toBe(12379);
 
     expect(DB::table('tbl_tipo_documento')->where('codigo_tdo', '3')->value('nombre_tdo'))
         ->toBe('CEDULA DE IDENTIDAD');
@@ -67,6 +67,15 @@ it('loads the excel master catalogs into the database', function (): void {
     expect(DB::table('tbl_lengua_extranjera')->where('codigo_lex', '5')->value('nombre_lex'))
         ->toBe('ALBANIA');
 
-    expect(DB::table('tbl_colegio')->where('id_col', '0416123')->value('nombre_col'))
-        ->toBe('HIPOLITO UNANUE');
+    expect(DB::table('tbl_colegio')->where('id_col', '0411736')->first([
+        'nombre_col',
+        'direccion_col',
+        'id_tipo_colegio',
+        'id_ubigeo',
+    ]))->toMatchObject([
+        'nombre_col' => '86001 SANTA ROSA DE VITERBO',
+        'direccion_col' => 'JIRON RAMON CASTILLA 1219',
+        'id_tipo_colegio' => 1,
+        'id_ubigeo' => '020101',
+    ]);
 });
