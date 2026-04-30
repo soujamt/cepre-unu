@@ -52,6 +52,8 @@ class extends Component
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
                 'procesoOferta.ofertaBase.sedeCarrera.sede',
                 'procesoOferta.turno',
+                'procesoAula.aula',
+                'procesoAula.turno',
                 'convenioProceso.convenio',
                 'paisColegio',
                 'colegio.tipoColegio',
@@ -199,6 +201,21 @@ class extends Component
     public function turnoResumen(): string
     {
         return $this->inscripcionActual->procesoOferta?->turno?->nombre_tur ?? 'Sin turno';
+    }
+
+    public function aulaResumen(): string
+    {
+        $procesoAula = $this->inscripcionActual->procesoAula;
+
+        if ($procesoAula === null || $procesoAula->aula === null) {
+            return 'Sin aula asignada';
+        }
+
+        return implode(' | ', array_filter([
+            $procesoAula->aula->nombre_aul,
+            $procesoAula->aula->piso_aul?->getNombre(),
+            $procesoAula->aula->lugar_aul?->getNombre(),
+        ]));
     }
 
     public function ubigeoCompleto(?Ubigeo $ubigeo): string

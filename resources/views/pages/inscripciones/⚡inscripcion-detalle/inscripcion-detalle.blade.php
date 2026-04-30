@@ -74,6 +74,13 @@
                     <div
                         class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
                     >
+                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Aula</p>
+                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $this->aulaResumen() }}</p>
+                    </div>
+
+                    <div
+                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
+                    >
                         <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pago</p>
                         <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $resumenPagoGeneral['detalle'] }}</p>
                     </div>
@@ -245,6 +252,10 @@
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Turno</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->turno?->nombre_tur ?? 'No registrado' }}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Aula asignada</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $this->aulaResumen() }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Convenio</p>
