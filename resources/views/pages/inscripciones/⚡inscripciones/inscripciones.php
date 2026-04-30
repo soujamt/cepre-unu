@@ -210,11 +210,12 @@ class extends Component
     public function aulasProcesoDisponibles(): Collection
     {
         return ProcesoAula::query()
-            ->with('aula')
+            ->with(['aula', 'turno'])
             ->when(filled($this->idProceso), fn (Builder $q) => $q->where('id_proceso', (int) $this->idProceso))
             ->when(! filled($this->idProceso) && filled($this->idSemestre), function (Builder $q): void {
                 $q->whereHas('proceso', fn (Builder $p) => $p->where('id_semestre', (int) $this->idSemestre));
             })
+            ->when(filled($this->idTurno), fn (Builder $q) => $q->where('id_turno', (int) $this->idTurno))
             ->whereHas('inscripciones')
             ->orderBy('id_pau')
             ->get();
@@ -324,7 +325,7 @@ class extends Component
         $this->autorizarPermiso('inscripcion', 'editar');
 
         $inscripcion = Inscripcion::query()
-            ->with(['procesoOferta.proceso', 'procesoAula.aula'])
+            ->with(['procesoOferta.proceso', 'procesoOferta.turno', 'procesoAula.aula'])
             ->findOrFail($idInscripcion);
 
         $this->idInscripcionAula = $inscripcion->id_ins;
@@ -344,7 +345,10 @@ class extends Component
         $this->resetValidation('idProcesoAulaSeleccionada');
         $this->modal('modal-asignar-aula')->show();
 
-        $json = json_encode($aulasData, JSON_THROW_ON_ERROR);
+        $json = json_encode([
+            'turno' => $inscripcion->procesoOferta?->turno?->nombre_tur ?? '',
+            'aulas' => $aulasData,
+        ], JSON_THROW_ON_ERROR);
         $this->js("window.dispatchEvent(new CustomEvent('cargar-aulas-modal', { detail: {$json} }))");
     }
 
@@ -360,8 +364,9 @@ class extends Component
             ->findOrFail($this->idInscripcionAula);
 
         $idProceso = $inscripcion->procesoOferta?->id_proceso;
+        $idTurno = $inscripcion->procesoOferta?->id_turno;
 
-        if ($idProceso === null) {
+        if ($idProceso === null || $idTurno === null) {
             return new Collection();
         }
 
@@ -374,6 +379,7 @@ class extends Component
                     ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value),
             ])
             ->where('tbl_proceso_aula.id_proceso', $idProceso)
+            ->where('tbl_proceso_aula.id_turno', $idTurno)
             ->where('tbl_proceso_aula.estado_pau', EstadoCatalogo::Habilitado->value)
             ->where('tbl_aula.estado_aul', EstadoCatalogo::Habilitado->value)
             ->orderBy('tbl_aula.lugar_aul')
@@ -403,8 +409,10 @@ class extends Component
 
                 $inscripcion = Inscripcion::query()
                     ->lockForUpdate()
+                    ->with('procesoOferta')
                     ->findOrFail($this->idInscripcionAula);
 
+                app(AsignadorAulaInscripcion::class)->validarCompatibilidad($procesoAula, $inscripcion);
                 app(AsignadorAulaInscripcion::class)->validarCupo($procesoAula, $inscripcion);
 
                 $inscripcion->update(['id_proceso_aula' => $procesoAula->id_pau]);
@@ -655,6 +663,8 @@ class extends Component
             'procesoOferta.ofertaBase.sedeCarrera.sede',
             'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
             'procesoOferta.turno',
+            'procesoAula.aula',
+            'procesoAula.turno',
             'obligacionesPago',
             'expedientes',
         ];

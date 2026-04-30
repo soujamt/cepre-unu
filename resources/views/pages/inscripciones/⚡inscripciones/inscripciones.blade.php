@@ -209,7 +209,7 @@
                 <option value="">Todas las aulas</option>
                 @foreach ($this->aulasProcesoDisponibles as $aulaOpcion)
                     <option wire:key="aula-proceso-{{ $aulaOpcion->id_pau }}" value="{{ $aulaOpcion->id_pau }}">
-                        {{ $aulaOpcion->aula?->nombre_aul }}
+                        {{ $aulaOpcion->aula?->nombre_aul }}{{ $aulaOpcion->turno?->nombre_tur ? ' | '.$aulaOpcion->turno?->nombre_tur : '' }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -353,6 +353,9 @@
                                         {{ implode(' · ', array_filter([$modalidad, $turno])) }}
                                     </p>
                                 @endif
+                                <p class="text-xs text-zinc-400 dark:text-zinc-500">
+                                    Aula: {{ $inscripcion->procesoAula?->aula?->nombre_aul ?? 'SIN ASIGNAR' }}
+                                </p>
                             </div>
                         </x-table.cell>
                         <x-table.cell>
@@ -563,15 +566,42 @@
                 x-data="{
                     selected: $wire.entangle('idProcesoAulaSeleccionada'),
                     buscar: '',
+                    lugarFiltro: '',
+                    turnoActual: '',
                     aulas: [],
+                    get lugaresDisponibles() {
+                        return [...new Set(this.aulas.map(a => a.lugar).filter(Boolean))].sort();
+                    },
                     get filtradas() {
-                        if (this.buscar.trim() === '') return this.aulas;
                         const q = this.buscar.toLowerCase();
-                        return this.aulas.filter(a =>
-                            a.nombre.toLowerCase().includes(q) ||
-                            a.lugar.toLowerCase().includes(q) ||
-                            a.piso.toLowerCase().includes(q)
-                        );
+
+                        return this.aulas.filter(a => {
+                            const coincideLugar = this.lugarFiltro === '' || a.lugar === this.lugarFiltro;
+                            const coincideBusqueda = this.buscar.trim() === '' || (
+                                a.nombre.toLowerCase().includes(q) ||
+                                a.lugar.toLowerCase().includes(q) ||
+                                a.piso.toLowerCase().includes(q)
+                            );
+
+                            return coincideLugar && coincideBusqueda;
+                        });
+                    },
+                    get grupos() {
+                        return this.filtradas.reduce((carry, aula) => {
+                            const key = aula.lugar || 'Sin lugar';
+                            if (!carry[key]) carry[key] = [];
+                            carry[key].push(aula);
+                            return carry;
+                        }, {});
+                    },
+                    get resumen() {
+                        return this.filtradas.reduce((carry, aula) => {
+                            carry.total += 1;
+                            carry.capacidad += aula.capacidad;
+                            carry.ocupados += aula.ocupados;
+                            carry.llenas += this.llena(aula) ? 1 : 0;
+                            return carry;
+                        }, { total: 0, capacidad: 0, ocupados: 0, llenas: 0 });
                     },
                     porcentaje(a) {
                         return a.capacidad > 0 ? Math.round((a.ocupados / a.capacidad) * 100) : 0;
@@ -589,7 +619,7 @@
                         this.selected = a.id;
                     },
                 }"
-                x-on:cargar-aulas-modal.window="aulas = $event.detail; buscar = '';"
+                x-on:cargar-aulas-modal.window="aulas = $event.detail.aulas; turnoActual = $event.detail.turno; buscar = ''; lugarFiltro = '';"
             >
                 {{-- Cabecera fija --}}
                 <div class="shrink-0 space-y-4 px-5">
@@ -597,11 +627,38 @@
                         <flux:heading size="lg">Asignar aula</flux:heading>
                         <flux:subheading>Seleccione el aula. La capacidad se valida al guardar.</flux:subheading>
                     </div>
-                    <flux:input x-model="buscar" placeholder="Buscar por nombre, lugar o piso..." clearable>
-                        <x-slot name="icon">
-                            <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
-                        </x-slot>
-                    </flux:input>
+                    <div class="grid gap-3 sm:grid-cols-4">
+                        <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/70">
+                            <p class="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Turno</p>
+                            <p class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100" x-text="turnoActual || 'Sin turno'"></p>
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/70">
+                            <p class="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Aulas</p>
+                            <p class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100" x-text="resumen.total"></p>
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/70">
+                            <p class="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Ocupados</p>
+                            <p class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100" x-text="resumen.ocupados + ' / ' + resumen.capacidad"></p>
+                        </div>
+                        <div class="rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 dark:border-zinc-800 dark:bg-zinc-900/70">
+                            <p class="text-[11px] font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Llenas</p>
+                            <p class="mt-1 text-sm font-medium text-zinc-900 dark:text-zinc-100" x-text="resumen.llenas"></p>
+                        </div>
+                    </div>
+                    <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
+                        <flux:input x-model="buscar" placeholder="Buscar por nombre, lugar o piso..." clearable>
+                            <x-slot name="icon">
+                                <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                            </x-slot>
+                        </flux:input>
+
+                        <x-ui.select x-model="lugarFiltro">
+                            <option value="">Todos los lugares</option>
+                            <template x-for="lugar in lugaresDisponibles" :key="lugar">
+                                <option :value="lugar" x-text="lugar"></option>
+                            </template>
+                        </x-ui.select>
+                    </div>
                 </div>
 
                 <flux:separator variant="subtle" />
@@ -616,34 +673,52 @@
                             </div>
                         </template>
 
-                        <template x-for="aula in filtradas" :key="aula.id">
-                            <button
-                                type="button"
-                                x-on:click="seleccionar(aula)"
-                                :disabled="llena(aula) && selected !== aula.id"
-                                :class="{
-                                    'border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100': selected === aula.id,
-                                    'cursor-not-allowed border-zinc-200 bg-zinc-50/50 opacity-50 dark:border-zinc-800 dark:bg-zinc-900/50': llena(aula) && selected !== aula.id,
-                                    'border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600': !llena(aula) && selected !== aula.id,
-                                }"
-                                class="w-full rounded-xl border p-4 text-left transition"
-                            >
-                                <div class="flex items-center justify-between gap-3">
-                                    <div class="min-w-0 flex-1">
-                                        <p class="font-medium" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : 'text-zinc-800 dark:text-zinc-100'">
-                                            <span x-text="aula.nombre"></span>
-                                            <span class="ml-1 text-xs font-normal" :class="selected === aula.id ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-500 dark:text-zinc-400'" x-text="aula.piso + ' · ' + aula.lugar"></span>
-                                        </p>
-                                        <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full" :class="selected === aula.id ? 'bg-zinc-700 dark:bg-zinc-300' : 'bg-zinc-200 dark:bg-zinc-700'">
-                                            <div class="h-full rounded-full transition-all duration-300" :class="barColor(aula)" :style="'width: ' + Math.min(porcentaje(aula), 100) + '%'"></div>
-                                        </div>
+                        <template x-for="[lugar, aulasGrupo] in Object.entries(grupos)" :key="lugar">
+                            <div class="space-y-2">
+                                <div class="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95">
+                                    <div class="flex items-center gap-2">
+                                        <x-ui.icon name="map-pin-area" size="4" class="text-zinc-400 dark:text-zinc-500" />
+                                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100" x-text="lugar"></p>
                                     </div>
-                                    <div class="shrink-0 text-right">
-                                        <p class="text-sm font-semibold" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : (llena(aula) ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-200')" x-text="aula.ocupados + ' / ' + aula.capacidad"></p>
-                                        <p class="text-xs" :class="selected === aula.id ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500'" x-text="llena(aula) ? 'Llena' : (aula.capacidad - aula.ocupados) + ' libres'"></p>
-                                    </div>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400" x-text="aulasGrupo.length + ' aulas'"></p>
                                 </div>
-                            </button>
+
+                                <div class="space-y-2">
+                                    <template x-for="aula in aulasGrupo" :key="aula.id">
+                                        <button
+                                            type="button"
+                                            x-on:click="seleccionar(aula)"
+                                            :disabled="llena(aula) && selected !== aula.id"
+                                            :class="{
+                                                'border-zinc-900 bg-zinc-900 dark:border-zinc-100 dark:bg-zinc-100': selected === aula.id,
+                                                'cursor-not-allowed border-zinc-200 bg-zinc-50/50 opacity-50 dark:border-zinc-800 dark:bg-zinc-900/50': llena(aula) && selected !== aula.id,
+                                                'border-zinc-200 bg-white hover:border-zinc-400 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-600': !llena(aula) && selected !== aula.id,
+                                            }"
+                                            class="w-full rounded-xl border p-4 text-left transition"
+                                        >
+                                            <div class="flex items-center justify-between gap-3">
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                        <p class="font-medium" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : 'text-zinc-800 dark:text-zinc-100'" x-text="aula.nombre"></p>
+                                                        <span
+                                                            class="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                                            :class="selected === aula.id ? 'bg-white/15 text-zinc-100 dark:bg-zinc-900/10 dark:text-zinc-700' : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300'"
+                                                            x-text="aula.piso"
+                                                        ></span>
+                                                    </div>
+                                                    <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full" :class="selected === aula.id ? 'bg-zinc-700 dark:bg-zinc-300' : 'bg-zinc-200 dark:bg-zinc-700'">
+                                                        <div class="h-full rounded-full transition-all duration-300" :class="barColor(aula)" :style="'width: ' + Math.min(porcentaje(aula), 100) + '%'"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="shrink-0 text-right">
+                                                    <p class="text-sm font-semibold" :class="selected === aula.id ? 'text-white dark:text-zinc-900' : (llena(aula) ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-200')" x-text="aula.ocupados + ' / ' + aula.capacidad"></p>
+                                                    <p class="text-xs" :class="selected === aula.id ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 dark:text-zinc-500'" x-text="llena(aula) ? 'Llena' : (aula.capacidad - aula.ocupados) + ' libres'"></p>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
                         </template>
                     </div>
                 </div>
@@ -671,4 +746,3 @@
         </flux:modal>
     @endpermiso
 </div>
-

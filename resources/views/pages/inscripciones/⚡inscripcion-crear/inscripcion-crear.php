@@ -1975,14 +1975,17 @@ class extends Component
                 }
 
                 $aulaActual = $inscripcion->procesoAula()->first();
-                $debeAsignarAula = $aulaActual === null || $aulaActual->id_proceso !== $procesoActivo->id_pro;
+                $turnoPostulacion = (int) $data['postulacionForm']['id_turno'];
+                $debeAsignarAula = $aulaActual === null
+                    || $aulaActual->id_proceso !== $procesoActivo->id_pro
+                    || $aulaActual->id_turno !== $turnoPostulacion;
 
                 if ($debeAsignarAula) {
                     if ($aulaActual !== null) {
                         $inscripcion->update(['id_proceso_aula' => null]);
                     }
 
-                    app(AsignadorAulaInscripcion::class)->asignarDisponible($inscripcion, $procesoActivo->id_pro);
+                    app(AsignadorAulaInscripcion::class)->asignarDisponible($inscripcion, $procesoActivo->id_pro, $turnoPostulacion);
                 }
 
                 $this->inscripcionId = $inscripcion->id_ins;
