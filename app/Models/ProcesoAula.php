@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_proceso', 'id_aula', 'capacidad_pau', 'estado_pau'])]
+#[Fillable(['id_proceso', 'id_turno', 'id_aula', 'capacidad_pau', 'estado_pau'])]
 #[Table('tbl_proceso_aula', key: 'id_pau')]
 class ProcesoAula extends LegacyModel
 {
@@ -28,6 +28,11 @@ class ProcesoAula extends LegacyModel
     public function aula(): BelongsTo
     {
         return $this->belongsTo(Aula::class, 'id_aula');
+    }
+
+    public function turno(): BelongsTo
+    {
+        return $this->belongsTo(Turno::class, 'id_turno', 'id_tur');
     }
 
     public function inscripciones(): HasMany
