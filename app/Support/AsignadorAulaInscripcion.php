@@ -10,9 +10,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class AsignadorAulaInscripcion
 {
-    public function asignarDisponible(Inscripcion $inscripcion, int $idProceso): ?ProcesoAula
+    public function asignarDisponible(Inscripcion $inscripcion, int $idProceso, int $idTurno): ?ProcesoAula
     {
-        $aulas = $this->aulasOrdenadasPorProceso($idProceso);
+        $aulas = $this->aulasOrdenadasPorProcesoYTurno($idProceso, $idTurno);
 
         if ($aulas->isEmpty()) {
             return null;
@@ -38,16 +38,33 @@ class AsignadorAulaInscripcion
         }
     }
 
+    public function validarCompatibilidad(ProcesoAula $procesoAula, Inscripcion $inscripcion): void
+    {
+        $inscripcion->loadMissing('procesoOferta');
+
+        if ($inscripcion->procesoOferta === null) {
+            throw new \RuntimeException('La inscripcion no tiene una oferta de proceso valida.');
+        }
+
+        if (
+            $procesoAula->id_proceso !== $inscripcion->procesoOferta->id_proceso
+            || $procesoAula->id_turno !== $inscripcion->procesoOferta->id_turno
+        ) {
+            throw new \RuntimeException('El aula seleccionada no corresponde al proceso y turno de la postulacion.');
+        }
+    }
+
     /**
      * @return Collection<int, ProcesoAula>
      */
-    private function aulasOrdenadasPorProceso(int $idProceso): Collection
+    private function aulasOrdenadasPorProcesoYTurno(int $idProceso, int $idTurno): Collection
     {
         return ProcesoAula::query()
             ->select('tbl_proceso_aula.*')
             ->join('tbl_aula', 'tbl_aula.id_aul', '=', 'tbl_proceso_aula.id_aula')
             ->with('aula')
             ->where('tbl_proceso_aula.id_proceso', $idProceso)
+            ->where('tbl_proceso_aula.id_turno', $idTurno)
             ->where('tbl_proceso_aula.estado_pau', EstadoCatalogo::Habilitado->value)
             ->where('tbl_aula.estado_aul', EstadoCatalogo::Habilitado->value)
             ->orderBy('tbl_aula.lugar_aul')
