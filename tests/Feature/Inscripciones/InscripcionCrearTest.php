@@ -33,6 +33,7 @@ use App\Models\Rol;
 use App\Models\TipoColegio;
 use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
+use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Database\Seeders\CarreraSeeder;
@@ -278,7 +279,7 @@ function crearPersonaParaPostulacion(string $numeroDocumento): Persona
 /**
  * @return array{aula: Aula, procesoAula: ProcesoAula}
  */
-function crearAulaParaProcesoInscripcion(Proceso $proceso, string $nombre, string $lugar, string $piso, int $capacidad): array
+function crearAulaParaProcesoInscripcion(Proceso $proceso, Turno $turno, string $nombre, string $lugar, string $piso, int $capacidad): array
 {
     $aula = Aula::query()->create([
         'nombre_aul' => $nombre,
@@ -290,6 +291,7 @@ function crearAulaParaProcesoInscripcion(Proceso $proceso, string $nombre, strin
 
     $procesoAula = ProcesoAula::query()->create([
         'id_proceso' => $proceso->id_pro,
+        'id_turno' => $turno->id_tur,
         'id_aula' => $aula->id_aul,
         'capacidad_pau' => $capacidad,
         'estado_pau' => 'HABILITADO',
@@ -888,8 +890,8 @@ test('postulacion assigns the first aula with capacity by configured order', fun
         ->where('id_proceso', $proceso->id_pro)
         ->firstOrFail();
 
-    $primerAula = crearAulaParaProcesoInscripcion($proceso, 'AULA A', 'UAP', 'PISO 1', 2);
-    crearAulaParaProcesoInscripcion($proceso, 'AULA B', 'UAP', 'PISO 1', 2);
+    $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 2);
+    crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
 
     $this->actingAs($usuario);
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
@@ -935,8 +937,8 @@ test('postulacion skips full aulas and assigns the next available aula', functio
         ->where('id_proceso', $proceso->id_pro)
         ->firstOrFail();
 
-    $primerAula = crearAulaParaProcesoInscripcion($proceso, 'AULA A', 'UAP', 'PISO 1', 1);
-    $segundaAula = crearAulaParaProcesoInscripcion($proceso, 'AULA B', 'UAP', 'PISO 1', 2);
+    $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 1);
+    $segundaAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
 
     Inscripcion::query()->create([
         'codigo_ins' => 'OCUPADO-001',
@@ -972,6 +974,74 @@ test('postulacion skips full aulas and assigns the next available aula', functio
         ->firstOrFail();
 
     expect($inscripcion->id_proceso_aula)->toBe($segundaAula['procesoAula']->id_pau);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('postulacion only assigns aulas from the selected turno', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $persona = crearPersonaParaPostulacion('46027898');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+
+    $procesoOfertaManana = ProcesoOferta::query()
+        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
+        ->where('id_proceso', $proceso->id_pro)
+        ->firstOrFail();
+
+    $turnoTarde = Turno::query()
+        ->where('id_tur', '!=', $procesoOfertaManana->id_turno)
+        ->orderBy('id_tur')
+        ->first();
+
+    if ($turnoTarde === null) {
+        $turnoTarde = Turno::query()->create([
+            'codigo_tur' => 'turno_noche',
+            'nombre_tur' => 'NOCHE',
+            'estado_tur' => 'HABILITADO',
+        ]);
+    }
+
+    $procesoOfertaTarde = ProcesoOferta::query()->create([
+        'id_proceso' => $proceso->id_pro,
+        'id_oferta_base' => $procesoOfertaManana->id_oferta_base,
+        'id_turno' => $turnoTarde->id_tur,
+        'estado_pof' => 'HABILITADO',
+    ]);
+    $procesoOfertaTarde->load('ofertaBase.modalidadLugarInscripcion', 'turno');
+
+    crearAulaParaProcesoInscripcion($proceso, $procesoOfertaManana->turno, 'AULA MANANA', 'UAP', 'PISO 1', 40);
+    $aulaTarde = crearAulaParaProcesoInscripcion($proceso, $procesoOfertaTarde->turno, 'AULA TARDE', 'UAP', 'PISO 2', 50);
+
+    $this->actingAs($usuario);
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0)
+        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_turno', (string) $procesoOfertaTarde->id_turno)
+        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOfertaTarde->id_pof)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors()
+        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+
+    $inscripcion = Inscripcion::query()->firstOrFail();
+
+    expect($inscripcion->id_proceso_aula)->toBe($aulaTarde['procesoAula']->id_pau);
 
     Carbon\Carbon::setTestNow();
 });

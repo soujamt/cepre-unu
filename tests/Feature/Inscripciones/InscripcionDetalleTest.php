@@ -5,6 +5,7 @@ use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoValidacionPago;
 use App\Models\Accion;
+use App\Models\Aula;
 use App\Models\Inscripcion;
 use App\Models\InscripcionExpediente;
 use App\Models\InscripcionObligacionPago;
@@ -13,6 +14,7 @@ use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
+use App\Models\ProcesoAula;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\RequisitoExpediente;
@@ -266,6 +268,64 @@ test('aprobar expediente no activa la inscripcion si quedan obligatorios pendien
         ->call('aprobarExpediente', $primerExpediente->id_iex);
 
     expect($inscripcion->fresh()->estado_ins)->toBe(EstadoInscripcion::Pendiente);
+});
+
+test('detail page shows assigned aula information', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionDetalle($usuario, ['inscripcion_indice']);
+
+    sembrarConfiguracionParaDetalle();
+
+    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+
+    $procesoOferta = ProcesoOferta::query()
+        ->with(['ofertaBase', 'proceso'])
+        ->where('estado_pof', 'HABILITADO')
+        ->firstOrFail();
+
+    $persona = Persona::query()->create([
+        'id_tipo_documento' => $tipoDocumento->id_tdo,
+        'numero_documento_per' => '55667111',
+        'solo_un_apellido_per' => false,
+        'apellido_paterno_per' => 'RUIZ',
+        'apellido_materno_per' => 'LOPEZ',
+        'nombres_per' => 'MARIA',
+        'id_pais_nacimiento' => $pais->id_pai,
+        'estado_per' => 'HABILITADO',
+    ]);
+
+    $aula = Aula::query()->create([
+        'nombre_aul' => 'AULA DETALLE 2',
+        'piso_aul' => 'PISO 2',
+        'lugar_aul' => 'UNU',
+        'orden_aul' => 2,
+        'estado_aul' => 'HABILITADO',
+    ]);
+
+    $procesoAula = ProcesoAula::query()->create([
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_turno' => $procesoOferta->id_turno,
+        'id_aula' => $aula->id_aul,
+        'capacidad_pau' => 45,
+        'estado_pau' => 'HABILITADO',
+    ]);
+
+    $inscripcion = Inscripcion::query()->create([
+        'codigo_ins' => 'TEST-DET-AULA',
+        'id_persona' => $persona->id_per,
+        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso_aula' => $procesoAula->id_pau,
+        'fecha_inscripcion_ins' => now(),
+        'estado_ins' => EstadoInscripcion::Pendiente->value,
+    ]);
+
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.detalle', encode($inscripcion->id_ins)))
+        ->assertOk()
+        ->assertSee('Aula asignada')
+        ->assertSee('AULA DETALLE 2')
+        ->assertSee('PISO 2');
 });
 
 test('aprobar todos los expedientes obligatorios no activa la inscripcion si no hay pago verificado', function () {

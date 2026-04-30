@@ -2,6 +2,7 @@
 
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Accion;
+use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
@@ -15,6 +16,7 @@ use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
+use App\Models\ProcesoAula;
 use App\Models\ProcesoOferta;
 use App\Models\Rol;
 use App\Models\Sede;
@@ -81,7 +83,7 @@ function otorgarPermisosInscripcion(Usuario $usuario, array $claves): void
 }
 
 /**
- * @return array{inscripcion: Inscripcion, proceso: Proceso, persona: Persona}
+ * @return array{inscripcion: Inscripcion, proceso: Proceso, persona: Persona, aula: Aula, procesoAula: ProcesoAula}
  */
 function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENTE'): array
 {
@@ -206,6 +208,22 @@ function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENT
         'estado_pof' => 'HABILITADO',
     ]);
 
+    $aula = Aula::query()->create([
+        'nombre_aul' => "AULA {$indice}",
+        'piso_aul' => 'PISO 1',
+        'lugar_aul' => 'UNU',
+        'orden_aul' => $indice,
+        'estado_aul' => 'HABILITADO',
+    ]);
+
+    $procesoAula = ProcesoAula::query()->create([
+        'id_proceso' => $proceso->id_pro,
+        'id_turno' => $turno->id_tur,
+        'id_aula' => $aula->id_aul,
+        'capacidad_pau' => 40,
+        'estado_pau' => 'HABILITADO',
+    ]);
+
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
         'numero_documento_per' => (string) (7450000 + $indice),
@@ -226,11 +244,12 @@ function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENT
         'codigo_ins' => "INS-{$indice}",
         'id_persona' => $persona->id_per,
         'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso_aula' => $procesoAula->id_pau,
         'fecha_inscripcion_ins' => '2026-03-20 08:00:00',
         'estado_ins' => $estado,
     ]);
 
-    return compact('inscripcion', 'proceso', 'persona');
+    return compact('inscripcion', 'proceso', 'persona', 'aula', 'procesoAula');
 }
 
 test('authorized users can access inscripciones page', function () {
@@ -264,6 +283,8 @@ test('users can filter inscripciones by search process and state', function () {
         ->set('idSemestre', '')
         ->assertSee('INS-1')
         ->assertSee('INS-2')
+        ->assertSee($contextoPendiente['aula']->nombre_aul)
+        ->assertSee($contextoActivo['aula']->nombre_aul)
         ->set('buscar', $contextoPendiente['persona']->numero_documento_per)
         ->assertSee('INS-1')
         ->assertDontSee('INS-2')
@@ -346,7 +367,8 @@ test('authorized users can access inscripcion detail page', function () {
         ->assertSee('DETALLE DE INSCRIPCION')
         ->assertSee($contextoActivo['inscripcion']->codigo_ins)
         ->assertSee($contextoActivo['persona']->numero_documento_per)
-        ->assertSee($contextoActivo['proceso']->nombre_pro);
+        ->assertSee($contextoActivo['proceso']->nombre_pro)
+        ->assertSee($contextoActivo['aula']->nombre_aul);
 });
 
 test('authorized users can access inscripcion detail page even when the inscripcion is pending or annulled', function () {
