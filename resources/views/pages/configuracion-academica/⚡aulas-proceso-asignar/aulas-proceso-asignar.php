@@ -5,6 +5,7 @@ use App\Models\Aula;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Semestre;
+use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,6 +27,8 @@ class extends Component
     public string $idProceso = '';
 
     public string $idSemestre = '';
+
+    public string $idTurno = '';
 
     /**
      * @var array<int, bool>
@@ -49,10 +52,17 @@ class extends Component
     public function updatedIdSemestre(): void
     {
         $this->idProceso = '';
+        $this->idTurno = '';
         $this->limpiarSeleccionadasVisibles();
     }
 
     public function updatedIdProceso(): void
+    {
+        $this->idTurno = '';
+        $this->limpiarSeleccionadasVisibles();
+    }
+
+    public function updatedIdTurno(): void
     {
         $this->limpiarSeleccionadasVisibles();
     }
@@ -90,6 +100,15 @@ class extends Component
     }
 
     #[Computed]
+    public function turnosDisponibles(): Collection
+    {
+        return Turno::query()
+            ->where('estado_tur', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_tur')
+            ->get();
+    }
+
+    #[Computed]
     public function aulas(): Collection
     {
         return Aula::query()
@@ -109,12 +128,13 @@ class extends Component
 
     public function aulaYaAsignada(int $id_aula): bool
     {
-        if (blank($this->idProceso)) {
+        if (blank($this->idProceso) || blank($this->idTurno)) {
             return false;
         }
 
         return ProcesoAula::query()
             ->where('id_proceso', (int) $this->idProceso)
+            ->where('id_turno', (int) $this->idTurno)
             ->where('id_aula', $id_aula)
             ->exists();
     }
@@ -122,7 +142,7 @@ class extends Component
     #[Computed]
     public function idsAulasSeleccionables(): array
     {
-        if (blank($this->idProceso)) {
+        if (blank($this->idProceso) || blank($this->idTurno)) {
             return [];
         }
 
@@ -168,6 +188,12 @@ class extends Component
             return;
         }
 
+        if (blank($this->idTurno)) {
+            $this->addError('idTurno', 'Debe seleccionar un turno.');
+
+            return;
+        }
+
         $aulasSeleccionadas = collect($this->seleccionadas)
             ->filter(fn ($selected) => $selected)
             ->keys()
@@ -190,12 +216,30 @@ class extends Component
         try {
             DB::transaction(function () use ($aulasSeleccionadas): void {
                 foreach ($aulasSeleccionadas as $id_aula) {
-                    if ($this->aulaYaAsignada($id_aula)) {
+                    $asignacionExistente = ProcesoAula::query()
+                        ->withTrashed()
+                        ->where('id_proceso', (int) $this->idProceso)
+                        ->where('id_turno', (int) $this->idTurno)
+                        ->where('id_aula', (int) $id_aula)
+                        ->first();
+
+                    if ($asignacionExistente !== null && $asignacionExistente->trashed()) {
+                        $asignacionExistente->restore();
+                        $asignacionExistente->update([
+                            'capacidad_pau' => (int) $this->capacidades[$id_aula],
+                            'estado_pau' => EstadoCatalogo::Habilitado->value,
+                        ]);
+
+                        continue;
+                    }
+
+                    if ($asignacionExistente !== null) {
                         continue;
                     }
 
                     ProcesoAula::query()->create([
                         'id_proceso' => (int) $this->idProceso,
+                        'id_turno' => (int) $this->idTurno,
                         'id_aula' => (int) $id_aula,
                         'capacidad_pau' => (int) $this->capacidades[$id_aula],
                         'estado_pau' => EstadoCatalogo::Habilitado->value,

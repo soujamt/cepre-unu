@@ -68,6 +68,17 @@
             </x-ui.select>
         </div>
 
+        <div class="w-full sm:w-40">
+            <x-ui.select wire:model.live="idTurno" placeholder="Filtrar por turno">
+                <option value="">Todos los turnos</option>
+                @foreach ($this->turnosDisponibles as $turno)
+                    <option wire:key="turno-aula-proceso-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
+                        {{ $turno->nombre_tur }}
+                    </option>
+                @endforeach
+            </x-ui.select>
+        </div>
+
         <flux:dropdown>
             <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
@@ -131,6 +142,7 @@
                     <x-table.heading class="min-w-56">PROCESO</x-table.heading>
                     <x-table.heading class="min-w-44">AULA</x-table.heading>
                     <x-table.heading class="min-w-32">LUGAR</x-table.heading>
+                    <x-table.heading class="min-w-32">TURNO</x-table.heading>
                     <x-table.heading class="w-24">CAPACIDAD</x-table.heading>
                     <x-table.heading class="w-24">INSCRITOS</x-table.heading>
                     <x-table.heading class="w-32">ESTADO</x-table.heading>
@@ -165,6 +177,7 @@
                                 {{ $asignacion->aula?->lugar_aul?->getNombre() }}
                             </flux:badge>
                         </x-table.cell>
+                        <x-table.cell>{{ $asignacion->turno?->nombre_tur }}</x-table.cell>
                         <x-table.cell>
                             <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $asignacion->capacidad_pau }}</span>
                         </x-table.cell>
@@ -221,7 +234,7 @@
                     </x-table.row>
                 @empty
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
-                        <x-table.cell colspan="9" class="h-auto py-10 text-center whitespace-normal">
+                        <x-table.cell colspan="10" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <x-ui.icon name="building-office" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron asignaciones con los filtros aplicados.</p>
@@ -235,12 +248,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idSemestre, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

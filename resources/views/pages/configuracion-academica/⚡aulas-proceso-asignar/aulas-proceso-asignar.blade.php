@@ -20,7 +20,7 @@
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div class="space-y-5">
             <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-                <div class="grid gap-4 lg:grid-cols-3">
+                <div class="grid gap-4 lg:grid-cols-4">
                     <div class="min-w-0">
                         <x-ui.select
                             label="Semestre"
@@ -56,6 +56,24 @@
                     </div>
 
                     <div class="min-w-0">
+                        <x-ui.select
+                            label="Turno"
+                            wire:model.live="idTurno"
+                            :invalid="$errors->has('idTurno')"
+                            :error="$errors->first('idTurno')"
+                            required
+                            floating
+                        >
+                            <option value="">Seleccionar turno</option>
+                            @foreach ($this->turnosDisponibles as $turno)
+                                <option wire:key="turno-aula-asignar-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
+                                    {{ $turno->nombre_tur }}
+                                </option>
+                            @endforeach
+                        </x-ui.select>
+                    </div>
+
+                    <div class="min-w-0">
                         <x-ui.input
                             label="Buscar aula"
                             type="text"
@@ -67,7 +85,7 @@
                 </div>
             </div>
 
-            @if (filled($this->idProceso))
+            @if (filled($this->idProceso) && filled($this->idTurno))
                 <div class="relative">
                     <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div class="text-sm text-zinc-500 dark:text-zinc-400">
@@ -170,12 +188,12 @@
                     <div
                         class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
                         wire:loading
-                        wire:target="buscar, idSemestre, idProceso, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
+                        wire:target="buscar, idSemestre, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
                     ></div>
                     <div
                         class="absolute inset-0 flex items-center justify-center"
                         wire:loading.flex
-                        wire:target="buscar, idSemestre, idProceso, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
+                        wire:target="buscar, idSemestre, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
                     >
                         <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
                     </div>
@@ -184,7 +202,7 @@
                 <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
                     <div class="flex flex-col items-center justify-center space-y-3">
                         <x-ui.icon name="funnel" size="12" class="text-zinc-400 dark:text-zinc-500" />
-                        <p class="text-zinc-700 dark:text-zinc-200">Seleccione un proceso para ver las aulas disponibles.</p>
+                        <p class="text-zinc-700 dark:text-zinc-200">Seleccione un proceso y un turno para ver las aulas disponibles.</p>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">La capacidad por defecto será de 40.</p>
                     </div>
                 </div>
@@ -201,6 +219,13 @@
                         </p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
                             {{ $this->procesoSeleccionado?->semestre?->nombre_sem ?? 'Sin semestre seleccionado' }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Turno</p>
+                        <p class="mt-1 text-sm text-zinc-800 dark:text-zinc-100">
+                            {{ $this->turnosDisponibles->firstWhere('id_tur', (int) $idTurno)?->nombre_tur ?? 'Seleccione un turno' }}
                         </p>
                     </div>
 

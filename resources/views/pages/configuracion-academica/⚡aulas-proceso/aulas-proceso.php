@@ -4,6 +4,7 @@ use App\Enums\EstadoCatalogo;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Semestre;
+use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -33,6 +34,9 @@ class extends Component
 
     #[Url(as: 'semestre')]
     public string $idSemestre = '';
+
+    #[Url(as: 'turno')]
+    public string $idTurno = '';
 
     /**
      * @var array<string, bool>
@@ -67,6 +71,12 @@ class extends Component
     public function updatedIdSemestre(): void
     {
         $this->idProceso = '';
+        $this->idTurno = '';
+        $this->resetPage();
+    }
+
+    public function updatedIdTurno(): void
+    {
         $this->resetPage();
     }
 
@@ -79,6 +89,7 @@ class extends Component
     {
         $this->idSemestre = '';
         $this->idProceso = '';
+        $this->idTurno = '';
         $this->resetPage();
     }
 
@@ -123,10 +134,30 @@ class extends Component
     }
 
     #[Computed]
+    public function turnosDisponibles(): Collection
+    {
+        return Turno::query()
+            ->whereHas('procesoAulas', function (Builder $query): void {
+                if (filled($this->idProceso)) {
+                    $query->where('id_proceso', (int) $this->idProceso);
+
+                    return;
+                }
+
+                if (filled($this->idSemestre)) {
+                    $query->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery->where('id_semestre', (int) $this->idSemestre));
+                }
+            })
+            ->where('estado_tur', EstadoCatalogo::Habilitado->value)
+            ->orderBy('nombre_tur')
+            ->get();
+    }
+
+    #[Computed]
     public function asignaciones(): LengthAwarePaginator
     {
         return ProcesoAula::query()
-            ->with(['proceso.semestre', 'aula'])
+            ->with(['proceso.semestre', 'aula', 'turno'])
             ->withCount('inscripciones')
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
@@ -149,6 +180,7 @@ class extends Component
                     ->where('id_semestre', (int) $this->idSemestre));
             })
             ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
+            ->when(filled($this->idTurno), fn (Builder $query) => $query->where('id_turno', (int) $this->idTurno))
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_pau', $this->estadosSeleccionados);
             })
