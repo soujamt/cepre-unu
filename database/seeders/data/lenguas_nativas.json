@@ -1,0 +1,242 @@
+﻿[
+    {
+        "codigo_lna":  "1",
+        "nombre_lna":  "ACHUAR",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "2",
+        "nombre_lna":  "AIMARA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "3",
+        "nombre_lna":  "AMAHUACA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "4",
+        "nombre_lna":  "ARABELA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "5",
+        "nombre_lna":  "ASHANINKA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "6",
+        "nombre_lna":  "AWAJÚN",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "7",
+        "nombre_lna":  "BORA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "8",
+        "nombre_lna":  "CAPANAHUA (KAPANAWA)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "9",
+        "nombre_lna":  "CASHINAHUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "10",
+        "nombre_lna":  "CAUQUI (KAWKI)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "11",
+        "nombre_lna":  "CHAMICURO",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "12",
+        "nombre_lna":  "ESE EJA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "13",
+        "nombre_lna":  "HARAKBUT",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "14",
+        "nombre_lna":  "IÑAPARI",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "15",
+        "nombre_lna":  "IQUITU (IKITU)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "16",
+        "nombre_lna":  "ISCONAHUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "17",
+        "nombre_lna":  "JAQARU",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "18",
+        "nombre_lna":  "KAKATAIBO",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "19",
+        "nombre_lna":  "KAKINTE (CAQUINTE)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "20",
+        "nombre_lna":  "KANDOZI-CHAPRA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "21",
+        "nombre_lna":  "KUKAMA-KUKAMIRIA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "22",
+        "nombre_lna":  "MADIJA (CULINA)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "23",
+        "nombre_lna":  "MAIJUNA (MAIJIKI)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "24",
+        "nombre_lna":  "MATSÉS",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "25",
+        "nombre_lna":  "MATSIGENKA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "26",
+        "nombre_lna":  "MUNICHE",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "27",
+        "nombre_lna":  "MURUI-MUINAN?",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "28",
+        "nombre_lna":  "NANTI",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "29",
+        "nombre_lna":  "NOMATSIGENGA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "30",
+        "nombre_lna":  "OCAINA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "31",
+        "nombre_lna":  "OMAGUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "48",
+        "nombre_lna":  "OTROS",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "32",
+        "nombre_lna":  "QUECHUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "33",
+        "nombre_lna":  "RESÍGARO",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "34",
+        "nombre_lna":  "SECOYA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "35",
+        "nombre_lna":  "SHARANAHUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "36",
+        "nombre_lna":  "SHAWI",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "37",
+        "nombre_lna":  "SHIPIBO-KONIBO",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "38",
+        "nombre_lna":  "SHIWILU",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "39",
+        "nombre_lna":  "TAUSHIRO",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "40",
+        "nombre_lna":  "TIKUNA (TICUNA)",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "41",
+        "nombre_lna":  "URARINA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "42",
+        "nombre_lna":  "WAMPIS",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "43",
+        "nombre_lna":  "YAGUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "44",
+        "nombre_lna":  "YAMINAHUA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "45",
+        "nombre_lna":  "YANESHA",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "46",
+        "nombre_lna":  "YINE",
+        "estado_lna":  "HABILITADO"
+    },
+    {
+        "codigo_lna":  "47",
+        "nombre_lna":  "YORA (NAHUA)",
+        "estado_lna":  "HABILITADO"
+    }
+]

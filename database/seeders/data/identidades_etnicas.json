@@ -1,0 +1,47 @@
+﻿[
+    {
+        "codigo_iet":  "QUE",
+        "nombre_iet":  "QUECHUA",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "AYM",
+        "nombre_iet":  "AYMARA",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "AMA",
+        "nombre_iet":  "NATIVO O INDÍGENA DE LA AMAZONIA",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "ORI",
+        "nombre_iet":  "PERTENECIENTE O PARTE DE OTRO PUEBLO INDÍGENA U ORIGINARIO",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "AFR",
+        "nombre_iet":  "NEGRO/MORENO/ZAMBO/MULATO/PUEBLO AFROPERUANO O AFRODESCENDIENTE",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "BLA",
+        "nombre_iet":  "BLANCO",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "MES",
+        "nombre_iet":  "MESTIZO",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "OTR",
+        "nombre_iet":  "OTROS",
+        "estado_iet":  "HABILITADO"
+    },
+    {
+        "codigo_iet":  "NCI",
+        "nombre_iet":  "NO CUENTA CON INFORMACIÓN",
+        "estado_iet":  "HABILITADO"
+    }
+]

@@ -1,0 +1,323 @@
+<?php
+
+namespace Database\Seeders\Support;
+
+class CepreOfertaCatalog
+{
+    /**
+     * @return list<array{codigo_sed:string,nombre_sed:string,id_ubigeo:string,direccion_sed:null|string,estado_sed:string}>
+     */
+    public static function sedes(): array
+    {
+        return [
+            [
+                'codigo_sed' => 'SEDCAL',
+                'nombre_sed' => 'SEDE CALLERIA',
+                'id_ubigeo' => '250101',
+                'direccion_sed' => null,
+                'estado_sed' => 'HABILITADO',
+            ],
+            [
+                'codigo_sed' => 'FILAGU',
+                'nombre_sed' => 'FILIAL AGUAYTIA',
+                'id_ubigeo' => '250201',
+                'direccion_sed' => null,
+                'estado_sed' => 'HABILITADO',
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{codigo_mad:string,nombre_mad:string,descripcion_mad:null|string,estado_mad:string}>
+     */
+    public static function modalidades(): array
+    {
+        return [
+            [
+                'codigo_mad' => '2',
+                'nombre_mad' => 'EXONERACIÓN - CEPREUNU',
+                'descripcion_mad' => null,
+                'estado_mad' => 'HABILITADO',
+            ],
+            [
+                'codigo_mad' => '8',
+                'nombre_mad' => 'RESERVA - CEPREUNU',
+                'descripcion_mad' => null,
+                'estado_mad' => 'HABILITADO',
+            ],
+        ];
+    }
+
+    /**
+     * @return list<array{codigo_lin:string,nombre_lin:string,codigo_sed:string,estado_lin:string}>
+     */
+    public static function lugaresInscripcion(): array
+    {
+        return [
+            ['codigo_lin' => '603', 'nombre_lin' => 'PUCALLPA', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '604', 'nombre_lin' => 'PUCALLPA', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '620', 'nombre_lin' => 'PUERTO INCA', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '621', 'nombre_lin' => 'ALEXANDER VON HUMBOLDT', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '622', 'nombre_lin' => 'PADRE ABAD', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '623', 'nombre_lin' => 'CAMPO VERDE', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '624', 'nombre_lin' => 'MANANTAY', 'codigo_sed' => 'SEDCAL', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '625', 'nombre_lin' => 'AGUAYTIA', 'codigo_sed' => 'FILAGU', 'estado_lin' => 'HABILITADO'],
+            ['codigo_lin' => '626', 'nombre_lin' => 'AGUAYTIA', 'codigo_sed' => 'FILAGU', 'estado_lin' => 'HABILITADO'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function careerCodes(): array
+    {
+        return [
+            'ADMINISTRACIÓN' => 'ADM',
+            'AGRONOMIA' => 'AGR',
+            'CIENCIAS DE LA COMUNICACIÓN' => 'CCO',
+            'CONTABILIDAD' => 'CON',
+            'DERECHO' => 'DER',
+            'ECONOMÍA Y NEGOCIOS INTERNACIONALES' => 'ENI',
+            'EDUCACIÓN INICIAL' => 'EDI',
+            'EDUCACIÓN PRIMARIA' => 'EDP',
+            'EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS NATURALES Y MEDIO AMBIENTE' => 'ESC',
+            'EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS SOCIALES Y EDUCACIÓN INTERCULTURAL' => 'ESS',
+            'EDUCACIÓN SECUNDARIA: ESPECIALIDAD IDIOMA INGLES' => 'EII',
+            'EDUCACIÓN SECUNDARIA: ESPECIALIDAD LENGUA Y LITERATURA' => 'ELL',
+            'EDUCACIÓN SECUNDARIA: ESPECIALIDAD MATEMÁTICA, FÍSICA E INFORMÁTICA' => 'EMF',
+            'ENFERMERÍA' => 'ENF',
+            'INGENIERÍA AGROINDUSTRIAL' => 'IAG',
+            'INGENIERIA AMBIENTAL' => 'IAM',
+            'INGENIERIA CIVIL' => 'ICI',
+            'INGENIERÍA DE SISTEMAS' => 'IDS',
+            'INGENIERIA FORESTAL' => 'IFO',
+            'MEDICINA HUMANA' => 'MED',
+            'PSICOLOGÍA' => 'PSI',
+        ];
+    }
+
+    /**
+     * @return list<array{codigo_car:string,nombre_car:string,estado_car:string}>
+     */
+    public static function carreras(): array
+    {
+        $records = [];
+
+        foreach (self::careerCodes() as $name => $code) {
+            $records[] = [
+                'codigo_car' => $code,
+                'nombre_car' => $name,
+                'estado_car' => 'HABILITADO',
+            ];
+        }
+
+        return $records;
+    }
+
+    /**
+     * @return list<array{codigo_mad:string,nombre_mad:string,codigo_lin:string,nombre_lin:string,codigo_ofb:string,codigo_sed:string,nombre_car:string}>
+     */
+    public static function ofertas(): array
+    {
+        $records = [];
+
+        foreach (preg_split('/\r\n|\r|\n/', trim(self::rawOffers())) as $line) {
+            if ($line === '') {
+                continue;
+            }
+
+            [$modalidadCode, $modalidadName, $lugarCode, $lugarName, $ofertaCode, $careerName] = array_map(
+                static fn (string $value): string => trim($value),
+                explode('|', $line)
+            );
+
+            $records[] = [
+                'codigo_mad' => $modalidadCode,
+                'nombre_mad' => $modalidadName,
+                'codigo_lin' => $lugarCode,
+                'nombre_lin' => $lugarName,
+                'codigo_ofb' => $ofertaCode,
+                'codigo_sed' => in_array($ofertaCode, ['2721', '2722', '2736', '2737', '3022', '3023', '3085', '3086', '3087', '3088'], true)
+                    ? 'FILAGU'
+                    : 'SEDCAL',
+                'nombre_car' => $careerName,
+            ];
+        }
+
+        return $records;
+    }
+
+    /**
+     * @return list<array{codigo_sed:string,nombre_car:string,codigo_externo_sca:string,estado_sca:string}>
+     */
+    public static function sedeCarreras(): array
+    {
+        $records = [];
+
+        foreach (self::ofertas() as $offer) {
+            $key = "{$offer['codigo_sed']}|{$offer['nombre_car']}";
+
+            if (array_key_exists($key, $records)) {
+                continue;
+            }
+
+            $records[$key] = [
+                'codigo_sed' => $offer['codigo_sed'],
+                'nombre_car' => $offer['nombre_car'],
+                'codigo_externo_sca' => "{$offer['codigo_sed']}-".self::careerCodes()[$offer['nombre_car']],
+                'estado_sca' => 'HABILITADO',
+            ];
+        }
+
+        return array_values($records);
+    }
+
+    /**
+     * @return list<array{id_mli:int,codigo_mad:string,codigo_lin:string,estado_mli:string}>
+     */
+    public static function modalidadesLugarInscripcion(): array
+    {
+        $records = [];
+        $id = 1;
+
+        foreach (self::ofertas() as $offer) {
+            $key = "{$offer['codigo_mad']}|{$offer['codigo_lin']}";
+
+            if (array_key_exists($key, $records)) {
+                continue;
+            }
+
+            $records[$key] = [
+                'id_mli' => $id++,
+                'codigo_mad' => $offer['codigo_mad'],
+                'codigo_lin' => $offer['codigo_lin'],
+                'estado_mli' => 'HABILITADO',
+            ];
+        }
+
+        return array_values($records);
+    }
+
+    private static function rawOffers(): string
+    {
+        return <<<'TEXT'
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2700|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2701|INGENIERÍA AGROINDUSTRIAL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2702|INGENIERIA FORESTAL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2703|INGENIERIA AMBIENTAL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2704|PSICOLOGÍA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2705|ENFERMERÍA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2706|MEDICINA HUMANA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2707|ADMINISTRACIÓN
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2708|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2709|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2710|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2711|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2712|DERECHO
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2713|EDUCACIÓN INICIAL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2714|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2715|EDUCACIÓN SECUNDARIA: ESPECIALIDAD IDIOMA INGLES
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2716|EDUCACIÓN SECUNDARIA: ESPECIALIDAD LENGUA Y LITERATURA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2717|EDUCACIÓN SECUNDARIA: ESPECIALIDAD MATEMÁTICA, FÍSICA E INFORMÁTICA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2718|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS NATURALES Y MEDIO AMBIENTE
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2719|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS SOCIALES Y EDUCACIÓN INTERCULTURAL
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2720|CIENCIAS DE LA COMUNICACIÓN
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2721|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|603|PUCALLPA|2722|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3024|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3025|INGENIERÍA AGROINDUSTRIAL
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3026|INGENIERIA FORESTAL
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3027|INGENIERIA AMBIENTAL
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3028|PSICOLOGÍA
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3029|ENFERMERÍA
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3030|ADMINISTRACIÓN
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3031|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3032|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3033|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3034|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3035|DERECHO
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3036|EDUCACIÓN INICIAL
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3037|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3038|EDUCACIÓN SECUNDARIA: ESPECIALIDAD LENGUA Y LITERATURA
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3039|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS NATURALES Y MEDIO AMBIENTE
+2|EXONERACIÓN - CEPREUNU|620|PUERTO INCA|3040|CIENCIAS DE LA COMUNICACIÓN
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3041|INGENIERÍA AGROINDUSTRIAL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3042|INGENIERIA FORESTAL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3043|INGENIERIA AMBIENTAL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3044|PSICOLOGÍA
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3045|ENFERMERÍA
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3046|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3047|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3048|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3049|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3050|EDUCACIÓN INICIAL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3051|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3052|EDUCACIÓN SECUNDARIA: ESPECIALIDAD IDIOMA INGLES
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3053|EDUCACIÓN SECUNDARIA: ESPECIALIDAD LENGUA Y LITERATURA
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3054|EDUCACIÓN SECUNDARIA: ESPECIALIDAD MATEMÁTICA, FÍSICA E INFORMÁTICA
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3055|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS NATURALES Y MEDIO AMBIENTE
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3056|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS SOCIALES Y EDUCACIÓN INTERCULTURAL
+2|EXONERACIÓN - CEPREUNU|621|ALEXANDER VON HUMBOLDT|3057|CIENCIAS DE LA COMUNICACIÓN
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3010|INGENIERÍA AGROINDUSTRIAL
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3011|INGENIERIA FORESTAL
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3012|INGENIERIA AMBIENTAL
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3013|PSICOLOGÍA
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3014|ENFERMERÍA
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3015|ADMINISTRACIÓN
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3016|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3017|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3018|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3019|DERECHO
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3020|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3021|EDUCACIÓN SECUNDARIA: ESPECIALIDAD MATEMÁTICA, FÍSICA E INFORMÁTICA
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3022|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|622|PADRE ABAD|3023|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3058|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3059|INGENIERÍA AGROINDUSTRIAL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3060|INGENIERIA FORESTAL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3061|INGENIERIA AMBIENTAL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3062|PSICOLOGÍA
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3063|ENFERMERÍA
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3064|ADMINISTRACIÓN
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3065|CONTABILIDAD
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3066|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3067|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3068|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3069|DERECHO
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3070|EDUCACIÓN INICIAL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3071|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3072|EDUCACIÓN SECUNDARIA: ESPECIALIDAD IDIOMA INGLES
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3073|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS NATURALES Y MEDIO AMBIENTE
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3074|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS SOCIALES Y EDUCACIÓN INTERCULTURAL
+2|EXONERACIÓN - CEPREUNU|623|CAMPO VERDE|3075|CIENCIAS DE LA COMUNICACIÓN
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3076|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3077|INGENIERÍA DE SISTEMAS
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3078|INGENIERIA CIVIL
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3079|EDUCACIÓN PRIMARIA
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3080|EDUCACIÓN SECUNDARIA: ESPECIALIDAD IDIOMA INGLES
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3081|EDUCACIÓN SECUNDARIA: ESPECIALIDAD LENGUA Y LITERATURA
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3082|EDUCACIÓN SECUNDARIA: ESPECIALIDAD MATEMÁTICA, FÍSICA E INFORMÁTICA
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3083|EDUCACIÓN SECUNDARIA: ESPECIALIDAD CIENCIAS SOCIALES Y EDUCACIÓN INTERCULTURAL
+2|EXONERACIÓN - CEPREUNU|624|MANANTAY|3084|CIENCIAS DE LA COMUNICACIÓN
+2|EXONERACIÓN - CEPREUNU|626|AGUAYTIA|3087|AGRONOMIA
+2|EXONERACIÓN - CEPREUNU|626|AGUAYTIA|3088|CONTABILIDAD
+8|RESERVA - CEPREUNU|604|PUCALLPA|2723|AGRONOMIA
+8|RESERVA - CEPREUNU|604|PUCALLPA|2724|INGENIERÍA AGROINDUSTRIAL
+8|RESERVA - CEPREUNU|604|PUCALLPA|2725|INGENIERIA FORESTAL
+8|RESERVA - CEPREUNU|604|PUCALLPA|2726|INGENIERIA AMBIENTAL
+8|RESERVA - CEPREUNU|604|PUCALLPA|2727|PSICOLOGÍA
+8|RESERVA - CEPREUNU|604|PUCALLPA|2728|ENFERMERÍA
+8|RESERVA - CEPREUNU|604|PUCALLPA|2729|MEDICINA HUMANA
+8|RESERVA - CEPREUNU|604|PUCALLPA|2730|ADMINISTRACIÓN
+8|RESERVA - CEPREUNU|604|PUCALLPA|2731|CONTABILIDAD
+8|RESERVA - CEPREUNU|604|PUCALLPA|2732|ECONOMÍA Y NEGOCIOS INTERNACIONALES
+8|RESERVA - CEPREUNU|604|PUCALLPA|2733|INGENIERÍA DE SISTEMAS
+8|RESERVA - CEPREUNU|604|PUCALLPA|2734|INGENIERIA CIVIL
+8|RESERVA - CEPREUNU|604|PUCALLPA|2735|DERECHO
+8|RESERVA - CEPREUNU|604|PUCALLPA|2736|AGRONOMIA
+8|RESERVA - CEPREUNU|604|PUCALLPA|2737|CONTABILIDAD
+8|RESERVA - CEPREUNU|625|AGUAYTIA|3085|AGRONOMIA
+8|RESERVA - CEPREUNU|625|AGUAYTIA|3086|CONTABILIDAD
+TEXT;
+    }
+}

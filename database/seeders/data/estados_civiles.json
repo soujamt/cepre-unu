@@ -1,0 +1,22 @@
+﻿[
+    {
+        "codigo_eci":  "SOLTERO(A)",
+        "nombre_eci":  "SOLTERO(A)",
+        "estado_eci":  "HABILITADO"
+    },
+    {
+        "codigo_eci":  "CASADO(A)",
+        "nombre_eci":  "CASADO(A)",
+        "estado_eci":  "HABILITADO"
+    },
+    {
+        "codigo_eci":  "VIUDO(A)",
+        "nombre_eci":  "VIUDO(A)",
+        "estado_eci":  "HABILITADO"
+    },
+    {
+        "codigo_eci":  "DIVORCIADO(A)",
+        "nombre_eci":  "DIVORCIADO(A)",
+        "estado_eci":  "HABILITADO"
+    }
+]

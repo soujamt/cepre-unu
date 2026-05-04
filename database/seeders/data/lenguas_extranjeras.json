@@ -1,0 +1,922 @@
+﻿[
+    {
+        "codigo_lex":  "1",
+        "nombre_lex":  "ABKHAZ",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "2",
+        "nombre_lex":  "AFAR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "3",
+        "nombre_lex":  "AFRICANOS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "4",
+        "nombre_lex":  "AKAN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "5",
+        "nombre_lex":  "ALBANIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "6",
+        "nombre_lex":  "AMÁRICO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "7",
+        "nombre_lex":  "ÁRABE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "8",
+        "nombre_lex":  "ARAGONÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "9",
+        "nombre_lex":  "ARMENIO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "10",
+        "nombre_lex":  "ASSAMESE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "11",
+        "nombre_lex":  "AVARIC",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "12",
+        "nombre_lex":  "AVESTAN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "13",
+        "nombre_lex":  "AYMARA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "14",
+        "nombre_lex":  "AZERBAIYÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "15",
+        "nombre_lex":  "BAMBARA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "16",
+        "nombre_lex":  "BASHKIR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "17",
+        "nombre_lex":  "VASCO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "18",
+        "nombre_lex":  "BELARÚS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "19",
+        "nombre_lex":  "BENGALÍ",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "20",
+        "nombre_lex":  "BIHARI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "21",
+        "nombre_lex":  "BISLAMA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "22",
+        "nombre_lex":  "BOSNIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "23",
+        "nombre_lex":  "BRETON",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "24",
+        "nombre_lex":  "BÚLGARO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "25",
+        "nombre_lex":  "BURMESE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "26",
+        "nombre_lex":  "CATALÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "27",
+        "nombre_lex":  "CHAMORRO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "28",
+        "nombre_lex":  "CHECHENIO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "29",
+        "nombre_lex":  "CHICHEWA, CHEWA, NYANJA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "30",
+        "nombre_lex":  "CHINO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "31",
+        "nombre_lex":  "CHUVASHIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "32",
+        "nombre_lex":  "CORNUALLES",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "33",
+        "nombre_lex":  "CORSO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "34",
+        "nombre_lex":  "CREE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "35",
+        "nombre_lex":  "CROACIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "36",
+        "nombre_lex":  "CHECO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "37",
+        "nombre_lex":  "DANÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "38",
+        "nombre_lex":  "DIVEHI, DHIVEHI, MALDIVAS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "39",
+        "nombre_lex":  "HOLANDÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "40",
+        "nombre_lex":  "DZONGKHA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "41",
+        "nombre_lex":  "INGLÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "42",
+        "nombre_lex":  "ESPERANTO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "43",
+        "nombre_lex":  "ESTONIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "44",
+        "nombre_lex":  "EWE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "45",
+        "nombre_lex":  "FAROESE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "46",
+        "nombre_lex":  "FIJI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "47",
+        "nombre_lex":  "FINLANDÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "48",
+        "nombre_lex":  "FRANCÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "49",
+        "nombre_lex":  "FULA, FULAH, PULAAR, PULAR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "50",
+        "nombre_lex":  "GALICIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "51",
+        "nombre_lex":  "GEORGIANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "52",
+        "nombre_lex":  "ALEMÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "53",
+        "nombre_lex":  "GRIEGO MODERNO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "54",
+        "nombre_lex":  "GUARANÍ",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "55",
+        "nombre_lex":  "GUJARATI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "56",
+        "nombre_lex":  "HAITIANO, CREOLE HAITIANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "57",
+        "nombre_lex":  "HAUSA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "58",
+        "nombre_lex":  "HEBREO (MODERNO)",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "59",
+        "nombre_lex":  "HERERO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "60",
+        "nombre_lex":  "HINDI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "61",
+        "nombre_lex":  "HIRI MOTU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "62",
+        "nombre_lex":  "HÚNGARO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "63",
+        "nombre_lex":  "INTERLINGUA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "64",
+        "nombre_lex":  "INDONESIO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "65",
+        "nombre_lex":  "INTERLINGUE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "66",
+        "nombre_lex":  "IRLANDA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "67",
+        "nombre_lex":  "IGBO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "68",
+        "nombre_lex":  "INUPIAQ",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "69",
+        "nombre_lex":  "IDO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "70",
+        "nombre_lex":  "ISLANDÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "71",
+        "nombre_lex":  "ITALIANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "72",
+        "nombre_lex":  "INUKTITUT",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "73",
+        "nombre_lex":  "JAPONÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "74",
+        "nombre_lex":  "JAVANÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "75",
+        "nombre_lex":  "KALAALLISUT, GROENLANDIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "76",
+        "nombre_lex":  "CANARÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "77",
+        "nombre_lex":  "KANURI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "78",
+        "nombre_lex":  "CACHEMIRA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "79",
+        "nombre_lex":  "KAZAJSTÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "80",
+        "nombre_lex":  "KHMER",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "81",
+        "nombre_lex":  "KIKUYU, GIKUYU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "82",
+        "nombre_lex":  "KINYARWANDA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "83",
+        "nombre_lex":  "KIRGUISES, KIRGUISTÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "84",
+        "nombre_lex":  "KOMI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "85",
+        "nombre_lex":  "KONGO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "86",
+        "nombre_lex":  "COREA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "87",
+        "nombre_lex":  "KURDO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "88",
+        "nombre_lex":  "KWANYAMA, KUANYAMA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "89",
+        "nombre_lex":  "LATIN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "90",
+        "nombre_lex":  "LUXEMBURGUÉS, LUXEMBURGUÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "91",
+        "nombre_lex":  "LUGANDA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "92",
+        "nombre_lex":  "LIMBURGUÉS, LIMBURGAN, LIMBURGER",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "93",
+        "nombre_lex":  "LINGALA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "94",
+        "nombre_lex":  "LAO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "95",
+        "nombre_lex":  "LITUANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "96",
+        "nombre_lex":  "LUBA-KATANGA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "97",
+        "nombre_lex":  "LETONIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "98",
+        "nombre_lex":  "MANX",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "99",
+        "nombre_lex":  "MACEDONIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "100",
+        "nombre_lex":  "MADAGASCAR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "101",
+        "nombre_lex":  "MALAYO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "102",
+        "nombre_lex":  "MALAYALAM",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "103",
+        "nombre_lex":  "MALTÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "104",
+        "nombre_lex":  "MĀORI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "105",
+        "nombre_lex":  "MARATÍ (MARATHI)",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "106",
+        "nombre_lex":  "DE LAS ISLAS MARSHALL",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "107",
+        "nombre_lex":  "MONGOLIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "108",
+        "nombre_lex":  "NAURU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "109",
+        "nombre_lex":  "NAVAJO, NAVAHO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "110",
+        "nombre_lex":  "NORUEGO BOKMÅL",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "111",
+        "nombre_lex":  "NDEBELE DEL NORTE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "112",
+        "nombre_lex":  "NEPALI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "113",
+        "nombre_lex":  "NDONGA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "114",
+        "nombre_lex":  "NORUEGO NYNORSK",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "115",
+        "nombre_lex":  "NORUEGO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "116",
+        "nombre_lex":  "NUOSU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "117",
+        "nombre_lex":  "NDEBELE DEL SUR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "118",
+        "nombre_lex":  "OCCITANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "119",
+        "nombre_lex":  "OJIBWE, OJIBWA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "120",
+        "nombre_lex":  "ANTIGUO ESLAVO ECLESIÁSTICO, IGLESIA ESLAVA, ESLAVO ECLESIÁSTICO, ANTIGUO BÚLGARO, ESCLAVO VIEJO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "121",
+        "nombre_lex":  "OROMO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "122",
+        "nombre_lex":  "ORIYA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "123",
+        "nombre_lex":  "OSETIA DEL SUR, OSETIO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "124",
+        "nombre_lex":  "PANJABI, PUNJABI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "125",
+        "nombre_lex":  "PĀLI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "126",
+        "nombre_lex":  "PERSA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "127",
+        "nombre_lex":  "POLACO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "128",
+        "nombre_lex":  "PASHTO, PUSHTO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "129",
+        "nombre_lex":  "PORTUGUÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "130",
+        "nombre_lex":  "QUECHUA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "131",
+        "nombre_lex":  "ROMANCHE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "132",
+        "nombre_lex":  "KIRUNDI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "133",
+        "nombre_lex":  "RUMANIA, MOLDAVIA, MOLDAVAN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "134",
+        "nombre_lex":  "RUSO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "135",
+        "nombre_lex":  "SÁNSCRITO (SAMSKRTA)",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "136",
+        "nombre_lex":  "SARDO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "137",
+        "nombre_lex":  "SINDHI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "138",
+        "nombre_lex":  "SAMI DEL NORTE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "139",
+        "nombre_lex":  "SAMOA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "140",
+        "nombre_lex":  "SANGO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "141",
+        "nombre_lex":  "SERBIO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "142",
+        "nombre_lex":  "GAÉLICO ESCOCÉS, GAÉLICO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "143",
+        "nombre_lex":  "SHONA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "144",
+        "nombre_lex":  "CINGALÉS, SINGALÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "145",
+        "nombre_lex":  "ESLOVACA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "146",
+        "nombre_lex":  "ESLOVENO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "147",
+        "nombre_lex":  "SOMALÍ",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "148",
+        "nombre_lex":  "SOUTHERN SOTHO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "149",
+        "nombre_lex":  "ESPAÑOL, CASTELLANO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "150",
+        "nombre_lex":  "SUNDANESE",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "151",
+        "nombre_lex":  "SWAHILI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "152",
+        "nombre_lex":  "SWATI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "153",
+        "nombre_lex":  "SUECO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "154",
+        "nombre_lex":  "TAMIL",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "155",
+        "nombre_lex":  "TELUGU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "156",
+        "nombre_lex":  "TAYIKISTÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "157",
+        "nombre_lex":  "TAILANDIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "158",
+        "nombre_lex":  "TIGRINYA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "159",
+        "nombre_lex":  "TIBETANO ESTÁNDAR, TIBETANO, CENTRAL",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "160",
+        "nombre_lex":  "TURKMENISTÁN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "161",
+        "nombre_lex":  "TAGALO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "162",
+        "nombre_lex":  "TSWANA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "163",
+        "nombre_lex":  "TONGA (ISLAS TONGA)",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "164",
+        "nombre_lex":  "TURCO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "165",
+        "nombre_lex":  "TSONGA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "166",
+        "nombre_lex":  "TÁRTARA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "167",
+        "nombre_lex":  "TWI",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "168",
+        "nombre_lex":  "TAHITIAN",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "169",
+        "nombre_lex":  "UIGHUR, UYGHUR",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "170",
+        "nombre_lex":  "UCRANIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "171",
+        "nombre_lex":  "URDU",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "172",
+        "nombre_lex":  "UZBEKO",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "173",
+        "nombre_lex":  "VENDA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "174",
+        "nombre_lex":  "VIETNAMITA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "175",
+        "nombre_lex":  "VOLAPÜK",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "176",
+        "nombre_lex":  "VALONIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "177",
+        "nombre_lex":  "GALÉS",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "178",
+        "nombre_lex":  "WOLOF",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "179",
+        "nombre_lex":  "OESTE DE FRISIA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "180",
+        "nombre_lex":  "XHOSA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "181",
+        "nombre_lex":  "YIDDISH",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "182",
+        "nombre_lex":  "YORUBA",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "183",
+        "nombre_lex":  "ZHUANG, CHUANG",
+        "estado_lex":  "HABILITADO"
+    },
+    {
+        "codigo_lex":  "184",
+        "nombre_lex":  "ZULU",
+        "estado_lex":  "HABILITADO"
+    }
+]

@@ -1,0 +1,12 @@
+﻿[
+    {
+        "codigo_tco":  "1",
+        "nombre_tco":  "COLEGIO NACIONAL",
+        "estado_tco":  "HABILITADO"
+    },
+    {
+        "codigo_tco":  "2",
+        "nombre_tco":  "COLEGIO PARTICULAR",
+        "estado_tco":  "HABILITADO"
+    }
+]
