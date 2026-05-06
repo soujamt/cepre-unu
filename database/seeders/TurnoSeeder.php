@@ -26,7 +26,7 @@ class TurnoSeeder extends Seeder
             [
                 'id_tur' => 1,
                 'codigo_tur' => 'MAN',
-                'nombre_tur' => 'MANANA',
+                'nombre_tur' => 'MAÑANA',
                 'estado_tur' => 'HABILITADO',
             ],
             [
