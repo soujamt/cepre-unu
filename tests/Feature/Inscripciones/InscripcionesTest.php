@@ -487,3 +487,40 @@ test('users without export permiso cannot export inscripciones to excel', functi
         ->call('exportarExcel')
         ->assertForbidden();
 });
+
+test('anular inscripcion libera el aula asignada', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_estado']);
+
+    $contextoActivo = crearContextoListadoInscripcion(90, 'ACTIVO');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idInscripcionAnular', $contextoActivo['inscripcion']->id_ins)
+        ->set('motivoAnulacion', 'Anulación por desistimiento del postulante.')
+        ->call('anularInscripcion')
+        ->assertHasNoErrors();
+
+    expect($contextoActivo['inscripcion']->fresh()->estado_ins->value)->toBe('ANULADO')
+        ->and($contextoActivo['inscripcion']->fresh()->id_proceso_aula)->toBeNull();
+});
+
+test('no se puede asignar aula a una inscripcion anulada', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_editar']);
+
+    $contextoAnulado = crearContextoListadoInscripcion(91, 'ANULADO');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->call('abrirModalAsignarAula', $contextoAnulado['inscripcion']->id_ins)
+        ->assertDispatched('toast', message: 'No se puede asignar aula a una inscripción anulada.', type: 'error');
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idInscripcionAula', $contextoAnulado['inscripcion']->id_ins)
+        ->set('idProcesoAulaSeleccionada', (string) $contextoAnulado['procesoAula']->id_pau)
+        ->call('guardarAulaInscripcion')
+        ->assertDispatched('toast', message: 'No se puede asignar aula a una inscripción anulada.', type: 'error');
+});
