@@ -87,6 +87,11 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
+                'clave_permiso' => 'colegio',
+                'nombre_permiso' => 'COLEGIOS',
+                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+            ],
+            [
                 'clave_permiso' => 'semestre',
                 'nombre_permiso' => 'SEMESTRES',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
