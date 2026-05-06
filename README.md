@@ -1,59 +1,266 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CEPRE UNU
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gestión académica y de inscripciones para CEPRE UNU, construido con Laravel, Livewire 4, Flux UI y Tailwind CSS 4.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3 o superior
+- Composer
+- Node.js 20 o superior
+- NPM
+- MySQL/MariaDB
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Instalación Inicial
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Instalar dependencias
 
-## Learning Laravel
+```bash
+composer install
+npm install
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+### 2. Crear y configurar el archivo `.env`
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Laravel Sponsors
+Variables mínimas a revisar en `.env`:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```env
+APP_NAME="CEPRE UNU"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://tu-dominio
 
-### Premium Partners
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=cepre_unu
+DB_USERNAME=tu_usuario
+DB_PASSWORD=tu_password
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+FILESYSTEM_DISK=public
+```
 
-## Contributing
+## Configuración RENIEC
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+El sistema usa el servicio RENIEC desde `config/services.php`.
 
-## Code of Conduct
+Configurar en `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```env
+URL_API_RENIEC=https://tu-endpoint-reniec
+TOKEN_API_RENIEC=tu_token_reniec
+RENIEC_ALLOW_INSECURE_SSL=false
+```
 
-## Security Vulnerabilities
+Notas:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- `TOKEN_API_RENIEC` es la variable principal.
+- También se acepta `API_RENIEC_KEY` como respaldo si el entorno ya usa ese nombre.
+- `RENIEC_ALLOW_INSECURE_SSL=true` solo debería usarse en entornos locales con certificados no válidos.
 
-## License
+## Base de Datos
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. Ejecutar migraciones
+
+```bash
+php artisan migrate --force
+```
+
+### 2. Crear enlace de almacenamiento público
+
+El sistema guarda archivos de expedientes en disco `public`.
+
+```bash
+php artisan storage:link
+```
+
+## Seeders
+
+El proyecto separa la carga inicial en grupos para no subir datos que no correspondan al ambiente.
+
+### Seed base institucional
+
+Carga catálogos generales y catálogos base del sistema:
+
+- permisos
+- tipos de documento
+- tipos de discapacidad
+- tipos de colegio
+- estado civil
+- países
+- nacionalidades
+- ubigeos
+- identidades étnicas
+- lenguas nativas
+- lenguas extranjeras
+- colegios
+- turnos
+- conceptos de pago
+- tipos de expediente
+
+Comando:
+
+```bash
+php artisan db:seed --no-interaction
+```
+
+Este comando ejecuta:
+
+- `BaseCatalogSeeder`
+- `BaseOfertaCatalogSeeder`
+- `InitialAccessSeeder`
+
+### Seed base de oferta
+
+Forma parte de la base institucional y contiene:
+
+- sedes
+- modalidades de admisión
+- lugares de inscripción
+- carreras
+- relaciones sede-carrera
+- oferta base
+
+La fuente principal está en:
+
+- `database/seeders/Support/CepreOfertaCatalog.php`
+
+### Seed de configuración académica inicial
+
+Este seeder ya no corre por defecto. Debe ejecutarse solo si deseas dejar un ciclo inicial listo para operar.
+
+Incluye:
+
+- semestre inicial
+- proceso inicial
+- proceso-oferta
+- convenios
+- reglas de pago
+- requisitos por proceso
+
+Comando:
+
+```bash
+php artisan db:seed --class=AcademicBootstrapSeeder --no-interaction
+```
+
+### Seed de datos temporales o de desarrollo
+
+No ejecutar en producción si no deseas datos genéricos.
+
+Actualmente incluye:
+
+- aulas genéricas
+
+Comando:
+
+```bash
+php artisan db:seed --class=DevelopmentDataSeeder --no-interaction
+```
+
+## Usuario Inicial
+
+El seeder `InitialAccessSeeder` crea un usuario administrador inicial:
+
+- usuario: `superadmin`
+- correo: `superadmin@unu.edu.pe`
+
+Importante:
+
+- cambiar la contraseña inmediatamente después del primer ingreso
+- si el ambiente es productivo, no dejar credenciales por defecto activas más tiempo del necesario
+
+## Compilación de Frontend
+
+Para desarrollo:
+
+```bash
+npm run dev
+```
+
+Para pruebas o producción:
+
+```bash
+npm run build
+```
+
+## Levantar el Proyecto en Desarrollo
+
+Puedes usar el flujo completo definido en Composer:
+
+```bash
+composer run dev
+```
+
+Esto inicia:
+
+- servidor Laravel
+- cola
+- logs con Pail
+- Vite
+
+## Orden Recomendado Para Un Ambiente Nuevo
+
+### Ambiente de pruebas limpio
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force
+php artisan storage:link
+php artisan db:seed --no-interaction
+php artisan db:seed --class=AcademicBootstrapSeeder --no-interaction
+npm run build
+```
+
+### Ambiente de producción sin ciclo académico precargado
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate --force
+php artisan storage:link
+php artisan db:seed --no-interaction
+npm run build
+```
+
+## Verificación Rápida
+
+Después de la instalación inicial, validar:
+
+- acceso al login
+- compilación correcta de assets
+- conexión a base de datos
+- existencia del enlace `public/storage`
+- funcionamiento de la consulta RENIEC
+
+## Pruebas
+
+```bash
+php artisan test --compact
+```
+
+## Mantenimiento Útil
+
+Limpiar cachés:
+
+```bash
+php artisan optimize:clear
+```
+
+Volver a compilar frontend:
+
+```bash
+npm run build
+```
