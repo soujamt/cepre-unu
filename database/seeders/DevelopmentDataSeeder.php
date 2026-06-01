@@ -9,7 +9,7 @@ class DevelopmentDataSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AulaSeeder::class,
+            InscripcionManualSeeder::class,
         ]);
     }
 }
