@@ -38,6 +38,14 @@ Route::middleware('auth')->group(function (): void {
         ->name('permisos.index');
 
     // Mantenedores
+    Route::livewire('/mantenedores/aulas', 'pages::mantenedores.aulas')
+        ->middleware('permiso:aula_indice')
+        ->name('mantenedor-aulas.index');
+
+    Route::livewire('/mantenedores/colegios', 'pages::mantenedores.colegios')
+        ->middleware('permiso:colegio_indice')
+        ->name('mantenedor-colegios.index');
+
     Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
         ->middleware('permiso:tipo_expediente_indice')
         ->name('tipos-expediente.index');

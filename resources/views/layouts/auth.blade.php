@@ -12,6 +12,8 @@
     />
     <meta name="author" content="CEPRE - UNU" />
 
+    <link rel="shortcut icon" href="{{ asset('assets/media/logo_unu.png') }}" type="image/x-icon" />
+
     @vite (['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
     @livewireStyles
@@ -31,7 +33,7 @@
             class="absolute right-[10%] bottom-16 h-80 w-80 rounded-full bg-sky-300/18 blur-3xl dark:bg-sky-400/10"
         ></div>
         <div
-            class="absolute inset-0 opacity-[0.04] [background-image:linear-gradient(to_right,rgba(15,23,42,0.7)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.7)_1px,transparent_1px)] [background-size:48px_48px] dark:opacity-[0.06]"
+            class="absolute inset-0 [background-image:linear-gradient(to_right,rgba(15,23,42,0.7)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,23,42,0.7)_1px,transparent_1px)] [background-size:48px_48px] opacity-[0.04] dark:opacity-[0.06]"
         ></div>
         <div
             class="absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(to_right,transparent,rgba(156,163,175,0.5),transparent)] dark:bg-[linear-gradient(to_right,transparent,rgba(255,255,255,0.1),transparent)]"

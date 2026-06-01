@@ -23,8 +23,20 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folders',
-                'active' => $this->routeIs('mantenedores.*', 'tipos-expediente.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'mantenedor-colegios.*', 'tipos-expediente.*'),
                 'items' => [
+                    [
+                        'label' => 'AULAS',
+                        'href' => route('mantenedor-aulas.index'),
+                        'active' => $this->routeIs('mantenedor-aulas.*'),
+                        'permiso' => 'aula_indice',
+                    ],
+                    [
+                        'label' => 'COLEGIOS',
+                        'href' => route('mantenedor-colegios.index'),
+                        'active' => $this->routeIs('mantenedor-colegios.*'),
+                        'permiso' => 'colegio_indice',
+                    ],
                     [
                         'label' => 'TIPOS DE EXPEDIENTE',
                         'href' => route('tipos-expediente.index'),
