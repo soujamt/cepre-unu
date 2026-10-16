@@ -457,13 +457,15 @@
                                     @endif
 
                                     @permiso ('inscripcion_editar')
-                                        <flux:menu.separator />
-                                        <flux:menu.item wire:click="abrirModalAsignarAula({{ $inscripcion->id_ins }})">
-                                            <x-slot name="icon">
-                                                <x-ui.icon name="building-office" size="4" class="me-2" />
-                                            </x-slot>
-                                            {{ $inscripcion->id_proceso_aula ? 'Cambiar aula' : 'Asignar aula' }}
-                                        </flux:menu.item>
+                                        @if ($this->puedeAsignarAula($inscripcion))
+                                            <flux:menu.separator />
+                                            <flux:menu.item wire:click="abrirModalAsignarAula({{ $inscripcion->id_ins }})">
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="building-office" size="4" class="me-2" />
+                                                </x-slot>
+                                                {{ $inscripcion->id_proceso_aula ? 'Cambiar aula' : 'Asignar aula' }}
+                                            </flux:menu.item>
+                                        @endif
                                     @endpermiso
 
                                     @if (! $this->puedeContinuarRegistro($inscripcion) && $inscripcion->estado_ins !== App\Enums\EstadoInscripcion::Activo)

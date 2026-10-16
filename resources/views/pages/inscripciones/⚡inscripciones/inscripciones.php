@@ -328,6 +328,12 @@ class extends Component
             ->with(['procesoOferta.proceso', 'procesoOferta.turno', 'procesoAula.aula'])
             ->findOrFail($idInscripcion);
 
+        if (! $this->puedeAsignarAula($inscripcion)) {
+            $this->dispatch('toast', message: 'No se puede asignar aula a una inscripción anulada.', type: 'error');
+
+            return;
+        }
+
         $this->idInscripcionAula = $inscripcion->id_ins;
         $this->idProcesoAulaSeleccionada = $inscripcion->id_proceso_aula !== null
             ? (string) $inscripcion->id_proceso_aula
@@ -412,6 +418,10 @@ class extends Component
                     ->with('procesoOferta')
                     ->findOrFail($this->idInscripcionAula);
 
+                if (! $this->puedeAsignarAula($inscripcion)) {
+                    throw new \RuntimeException('No se puede asignar aula a una inscripción anulada.');
+                }
+
                 app(AsignadorAulaInscripcion::class)->validarCompatibilidad($procesoAula, $inscripcion);
                 app(AsignadorAulaInscripcion::class)->validarCupo($procesoAula, $inscripcion);
 
@@ -464,6 +474,7 @@ class extends Component
 
             $inscripcion->update([
                 'estado_ins' => EstadoInscripcion::Anulado->value,
+                'id_proceso_aula' => null,
                 'motivo_anulacion_ins' => $this->motivoAnulacion,
             ]);
         } catch (\Throwable $throwable) {
@@ -484,6 +495,14 @@ class extends Component
     public function puedeContinuarRegistro(Inscripcion $inscripcion): bool
     {
         return $inscripcion->estado_ins === EstadoInscripcion::Pendiente;
+    }
+
+    public function puedeAsignarAula(Inscripcion $inscripcion): bool
+    {
+        return in_array($inscripcion->estado_ins, [
+            EstadoInscripcion::Activo,
+            EstadoInscripcion::Pendiente,
+        ], true);
     }
 
     public function puedeVerDetalleRegistro(Inscripcion $inscripcion): bool
