@@ -2145,7 +2145,6 @@ class extends Component
         return false;
     }
 
-
     private function cargarPersonaDesdeSistema(Persona $persona): void
     {
         $persona->loadMissing(['ubigeoNacimiento', 'ubigeoDomicilio']);
@@ -2472,8 +2471,6 @@ class extends Component
         return $contextoProceso['proceso'];
     }
 
-
-
     private function validarInscripcionBorradorVigente(Inscripcion $inscripcion): void
     {
         $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
@@ -2481,7 +2478,6 @@ class extends Component
         app(ValidadorVigenciaInscripcion::class)->ofertaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
         app(ValidadorVigenciaInscripcion::class)->convenioVigente($inscripcion->id_convenio_proceso, $procesoActivo);
     }
-
 
     private function inicializarExpedientesForm(): void
     {
