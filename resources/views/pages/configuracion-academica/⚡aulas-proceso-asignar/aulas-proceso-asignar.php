@@ -45,9 +45,7 @@ class extends Component
         $this->autorizarPermiso('aula_proceso', 'crear');
     }
 
-    public function updatedBuscar(): void
-    {
-    }
+    public function updatedBuscar(): void {}
 
     public function updatedIdSemestre(): void
     {
@@ -246,7 +244,7 @@ class extends Component
                     ]);
                 }
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudieron asignar las aulas. Intente nuevamente.', type: 'error');
 

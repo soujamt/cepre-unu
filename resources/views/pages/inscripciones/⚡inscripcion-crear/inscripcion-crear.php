@@ -1930,7 +1930,7 @@ class extends Component
                         ->count();
 
                     if ($inscritos >= $convenioProceso->cupo_maximo_cpr) {
-                        throw new \RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
+                        throw new RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
                     }
                 }
 
@@ -1991,7 +1991,7 @@ class extends Component
                 $this->inscripcionId = $inscripcion->id_ins;
             });
         } catch (Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
 
             return;

@@ -69,7 +69,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombreNormalizado = $this->normalizarTexto((string) $value) ?? '';
                     $nombre = $this->mayusculas($nombreNormalizado);
                     $codigo = $this->generarCodigo($nombreNormalizado);
@@ -193,7 +193,7 @@ class extends Component
                     'estado_sem' => EstadoProceso::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el semestre. Intente nuevamente.', type: 'error');
 
@@ -237,7 +237,7 @@ class extends Component
                         ]);
                     }
 
-                    throw new \RuntimeException('El semestre ya venció por fecha y ahora se encuentra cerrado.');
+                    throw new RuntimeException('El semestre ya venció por fecha y ahora se encuentra cerrado.');
                 }
 
                 $nuevoEstado = match ($semestre->estado_sem) {
@@ -249,8 +249,8 @@ class extends Component
                     'estado_sem' => $nuevoEstado,
                 ]);
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del semestre.',
@@ -282,13 +282,13 @@ class extends Component
                     ->findOrFail($id_semestre);
 
                 if ($semestre->procesos_count > 0) {
-                    throw new \RuntimeException('El semestre tiene procesos relacionados y no puede eliminarse.');
+                    throw new RuntimeException('El semestre tiene procesos relacionados y no puede eliminarse.');
                 }
 
                 $semestre->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar el semestre.',

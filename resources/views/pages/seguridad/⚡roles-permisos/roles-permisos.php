@@ -94,7 +94,7 @@ class extends Component
                         }
                     });
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudieron guardar los permisos del rol.', type: 'error');
 

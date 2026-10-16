@@ -11,8 +11,8 @@ use App\Models\InscripcionPago;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DomainException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class InscripcionPagoManager
@@ -87,7 +87,7 @@ class InscripcionPagoManager
                 'numero_operacion_ipa' => $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd,
                 'estado_validacion_ipa' => EstadoValidacionPago::Verificado,
                 'validado_en' => now(),
-                'id_usuario_validador' => Auth::id()
+                'id_usuario_validador' => Auth::id(),
             ]);
 
             $detalle->estado_ibd = EstadoImportacionBancoDetalle::Asociado;

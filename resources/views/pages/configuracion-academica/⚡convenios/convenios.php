@@ -119,7 +119,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombre = $this->mayusculas($this->normalizarTexto((string) $value) ?? '');
 
                     if ($nombre === '') {
@@ -145,7 +145,7 @@ class extends Component
                 'nullable',
                 'numeric',
                 'min:0',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->convenioForm['tipo_beneficio'] === TipoBeneficioConvenio::ExoneracionTotal->value) {
                         return;
                     }
@@ -160,7 +160,7 @@ class extends Component
                 'numeric',
                 'min:0',
                 'max:100',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->convenioForm['tipo_beneficio'] === TipoBeneficioConvenio::ExoneracionTotal->value) {
                         return;
                     }
@@ -174,7 +174,7 @@ class extends Component
                 'required',
                 'integer',
                 'exists:tbl_proceso,id_pro',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($this->editingConvenioId)) {
                         return;
                     }
@@ -194,7 +194,7 @@ class extends Component
             'convenioForm.fecha_inicio' => [
                 'required',
                 'date',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $proceso = $this->procesoSeleccionado();
 
                     if ($proceso === null || blank($value)) {
@@ -217,7 +217,7 @@ class extends Component
                 'required',
                 'date',
                 'after_or_equal:convenioForm.fecha_inicio',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $proceso = $this->procesoSeleccionado();
 
                     if ($proceso === null || blank($value)) {
@@ -440,7 +440,7 @@ class extends Component
                     'estado_cpr' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el convenio. Intente nuevamente.', type: 'error');
 
@@ -479,7 +479,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado del convenio.', type: 'error');
 
@@ -508,13 +508,13 @@ class extends Component
                     ->findOrFail($id_convenio_proceso);
 
                 if ($convenioProceso->inscripciones_count > 0 || $convenioProceso->reglas_pago_count > 0) {
-                    throw new \RuntimeException('El convenio tiene registros relacionados y no puede eliminarse.');
+                    throw new RuntimeException('El convenio tiene registros relacionados y no puede eliminarse.');
                 }
 
                 $convenioProceso->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar el convenio.',

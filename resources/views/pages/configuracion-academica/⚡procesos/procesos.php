@@ -84,7 +84,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombreNormalizado = $this->normalizarTexto((string) $value) ?? '';
                     $nombre = $this->mayusculas($nombreNormalizado);
                     $codigo = $this->generarCodigo($nombreNormalizado);
@@ -119,7 +119,7 @@ class extends Component
             'procesoForm.fecha_inicio' => [
                 'required',
                 'date',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $semestre = $this->semestreSeleccionado();
 
                     if ($semestre === null || blank($value)) {
@@ -142,7 +142,7 @@ class extends Component
                 'required',
                 'date',
                 'after_or_equal:procesoForm.fecha_inicio',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $semestre = $this->semestreSeleccionado();
 
                     if ($semestre === null || blank($value)) {
@@ -271,7 +271,7 @@ class extends Component
                     'estado_pro' => EstadoProceso::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el proceso. Intente nuevamente.', type: 'error');
 
@@ -315,7 +315,7 @@ class extends Component
                         ]);
                     }
 
-                    throw new \RuntimeException('El proceso ya venció por fecha y ahora se encuentra cerrado.');
+                    throw new RuntimeException('El proceso ya venció por fecha y ahora se encuentra cerrado.');
                 }
 
                 $nuevoEstado = match ($proceso->estado_pro) {
@@ -327,8 +327,8 @@ class extends Component
                     'estado_pro' => $nuevoEstado,
                 ]);
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del proceso.',
@@ -365,13 +365,13 @@ class extends Component
                     || $proceso->reglas_pago_count > 0
                     || $proceso->requisitos_expediente_count > 0
                 ) {
-                    throw new \RuntimeException('El proceso tiene configuraciones relacionadas y no puede eliminarse.');
+                    throw new RuntimeException('El proceso tiene configuraciones relacionadas y no puede eliminarse.');
                 }
 
                 $proceso->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar el proceso.',

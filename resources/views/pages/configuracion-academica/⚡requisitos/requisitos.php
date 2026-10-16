@@ -92,7 +92,7 @@ class extends Component
                 'required',
                 'integer',
                 'exists:tbl_proceso,id_pro',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($value) || blank($this->requisitoForm['id_tipo_expediente'])) {
                         return;
                     }
@@ -263,7 +263,7 @@ class extends Component
                     'estado_rex' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el requisito. Intente nuevamente.', type: 'error');
 
@@ -302,7 +302,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado del requisito.', type: 'error');
 
@@ -329,7 +329,7 @@ class extends Component
                 $requisito = RequisitoExpediente::query()->findOrFail($id_requisito);
                 $requisito->delete();
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo eliminar el requisito.', type: 'error');
 

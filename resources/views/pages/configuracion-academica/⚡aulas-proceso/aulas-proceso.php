@@ -247,7 +247,7 @@ class extends Component
                 };
                 $asignacion->update(['estado_pau' => $nuevoEstado]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'Error al cambiar estado.', type: 'error');
 
@@ -273,13 +273,13 @@ class extends Component
             DB::transaction(function () use ($id_asignacion): void {
                 $asignacion = ProcesoAula::query()->withCount('inscripciones')->findOrFail($id_asignacion);
                 if ($asignacion->inscripciones_count > 0) {
-                    throw new \RuntimeException('No se puede eliminar porque existen inscripciones en esta aula.');
+                    throw new RuntimeException('No se puede eliminar porque existen inscripciones en esta aula.');
                 }
 
                 $asignacion->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'Error al eliminar asignación.', type: 'error');
 
             return;

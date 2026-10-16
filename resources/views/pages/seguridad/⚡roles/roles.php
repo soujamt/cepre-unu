@@ -6,7 +6,6 @@ use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -70,7 +69,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombre = $this->mayusculas($this->normalizarTexto((string) $value) ?? '');
 
                     if ($nombre === '') {
@@ -183,7 +182,7 @@ class extends Component
                     'estado_rol' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el rol. Intente nuevamente.', type: 'error');
 
@@ -217,7 +216,7 @@ class extends Component
                 $rol = Rol::query()->findOrFail($id_rol);
 
                 if ($rol->nombre_rol === 'ADMINISTRADOR') {
-                    throw new \RuntimeException('El rol ADMINISTRADOR no puede cambiar de estado.');
+                    throw new RuntimeException('El rol ADMINISTRADOR no puede cambiar de estado.');
                 }
 
                 $rol->update([
@@ -226,8 +225,8 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del rol.', type: 'error');
 
             return;
@@ -253,13 +252,13 @@ class extends Component
                 $rol = Rol::query()->findOrFail($id_rol);
 
                 if ($rol->nombre_rol === 'ADMINISTRADOR') {
-                    throw new \RuntimeException('El rol ADMINISTRADOR no puede eliminarse.');
+                    throw new RuntimeException('El rol ADMINISTRADOR no puede eliminarse.');
                 }
 
                 $rol->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo eliminar el rol.', type: 'error');
 
             return;

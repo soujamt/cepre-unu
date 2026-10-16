@@ -331,7 +331,7 @@ class extends Component
                 'revisado_en' => now(),
                 'id_usuario_revisor' => Auth::id(),
             ]);
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo actualizar el expediente.', type: 'error');
 
