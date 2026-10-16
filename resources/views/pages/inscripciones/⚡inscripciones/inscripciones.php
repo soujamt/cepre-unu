@@ -1,10 +1,10 @@
 <?php
 
-use App\Exports\InscripcionesFormatoCepreExport;
 use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoRevisionExpediente;
+use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Inscripcion;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
@@ -362,7 +362,7 @@ class extends Component
     public function aulasDisponiblesParaInscripcion(): Collection
     {
         if ($this->idInscripcionAula === null) {
-            return new Collection();
+            return new Collection;
         }
 
         $inscripcion = Inscripcion::query()
@@ -373,7 +373,7 @@ class extends Component
         $idTurno = $inscripcion->procesoOferta?->id_turno;
 
         if ($idProceso === null || $idTurno === null) {
-            return new Collection();
+            return new Collection;
         }
 
         return ProcesoAula::query()
@@ -419,7 +419,7 @@ class extends Component
                     ->findOrFail($this->idInscripcionAula);
 
                 if (! $this->puedeAsignarAula($inscripcion)) {
-                    throw new \RuntimeException('No se puede asignar aula a una inscripción anulada.');
+                    throw new RuntimeException('No se puede asignar aula a una inscripción anulada.');
                 }
 
                 app(AsignadorAulaInscripcion::class)->validarCompatibilidad($procesoAula, $inscripcion);
@@ -427,8 +427,8 @@ class extends Component
 
                 $inscripcion->update(['id_proceso_aula' => $procesoAula->id_pau]);
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo asignar el aula.', type: 'error');
 
             return;
@@ -469,7 +469,7 @@ class extends Component
             $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAnular);
 
             if ($inscripcion->estado_ins !== EstadoInscripcion::Activo) {
-                throw new \RuntimeException('Solo se pueden anular inscripciones activas.');
+                throw new RuntimeException('Solo se pueden anular inscripciones activas.');
             }
 
             $inscripcion->update([
@@ -477,8 +477,8 @@ class extends Component
                 'id_proceso_aula' => null,
                 'motivo_anulacion_ins' => $this->motivoAnulacion,
             ]);
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo anular la inscripción.', type: 'error');
 
             return;

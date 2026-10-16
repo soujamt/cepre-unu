@@ -149,7 +149,7 @@ class extends Component
                 'required',
                 'integer',
                 'exists:tbl_proceso,id_pro',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($this->reglaPagoForm['id_concepto_pago']) || blank($value)) {
                         return;
                     }
@@ -188,7 +188,7 @@ class extends Component
                 'nullable',
                 'integer',
                 'exists:tbl_convenio_proceso,id_cpr',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($value) || blank($this->reglaPagoForm['id_proceso'])) {
                         return;
                     }
@@ -206,7 +206,7 @@ class extends Component
             'reglaPagoForm.monto_total' => ['required', 'numeric', 'gt:0'],
             'reglaPagoForm.permite_cuotas' => [
                 'boolean',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (! (bool) $value) {
                         return;
                     }
@@ -227,7 +227,7 @@ class extends Component
                 'nullable',
                 'numeric',
                 'gt:0',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (! $this->reglaPagoForm['permite_cuotas']) {
                         return;
                     }
@@ -248,7 +248,7 @@ class extends Component
                 'required',
                 'integer',
                 'min:1',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if ($this->reglaPagoForm['permite_cuotas'] && (int) $value < 2) {
                         $fail('Debe indicar al menos 2 cuotas cuando la regla permite cuotas.');
                     }
@@ -262,7 +262,7 @@ class extends Component
             'reglaPagoForm.vigente_desde' => [
                 'required',
                 'date',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($value)) {
                         return;
                     }
@@ -302,7 +302,7 @@ class extends Component
                 'nullable',
                 'date',
                 'after_or_equal:reglaPagoForm.vigente_desde',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (blank($value)) {
                         return;
                     }
@@ -548,7 +548,7 @@ class extends Component
                     'estado_rpa' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar la regla de pago. Intente nuevamente.', type: 'error');
 
@@ -587,7 +587,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado de la regla de pago.', type: 'error');
 
@@ -616,13 +616,13 @@ class extends Component
                     ->findOrFail($id_regla_pago);
 
                 if ($reglaPago->obligaciones_pago_count > 0) {
-                    throw new \RuntimeException('La regla de pago tiene obligaciones relacionadas y no puede eliminarse.');
+                    throw new RuntimeException('La regla de pago tiene obligaciones relacionadas y no puede eliminarse.');
                 }
 
                 $reglaPago->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar la regla de pago.',

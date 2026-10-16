@@ -1,12 +1,12 @@
 <?php
 
-use App\Traits\AuthorizesPermisos;
 use App\Enums\EstadoCatalogo;
 use App\Models\Accion;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
-use Illuminate\Database\Eloquent\Collection;
+use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -71,7 +71,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $codigo = $this->generarClave((string) $value);
 
                     if ($codigo === '') {
@@ -177,7 +177,7 @@ class extends Component
 
                 $this->sincronizarAcciones($permiso, $accionesSeleccionadas);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el permiso. Intente nuevamente.', type: 'error');
 
@@ -216,7 +216,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado del permiso.', type: 'error');
 
@@ -242,7 +242,7 @@ class extends Component
             DB::transaction(function () use ($id_permiso): void {
                 Permiso::query()->findOrFail($id_permiso)->delete();
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo eliminar el permiso.', type: 'error');
 

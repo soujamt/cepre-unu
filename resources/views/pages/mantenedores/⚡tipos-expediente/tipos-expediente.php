@@ -69,7 +69,7 @@ class extends Component
                 'required',
                 'string',
                 'max:50',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $codigo = $this->normalizarCodigo((string) $value);
 
                     if ($codigo === '') {
@@ -93,7 +93,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombre = $this->mayusculas($this->normalizarTexto((string) $value) ?? '');
 
                     if ($nombre === '') {
@@ -204,7 +204,7 @@ class extends Component
                     'estado_tex' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el tipo de expediente. Intente nuevamente.', type: 'error');
 
@@ -243,7 +243,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado del tipo de expediente.', type: 'error');
 
@@ -272,13 +272,13 @@ class extends Component
                     ->findOrFail($id_tipo_expediente);
 
                 if ($tipoExpediente->requisitos_count > 0 || $tipoExpediente->inscripciones_expediente_count > 0) {
-                    throw new \RuntimeException('El tipo de expediente tiene registros relacionados y no puede eliminarse.');
+                    throw new RuntimeException('El tipo de expediente tiene registros relacionados y no puede eliminarse.');
                 }
 
                 $tipoExpediente->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar el tipo de expediente.',

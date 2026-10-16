@@ -10,6 +10,7 @@ use App\Models\ProcesoOferta;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -43,9 +44,7 @@ class extends Component
         $this->autorizarPermiso('oferta', 'crear');
     }
 
-    public function updatedBuscar(): void
-    {
-    }
+    public function updatedBuscar(): void {}
 
     public function updatedIdProceso(): void
     {
@@ -99,7 +98,7 @@ class extends Component
     }
 
     #[Computed]
-    public function procesosDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function procesosDisponibles(): Collection
     {
         return Proceso::query()
             ->with('semestre')
@@ -109,7 +108,7 @@ class extends Component
     }
 
     #[Computed]
-    public function turnosDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function turnosDisponibles(): Collection
     {
         return Turno::query()
             ->where('estado_tur', EstadoCatalogo::Habilitado->value)
@@ -118,7 +117,7 @@ class extends Component
     }
 
     #[Computed]
-    public function modalidadesDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function modalidadesDisponibles(): Collection
     {
         return ModalidadAdmision::query()
             ->where('estado_mad', EstadoCatalogo::Habilitado->value)
@@ -127,7 +126,7 @@ class extends Component
     }
 
     #[Computed]
-    public function lugaresInscripcionDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function lugaresInscripcionDisponibles(): Collection
     {
         return LugarInscripcion::query()
             ->with('sede')
@@ -233,7 +232,7 @@ class extends Component
     }
 
     #[Computed]
-    public function ofertasBase(): \Illuminate\Database\Eloquent\Collection
+    public function ofertasBase(): Collection
     {
         if (! $this->filtrosAplicados()) {
             return OfertaBase::newCollection();
@@ -321,7 +320,7 @@ class extends Component
                     ]);
                 });
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudieron asignar las ofertas. Intente nuevamente.', type: 'error');
 

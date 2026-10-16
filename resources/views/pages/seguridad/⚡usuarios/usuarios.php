@@ -76,7 +76,7 @@ class extends Component
                 'required',
                 'email',
                 'max:150',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $correo = Str::lower(trim((string) $value));
 
                     $exists = Usuario::query()
@@ -215,7 +215,7 @@ class extends Component
 
                 $this->sincronizarRoles($usuario, $rolesSeleccionados);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el usuario. Intente nuevamente.', type: 'error');
 
@@ -249,7 +249,7 @@ class extends Component
                 $usuario = Usuario::query()->findOrFail($id_usuario);
 
                 if ((int) $usuario->id_usu === (int) Auth::id()) {
-                    throw new \RuntimeException('No puedes cambiar el estado de tu propio usuario.');
+                    throw new RuntimeException('No puedes cambiar el estado de tu propio usuario.');
                 }
 
                 $estado = $usuario->estado_usu === EstadoUsuario::Habilitado
@@ -260,8 +260,8 @@ class extends Component
                     'estado_usu' => $estado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo cambiar el estado del usuario.', type: 'error');
 
             return;
@@ -287,13 +287,13 @@ class extends Component
                 $usuario = Usuario::query()->findOrFail($id_usuario);
 
                 if ((int) $usuario->id_usu === (int) Auth::id()) {
-                    throw new \RuntimeException('No puedes eliminar tu propio usuario.');
+                    throw new RuntimeException('No puedes eliminar tu propio usuario.');
                 }
 
                 $usuario->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo eliminar el usuario.', type: 'error');
 
             return;

@@ -112,7 +112,7 @@ class extends Component
                 'required',
                 'integer',
                 'exists:tbl_turno,id_tur',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     if (
                         blank($this->ofertaForm['id_proceso'])
                         || blank($this->ofertaForm['id_oferta_base'])
@@ -261,7 +261,7 @@ class extends Component
 
                 ProcesoOferta::query()->findOrFail($this->editingId)->update($payload);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar la oferta. Intente nuevamente.', type: 'error');
 
@@ -303,7 +303,7 @@ class extends Component
                     'estado_pof' => $nuevoEstado,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado de la oferta.', type: 'error');
 
@@ -332,13 +332,13 @@ class extends Component
                     ->findOrFail($id_oferta);
 
                 if ($oferta->inscripciones_count > 0) {
-                    throw new \RuntimeException('La oferta tiene inscripciones relacionadas y no puede eliminarse.');
+                    throw new RuntimeException('La oferta tiene inscripciones relacionadas y no puede eliminarse.');
                 }
 
                 $oferta->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar la oferta.',

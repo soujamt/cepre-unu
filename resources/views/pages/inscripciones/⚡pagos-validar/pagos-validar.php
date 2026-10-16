@@ -8,6 +8,7 @@ use App\Models\InscripcionObligacionPago;
 use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -121,11 +122,11 @@ class extends Component
 
         try {
             $manager->asociarDetalleAObligacion($obligacion, $detalle);
-        } catch (\DomainException $exception) {
+        } catch (DomainException $exception) {
             $this->dispatch('toast', message: $exception->getMessage(), type: 'error');
 
             return;
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo validar el pago seleccionado.', type: 'error');
 
@@ -155,7 +156,7 @@ class extends Component
     }
 
     #[Computed]
-    public function obligacionesDisponibles(): \Illuminate\Database\Eloquent\Collection
+    public function obligacionesDisponibles(): Collection
     {
         return InscripcionObligacionPago::query()
             ->with([
@@ -206,7 +207,7 @@ class extends Component
     }
 
     #[Computed]
-    public function detallesEncontrados(): \Illuminate\Database\Eloquent\Collection
+    public function detallesEncontrados(): Collection
     {
         if ($this->resultadoDetalleIds === []) {
             return ImportacionBancoDetalle::query()->whereRaw('1 = 0')->get();

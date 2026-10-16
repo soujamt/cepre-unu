@@ -31,8 +31,10 @@ use App\Models\TipoDocumento;
 use App\Models\Ubigeo;
 use App\Services\ReniecService;
 use App\Support\AsignadorAulaInscripcion;
+use App\Support\GeneradorCodigoInscripcion;
 use App\Support\InscripcionPagoManager;
 use App\Support\ProcesoInscripcionResolver;
+use App\Support\ValidadorVigenciaInscripcion;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -1173,90 +1175,71 @@ class extends Component
     #[Computed]
     public function tiposDocumento(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->tiposDocumentoCatalogo)
-                ->map(fn (array $tipoDocumento): TipoDocumento => tap(new TipoDocumento, fn (TipoDocumento $model) => $model->forceFill($tipoDocumento)))
-                ->all(),
-        );
+        return $this->hidratarModelos(TipoDocumento::class, $this->tiposDocumentoCatalogo);
     }
 
     #[Computed]
     public function estadosCiviles(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->estadosCivilesCatalogo)
-                ->map(fn (array $estadoCivil): EstadoCivil => tap(new EstadoCivil, fn (EstadoCivil $model) => $model->forceFill($estadoCivil)))
-                ->all(),
-        );
+        return $this->hidratarModelos(EstadoCivil::class, $this->estadosCivilesCatalogo);
     }
 
     #[Computed]
     public function paises(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->paisesCatalogo)
-                ->map(fn (array $pais): Pais => tap(new Pais, fn (Pais $model) => $model->forceFill($pais)))
-                ->all(),
-        );
+        return $this->hidratarModelos(Pais::class, $this->paisesCatalogo);
     }
 
     #[Computed]
     public function nacionalidades(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->nacionalidadesCatalogo)
-                ->map(fn (array $nacionalidad): Nacionalidad => tap(new Nacionalidad, fn (Nacionalidad $model) => $model->forceFill($nacionalidad)))
-                ->all(),
-        );
+        return $this->hidratarModelos(Nacionalidad::class, $this->nacionalidadesCatalogo);
     }
 
     #[Computed]
     public function identidadesEtnicas(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->identidadesEtnicasCatalogo)
-                ->map(fn (array $identidadEtnica): IdentidadEtnica => tap(new IdentidadEtnica, fn (IdentidadEtnica $model) => $model->forceFill($identidadEtnica)))
-                ->all(),
-        );
+        return $this->hidratarModelos(IdentidadEtnica::class, $this->identidadesEtnicasCatalogo);
     }
 
     #[Computed]
     public function lenguasNativas(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->lenguasNativasCatalogo)
-                ->map(fn (array $lenguaNativa): LenguaNativa => tap(new LenguaNativa, fn (LenguaNativa $model) => $model->forceFill($lenguaNativa)))
-                ->all(),
-        );
+        return $this->hidratarModelos(LenguaNativa::class, $this->lenguasNativasCatalogo);
     }
 
     #[Computed]
     public function lenguasExtranjeras(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->lenguasExtranjerasCatalogo)
-                ->map(fn (array $lenguaExtranjera): LenguaExtranjera => tap(new LenguaExtranjera, fn (LenguaExtranjera $model) => $model->forceFill($lenguaExtranjera)))
-                ->all(),
-        );
+        return $this->hidratarModelos(LenguaExtranjera::class, $this->lenguasExtranjerasCatalogo);
     }
 
     #[Computed]
     public function tiposDiscapacidad(): Illuminate\Database\Eloquent\Collection
     {
-        return new Illuminate\Database\Eloquent\Collection(
-            collect($this->tiposDiscapacidadCatalogo)
-                ->map(fn (array $tipoDiscapacidad): TipoDiscapacidad => tap(new TipoDiscapacidad, fn (TipoDiscapacidad $model) => $model->forceFill($tipoDiscapacidad)))
-                ->all(),
-        );
+        return $this->hidratarModelos(TipoDiscapacidad::class, $this->tiposDiscapacidadCatalogo);
     }
 
     #[Computed]
     public function tiposColegio(): Illuminate\Database\Eloquent\Collection
     {
+        return $this->hidratarModelos(TipoColegio::class, $this->tiposColegioCatalogo);
+    }
+
+    /**
+     * Convierte los registros de un catalogo guardados como arreglos en el
+     * estado del componente de vuelta en modelos, sin consultar la base.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  class-string<TModel>  $modelo
+     * @param  array<int, array<string, mixed>>  $registros
+     * @return Illuminate\Database\Eloquent\Collection<int, TModel>
+     */
+    private function hidratarModelos(string $modelo, array $registros): Illuminate\Database\Eloquent\Collection
+    {
         return new Illuminate\Database\Eloquent\Collection(
-            collect($this->tiposColegioCatalogo)
-                ->map(fn (array $tipoColegio): TipoColegio => tap(new TipoColegio, fn (TipoColegio $model) => $model->forceFill($tipoColegio)))
-                ->all(),
+            array_map(fn (array $registro) => (new $modelo)->forceFill($registro), $registros),
         );
     }
 
@@ -1606,7 +1589,7 @@ class extends Component
                 ->findOrFail($this->inscripcionId);
 
             $this->validarInscripcionBorradorVigente($inscripcion);
-            $reglaPago = $this->validarReglaPagoSeleccionadaVigente(
+            $reglaPago = app(ValidadorVigenciaInscripcion::class)->reglaPagoVigente(
                 (int) $data['pagoForm']['id_regla_pago'],
                 $inscripcion,
             );
@@ -1907,7 +1890,7 @@ class extends Component
         try {
             DB::transaction(function () use ($data): void {
                 $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
-                $this->validarOfertaSeleccionadaVigente(
+                app(ValidadorVigenciaInscripcion::class)->ofertaVigente(
                     (int) $data['postulacionForm']['id_proceso_oferta'],
                     $procesoActivo,
                 );
@@ -1917,7 +1900,7 @@ class extends Component
                     : null;
 
                 if ($idConvenioProceso !== null) {
-                    $convenioProceso = $this->validarConvenioSeleccionadoVigente(
+                    $convenioProceso = app(ValidadorVigenciaInscripcion::class)->convenioVigente(
                         $idConvenioProceso,
                         $procesoActivo,
                         true,
@@ -1930,7 +1913,7 @@ class extends Component
                         ->count();
 
                     if ($inscritos >= $convenioProceso->cupo_maximo_cpr) {
-                        throw new \RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
+                        throw new RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
                     }
                 }
 
@@ -1969,7 +1952,7 @@ class extends Component
 
                     if (Str::startsWith((string) $inscripcion->codigo_ins, 'TMP-')) {
                         $inscripcion->update([
-                            'codigo_ins' => $this->generarCodigoInscripcion($inscripcion),
+                            'codigo_ins' => app(GeneradorCodigoInscripcion::class)->generar($inscripcion),
                         ]);
                     }
                 }
@@ -1991,7 +1974,7 @@ class extends Component
                 $this->inscripcionId = $inscripcion->id_ins;
             });
         } catch (Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch('toast', message: $throwable->getMessage() ?: 'No se pudo guardar la postulacion. Intente nuevamente.', type: 'error');
 
             return;
@@ -2160,43 +2143,6 @@ class extends Component
         );
 
         return false;
-    }
-
-    private function generarCodigoInscripcion(Inscripcion $inscripcion): string
-    {
-        $procesoOferta = ProcesoOferta::query()
-            ->with(['proceso.semestre'])
-            ->find($inscripcion->id_proceso_oferta);
-
-        $proceso = $procesoOferta?->proceso;
-        $semestre = $proceso?->semestre;
-
-        // Extraer año y número de semestre desde codigo_sem (ej: "2026_1" → "2026", "1")
-        [$anio, $numSem] = array_pad(
-            explode('_', (string) ($semestre?->codigo_sem ?? '0_0')),
-            2,
-            '0',
-        );
-
-        // Obtenemos los 2 ultimos numeros del año para el codigo (ej: "2026" → "26")
-        $anio = substr($anio, -2);
-
-        // Abreviatura del proceso (max 3 chars, mayusculas)
-        $codigoPro = mb_strtoupper(
-            mb_substr((string) ($proceso?->codigo_pro ?? 'PRO'), 0, 3, 'UTF-8'),
-            'UTF-8',
-        );
-
-        // Correlativo secuencial dentro del proceso
-        $correlativo = Inscripcion::query()
-            ->whereHas(
-                'procesoOferta',
-                fn ($q) => $q->where('id_proceso', $proceso?->id_pro),
-            )
-            ->where('id_ins', '<=', $inscripcion->id_ins)
-            ->count();
-
-        return "{$anio}{$numSem}{$codigoPro}".str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
     }
 
     private function cargarPersonaDesdeSistema(Persona $persona): void
@@ -2525,120 +2471,12 @@ class extends Component
         return $contextoProceso['proceso'];
     }
 
-    private function validarOfertaSeleccionadaVigente(int $idProcesoOferta, Proceso $procesoActivo): ProcesoOferta
-    {
-        $procesoOferta = ProcesoOferta::query()
-            ->with(['ofertaBase.modalidadLugarInscripcion'])
-            ->where('id_pof', $idProcesoOferta)
-            ->where('id_proceso', $procesoActivo->id_pro)
-            ->where('estado_pof', EstadoProceso::Habilitado->value)
-            ->first();
-
-        if ($procesoOferta === null) {
-            throw new RuntimeException('La oferta seleccionada ya no se encuentra disponible para el proceso activo.');
-        }
-
-        return $procesoOferta;
-    }
-
-    private function validarConvenioSeleccionadoVigente(?int $idConvenioProceso, Proceso $procesoActivo, bool $lock = false): ?ConvenioProceso
-    {
-        if ($idConvenioProceso === null) {
-            return null;
-        }
-
-        $query = ConvenioProceso::query()
-            ->with('convenio')
-            ->where('id_cpr', $idConvenioProceso)
-            ->where('id_proceso', $procesoActivo->id_pro)
-            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
-            ->whereDate('fecha_inicio_cpr', '<=', now()->toDateString())
-            ->whereDate('fecha_fin_cpr', '>=', now()->toDateString());
-
-        if ($lock) {
-            $query->lockForUpdate();
-        }
-
-        $convenioProceso = $query->first();
-
-        if ($convenioProceso === null) {
-            $convenioVencido = ConvenioProceso::query()
-                ->with('convenio')
-                ->where('id_cpr', $idConvenioProceso)
-                ->first();
-
-            if ($convenioVencido?->fecha_fin_cpr !== null) {
-                throw new RuntimeException(
-                    'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el '.$convenioVencido->fecha_fin_cpr->format('d/m/Y').'.'
-                );
-            }
-
-            throw new RuntimeException('El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo.');
-        }
-
-        return $convenioProceso;
-    }
-
     private function validarInscripcionBorradorVigente(Inscripcion $inscripcion): void
     {
         $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
 
-        $this->validarOfertaSeleccionadaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
-        $this->validarConvenioSeleccionadoVigente($inscripcion->id_convenio_proceso, $procesoActivo);
-    }
-
-    private function validarReglaPagoSeleccionadaVigente(int $idReglaPago, Inscripcion $inscripcion): ReglaPago
-    {
-        $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
-        $convenioProcesoId = $inscripcion->id_convenio_proceso;
-        $procesoId = $inscripcion->procesoOferta?->id_proceso;
-
-        if ($procesoId === null) {
-            throw new RuntimeException('La inscripción ya no tiene un proceso válido para continuar con el pago.');
-        }
-
-        $reglaPago = ReglaPago::query()
-            ->with([
-                'conceptoPago',
-                'modalidadAdmision',
-                'convenioProceso.convenio',
-            ])
-            ->where('id_rpa', $idReglaPago)
-            ->where('id_proceso', $procesoId)
-            ->where('estado_rpa', EstadoCatalogo::Habilitado->value)
-            ->whereDate('vigente_desde_rpa', '<=', now()->toDateString())
-            ->whereDate('vigente_hasta_rpa', '>=', now()->toDateString())
-            ->where(function ($query) use ($modalidadId): void {
-                $query->whereNull('id_modalidad_admision');
-
-                if ($modalidadId !== null) {
-                    $query->orWhere('id_modalidad_admision', $modalidadId);
-                }
-            })
-            ->where(function ($query) use ($convenioProcesoId): void {
-                $query->whereNull('id_convenio_proceso');
-
-                if ($convenioProcesoId !== null) {
-                    $query->orWhere('id_convenio_proceso', $convenioProcesoId);
-                }
-            })
-            ->first();
-
-        if ($reglaPago === null) {
-            $reglaVencida = ReglaPago::query()
-                ->where('id_rpa', $idReglaPago)
-                ->first();
-
-            if ($reglaVencida?->vigente_hasta_rpa !== null) {
-                throw new RuntimeException(
-                    'La regla de pago seleccionada ya no se encuentra vigente para esta inscripción. Su vigencia terminó el '.$reglaVencida->vigente_hasta_rpa->format('d/m/Y').'.'
-                );
-            }
-
-            throw new RuntimeException('La regla de pago seleccionada ya no se encuentra vigente para esta inscripción.');
-        }
-
-        return $reglaPago;
+        app(ValidadorVigenciaInscripcion::class)->ofertaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
+        app(ValidadorVigenciaInscripcion::class)->convenioVigente($inscripcion->id_convenio_proceso, $procesoActivo);
     }
 
     private function inicializarExpedientesForm(): void

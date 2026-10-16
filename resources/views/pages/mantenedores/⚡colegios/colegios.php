@@ -82,7 +82,7 @@ class extends Component
                 'required',
                 'string',
                 'max:10',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $codigo = $this->normalizarCodigo((string) $value);
 
                     if ($codigo === '') {
@@ -106,7 +106,7 @@ class extends Component
                 'nullable',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $codigoModular = $this->normalizarCodigoOpcional((string) $value);
 
                     if ($codigoModular === null) {
@@ -128,7 +128,7 @@ class extends Component
                 'required',
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, \Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail): void {
                     $nombre = $this->normalizarTexto((string) $value) ?? '';
 
                     if ($nombre === '') {
@@ -273,7 +273,7 @@ class extends Component
                     'estado_col' => EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo guardar el colegio. Intente nuevamente.', type: 'error');
 
@@ -312,7 +312,7 @@ class extends Component
                         : EstadoCatalogo::Habilitado->value,
                 ]);
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             report($throwable);
             $this->dispatch('toast', message: 'No se pudo cambiar el estado del colegio.', type: 'error');
 
@@ -341,13 +341,13 @@ class extends Component
                     ->findOrFail($id_colegio);
 
                 if ($colegio->inscripciones_count > 0) {
-                    throw new \RuntimeException('El colegio tiene inscripciones relacionadas y no puede eliminarse.');
+                    throw new RuntimeException('El colegio tiene inscripciones relacionadas y no puede eliminarse.');
                 }
 
                 $colegio->delete();
             });
-        } catch (\Throwable $throwable) {
-            report_if(! $throwable instanceof \RuntimeException, $throwable);
+        } catch (Throwable $throwable) {
+            report_if(! $throwable instanceof RuntimeException, $throwable);
             $this->dispatch(
                 'toast',
                 message: $throwable->getMessage() ?: 'No se pudo eliminar el colegio.',

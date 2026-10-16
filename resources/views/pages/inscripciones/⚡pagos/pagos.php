@@ -19,6 +19,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
@@ -27,7 +28,7 @@ class extends Component
 {
     use AuthorizesPermisos;
     use WithFileUploads;
-    use \Livewire\WithPagination;
+    use WithPagination;
 
     public string $buscar = '';
 
@@ -112,13 +113,13 @@ class extends Component
             $rutaArchivo = $data['archivo']->getRealPath();
 
             if (! is_string($rutaArchivo) || $rutaArchivo === '') {
-                throw new \RuntimeException('No se pudo ubicar el archivo temporal.');
+                throw new RuntimeException('No se pudo ubicar el archivo temporal.');
             }
 
             $content = file_get_contents($rutaArchivo);
 
             if ($content === false) {
-                throw new \RuntimeException('No se pudo leer el archivo temporal.');
+                throw new RuntimeException('No se pudo leer el archivo temporal.');
             }
 
             $parsed = $parser->parse($content);
@@ -145,7 +146,7 @@ class extends Component
             );
 
             $this->modal('modal-previsualizar-importacion')->show();
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             Log::error('Fallo al importar TXT bancario.', [
                 'archivo' => $data['archivo']?->getClientOriginalName(),
                 'mensaje' => $throwable->getMessage(),
@@ -211,7 +212,7 @@ class extends Component
 
                 $this->detalleImportacionId = $importacion->id_iba;
             });
-        } catch (\Throwable $throwable) {
+        } catch (Throwable $throwable) {
             Log::error('Fallo al confirmar importacion TXT bancario.', [
                 'archivo' => $this->previsualizacionImportacion['nombre_archivo'] ?? null,
                 'mensaje' => $throwable->getMessage(),

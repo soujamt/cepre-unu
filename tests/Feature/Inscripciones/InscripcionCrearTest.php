@@ -329,6 +329,8 @@ test('users can register personal information for a new inscripcion draft', func
 
     $this->actingAs($usuario);
 
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '74503321')
@@ -369,6 +371,8 @@ test('users can register personal information for a new inscripcion draft', func
     expect($persona?->nombres_per)->toBe('LUCY BETTY');
     expect($persona?->correo_electronico_per)->toBe('lucy@test.com');
     expect($persona?->discapacidad_per)->toBeTrue();
+
+    Carbon\Carbon::setTestNow();
 });
 
 test('existing person data is loaded from the local system before consulting reniec', function () {
