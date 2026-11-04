@@ -1,83 +1,145 @@
 @section ('icon')
-    <x-header.icon icon="money" />
+    <x-header.icon icon="currency-note" />
 @endsection
 
 @section ('header')
-    <x-header.title>PAGOS</x-header.title>
+    <x-header.title>Pagos</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('pagos.index') }}" wire:navigate>PAGOS</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('pagos.index') }}" wire:navigate>Pagos</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
     @permiso ('pago_crear')
-        <div class="flex justify-end">
-            <flux:button variant="ghost" href="{{ route('pagos.validar') }}" wire:navigate class="font-normal">
-                <x-slot name="icon">
-                    <x-ui.icon name="shield-check" size="5" />
-                </x-slot>
-                Validar pagos
-            </flux:button>
-        </div>
-    @endpermiso
-
-    @permiso ('pago_crear')
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <div class="space-y-5">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div class="space-y-1">
-                        <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">
-                            IMPORTAR TXT DEL BANCO
-                        </h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Cargue el archivo recibido del banco para registrar el lote y sus operaciones.</p>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div class="flex items-start gap-3">
+                        <span
+                            class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-index-100 bg-index-50 text-index-500 dark:border-index-500/20 dark:bg-index-500/10 dark:text-index-300"
+                        >
+                            <x-ui.icon name="bank" size="5" />
+                        </span>
+                        <div class="space-y-0.5">
+                            <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Importar TXT del banco</h3>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Cargue el archivo recibido del banco para registrar el lote y sus operaciones.</p>
+                        </div>
                     </div>
 
-                    <flux:badge color="zinc" size="lg">TXT</flux:badge>
+                    <flux:button href="{{ route('pagos.validar') }}" wire:navigate class="shrink-0">
+                        <x-slot name="icon">
+                            <x-ui.icon name="check-shield" size="5" class="text-index-500" />
+                        </x-slot>
+                        Validar pagos
+                    </flux:button>
                 </div>
 
                 <form wire:submit="importar" class="space-y-4">
-                    <div class="space-y-2">
-                        <label for="archivo-pagos" class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
-                            Archivo TXT <span class="text-red-500">*</span>
-                        </label>
+                    <div
+                        x-data="{ arrastrando: false, progreso: 0 }"
+                        x-on:livewire-upload-start="progreso = 0"
+                        x-on:livewire-upload-progress="progreso = $event.detail.progress"
+                        x-on:livewire-upload-finish="progreso = 0"
+                        x-on:livewire-upload-error="progreso = 0"
+                        class="space-y-2"
+                    >
+                        @if ($archivo)
+                            <div
+                                class="flex items-center gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-3 dark:border-white/[0.06] dark:bg-white/[0.02]"
+                            >
+                                <span
+                                    class="flex size-10 shrink-0 items-center justify-center rounded-lg border border-zinc-200/80 bg-white text-index-500 shadow-card dark:border-white/10 dark:bg-zinc-900 dark:shadow-none"
+                                >
+                                    <x-ui.icon name="file-detail" size="5" />
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="truncate text-sm font-medium text-zinc-900 dark:text-white">
+                                        {{ $archivo->getClientOriginalName() }}
+                                    </p>
+                                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                                        {{ \Illuminate\Support\Number::fileSize($archivo->getSize(), precision: 1) }} · listo para importar
+                                    </p>
+                                </div>
+                                <flux:button
+                                    size="sm"
+                                    variant="subtle"
+                                    square
+                                    wire:click="$set('archivo', null)"
+                                    aria-label="Quitar archivo"
+                                >
+                                    <x-slot name="icon">
+                                        <x-ui.icon name="x" size="4" />
+                                    </x-slot>
+                                </flux:button>
+                            </div>
+                        @else
+                            <label
+                                for="archivo-pagos"
+                                x-on:dragover.prevent="arrastrando = true"
+                                x-on:dragleave.prevent="arrastrando = false"
+                                x-on:drop.prevent="
+                                    arrastrando = false;
+                                    if ($event.dataTransfer.files.length) {
+                                        $refs.archivo.files = $event.dataTransfer.files;
+                                        $refs.archivo.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                "
+                                class="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 py-8 text-center transition-colors"
+                                :class="arrastrando
+                                    ? 'border-index-400 bg-index-50/70 dark:border-index-400/60 dark:bg-index-500/10'
+                                    : 'border-zinc-300 bg-zinc-50/60 hover:border-index-300 hover:bg-index-50/40 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-index-400/40 dark:hover:bg-index-500/5'"
+                            >
+                                <span
+                                    class="flex size-11 items-center justify-center rounded-full border border-zinc-200/80 bg-white text-zinc-400 shadow-card transition-colors group-hover:text-index-500 dark:border-white/10 dark:bg-zinc-900 dark:shadow-none"
+                                    :class="arrastrando && 'text-index-500'"
+                                >
+                                    <x-ui.icon name="arrow-out-up-square-half" size="5" />
+                                </span>
+                                <span class="text-sm text-zinc-700 dark:text-zinc-200">
+                                    <span class="font-medium text-index-600 dark:text-index-300">Seleccione el archivo</span>
+                                    o arrástrelo aquí
+                                </span>
+                                <span class="text-xs text-zinc-500 dark:text-zinc-400">Solo archivos .TXT · máximo 5 MB</span>
+                            </label>
+                        @endif
 
-                        <div
-                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40"
-                        >
-                            <input
-                                id="archivo-pagos"
-                                type="file"
-                                wire:model="archivo"
-                                accept=".txt,text/plain"
-                                class="block w-full cursor-pointer rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 file:me-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-zinc-800 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:file:bg-white dark:file:text-zinc-900 dark:hover:file:bg-zinc-100"
-                            />
+                        <input
+                            id="archivo-pagos"
+                            x-ref="archivo"
+                            type="file"
+                            wire:model="archivo"
+                            accept=".txt,text/plain"
+                            class="sr-only"
+                        />
+
+                        <div class="h-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-white/5" x-show="progreso > 0" x-cloak>
+                            <div class="h-full rounded-full bg-index-500 transition-all" :style="`width: ${progreso}%`"></div>
                         </div>
 
                         @error ('archivo')
                             <p class="flex items-center gap-1 ps-1 text-xs font-medium text-red-500 dark:text-red-400">
-                                <x-ui.icon name="warning-circle" size="4" />
+                                <x-ui.icon name="alert-circle" size="4" />
                                 {{ $message }}
                             </p>
                         @enderror
                     </div>
 
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Maximo 5 MB. El sistema valida cabecera, detalle y cierre del lote.</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">El sistema valida cabecera, detalle y cierre del lote antes de importar.</p>
 
                         <flux:button
                             variant="primary"
                             type="submit"
-                            class="font-normal"
                             wire:loading.attr="disabled"
                             wire:target="archivo, importar"
                         >
                             <x-slot name="icon">
-                                <x-ui.icon name="upload-simple" size="5" class="text-white" />
+                                <x-ui.icon name="arrow-out-up-square-half" size="5" class="text-white" />
                             </x-slot>
                             Importar archivo
                         </flux:button>
@@ -86,9 +148,9 @@
                     <div
                         class="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400"
                         wire:loading.flex
-                        wire:target="archivo, importar"
+                        wire:target="importar"
                     >
-                        <x-ui.icon name="spinner-gap" size="5" class="animate-spin" />
+                        <x-ui.icon name="loader-lines" size="5" class="animate-spin" />
                         Procesando archivo...
                     </div>
                 </form>
@@ -99,7 +161,7 @@
 
             <div class="space-y-5">
                 <div class="space-y-2 px-5">
-                    <flux:heading size="lg">Revision del TXT bancario</flux:heading>
+                    <flux:heading size="lg">Revisión del TXT bancario</flux:heading>
                     <p class="text-sm text-zinc-500 dark:text-zinc-400">
                         {{ $previsualizacion['nombre_archivo'] ?? 'Archivo TXT' }}
                     </p>
@@ -110,7 +172,7 @@
                 <div class="space-y-5 px-5">
                     @if (($previsualizacion['valido'] ?? false) === true)
                         <flux:callout color="green" icon="check-circle">
-                            El archivo cuadra con los totales reportados por el banco. Puede confirmar la importacion.
+                            El archivo cuadra con los totales reportados por el banco. Puede confirmar la importación.
                         </flux:callout>
                     @elseif ($previsualizacion !== [])
                         <flux:callout color="red" icon="exclamation-triangle">
@@ -145,7 +207,7 @@
                                         <div
                                             class="flex gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
                                         >
-                                            <x-ui.icon name="warning-circle" size="5" class="mt-0.5 shrink-0" />
+                                            <x-ui.icon name="alert-circle" size="5" class="mt-0.5 shrink-0" />
                                             <p>{{ $observacion }}</p>
                                         </div>
                                     @endforeach
@@ -164,11 +226,11 @@
                                     <x-table>
                                         <x-table.head>
                                             <x-table.row>
-                                                <x-table.heading class="min-w-32">TIPO</x-table.heading>
-                                                <x-table.heading class="min-w-28">DNI</x-table.heading>
-                                                <x-table.heading class="min-w-32">OPERACION</x-table.heading>
-                                                <x-table.heading class="min-w-28">FECHA</x-table.heading>
-                                                <x-table.heading class="min-w-28">MONTO</x-table.heading>
+                                                <x-table.heading>TIPO</x-table.heading>
+                                                <x-table.heading>DNI</x-table.heading>
+                                                <x-table.heading>OPERACION</x-table.heading>
+                                                <x-table.heading>FECHA</x-table.heading>
+                                                <x-table.heading>MONTO</x-table.heading>
                                             </x-table.row>
                                         </x-table.head>
                                         <x-table.body>
@@ -204,10 +266,10 @@
                                 <x-table>
                                     <x-table.head>
                                         <x-table.row>
-                                            <x-table.heading class="min-w-28">DNI</x-table.heading>
-                                            <x-table.heading class="min-w-36">OPERACION</x-table.heading>
-                                            <x-table.heading class="min-w-28">FECHA</x-table.heading>
-                                            <x-table.heading class="min-w-28">MONTO</x-table.heading>
+                                            <x-table.heading>DNI</x-table.heading>
+                                            <x-table.heading>OPERACION</x-table.heading>
+                                            <x-table.heading>FECHA</x-table.heading>
+                                            <x-table.heading>MONTO</x-table.heading>
                                         </x-table.row>
                                     </x-table.head>
                                     <x-table.body>
@@ -259,7 +321,7 @@
                                 <x-slot name="icon">
                                     <x-ui.icon name="check-circle" size="5" class="text-white" />
                                 </x-slot>
-                                Confirmar importacion
+                                Confirmar importación
                             </flux:button>
                         @endif
                     </div>
@@ -269,13 +331,13 @@
     @endpermiso
 
     <div
-        class="space-y-5 rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+        class="space-y-5 rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
     >
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div class="w-full lg:w-xs">
                 <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar importaciones" clearable>
                     <x-slot name="icon">
-                        <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                        <x-ui.icon name="search" size="5" class="text-zinc-400 dark:text-zinc-500" />
                     </x-slot>
                 </flux:input>
             </div>
@@ -284,26 +346,20 @@
                 <flux:dropdown>
                     <flux:button class="w-full font-normal" icon:trailing="chevron-down">
                         <x-slot name="icon">
-                            <x-ui.icon name="funnel" size="5" />
+                            <x-ui.icon name="filter" size="5" />
                         </x-slot>
                         Estado
                         @if (count($this->estadosSeleccionados) > 0)
-                            <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
+                            <span class="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-index-500 px-1.5 text-[11px] leading-5 font-semibold text-white">{{ count($this->estadosSeleccionados) }}</span>
                         @endif
                     </flux:button>
 
                     <flux:menu keep-open class="dark:bg-zinc-800">
                         @foreach ($this->estados() as $estado)
                             <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon
+                                <x-ui.icon
                                         :name="$estado->getIcon()"
-                                        size="4"
-                                        class="text-{{ $estado->getColor() }}-500"
-                                    />
-                                </div>
+                                        size="4" class="me-2 text-{{ $estado->getColor() }}-500" />
                                 {{ ucfirst(strtolower($estado->getNombre())) }}
                             </flux:menu.checkbox>
                         @endforeach
@@ -312,11 +368,7 @@
                             <flux:menu.separator />
                             <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                                 <x-slot name="icon">
-                                    <div
-                                        class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                    >
-                                        <x-ui.icon name="trash" size="4" />
-                                    </div>
+                                    <x-ui.icon name="trash" size="4" class="me-2" />
                                 </x-slot>
                                 Limpiar filtros
                             </flux:menu.item>
@@ -331,13 +383,13 @@
                 <x-table.head>
                     <x-table.row>
                         <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
-                        <x-table.heading class="min-w-48">ARCHIVO</x-table.heading>
-                        <x-table.heading class="min-w-30">FECHA LOTE</x-table.heading>
-                        <x-table.heading class="min-w-24">REGISTROS</x-table.heading>
-                        <x-table.heading class="min-w-28">MONTO</x-table.heading>
-                        <x-table.heading class="min-w-30">ESTADO</x-table.heading>
-                        <x-table.heading class="min-w-35">IMPORTADO</x-table.heading>
-                        <x-table.heading class="w-24"></x-table.heading>
+                        <x-table.heading>ARCHIVO</x-table.heading>
+                        <x-table.heading>FECHA LOTE</x-table.heading>
+                        <x-table.heading>REGISTROS</x-table.heading>
+                        <x-table.heading>MONTO</x-table.heading>
+                        <x-table.heading>ESTADO</x-table.heading>
+                        <x-table.heading>IMPORTADO</x-table.heading>
+                        <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
                     </x-table.row>
                 </x-table.head>
 
@@ -373,16 +425,17 @@
                                 </div>
                             </x-table.cell>
                             <x-table.cell>
-                                <flux:badge color="{{ $importacion->estado_iba->getColor() }}" size="lg">
+                                <flux:badge color="{{ $importacion->estado_iba->getColor() }}">
                                     <x-slot name="icon">
                                         <x-ui.icon :name="$importacion->estado_iba->getIcon()" size="4" class="me-1" />
                                     </x-slot>
                                     {{ $importacion->estado_iba->getNombre() }}
                                 </flux:badge>
                             </x-table.cell>
-                            <x-table.cell>
-                                {{ $importacion->fecha_importacion_iba?->format('d M Y, h:i a') }}</x-table.cell
-                            >
+                            <x-table.cell class="h-auto py-2">
+                                <span class="block tabular-nums">{{ $importacion->fecha_importacion_iba?->format('d/m/Y') }}</span>
+                                <span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $importacion->fecha_importacion_iba?->format('h:i a') }}</span>
+                            </x-table.cell>
                             <x-table.cell align="end">
                                 <div class="flex items-center justify-end gap-1.5">
                                     @permiso ('pago_crear')
@@ -399,7 +452,7 @@
                                             :disabled="$importacion->detalles_pendientes_count === 0"
                                         >
                                             <x-slot name="icon">
-                                                <x-ui.icon name="shield-check" size="4" class="text-blue-500" />
+                                                <x-ui.icon name="check-shield" size="4" class="text-blue-500" />
                                             </x-slot>
                                         </flux:button>
                                     @endpermiso
@@ -424,7 +477,7 @@
                         <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
                             <x-table.cell colspan="8" class="h-auto py-10 text-center whitespace-normal">
                                 <div class="flex flex-col items-center justify-center space-y-3">
-                                    <x-ui.icon name="money" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                    <x-ui.icon name="currency-note" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                     <p class="text-zinc-500 dark:text-zinc-400">No se encontraron importaciones bancarias.</p>
                                 </div>
                             </x-table.cell>
@@ -443,7 +496,7 @@
                 wire:loading.flex
                 wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, verDetalle, validarPagosPendientes"
             >
-                <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+                <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
             </div>
         </div>
 
@@ -455,13 +508,13 @@
         </div>
     </div>
 
-    <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+    <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
         @if ($this->detalleImportacionSeleccionada)
             @php ($detalleImportacion = $this->detalleImportacionSeleccionada)
             <div class="space-y-5">
                 <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div class="space-y-2">
-                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Detalle de importacion</p>
+                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Detalle de importación</p>
                         <div class="space-y-1">
                             <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">
                                 {{ $detalleImportacion->nombre_archivo_iba }}
@@ -474,7 +527,7 @@
 
                     <div class="flex flex-wrap gap-3">
                         <div
-                            class="rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3 dark:border-white/[0.06] dark:bg-zinc-950/40"
                         >
                             <p class="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Estado</p>
                             <div class="mt-2">
@@ -492,7 +545,7 @@
                         </div>
 
                         <div
-                            class="rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 px-4 py-3 dark:border-white/[0.06] dark:bg-zinc-950/40"
                         >
                             <p class="text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Totales</p>
                             <div class="mt-2 space-y-1 text-sm text-zinc-700 dark:text-zinc-200">
@@ -518,7 +571,7 @@
                     <div class="grid gap-3 lg:grid-cols-2">
                         @foreach ($detalleImportacion->detalles as $detalle)
                             <div
-                                class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                                class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                                 wire:key="detalle-importacion-{{ $detalle->id_ibd }}"
                             >
                                 <div class="flex items-start justify-between gap-3">
@@ -556,8 +609,8 @@
         @else
             <div class="flex min-h-72 flex-col items-center justify-center space-y-3 text-center">
                 <x-ui.icon name="wallet" size="12" class="text-zinc-400 dark:text-zinc-500" />
-                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Seleccione una importacion</p>
-                <p class="max-w-xs text-sm text-zinc-500 dark:text-zinc-400">Aqui vera el resumen del lote y las operaciones importadas desde el TXT del banco.</p>
+                <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Seleccione una importación</p>
+                <p class="max-w-xs text-sm text-zinc-500 dark:text-zinc-400">Aquí verá el resumen del lote y las operaciones importadas desde el TXT del banco.</p>
             </div>
         @endif
     </div>

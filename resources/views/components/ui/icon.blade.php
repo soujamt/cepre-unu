@@ -1,29 +1,6 @@
-@props (['name', 'size' => '5', 'weight' => 'regular', 'variant' => null, 'class' => ''])
+@props (['name', 'size' => '5', 'weight' => null, 'variant' => null, 'class' => ''])
 
 @php
-    $weight = match ($variant) {
-        'solid' => 'fill',
-        default => $weight,
-    };
-
-    $resolvedWeight = match ($weight) {
-        'thin' => 'thin',
-        'regular' => 'regular',
-        'fill' => 'fill',
-        'bold' => 'bold',
-        'duotone' => 'duotone',
-        default => 'regular',
-    };
-
-    $weightClass = match ($resolvedWeight) {
-        'thin' => 'ph-thin',
-        'regular' => 'ph',
-        'fill' => 'ph-fill',
-        'bold' => 'ph-bold',
-        'duotone' => 'ph-duotone',
-        default => 'ph',
-    };
-
     $resolvedSize = is_numeric($size) ? ((float) $size / 4) . 'rem' : $size;
 @endphp
 
@@ -34,5 +11,5 @@
         'aria-hidden' => 'true',
     ]) }}
 >
-    <i class="ui-icon-glyph {{ $weightClass }} ph-{{ \Illuminate\Support\Str::kebab($name) }}"></i>
+    <i class="ui-icon-glyph bxf bx-{{ $name }}"></i>
 </span>

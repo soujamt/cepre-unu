@@ -1,31 +1,31 @@
 @section ('icon')
-    <x-header.icon icon="note-pencil" />
+    <x-header.icon icon="pencil-square" />
 @endsection
 
 @section ('header')
-    <x-header.title>NUEVA INSCRIPCION</x-header.title>
+    <x-header.title>Nueva inscripción</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>INSCRIPCIONES</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>Inscripciones</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
         <x-breadcrumbs.item href="{{ route('inscripciones.crear') }}" wire:navigate>
-            NUEVA INSCRIPCION</x-breadcrumbs.item
+            Nueva inscripción</x-breadcrumbs.item
         >
     </x-breadcrumbs>
 @endsection
 
-<div class="-mt-5 space-y-5">
+<div class="space-y-5">
     @if ($this->inicioInscripcionBloqueado)
         @php
             $contextoProceso = $this->contextoProcesoPostulacion;
         @endphp
         <div class="grid gap-5 xl:grid-cols-[22rem_minmax(0,1fr)]">
             <div class="space-y-4">
-                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="space-y-5">
                         <div class="space-y-1">
                             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Disponibilidad</p>
@@ -47,7 +47,7 @@
 
                         <flux:button variant="filled" class="w-full font-normal" wire:click="volverListado">
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-circle-left" size="5" class="text-current" />
+                                <x-ui.icon name="chevron-left-circle" size="5" class="text-current" />
                             </x-slot>
                             Volver al listado
                         </flux:button>
@@ -56,7 +56,7 @@
             </div>
 
             <div class="space-y-5">
-                <div class="overflow-hidden rounded-[1.75rem] border border-zinc-200 bg-white shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="relative border-b border-zinc-200/80 px-6 py-5 dark:border-white/10">
                         <div class="absolute inset-y-0 right-0 w-40 bg-linear-to-l from-amber-100/80 to-transparent dark:from-amber-500/10"></div>
                         <div class="relative space-y-2">
@@ -72,25 +72,34 @@
                                 <p class="text-sm">Cuando se habilite un semestre y un proceso vigentes con ofertas activas, este formulario volverá a estar disponible automáticamente.</p>
                             </flux:callout>
 
-                            <div class="grid gap-4 md:grid-cols-3">
-                                <div class="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40">
-                                    <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Semestre</p>
-                                    <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Debe encontrarse vigente según sus fechas de inscripción.</p>
-                                </div>
+                            <div class="space-y-2">
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Requisitos para habilitar</p>
 
-                                <div class="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40">
-                                    <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso</p>
-                                    <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Debe estar habilitado y dentro de su ventana de atención.</p>
-                                </div>
-
-                                <div class="rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40">
-                                    <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Ofertas</p>
-                                    <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">Se requiere al menos una oferta activa para continuar con la postulación.</p>
-                                </div>
+                                <ul
+                                    class="divide-y divide-zinc-200/80 rounded-xl border border-zinc-200/80 bg-zinc-50/60 dark:divide-white/[0.06] dark:border-white/[0.06] dark:bg-zinc-950/40"
+                                >
+                                    @foreach ([
+                                        ['icono' => 'calendar', 'titulo' => 'Semestre', 'texto' => 'Debe encontrarse vigente según sus fechas de inscripción.'],
+                                        ['icono' => 'cog', 'titulo' => 'Proceso', 'texto' => 'Debe estar habilitado y dentro de su ventana de atención.'],
+                                        ['icono' => 'layers', 'titulo' => 'Ofertas', 'texto' => 'Se requiere al menos una oferta activa para continuar con la postulación.'],
+                                    ] as $requisito)
+                                        <li class="flex items-start gap-3 px-4 py-3">
+                                            <span
+                                                class="flex size-8 shrink-0 items-center justify-center rounded-lg border border-zinc-200/80 bg-white text-zinc-500 shadow-card dark:border-white/[0.06] dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-none"
+                                            >
+                                                <x-ui.icon :name="$requisito['icono']" size="4" />
+                                            </span>
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-medium text-zinc-900 dark:text-white">{{ $requisito['titulo'] }}</p>
+                                                <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $requisito['texto'] }}</p>
+                                            </div>
+                                        </li>
+                                    @endforeach
+                                </ul>
                             </div>
                         </div>
 
-                        <div class="rounded-3xl border border-zinc-200/80 bg-zinc-50/70 p-5 dark:border-white/10 dark:bg-zinc-950/40">
+                        <div class="rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-5 dark:border-white/[0.06] dark:bg-zinc-950/40">
                             <div class="space-y-4">
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Qué revisar</p>
@@ -98,18 +107,18 @@
                                 </div>
 
                                 <div class="space-y-3">
-                                    <div class="flex items-start gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/10 dark:bg-zinc-900/60">
+                                    <div class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/[0.06] dark:bg-zinc-900/60 shadow-card">
                                         <x-ui.icon name="calendar-check" size="5" class="mt-0.5 text-emerald-500" />
                                         <p class="text-sm text-zinc-600 dark:text-zinc-300">Verifique que las fechas del semestre y del proceso incluyan el día actual.</p>
                                     </div>
 
-                                    <div class="flex items-start gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/10 dark:bg-zinc-900/60">
+                                    <div class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/[0.06] dark:bg-zinc-900/60 shadow-card">
                                         <x-ui.icon name="toggle-left" size="5" class="mt-0.5 text-sky-500" />
                                         <p class="text-sm text-zinc-600 dark:text-zinc-300">Confirme que el proceso no esté deshabilitado o cerrado automáticamente por vigencia.</p>
                                     </div>
 
-                                    <div class="flex items-start gap-3 rounded-2xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/10 dark:bg-zinc-900/60">
-                                        <x-ui.icon name="stack" size="5" class="mt-0.5 text-violet-500" />
+                                    <div class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/[0.06] dark:bg-zinc-900/60 shadow-card">
+                                        <x-ui.icon name="layers" size="5" class="mt-0.5 text-violet-500" />
                                         <p class="text-sm text-zinc-600 dark:text-zinc-300">Revise que el proceso tenga ofertas asignadas y habilitadas para inscripción.</p>
                                     </div>
                                 </div>
@@ -122,7 +131,7 @@
     @else
         <div class="grid gap-5 xl:grid-cols-[19rem_minmax(0,1fr)]">
             <div class="space-y-4">
-                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="space-y-5">
                         <div class="space-y-1">
                             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso de registro</p>
@@ -211,7 +220,7 @@
 
                         <flux:button variant="filled" class="w-full font-normal" wire:click="volverListado">
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-circle-left" size="5" class="text-current" />
+                                <x-ui.icon name="chevron-left-circle" size="5" class="text-current" />
                             </x-slot>
                             Volver al listado
                         </flux:button>
@@ -222,16 +231,16 @@
             <div class="space-y-5">
                 @if ($pasoActual === 1)
                     <div
-                        class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                        class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                     >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 1</p>
-                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Informacion personal</h3>
+                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Información personal</h3>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre la identidad, nacimiento, domicilio y datos base del postulante.</p>
                     </div>
                 </div>
                 <div
-                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
@@ -239,9 +248,9 @@
                         class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
-                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <x-ui.icon name="loader-lines" size="10" class="text-accent animate-spin" />
                             <div>
-                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando informacion personal</p>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando información personal</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
                             </div>
                         </div>
@@ -323,8 +332,8 @@
                             class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
-                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Identificacion</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione el documento, registre el numero y use RENIEC solo cuando aplique.</p>
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Identificación</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione el documento, registre el número y use RENIEC solo cuando aplique.</p>
                             </div>
 
                             <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
@@ -348,7 +357,7 @@
 
                                 <div class="lg:col-span-5">
                                     <x-ui.input
-                                        label="Numero documento"
+                                        label="Número documento"
                                         type="text"
                                         wire:model="personaForm.numero_documento"
                                         x-on:input="numeroDocumento = $event.target.value"
@@ -375,14 +384,14 @@
                                                 <x-ui.icon
                                                     x-show="esTipoDocumentoDni()"
                                                     x-cloak
-                                                    name="identification-card"
+                                                    name="user-id-card"
                                                     size="5"
                                                     class="text-current"
                                                 />
                                                 <x-ui.icon
                                                     x-show="!esTipoDocumentoDni()"
                                                     x-cloak
-                                                    name="magnifying-glass"
+                                                    name="search"
                                                     size="5"
                                                     class="text-current"
                                                 />
@@ -554,14 +563,14 @@
                             <div class="grid gap-4 lg:grid-cols-12">
                                 <div class="lg:col-span-6">
                                     <x-ui.select-filter
-                                        label="Pais nacimiento"
+                                        label="País nacimiento"
                                         wire:model="personaForm.id_pais_nacimiento"
                                         :invalid="$errors->has('personaForm.id_pais_nacimiento')"
                                         :error="$errors->first('personaForm.id_pais_nacimiento')"
                                         required
                                         floating
                                     >
-                                        <option value="">Seleccionar pais</option>
+                                        <option value="">Seleccionar país</option>
                                         @foreach ($this->paises as $pais)
                                             <option value="{{ $pais->id_pai }}">{{ $pais->nombre_pai }}</option>
                                         @endforeach
@@ -620,7 +629,7 @@
                             <div class="grid gap-4 lg:grid-cols-12">
                                 <div class="lg:col-span-6">
                                     <x-ui.input
-                                        label="Direccion"
+                                        label="Dirección"
                                         type="text"
                                         wire:model="personaForm.direccion"
                                         :invalid="$errors->has('personaForm.direccion')"
@@ -632,7 +641,7 @@
 
                                 <div class="lg:col-span-6">
                                     <x-ui.input
-                                        label="Correo electronico"
+                                        label="Correo electrónico"
                                         type="email"
                                         wire:model="personaForm.correo_electronico"
                                         :invalid="$errors->has('personaForm.correo_electronico')"
@@ -656,7 +665,7 @@
 
                                 <div class="lg:col-span-6">
                                     <x-ui.input
-                                        label="Telefono"
+                                        label="Teléfono"
                                         type="text"
                                         wire:model="personaForm.telefono"
                                         :invalid="$errors->has('personaForm.telefono')"
@@ -783,7 +792,7 @@
                             </div>
 
                             <x-ui.textarea
-                                label="Observacion"
+                                label="Observación"
                                 wire:model="personaForm.observacion"
                                 :invalid="$errors->has('personaForm.observacion')"
                                 :error="$errors->first('personaForm.observacion')"
@@ -793,11 +802,11 @@
                         </section>
 
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso, se registrara o actualizara la persona base del postulante.</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso, se registrará o actualizará la persona base del postulante.</p>
 
                             <flux:button variant="primary" type="submit" class="font-normal">
                                 <x-slot name="icon">
-                                    <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                    <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
                                 </x-slot>
                                 <span wire:loading.remove wire:target="guardarPasoPersonal">Guardar y continuar</span>
                                 <span wire:loading wire:target="guardarPasoPersonal">Guardando...</span>
@@ -807,16 +816,16 @@
                 </div>
                 @elseif ($pasoActual === 2)
                 <div
-                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 2</p>
-                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Informacion general</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre la procedencia educativa y el historial de postulacion del postulante.</p>
+                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Información general</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre la procedencia educativa y el historial de postulación del postulante.</p>
                     </div>
                 </div>
                 <div
-                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
@@ -824,9 +833,9 @@
                         class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
-                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <x-ui.icon name="loader-lines" size="10" class="text-accent animate-spin" />
                             <div>
-                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando informacion general</p>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando información general</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
                             </div>
                         </div>
@@ -866,13 +875,13 @@
                         >
                             <div class="space-y-1">
                                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Procedencia educativa</p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina el ano de graduacion, pais del colegio y tipo de institucion educativa.</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina el año de graduación, país del colegio y tipo de institución educativa.</p>
                             </div>
 
                             <div class="grid gap-4 lg:grid-cols-12">
                                 <div class="lg:col-span-4">
                                     <x-ui.input
-                                        label="Ano de graduacion"
+                                        label="Año de graduación"
                                         type="number"
                                         wire:model="generalForm.anio_graduacion"
                                         :invalid="$errors->has('generalForm.anio_graduacion')"
@@ -884,14 +893,14 @@
 
                                 <div class="lg:col-span-4">
                                     <x-ui.select-filter
-                                        label="Pais del colegio"
+                                        label="País del colegio"
                                         wire:model="generalForm.id_pais_colegio"
                                         :invalid="$errors->has('generalForm.id_pais_colegio')"
                                         :error="$errors->first('generalForm.id_pais_colegio')"
                                         required
                                         floating
                                     >
-                                        <option value="">Seleccionar pais</option>
+                                        <option value="">Seleccionar país</option>
                                         @foreach ($this->paises as $pais)
                                             <option value="{{ $pais->id_pai }}">{{ $pais->nombre_pai }}</option>
                                         @endforeach
@@ -937,7 +946,7 @@
                                         :filter-required="true"
                                         :reset-on-filter-change="true"
                                         :selected-label="$this->colegioLabel"
-                                        placeholder="Seleccione el tipo y busque por codigo o nombre"
+                                        placeholder="Seleccione el tipo y busque por código o nombre"
                                         :invalid="$errors->has('generalForm.id_colegio')"
                                         :error="$errors->first('generalForm.id_colegio')"
                                         required
@@ -960,9 +969,9 @@
                                 <div
                                     x-show="!paisColegioId"
                                     x-cloak
-                                    class="rounded-xl border border-dashed border-zinc-300 bg-white/70 px-4 py-3 text-sm text-zinc-500 lg:col-span-12 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-400"
+                                    class="rounded-xl border border-dashed border-zinc-300 bg-white/70 px-4 py-3 text-sm text-zinc-500 lg:col-span-12 dark:border-white/[0.06] dark:bg-zinc-900/50 dark:text-zinc-400"
                                 >
-                                    Seleccione primero el pais del colegio para continuar con la procedencia educativa.
+                                    Seleccione primero el país del colegio para continuar con la procedencia educativa.
                                 </div>
                             </div>
                         </section>
@@ -971,7 +980,7 @@
                             class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                         >
                             <div class="space-y-1">
-                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Historial de postulacion</p>
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Historial de postulación</p>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">Indique cuantas veces ya postulo a la UNU y a otras universidades.</p>
                             </div>
 
@@ -1002,7 +1011,7 @@
                             </div>
 
                             <x-ui.textarea
-                                label="Observacion general"
+                                label="Observación general"
                                 wire:model="generalForm.observacion"
                                 :invalid="$errors->has('generalForm.observacion')"
                                 :error="$errors->first('generalForm.observacion')"
@@ -1012,7 +1021,7 @@
                         </section>
 
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso, quedara lista la procedencia educativa para continuar con la postulacion.</p>
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso, quedará lista la procedencia educativa para continuar con la postulación.</p>
 
                             <div class="flex gap-3">
                                 <flux:button
@@ -1026,7 +1035,7 @@
 
                                 <flux:button variant="primary" type="submit" class="font-normal">
                                     <x-slot name="icon">
-                                        <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                        <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
                                     </x-slot>
                                     <span wire:loading.remove wire:target="guardarPasoGeneral"
                                         >Guardar y continuar</span
@@ -1041,16 +1050,16 @@
                 @php ($contextoProceso = $this->contextoProcesoPostulacion)
                 @php ($procesoActivo = $this->procesoPostulacionActivo)
                 <div
-                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 3</p>
-                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Postulacion</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la oferta activa del proceso vigente y deje listo el borrador de inscripcion.</p>
+                        <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Postulación</h3>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la oferta activa del proceso vigente y deje listo el borrador de inscripción.</p>
                     </div>
                 </div>
                 <div
-                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
@@ -1058,9 +1067,9 @@
                         class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
-                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <x-ui.icon name="loader-lines" size="10" class="text-accent animate-spin" />
                             <div>
-                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando postulacion</p>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando postulación</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
                             </div>
                         </div>
@@ -1073,7 +1082,7 @@
                                 icon="exclamation-circle"
                                 heading="{{ $contextoProceso['mensaje'] }}"
                             >
-                                <p class="text-sm">No podremos continuar con la postulacion hasta que exista un proceso habilitado y con ofertas activas.</p>
+                                <p class="text-sm">No podremos continuar con la postulación hasta que exista un proceso habilitado y con ofertas activas.</p>
                             </flux:callout>
 
                             <div class="flex gap-3">
@@ -1098,7 +1107,7 @@
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso vigente</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Este paso usara el proceso disponible segun la fecha y la configuracion academica activa.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Este paso usará el proceso disponible según la fecha y la configuración académica activa.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
@@ -1136,8 +1145,8 @@
                                 class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Seleccion de oferta</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">La seleccion se construye en cascada para mostrar solo combinaciones validas del proceso actual.</p>
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Selección de oferta</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">La selección se construye en cascada para mostrar solo combinaciones válidas del proceso actual.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
@@ -1167,7 +1176,7 @@
                                             wire:key="lugar-{{ $postulacionForm['id_modalidad_admision'] }}"
                                         >
                                             <x-ui.select
-                                                label="Lugar de inscripcion"
+                                                label="Lugar de inscripción"
                                                 wire:model.live="postulacionForm.id_lugar_inscripcion"
                                                 :invalid="$errors->has('postulacionForm.id_lugar_inscripcion')"
                                                 :error="$errors->first('postulacionForm.id_lugar_inscripcion')"
@@ -1234,7 +1243,7 @@
                                 class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Condicion especial</p>
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Condición especial</p>
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">Si corresponde, seleccione un convenio vigente para este mismo proceso.</p>
                                 </div>
 
@@ -1262,8 +1271,8 @@
                                 class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de postulacion</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Antes de continuar, revise que la modalidad, oferta y condicion especial sean las correctas.</p>
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de postulación</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Antes de continuar, revise que la modalidad, oferta y condición especial sean las correctas.</p>
                                 </div>
 
                                 @php ($ofertaSeleccionada = $this->procesoOfertasPostulacionDisponibles->firstWhere('id_pof', (int) $postulacionForm['id_proceso_oferta']))
@@ -1284,7 +1293,7 @@
                             </section>
 
                             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se creara o actualizara el borrador de inscripcion con la oferta seleccionada.</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se creará o actualizará el borrador de inscripción con la oferta seleccionada.</p>
 
                                 <div class="flex gap-3">
                                     <flux:button
@@ -1298,7 +1307,7 @@
 
                                     <flux:button variant="primary" type="submit" class="font-normal">
                                         <x-slot name="icon">
-                                            <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                            <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
                                         </x-slot>
                                         <span wire:loading.remove wire:target="guardarPasoPostulacion"
                                             >Guardar y continuar</span
@@ -1315,16 +1324,16 @@
                 @php ($reglaPagoSeleccionada = $this->reglaPagoSeleccionada)
                 @php ($obligacionPagoSeleccionada = $this->obligacionPagoSeleccionada)
                 <div
-                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 4</p>
                         <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Pago</h3>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la regla de pago, busque la operacion bancaria y valide el abono del postulante.</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la regla de pago, busque la operación bancaria y valide el abono del postulante.</p>
                     </div>
                 </div>
                 <div
-                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
@@ -1332,9 +1341,9 @@
                         class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
-                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <x-ui.icon name="loader-lines" size="10" class="text-accent animate-spin" />
                             <div>
-                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Procesando validacion de pago</p>
+                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Procesando validación de pago</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
                             </div>
                         </div>
@@ -1345,9 +1354,9 @@
                             <flux:callout
                                 variant="warning"
                                 icon="exclamation-circle"
-                                heading="No existe una inscripcion borrador para validar pagos."
+                                heading="No existe una inscripción borrador para validar pagos."
                             >
-                                <p class="text-sm">Primero debemos guardar la postulacion para poder asociar una regla de pago y validar la operacion bancaria.</p>
+                                <p class="text-sm">Primero debemos guardar la postulación para poder asociar una regla de pago y validar la operación bancaria.</p>
                             </flux:callout>
 
                             <div class="flex gap-3">
@@ -1365,9 +1374,9 @@
                             <flux:callout
                                 variant="warning"
                                 icon="exclamation-circle"
-                                heading="No hay reglas de pago vigentes para esta postulacion."
+                                heading="No hay reglas de pago vigentes para esta postulación."
                             >
-                                <p class="text-sm">Revise la configuracion de reglas de pago del proceso actual antes de continuar con la validacion bancaria.</p>
+                                <p class="text-sm">Revise la configuración de reglas de pago del proceso actual antes de continuar con la validación bancaria.</p>
                             </flux:callout>
 
                             <div class="flex gap-3">
@@ -1386,14 +1395,14 @@
                                 class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Contexto de inscripcion</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Validaremos el pago sobre la inscripcion borrador ya creada en el paso anterior.</p>
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Contexto de inscripción</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Validaremos el pago sobre la inscripción borrador ya creada en el paso anterior.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
                                     <div class="lg:col-span-4">
                                         <x-ui.input
-                                            label="Codigo inscripcion"
+                                            label="Código inscripción"
                                             :value="$inscripcionBorrador->codigo_ins"
                                             disabled
                                             floating
@@ -1427,7 +1436,7 @@
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Regla de pago</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la tarifa que corresponde a esta inscripcion antes de buscar el pago del banco.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la tarifa que corresponde a esta inscripción antes de buscar el pago del banco.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
@@ -1460,7 +1469,7 @@
                                             <p><span class="font-medium">Concepto:</span> {{ $reglaPagoSeleccionada->conceptoPago?->nombre_cpg }}</p>
                                             <p><span class="font-medium">Monto total:</span> S/ {{ number_format((float) $reglaPagoSeleccionada->monto_total_rpa, 2) }}</p>
                                             <p><span class="font-medium">Cuotas:</span> {{ $reglaPagoSeleccionada->permite_cuotas_rpa ? 'Hasta '.$reglaPagoSeleccionada->numero_maximo_cuotas_rpa : 'Pago unico' }}</p>
-                                            <p><span class="font-medium">Primera cuota minima:</span> S/ {{ number_format((float) $reglaPagoSeleccionada->monto_minimo_primera_cuota_rpa, 2) }}</p>
+                                            <p><span class="font-medium">Primera cuota mínima:</span> S/ {{ number_format((float) $reglaPagoSeleccionada->monto_minimo_primera_cuota_rpa, 2) }}</p>
                                         </div>
                                     </flux:callout>
                                 @endif
@@ -1469,7 +1478,7 @@
                                     <flux:callout
                                         variant="{{ $obligacionPagoSeleccionada->estado_iop->value === 'PAGADO' ? 'success' : 'warning' }}"
                                         icon="{{ $obligacionPagoSeleccionada->estado_iop->value === 'PAGADO' ? 'check-circle' : 'clock' }}"
-                                        heading="Estado actual de la obligacion"
+                                        heading="Estado actual de la obligación"
                                     >
                                         <div class="grid gap-3 text-sm lg:grid-cols-3">
                                             <p><span class="font-medium">Pagado:</span> S/ {{ number_format((float) $obligacionPagoSeleccionada->monto_pagado_iop, 2) }}</p>
@@ -1485,13 +1494,13 @@
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Busqueda de pago bancario</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Busque la operacion usando DNI, operacion visible y fecha del abono importado del banco.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Busque la operación usando DNI, operación visible y fecha del abono importado del banco.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
                                     <div class="lg:col-span-4">
                                         <x-ui.input
-                                            label="Numero documento"
+                                            label="Número documento"
                                             wire:model="pagoForm.numero_documento"
                                             disabled
                                             :invalid="$errors->has('pagoForm.numero_documento')"
@@ -1502,7 +1511,7 @@
 
                                     <div class="lg:col-span-4">
                                         <x-ui.input
-                                            label="Operacion visible"
+                                            label="Operación visible"
                                             type="text"
                                             wire:model="pagoForm.numero_operacion"
                                             :invalid="$errors->has('pagoForm.numero_operacion')"
@@ -1535,7 +1544,7 @@
                                         wire:target="buscarPagosPasoPago"
                                     >
                                         <x-slot name="icon">
-                                            <x-ui.icon name="magnifying-glass" size="5" class="text-white" />
+                                            <x-ui.icon name="search" size="5" class="text-white" />
                                         </x-slot>
                                         <span wire:loading.remove wire:target="buscarPagosPasoPago">Buscar pago</span>
                                         <span wire:loading wire:target="buscarPagosPasoPago">Buscando...</span>
@@ -1549,7 +1558,7 @@
                                 >
                                     <div class="space-y-1">
                                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resultados importados</p>
-                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione el pago correcto antes de confirmar la validacion de la obligacion.</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione el pago correcto antes de confirmar la validación de la obligación.</p>
                                     </div>
 
                                     @if ($this->detallesPagoEncontrados->isEmpty())
@@ -1558,7 +1567,7 @@
                                             icon="exclamation-circle"
                                             heading="No se encontraron pagos pendientes con esos datos."
                                         >
-                                            <p class="text-sm">Revise la operacion visible, la fecha o confirme que el TXT del banco ya fue importado.</p>
+                                            <p class="text-sm">Revise la operación visible, la fecha o confirme que el TXT del banco ya fue importado.</p>
                                         </flux:callout>
                                     @else
                                         <div class="grid gap-3">
@@ -1609,13 +1618,13 @@
                                 >
                                     <div class="space-y-1">
                                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pagos ya validados</p>
-                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Esta obligacion ya tiene cuotas registradas. Aqui puede revisar el historial acumulado.</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Esta obligación ya tiene cuotas registradas. Aquí puede revisar el historial acumulado.</p>
                                     </div>
 
                                     <div class="space-y-3">
                                         @foreach ($obligacionPagoSeleccionada->pagos as $pagoRegistrado)
                                             <div
-                                                class="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-zinc-900"
+                                                class="rounded-xl border border-zinc-200/80 bg-white px-4 py-3 text-sm dark:border-white/[0.06] dark:bg-zinc-900 shadow-card"
                                             >
                                                 <div
                                                     class="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between"
@@ -1646,7 +1655,7 @@
                                     icon="check-circle"
                                     heading="Pago validado correctamente"
                                 >
-                                    <p class="text-sm">Esta inscripcion ya tiene un pago verificado. Puede continuar directamente al paso de expedientes.</p>
+                                    <p class="text-sm">Esta inscripción ya tiene un pago verificado. Puede continuar directamente al paso de expedientes.</p>
                                 </flux:callout>
                                 <div class="flex justify-end">
                                     <flux:button
@@ -1656,14 +1665,14 @@
                                         class="font-normal"
                                     >
                                         <x-slot name="icon">
-                                            <x-ui.icon name="caret-circle-right" size="5" class="text-white" />
+                                            <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
                                         </x-slot>
                                         Continuar a expedientes
                                     </flux:button>
                                 </div>
                             @else
                                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Cuando confirmemos el pago, quedara asociado a la inscripcion y el wizard avanzara al paso de expedientes.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Cuando confirmemos el pago, quedará asociado a la inscripción y el wizard avanzará al paso de expedientes.</p>
 
                                     <div class="flex gap-3">
                                         <flux:button
@@ -1703,7 +1712,7 @@
                 @php ($inscripcionBorrador = $this->inscripcionBorrador)
                 @php ($requisitosExpediente = $this->requisitosExpedienteWizard)
                 <div
-                    class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div class="space-y-1">
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 5</p>
@@ -1712,7 +1721,7 @@
                     </div>
                 </div>
                 <div
-                    class="relative rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div
                         wire:loading.flex
@@ -1720,7 +1729,7 @@
                         class="absolute inset-0 z-30 hidden items-center justify-center rounded-xl bg-white/80 backdrop-blur-[2px] dark:bg-zinc-900/80"
                     >
                         <div class="flex flex-col items-center gap-3 text-center">
-                            <x-ui.icon name="spinner-gap" size="10" class="text-accent animate-spin" />
+                            <x-ui.icon name="loader-lines" size="10" class="text-accent animate-spin" />
                             <div>
                                 <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">Guardando expedientes</p>
                                 <p class="text-xs text-zinc-500 dark:text-zinc-400">Esto puede tomar unos segundos...</p>
@@ -1733,9 +1742,9 @@
                             <flux:callout
                                 variant="warning"
                                 icon="exclamation-circle"
-                                heading="No existe una inscripcion borrador para registrar expedientes."
+                                heading="No existe una inscripción borrador para registrar expedientes."
                             >
-                                <p class="text-sm">Primero debemos completar los pasos previos del wizard antes de cerrar la revision documental.</p>
+                                <p class="text-sm">Primero debemos completar los pasos previos del wizard antes de cerrar la revisión documental.</p>
                             </flux:callout>
 
                             <div class="flex gap-3">
@@ -1755,7 +1764,7 @@
                                 icon="exclamation-circle"
                                 heading="No hay requisitos de expediente configurados para este proceso."
                             >
-                                <p class="text-sm">Revise el mantenedor de requisitos antes de intentar finalizar la inscripcion.</p>
+                                <p class="text-sm">Revise el mantenedor de requisitos antes de intentar finalizar la inscripción.</p>
                             </flux:callout>
 
                             <div class="flex gap-3">
@@ -1775,13 +1784,13 @@
                             >
                                 <div class="space-y-1">
                                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de cierre</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">La inscripcion se activara solo si todos los expedientes obligatorios quedan aprobados.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">La inscripción se activará solo si todos los expedientes obligatorios quedan aprobados.</p>
                                 </div>
 
                                 <div class="grid gap-4 lg:grid-cols-12">
                                     <div class="lg:col-span-4">
                                         <x-ui.input
-                                            label="Codigo inscripcion"
+                                            label="Código inscripción"
                                             :value="$inscripcionBorrador->codigo_ins"
                                             disabled
                                             floating
@@ -1814,8 +1823,8 @@
                                 class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
                             >
                                 <div class="space-y-1">
-                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Revision documental</p>
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre el estado de revision, observaciones y una referencia simple del documento recibido.</p>
+                                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Revisión documental</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre el estado de revisión, observaciones y una referencia simple del documento recibido.</p>
                                 </div>
 
                                 <div class="space-y-4">
@@ -1824,7 +1833,7 @@
                                         @php ($esObligatorio = $requisito?->obligatorio_rex ?? false)
                                         <div
                                             wire:key="expediente-wizard-{{ $expediente['id_tipo_expediente'] }}"
-                                            class="rounded-xl border border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-900"
+                                            class="rounded-xl border border-zinc-200/80 bg-white dark:border-white/[0.06] dark:bg-zinc-900 shadow-card"
                                         >
                                             {{-- Cabecera del expediente --}}
                                             <div
@@ -1876,7 +1885,7 @@
                                                         <div
                                                             class="flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400"
                                                         >
-                                                            <x-ui.icon name="file-pdf" size="4" class="text-red-500" />
+                                                            <x-ui.icon name="file" size="4" class="text-red-500" />
                                                             <span>Archivo actual:</span>
                                                             <a
                                                                 href="{{ asset('storage/'.$expediente['archivo_url']) }}"
@@ -1892,7 +1901,7 @@
 
                                                     @error ('archivosExpediente.'.$indice)
                                                         <p class="flex items-center gap-1 ps-1 text-xs font-medium text-red-500 dark:text-red-400">
-                                                            <x-ui.icon name="warning-circle" size="4" />
+                                                            <x-ui.icon name="alert-circle" size="4" />
                                                             {{ $message }}
                                                         </p>
                                                     @enderror
@@ -1901,7 +1910,7 @@
                                                 {{-- Estado y observacion --}}
                                                 <div class="grid gap-4 lg:grid-cols-2">
                                                     <x-ui.select
-                                                        label="Estado de revision"
+                                                        label="Estado de revisión"
                                                         wire:model="expedientesForm.{{ $indice }}.estado_revision"
                                                         :invalid="$errors->has('expedientesForm.'.$indice.'.estado_revision')"
                                                         :error="$errors->first('expedientesForm.'.$indice.'.estado_revision')"
@@ -1916,7 +1925,7 @@
                                                     </x-ui.select>
 
                                                     <x-ui.textarea
-                                                        label="Observacion"
+                                                        label="Observación"
                                                         wire:model="expedientesForm.{{ $indice }}.observacion"
                                                         :invalid="$errors->has('expedientesForm.'.$indice.'.observacion')"
                                                         :error="$errors->first('expedientesForm.'.$indice.'.observacion')"
@@ -1931,7 +1940,7 @@
                             </section>
 
                             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se registrara la revision documental y se cerrara el wizard de inscripcion.</p>
+                                <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se registrará la revisión documental y se cerrará el wizard de inscripción.</p>
 
                                 <div class="flex gap-3">
                                     <flux:button
@@ -1961,14 +1970,14 @@
                 </div>
                 @else
                 <div
-                    class="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-xs dark:border-white/10 dark:bg-zinc-900"
+                    class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
                 >
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        <x-ui.icon name="stack" size="14" class="text-zinc-400 dark:text-zinc-500" />
+                        <x-ui.icon name="layers" size="14" class="text-zinc-400 dark:text-zinc-500" />
                         <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">
                             {{ $this->pasos[$pasoActual]['titulo'] }}
                         </p>
-                        <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitara en la siguiente iteracion. La base del wizard ya quedo lista para continuar sin perder el avance anterior.</p>
+                        <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">Este paso se habilitará en la siguiente iteración. La base del wizard ya quedó lista para continuar sin perder el avance anterior.</p>
 
                         <div class="flex gap-3">
                             <flux:button variant="filled" wire:click="irPasoAnterior" class="font-normal">

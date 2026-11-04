@@ -1,3 +1,3 @@
-<tbody {{ $attributes->class(['divide-y divide-zinc-200 bg-white dark:divide-zinc-700 dark:bg-zinc-950/10']) }}>
+<tbody {{ $attributes->class(['divide-y divide-zinc-100 bg-white dark:divide-white/[0.05] dark:bg-transparent [&>tr]:transition-colors [&>tr:hover]:bg-zinc-50/70 dark:[&>tr:hover]:bg-white/[0.02]']) }}>
     {{ $slot }}
 </tbody>

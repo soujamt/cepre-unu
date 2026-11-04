@@ -6,7 +6,7 @@
     'required' => false,
     'floating' => false,
     'iconLeading' => null,
-    'iconTrailing' => 'caret-down',
+    'iconTrailing' => 'chevron-down',
     'invalid' => null,
     'disabled' => false,
     'loading' => false,
@@ -31,7 +31,7 @@
     $controlClasses = \App\Helpers\Flux::classes()
         ->add('w-full rounded-lg border text-left text-base sm:text-sm disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
-        ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 dark:text-zinc-300')
+        ->add('bg-white dark:bg-control dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 dark:text-zinc-300')
         ->add($floating ? 'min-h-12 pt-7 pb-2' : 'min-h-10 py-2')
         ->add($paddingLeft)
         ->add($paddingRight)

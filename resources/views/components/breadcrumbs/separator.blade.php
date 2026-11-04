@@ -1,1 +1,1 @@
-<span class="mx-2 text-zinc-200 dark:text-zinc-800">/</span>
+<x-ui.icon name="chevron-right" size="3.5" class="mx-1 text-zinc-300 dark:text-zinc-600" />

@@ -30,7 +30,7 @@ $textareaValue = (! is_null($value) && ! $attributes->has('wire:model') && ! $at
     $textareaClasses = \App\Helpers\Flux::classes()
         ->add('peer block w-full rounded-lg border disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
-        ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
+        ->add('bg-white dark:bg-control dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
         ->add('text-base sm:text-sm min-h-28 py-3 leading-5.5')
         ->add($paddingLeft)
         ->add('pe-3')

@@ -3,25 +3,22 @@
 <a
     href="{{ $href }}"
     @click="if (window.innerWidth < 768) sidebarOpen = false;"
-    class="h-10 sm:h-10 flex items-center gap-2 px-2 py-1 text-sm font-regular rounded-lg group border
-    {{ $active
-       ? 'bg-index-500 text-white border-index-600 shadow-sm shadow-white/20 inset-shadow-xs inset-shadow-white/30 dark:shadow-black/20'
-       : 'text-zinc-600 border-zinc-50 hover:text-zinc-600 hover:bg-index-500/10 hover:border-index-600/10 dark:text-zinc-200 dark:border-zinc-800 hover:inset-shadow-xs hover:inset-shadow-white/20 dark:hover:bg-index-50/5 dark:hover:text-zinc-200 dark:hover:border-black/5'
-    }}"
+    @class ([
+        'group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors',
+        'bg-white font-medium text-zinc-900 shadow-xs ring-1 ring-zinc-200/80 dark:bg-zinc-800 dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:ring-white/[0.08]' => $active,
+        'text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[0.04] dark:hover:text-zinc-100' => ! $active,
+    ])
     {{ $attributes }}
     wire:navigate
 >
-    <div
-        class="size-7 group flex items-center justify-center rounded-md text-white border
-        {{ $active
-            ? 'bg-index-500 border-index-600/50 shadow-sm shadow-white/20 inset-shadow-xs inset-shadow-white/30'
-            : 'bg-index-500/15 border-index-600/15 shadow-sm shadow-white/60 group-hover:shadow-white/20 inset-shadow-xs inset-shadow-white/30 dark:bg-index-50/5 dark:border-black/5 dark:shadow-black/5 dark:group-hover:shadow-black/5'
-        }}
-        "
-    >
-        @if ($icon)
-            <x-ui.icon :name="$icon" size="5" class="{{ $active ? 'text-white dark:text-white' : 'text-zinc-600 dark:text-white' }}" />
-        @endif
-    </div>
-    {{ $label }}
+    @if ($icon)
+        <x-ui.icon
+            :name="$icon"
+            size="5"
+            :class="$active
+                ? 'text-index-500 transition-colors dark:text-index-400'
+                : 'text-zinc-400 transition-colors group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300'"
+        />
+    @endif
+    <span class="inline-block lowercase first-letter:uppercase">{{ $label }}</span>
 </a>

@@ -1,3 +1,3 @@
-<nav {{ $attributes->merge(['class' => 'hidden sm:flex items-center text-sm text-zinc-600 dark:text-zinc-400 mt-1']) }}>
+<nav {{ $attributes->merge(['class' => 'hidden sm:flex items-center text-xs text-zinc-500 dark:text-zinc-400']) }} aria-label="Ruta de navegación">
     {{ $slot }}
 </nav>

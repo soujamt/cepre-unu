@@ -27,7 +27,7 @@ enum PisoAula: string implements PresentableEnum
 
     public function getIcon(): string
     {
-        return 'building-office';
+        return 'building';
     }
 
     public function getIcono(): string

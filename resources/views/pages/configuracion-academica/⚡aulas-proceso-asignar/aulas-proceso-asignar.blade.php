@@ -1,25 +1,25 @@
 @section ('icon')
-    <x-header.icon icon="stack-plus" />
+    <x-header.icon icon="layers-plus-alt" />
 @endsection
 
 @section ('header')
-    <x-header.title>ASIGNAR AULAS</x-header.title>
+    <x-header.title>Asignar aulas</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('aulas.index') }}" wire:navigate>AULAS POR PROCESO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('aulas.index') }}" wire:navigate>Aulas por proceso</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('aulas.asignar') }}" wire:navigate>ASIGNAR</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('aulas.asignar') }}" wire:navigate>Asignar</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="grid gap-4 lg:grid-cols-4">
                     <div class="min-w-0">
                         <x-ui.select
@@ -78,7 +78,7 @@
                             label="Buscar aula"
                             type="text"
                             wire:model.live.debounce.400ms="buscar"
-                            iconLeading="magnifying-glass"
+                            iconLeading="search"
                             floating
                         />
                     </div>
@@ -117,10 +117,10 @@
                         <x-table.head>
                             <x-table.row>
                                 <x-table.heading class="w-16 max-w-16">SEL.</x-table.heading>
-                                <x-table.heading class="min-w-40">AULA</x-table.heading>
-                                <x-table.heading class="min-w-32">LUGAR</x-table.heading>
+                                <x-table.heading>AULA</x-table.heading>
+                                <x-table.heading>LUGAR</x-table.heading>
                                 <x-table.heading class="w-32">CAPACIDAD</x-table.heading>
-                                <x-table.heading class="min-w-24">ASIGNADA</x-table.heading>
+                                <x-table.heading>ASIGNADA</x-table.heading>
                             </x-table.row>
                         </x-table.head>
 
@@ -141,7 +141,7 @@
                                     </x-table.cell>
                                     <x-table.cell>
                                         <div class="flex items-center space-x-2">
-                                            <x-ui.icon name="building-office" size="4" class="text-zinc-400" />
+                                            <x-ui.icon name="building" size="4" class="text-zinc-400" />
                                             <span>{{ $aula->nombre_aul }} ({{ $aula->piso_aul?->getNombre() }})</span>
                                         </div>
                                     </x-table.cell>
@@ -176,7 +176,7 @@
                                 <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
                                     <x-table.cell colspan="5" class="h-auto py-10 text-center whitespace-normal">
                                         <div class="flex flex-col items-center justify-center space-y-3">
-                                            <x-ui.icon name="building-office" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                            <x-ui.icon name="building" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                             <p class="text-zinc-500 dark:text-zinc-400">No se encontraron aulas.</p>
                                         </div>
                                     </x-table.cell>
@@ -195,13 +195,13 @@
                         wire:loading.flex
                         wire:target="buscar, idSemestre, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
                     >
-                        <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+                        <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
                     </div>
                 </div>
             @else
-                <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        <x-ui.icon name="funnel" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                        <x-ui.icon name="filter" size="12" class="text-zinc-400 dark:text-zinc-500" />
                         <p class="text-zinc-700 dark:text-zinc-200">Seleccione un proceso y un turno para ver las aulas disponibles.</p>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">La capacidad por defecto será de 40.</p>
                     </div>
@@ -210,7 +210,7 @@
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div>
                         <p class="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Proceso</p>
@@ -240,7 +240,7 @@
 
                     <flux:button variant="primary" class="w-full font-normal" wire:click="guardar">
                         <x-slot name="icon">
-                            <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                            <x-ui.icon name="save" size="5" class="text-white" />
                         </x-slot>
                         Registrar seleccionadas
                     </flux:button>

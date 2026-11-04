@@ -12,7 +12,7 @@ new class extends Component
         return [
             [
                 'label' => 'SEGURIDAD',
-                'icon' => 'shield-check',
+                'icon' => 'check-shield',
                 'active' => $this->routeIs('seguridad.*', 'usuarios.*', 'roles.*', 'permisos.*'),
                 'items' => [
                     ['label' => 'USUARIOS', 'href' => route('usuarios.index'), 'active' => $this->routeIs('usuarios.*'), 'permiso' => 'usuario_indice'],
@@ -22,7 +22,7 @@ new class extends Component
             ],
             [
                 'label' => 'MANTENEDORES',
-                'icon' => 'folders',
+                'icon' => 'folder',
                 'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'mantenedor-colegios.*', 'tipos-expediente.*'),
                 'items' => [
                     [
@@ -47,7 +47,7 @@ new class extends Component
             ],
             [
                 'label' => 'CONF. ACADEMICA',
-                'icon' => 'gear-six',
+                'icon' => 'cog',
                 'active' => $this->routeIs(
                     'configuraciones.*',
                     'semestres.*',
@@ -71,7 +71,7 @@ new class extends Component
             ],
             [
                 'label' => 'INSCRIPCIONES',
-                'icon' => 'clipboard-text',
+                'icon' => 'clipboard-detail',
                 'active' => $this->routeIs('inscripciones.*', 'pagos.*'),
                 'items' => [
                     ['label' => 'INSCRIPCIONES', 'href' => route('inscripciones.index'), 'active' => $this->routeIs('inscripciones.*'), 'permiso' => 'inscripcion_indice'],
@@ -81,7 +81,7 @@ new class extends Component
             ],
             [
                 'label' => 'REPORTES',
-                'icon' => 'chart-bar',
+                'icon' => 'bar-chart',
                 'active' => $this->routeIs('reportes.*'),
                 'items' => [
                     [
@@ -106,14 +106,17 @@ new class extends Component
     <x-sidebar.panel>
         <x-slot:header>
             <div
-                class="flex size-10 items-center justify-center rounded-md border border-zinc-200/80 bg-white shadow-sm shadow-zinc-950/5 dark:border-white/10 dark:bg-zinc-950/70 dark:shadow-black/20">
+                class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200/80 bg-white shadow-xs dark:border-white/10 dark:bg-zinc-900 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <img src="{{ asset('assets/media/logo_unu.png') }}" alt="Logo UNU" class="w-6" />
             </div>
-            CEPRE UNU
+            <div class="min-w-0 leading-tight">
+                <p class="text-[15px] font-semibold text-zinc-900 dark:text-white">CEPRE UNU</p>
+                <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">Centro Preuniversitario</p>
+            </div>
         </x-slot:header>
 
         <x-sidebar.item label="INICIO" href="{{ route('inicio') }}" :active="request()->routeIs('inicio')"
-            wire:key="menu-inicio" icon="house-simple" />
+            wire:key="menu-inicio" icon="home" />
 
         @foreach ($this->gruposMenu() as $grupo)
         @php

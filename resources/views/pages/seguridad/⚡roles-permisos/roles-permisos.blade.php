@@ -3,14 +3,14 @@
 @endsection
 
 @section ('header')
-    <x-header.title>PERMISOS DEL ROL</x-header.title>
+    <x-header.title>Permisos del rol</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('roles.index') }}" wire:navigate>ROLES</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('roles.index') }}" wire:navigate>Roles</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
         <x-breadcrumbs.item href="{{ route('roles.permisos', $rolActual->id_rol) }}" wire:navigate>
             PERMISOS
@@ -39,7 +39,7 @@
                 @if ($rolActual->nombre_rol !== 'ADMINISTRADOR')
                     <flux:button wire:click="guardar" variant="primary" class="font-normal">
                         <x-slot name="icon">
-                            <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                            <x-ui.icon name="save" size="5" class="text-white" />
                         </x-slot>
                         Guardar
                     </flux:button>

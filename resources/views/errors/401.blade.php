@@ -4,7 +4,7 @@
 @section ('title', 'No Autorizado')
 
 @section ('illustration')
-    <i class="ki-duotone ki-lock text-7xl text-red-600"></i>
+    <x-ui.icon name="lock" size="10" />
 @endsection
 
 @section ('message')

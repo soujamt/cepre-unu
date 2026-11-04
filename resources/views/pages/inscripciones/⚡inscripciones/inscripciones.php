@@ -312,6 +312,29 @@ class extends Component
         $this->resetPage();
     }
 
+    public function limpiarFiltrosSecundarios(): void
+    {
+        $this->idModalidad = '';
+        $this->idLugarInscripcion = '';
+        $this->filtroPago = '';
+        $this->filtroExpediente = '';
+        $this->idTurno = '';
+        $this->idProcesoAulaFiltro = '';
+        $this->resetPage();
+    }
+
+    public function filtrosSecundariosActivos(): int
+    {
+        return collect([
+            $this->idModalidad,
+            $this->idLugarInscripcion,
+            $this->filtroPago,
+            $this->filtroExpediente,
+            $this->idTurno,
+            $this->idProcesoAulaFiltro,
+        ])->filter(fn (mixed $valor): bool => filled($valor))->count();
+    }
+
     public ?int $idInscripcionAnular = null;
 
     // --- Asignar Aula ---

@@ -70,6 +70,22 @@ class extends Component
         $this->estadoInscripcion = '';
     }
 
+    public function limpiarFiltrosSecundarios(): void
+    {
+        $this->idModalidad = '';
+        $this->idLugarInscripcion = '';
+        $this->idTurno = '';
+    }
+
+    public function filtrosSecundariosActivos(): int
+    {
+        return collect([
+            $this->idModalidad,
+            $this->idLugarInscripcion,
+            $this->idTurno,
+        ])->filter(fn (string $valor): bool => $valor !== '')->count();
+    }
+
     public function estadosInscripcionDisponibles(): array
     {
         return EstadoInscripcion::cases();

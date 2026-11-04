@@ -7,57 +7,46 @@
         @yield ('code')
         |
         @yield ('title')
+        - CEPRE UNU
     </title>
 
     <meta
         name="description"
-        content="Panel de administración de la Oficina de Tecnologías de la Información de la Universidad Nacional Intercultural de la Amazonía - UNIA"
+        content="Plataforma institucional del Centro Preuniversitario de la Universidad Nacional de Ucayali - UNU"
     />
-    <meta name="author" content="OTI - UNIA" />
+    <meta name="author" content="CEPRE - UNU" />
 
-    <link rel="icon" type="image/png" href="{{ asset('assets/media/logo-dark.png') }}" />
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
-        rel="stylesheet"
-    />
-
-    <!-- KeenIcons -->
-    <link href="{{ asset('assets/keenicons/styles.bundle.css') }}" rel="stylesheet" />
-
-    <!-- HugeIcons -->
-    <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" />
+    <link rel="shortcut icon" href="{{ asset('assets/media/logo_unu.png') }}" type="image/x-icon" />
 
     @fluxAppearance
     @vite (['resources/css/app.css'])
 </head>
-<body class="text-foreground dark:text-foreground-dark h-full w-full bg-zinc-50 text-base antialiased dark:bg-zinc-800">
-    <div class="flex h-dvh items-center justify-center">
-        <div class="mx-auto max-w-xl p-6 text-center">
-            <div class="mb-8">
+<body class="h-full w-full bg-zinc-100 text-base text-zinc-800 antialiased dark:bg-zinc-950 dark:text-zinc-100">
+    <div class="flex h-dvh items-center justify-center p-4">
+        <div
+            class="mx-auto w-full max-w-lg rounded-2xl border border-zinc-200/80 bg-white p-8 text-center shadow-xs sm:p-10 dark:border-white/[0.06] dark:bg-zinc-900"
+        >
+            <div
+                class="mx-auto mb-6 flex size-18 items-center justify-center rounded-2xl border border-index-100 bg-index-50 text-index-500 dark:border-index-500/20 dark:bg-index-500/10 dark:text-index-300"
+            >
                 @yield ('illustration')
             </div>
 
-            <div class="mb-4">
-                <h1 class="text-7xl font-extrabold text-zinc-900 dark:text-white">
-                    @yield ('code')
-                </h1>
-            </div>
+            <p class="text-sm font-semibold tracking-[0.2em] text-index-500 dark:text-index-400">
+                ERROR @yield ('code')
+            </p>
 
-            <h2 class="mb-3 text-3xl font-bold text-zinc-800 dark:text-zinc-100">
+            <h1 class="mt-2 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
                 @yield ('title')
-            </h2>
+            </h1>
 
-            <p class="mb-8 text-base text-zinc-500 dark:text-zinc-400">
+            <p class="mt-3 mb-8 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
                 @yield ('message')
             </p>
 
-            <flux:button variant="primary" href="/" class="font-normal">
+            <flux:button variant="primary" href="/">
                 <x-slot name="icon">
-                    <i class="ki-duotone ki-arrow-left text-xl"></i>
+                    <x-ui.icon name="arrow-left" size="5" class="text-white" />
                 </x-slot>
                 Regresar
             </flux:button>

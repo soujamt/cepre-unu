@@ -27,7 +27,7 @@ enum LugarAula: string implements PresentableEnum
 
     public function getIcon(): string
     {
-        return 'map-pin';
+        return 'location-pin';
     }
 
     public function getIcono(): string

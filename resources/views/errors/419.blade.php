@@ -4,7 +4,7 @@
 @section ('title', 'Tiempo de espera agotado')
 
 @section ('illustration')
-    <i class="ki-duotone ki-time text-7xl text-red-600"></i>
+    <x-ui.icon name="clock" size="10" />
 @endsection
 
 @section ('message')

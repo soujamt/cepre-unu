@@ -1,23 +1,23 @@
 @section ('icon')
-    <x-header.icon icon="chart-bar" />
+    <x-header.icon icon="bar-chart" />
 @endsection
 
 @section ('header')
-    <x-header.title>REPORTES DE INSCRIPCIONES</x-header.title>
+    <x-header.title>Reportes de inscripciones</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
         <x-breadcrumbs.item href="{{ route('reportes.inscripciones.index') }}" wire:navigate>
-            REPORTES DE INSCRIPCIONES</x-breadcrumbs.item
+            Reportes de inscripciones</x-breadcrumbs.item
         >
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
-    <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+    <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-1">
                 <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Resumen operativo del proceso</h3>
@@ -27,7 +27,7 @@
             <div class="flex flex-wrap gap-2">
                 <flux:button variant="filled" wire:click="limpiarFiltros" class="font-normal">
                     <x-slot name="icon">
-                        <x-ui.icon name="arrows-counter-clockwise" size="5" />
+                        <x-ui.icon name="refresh-ccw" size="5" />
                     </x-slot>
                     Limpiar filtros
                 </flux:button>
@@ -42,7 +42,7 @@
                         class="font-normal"
                     >
                         <x-slot name="icon">
-                            <x-ui.icon name="file-xls" size="5" />
+                            <x-ui.icon name="file-report" size="5" />
                         </x-slot>
                         Exportar Excel
                     </flux:button>
@@ -50,105 +50,124 @@
             </div>
         </div>
 
-        <div class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
-                <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
-                    <option wire:key="reporte-semestre-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                        {{ $semestre->nombre_sem }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div class="w-full sm:w-40">
+                <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+                    <option value="">Todos los semestres</option>
+                    @foreach ($this->semestresDisponibles as $semestre)
+                        <option wire:key="reporte-semestre-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
+                            {{ $semestre->nombre_sem }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
+            </div>
 
-            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
-                <option value="">Todos los procesos</option>
-                @foreach ($this->procesosDisponibles as $proceso)
-                    <option wire:key="reporte-proceso-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                        {{ $proceso->nombre_pro }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+            <div class="w-full sm:w-56">
+                <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+                    <option value="">Todos los procesos</option>
+                    @foreach ($this->procesosDisponibles as $proceso)
+                        <option wire:key="reporte-proceso-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
+                            {{ $proceso->nombre_pro }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
+            </div>
 
-            <x-ui.select wire:model.live="idModalidad" placeholder="Filtrar por modalidad">
-                <option value="">Todas las modalidades</option>
-                @foreach ($this->modalidadesDisponibles as $modalidad)
-                    <option wire:key="reporte-modalidad-{{ $modalidad->id_mad }}" value="{{ $modalidad->id_mad }}">
-                        {{ $modalidad->nombre_mad }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+            <div class="w-full sm:w-44">
+                <x-ui.select wire:model.live="estadoInscripcion" placeholder="Filtrar por estado">
+                    <option value="">Todos los estados</option>
+                    @foreach ($this->estadosInscripcionDisponibles() as $estado)
+                        <option wire:key="reporte-estado-{{ $estado->value }}" value="{{ $estado->value }}">
+                            {{ $estado->getNombre() }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
+            </div>
 
-            <x-ui.select wire:model.live="idLugarInscripcion" placeholder="Filtrar por lugar">
-                <option value="">Todos los lugares</option>
-                @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                    <option
-                        wire:key="reporte-lugar-{{ $lugarInscripcion->id_lin }}"
-                        value="{{ $lugarInscripcion->id_lin }}"
-                    >
-                        {{ $lugarInscripcion->nombre_lin }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+            <x-filtros.secundarios
+                :activos="$this->filtrosSecundariosActivos()"
+                limpiar="limpiarFiltrosSecundarios"
+                :columnas="3"
+                align="start"
+            >
+                <x-ui.select wire:model.live="idModalidad" label="Modalidad" placeholder="Todos">
+                    <option value="">Todas las modalidades</option>
+                    @foreach ($this->modalidadesDisponibles as $modalidad)
+                        <option wire:key="reporte-modalidad-{{ $modalidad->id_mad }}" value="{{ $modalidad->id_mad }}">
+                            {{ $modalidad->nombre_mad }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
 
-            <x-ui.select wire:model.live="idTurno" placeholder="Filtrar por turno">
-                <option value="">Todos los turnos</option>
-                @foreach ($this->turnosDisponibles as $turno)
-                    <option wire:key="reporte-turno-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
-                        {{ $turno->nombre_tur }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+                <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos">
+                    <option value="">Todos los lugares</option>
+                    @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
+                        <option
+                            wire:key="reporte-lugar-{{ $lugarInscripcion->id_lin }}"
+                            value="{{ $lugarInscripcion->id_lin }}"
+                        >
+                            {{ $lugarInscripcion->nombre_lin }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
 
-            <x-ui.select wire:model.live="estadoInscripcion" placeholder="Filtrar por estado">
-                <option value="">Todos los estados</option>
-                @foreach ($this->estadosInscripcionDisponibles() as $estado)
-                    <option wire:key="reporte-estado-{{ $estado->value }}" value="{{ $estado->value }}">
-                        {{ $estado->getNombre() }}
-                    </option>
-                @endforeach
-            </x-ui.select>
+                <x-ui.select wire:model.live="idTurno" label="Turno" placeholder="Todos">
+                    <option value="">Todos los turnos</option>
+                    @foreach ($this->turnosDisponibles as $turno)
+                        <option wire:key="reporte-turno-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
+                            {{ $turno->nombre_tur }}
+                        </option>
+                    @endforeach
+                </x-ui.select>
+            </x-filtros.secundarios>
         </div>
     </div>
 
-    <div
-        class="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+    <x-resumen
         wire:loading.class="opacity-60"
-        wire:target="idSemestre,idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros"
+        wire:target="idSemestre,idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
     >
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total inscritos</p>
-            <p class="mt-2 text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumenGeneral['total'] }}</p>
-            <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-                {{ $this->resumenGeneral['activas'] }} activas · {{ $this->resumenGeneral['pendientes'] }} pendientes
-            </p>
-        </div>
+        <x-resumen.item
+            label="Total inscritos"
+            :value="$this->resumenGeneral['total']"
+            icon="group"
+            tono="info"
+            detalle-icon="check-circle"
+            :detalle="$this->resumenGeneral['activas'].' activas · '.$this->resumenGeneral['pendientes'].' pendientes'"
+            destacado
+        />
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pagos</p>
-            <p class="mt-2 text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumenGeneral['pago_pendiente'] }}</p>
-            <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-                {{ $this->resumenGeneral['pago_parcial'] }} con pago parcial
-            </p>
-        </div>
+        <x-resumen.item
+            label="Pagos pendientes"
+            :value="$this->resumenGeneral['pago_pendiente']"
+            icon="wallet"
+            :tono="$this->resumenGeneral['pago_pendiente'] > 0 ? 'warning' : 'success'"
+            detalle-icon="dollar-circle"
+            :detalle="$this->resumenGeneral['pago_parcial'].' con pago parcial'"
+        />
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Expedientes</p>
-            <p class="mt-2 text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumenGeneral['docs_observados'] }}</p>
-            <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">
-                {{ $this->resumenGeneral['docs_rechazados'] }} rechazados
-            </p>
-        </div>
+        <x-resumen.item
+            label="Expedientes observados"
+            :value="$this->resumenGeneral['docs_observados']"
+            icon="file-search"
+            :tono="$this->resumenGeneral['docs_rechazados'] > 0 ? 'danger' : ($this->resumenGeneral['docs_observados'] > 0 ? 'warning' : 'success')"
+            detalle-icon="x-circle"
+            :detalle="$this->resumenGeneral['docs_rechazados'].' rechazados'"
+        />
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Anuladas</p>
-            <p class="mt-2 text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumenGeneral['anuladas'] }}</p>
-            <p class="mt-2 text-xs text-zinc-400 dark:text-zinc-500">Estado final fuera del flujo activo</p>
-        </div>
-    </div>
+        <x-resumen.item
+            label="Anuladas"
+            :value="$this->resumenGeneral['anuladas']"
+            icon="x-circle"
+            :tono="$this->resumenGeneral['anuladas'] > 0 ? 'danger' : 'neutral'"
+            detalle-icon="block"
+            detalle="Fuera del flujo activo"
+        />
+    </x-resumen>
 
-    <div class="grid gap-5 xl:grid-cols-3">
+    <div class="grid gap-5 xl:grid-cols-3 [&>*]:min-w-0">
         <div
-            class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs xl:col-span-2 dark:border-white/10 dark:bg-zinc-900"
+            class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card xl:col-span-2 dark:border-white/[0.06] dark:bg-zinc-900"
         >
             <div class="flex items-center justify-between gap-3">
                 <div>
@@ -193,27 +212,27 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Cobertura</p>
             <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Por convenio</h3>
 
             <div class="mt-5 space-y-3">
                 @forelse ($this->reportePorConvenio as $fila)
                     <div
-                        class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                        class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                     >
                         <div class="flex items-center justify-between gap-3">
                             <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $fila['convenio'] }}</p>
                             <flux:badge color="zinc" size="lg">{{ $fila['total'] }}</flux:badge>
                         </div>
                         <div class="mt-3 grid gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p>Cupo maximo: {{ $fila['cupo_maximo'] ?? 'No definido' }}</p>
+                            <p>Cupo máximo: {{ $fila['cupo_maximo'] ?? 'No definido' }}</p>
                             <p>Cupo disponible: {{ $fila['cupo_disponible'] ?? 'No aplica' }}</p>
                         </div>
                     </div>
                 @empty
                     <div
-                        class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-400"
+                        class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
                     >
                         No hay convenios asociados en el filtro actual.
                     </div>
@@ -222,11 +241,11 @@
         </div>
     </div>
 
-    <div class="grid gap-5 xl:grid-cols-2">
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+    <div class="grid gap-5 xl:grid-cols-2 [&>*]:min-w-0">
+        <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
-                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Distribucion</p>
+                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Distribución</p>
                     <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Inscritos por modalidad</h3>
                 </div>
                 <flux:badge color="zinc" size="lg">{{ $this->reportePorModalidad->count() }}</flux:badge>
@@ -265,7 +284,7 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+        <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Lectura rapida</p>

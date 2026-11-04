@@ -1164,11 +1164,11 @@ class extends Component
     public function pasos(): array
     {
         return [
-            1 => ['titulo' => 'Informacion personal', 'descripcion' => 'Datos base del postulante', 'icono' => 'user'],
-            2 => ['titulo' => 'Informacion general', 'descripcion' => 'Datos complementarios', 'icono' => 'notebook'],
-            3 => ['titulo' => 'Postulacion', 'descripcion' => 'Proceso, oferta y colegio', 'icono' => 'graduation-cap'],
-            4 => ['titulo' => 'Pago', 'descripcion' => 'Validacion del pago bancario', 'icono' => 'credit-card'],
-            5 => ['titulo' => 'Expedientes', 'descripcion' => 'Carga y revision de documentos', 'icono' => 'folder-open'],
+            1 => ['titulo' => 'Información personal', 'descripcion' => 'Datos base del postulante', 'icono' => 'user'],
+            2 => ['titulo' => 'Información general', 'descripcion' => 'Datos complementarios', 'icono' => 'note-book'],
+            3 => ['titulo' => 'Postulación', 'descripcion' => 'Proceso, oferta y colegio', 'icono' => 'school'],
+            4 => ['titulo' => 'Pago', 'descripcion' => 'Validación del pago bancario', 'icono' => 'credit-card'],
+            5 => ['titulo' => 'Expedientes', 'descripcion' => 'Carga y revisión de documentos', 'icono' => 'folder-open'],
         ];
     }
 

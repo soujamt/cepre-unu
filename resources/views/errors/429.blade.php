@@ -4,7 +4,7 @@
 @section ('title', 'Demasiadas solicitudes')
 
 @section ('illustration')
-    <i class="ki-duotone ki-timer text-7xl text-red-600"></i>
+    <x-ui.icon name="alarm" size="10" />
 @endsection
 
 @section ('message')

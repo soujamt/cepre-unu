@@ -1,16 +1,16 @@
 @section ('icon')
-    <x-header.icon icon="student" />
+    <x-header.icon icon="user-id-card" />
 @endsection
 
 @section ('header')
-    <x-header.title>COLEGIOS</x-header.title>
+    <x-header.title>Colegios</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('mantenedor-colegios.index') }}" wire:navigate>COLEGIOS</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('mantenedor-colegios.index') }}" wire:navigate>Colegios</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
@@ -25,7 +25,7 @@
         <div class="flex-1">
             <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar colegios" clearable>
                 <x-slot name="icon">
-                    <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                    <x-ui.icon name="search" size="5" class="text-zinc-400 dark:text-zinc-500" />
                 </x-slot>
             </flux:input>
         </div>
@@ -42,22 +42,18 @@
         <flux:dropdown>
             <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
-                    <x-ui.icon name="funnel" size="5" />
+                    <x-ui.icon name="filter" size="5" />
                 </x-slot>
                 Estado
                 @if (count($this->estadosSeleccionados) > 0)
-                    <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
+                    <span class="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-index-500 px-1.5 text-[11px] leading-5 font-semibold text-white">{{ count($this->estadosSeleccionados) }}</span>
                 @endif
             </flux:button>
 
             <flux:menu keep-open class="dark:bg-zinc-800">
                 @foreach ($this->estados() as $estado)
                     <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                        <div
-                            class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                        >
-                            <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
-                        </div>
+                        <x-ui.icon :name="$estado->getIcon()" size="4" class="me-2 text-{{ $estado->getColor() }}-500" />
                         {{ ucfirst(strtolower($estado->getNombre())) }}
                     </flux:menu.checkbox>
                 @endforeach
@@ -66,11 +62,7 @@
                     <flux:menu.separator />
                     <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                         <x-slot name="icon">
-                            <div
-                                class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                            >
-                                <x-ui.icon name="trash" size="4" />
-                            </div>
+                            <x-ui.icon name="trash" size="4" class="me-2" />
                         </x-slot>
                         Limpiar filtros
                     </flux:menu.item>
@@ -92,16 +84,16 @@
         <x-table>
             <x-table.head>
                 <x-table.row>
-                    <x-table.heading class="min-w-24">CODIGO</x-table.heading>
-                    <x-table.heading class="min-w-24">MODULAR</x-table.heading>
-                    <x-table.heading class="min-w-56">NOMBRE</x-table.heading>
-                    <x-table.heading class="min-w-40">TIPO</x-table.heading>
-                    <x-table.heading class="min-w-56">UBIGEO</x-table.heading>
-                    <x-table.heading class="min-w-40">DIRECCION</x-table.heading>
+                    <x-table.heading>CODIGO</x-table.heading>
+                    <x-table.heading>MODULAR</x-table.heading>
+                    <x-table.heading>NOMBRE</x-table.heading>
+                    <x-table.heading>TIPO</x-table.heading>
+                    <x-table.heading>UBIGEO</x-table.heading>
+                    <x-table.heading>DIRECCION</x-table.heading>
                     <x-table.heading class="w-20">USO</x-table.heading>
-                    <x-table.heading class="min-w-30">ESTADO</x-table.heading>
-                    <x-table.heading class="min-w-35">REGISTRO</x-table.heading>
-                    <x-table.heading class="w-24"></x-table.heading>
+                    <x-table.heading>ESTADO</x-table.heading>
+                    <x-table.heading>REGISTRO</x-table.heading>
+                    <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
                 </x-table.row>
             </x-table.head>
 
@@ -122,19 +114,21 @@
                         <x-table.cell class="whitespace-normal">{{ $colegio->direccion_col ?: 'SIN DIRECCION' }}</x-table.cell>
                         <x-table.cell>{{ $colegio->inscripciones_count }}</x-table.cell>
                         <x-table.cell>
-                            <flux:badge color="{{ $colegio->estado_col->getColor() }}" size="lg">
+                            <flux:badge color="{{ $colegio->estado_col->getColor() }}">
                                 <x-slot name="icon">
                                     <x-ui.icon :name="$colegio->estado_col->getIcon()" size="4" class="me-1" />
                                 </x-slot>
                                 {{ $colegio->estado_col->getNombre() }}
                             </flux:badge>
                         </x-table.cell>
-                        <x-table.cell>{{ $colegio->creado_en->format('d M Y, h:i a') }}</x-table.cell>
+                        <x-table.cell class="h-auto py-2"><span class="block tabular-nums">{{ $colegio->creado_en->format('d/m/Y') }}</span><span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $colegio->creado_en->format('h:i a') }}</span></x-table.cell>
                         <x-table.cell align="end">
                             @if ($puedeGestionarAcciones)
-                                <flux:dropdown>
-                                    <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
-                                        Acciones
+                                <flux:dropdown position="bottom" align="end">
+                                    <flux:button size="sm" variant="subtle" square aria-label="Acciones">
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="dots-vertical-rounded" size="5" />
+                                        </x-slot>
                                     </flux:button>
                                     <flux:menu>
                                         @permiso('colegio_editar')
@@ -149,7 +143,7 @@
                                         @permiso('colegio_estado')
                                             <flux:menu.item wire:click="$js.cargarAlertaEstado('{{ $colegio->id_col }}', '{{ $colegio->nombre_col }}')">
                                                 <x-slot name="icon">
-                                                    <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
+                                                    <x-ui.icon name="refresh-cw" size="4" class="me-2" />
                                                 </x-slot>
                                                 Estado
                                             </flux:menu.item>
@@ -175,7 +169,7 @@
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
                         <x-table.cell colspan="10" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
-                                <x-ui.icon name="student" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                <x-ui.icon name="user-id-card" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron colegios registrados.</p>
                             </div>
                         </x-table.cell>
@@ -194,7 +188,7 @@
             wire:loading.flex
             wire:target="buscar, idTipoColegioFiltro, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
-            <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+            <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
     </div>
 
@@ -214,7 +208,7 @@
                 <form wire:submit="guardar" class="space-y-5">
                     <div class="grid gap-5 px-5 md:grid-cols-2">
                         <x-ui.input
-                            label="Codigo"
+                            label="Código"
                             type="text"
                             wire:model="colegioForm.id"
                             :invalid="$errors->has('colegioForm.id')"
@@ -225,7 +219,7 @@
                         />
 
                         <x-ui.input
-                            label="Codigo modular"
+                            label="Código modular"
                             type="text"
                             wire:model="colegioForm.codigo_modular"
                             :invalid="$errors->has('colegioForm.codigo_modular')"
@@ -270,7 +264,7 @@
 
                         <div class="md:col-span-2">
                             <x-ui.textarea
-                                label="Direccion"
+                                label="Dirección"
                                 wire:model="colegioForm.direccion"
                                 :invalid="$errors->has('colegioForm.direccion')"
                                 :error="$errors->first('colegioForm.direccion')"
@@ -286,7 +280,7 @@
                         <flux:spacer />
                         <flux:button variant="primary" type="submit" class="font-normal">
                             <x-slot name="icon">
-                                <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                                <x-ui.icon name="save" size="5" class="text-white" />
                             </x-slot>
                             Guardar
                         </flux:button>
@@ -302,8 +296,8 @@
         this.$js.cargarAlertaEstado = (id_colegio, nombre) => {
             this.$dispatch('alert', {
                 type: 'question',
-                title: 'Confirmacion requerida',
-                message: 'Â¿Esta seguro de que desea cambiar el estado del colegio "' + nombre + '"?',
+                title: 'Confirmación requerida',
+                message: '¿Está seguro de que desea cambiar el estado del colegio "' + nombre + '"?',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Aceptar',
@@ -316,8 +310,8 @@
         this.$js.cargarAlertaEliminar = (id_colegio, nombre) => {
             this.$dispatch('alert', {
                 type: 'error',
-                title: 'Atencion',
-                message: 'Â¿Esta seguro de que desea eliminar el colegio "' + nombre + '"? Esta accion es irreversible.',
+                title: 'Atención',
+                message: '¿Está seguro de que desea eliminar el colegio "' + nombre + '"? Esta acción es irreversible.',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Eliminar',

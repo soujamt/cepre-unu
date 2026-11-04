@@ -1,3 +1,3 @@
-<div {{ $attributes->merge(['class' => 'sm:text-xl font-medium text-zinc-800 dark:text-zinc-200 leading-none']) }}>
+<div {{ $attributes->merge(['class' => 'text-base sm:text-lg font-semibold tracking-tight text-zinc-900 dark:text-white leading-none']) }}>
     {{ $slot }}
 </div>

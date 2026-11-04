@@ -1,100 +1,74 @@
 @section ('icon')
-    <x-header.icon icon="clipboard-text" />
+    <x-header.icon icon="clipboard-detail" />
 @endsection
 
 @section ('header')
-    <x-header.title>INSCRIPCIONES</x-header.title>
+    <x-header.title>Inscripciones</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>INSCRIPCIONES</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>Inscripciones</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
-    <div
-        class="grid gap-4 transition-opacity duration-200 lg:grid-cols-4"
+    <x-resumen
+        class="transition-opacity duration-200"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado"
+        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
     >
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total inscritas</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['total'] }}</p>
-                    <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                        {{ $this->resumen['activas'] }} activas · {{ $this->resumen['pendientes'] }} pendientes
-                    </p>
-                </div>
+        <x-resumen.item
+            label="Total inscritas"
+            :value="$this->resumen['total']"
+            icon="group"
+            tono="info"
+            detalle-icon="check-circle"
+            :detalle="$this->resumen['activas'].' activas · '.$this->resumen['pendientes'].' pendientes'"
+            destacado
+        />
 
-                <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300"
-                >
-                    <x-ui.icon name="users-three" size="6" />
-                </div>
-            </div>
-        </div>
+        <x-resumen.item
+            label="Pago pendiente"
+            :value="$this->resumen['pago_pendiente']"
+            icon="dollar-circle"
+            :tono="$this->resumen['pago_pendiente'] > 0 ? 'warning' : 'success'"
+            :detalle-icon="$this->resumen['pago_pendiente'] > 0 ? 'clock' : 'check'"
+            :detalle="$this->resumen['pago_pendiente'] > 0 ? 'Por completar' : 'Pagos al día'"
+        />
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Pago pendiente</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['pago_pendiente'] }}</p>
-                </div>
+        <x-resumen.item
+            label="Docs observados"
+            :value="$this->resumen['docs_observados']"
+            icon="file-search"
+            :tono="$this->resumen['docs_observados'] > 0 ? 'warning' : 'success'"
+            :detalle-icon="$this->resumen['docs_observados'] > 0 ? 'alert-triangle' : 'check'"
+            :detalle="$this->resumen['docs_observados'] > 0 ? 'Requieren revisión' : 'Sin observaciones'"
+        />
 
-                <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
-                >
-                    <x-ui.icon name="currency-circle-dollar" size="6" />
-                </div>
-            </div>
-        </div>
+        <x-resumen.item
+            label="Anuladas"
+            :value="$this->resumen['anuladas']"
+            icon="x-circle"
+            :tono="$this->resumen['anuladas'] > 0 ? 'danger' : 'neutral'"
+            detalle-icon="block"
+            detalle="Fuera del flujo activo"
+        />
+    </x-resumen>
 
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Docs observados</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['docs_observados'] }}</p>
-                </div>
-
-                <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-sky-100 text-sky-600 dark:bg-sky-500/10 dark:text-sky-300"
-                >
-                    <x-ui.icon name="warning" size="6" />
-                </div>
-            </div>
-        </div>
-
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                    <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Anuladas</p>
-                    <p class="text-4xl font-semibold text-zinc-900 dark:text-white">{{ $this->resumen['anuladas'] }}</p>
-                </div>
-
-                <div
-                    class="flex size-12 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-300"
-                >
-                    <x-ui.icon name="x-circle" size="6" />
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Fila 1: Buscador + Acciones --}}
+    {{-- Barra de herramientas: buscador + acciones --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div class="flex-1">
-            <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar inscripciones" clearable>
+        <div class="w-full sm:max-w-md sm:flex-1">
+            <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar por código, DNI o nombre" clearable>
                 <x-slot name="icon">
-                    <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                    <x-ui.icon name="search" size="5" class="text-zinc-400 dark:text-zinc-500" />
                 </x-slot>
             </flux:input>
         </div>
 
-        <div class="flex shrink-0 gap-3">
+        <div class="flex shrink-0 flex-col gap-2 sm:ms-auto sm:flex-row">
             @permiso ('inscripcion_exportar_excel')
                 <flux:button
                     variant="primary"
@@ -104,7 +78,7 @@
                     wire:target="exportarExcel"
                 >
                     <x-slot name="icon">
-                        <x-ui.icon name="file-xls" size="5" />
+                        <x-ui.icon name="file-report" size="5" />
                     </x-slot>
                     Exportar Excel
                 </flux:button>
@@ -115,16 +89,17 @@
                     <x-slot name="icon">
                         <x-ui.icon name="plus" size="5" class="text-white" />
                     </x-slot>
-                    Nueva inscripcion
+                    Nueva inscripción
                 </flux:button>
             @endpermiso
         </div>
     </div>
 
-    {{-- Fila 2: Filtros --}}
-    <div class="flex flex-wrap items-center gap-3">
-        <div class="w-full sm:w-40">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
+    {{-- Filtros principales + filtros secundarios --}}
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+
+        <div class="w-full sm:w-36">
+            <x-ui.select wire:model.live="idSemestre" placeholder="Semestre">
                 <option value="">Todos los semestres</option>
                 @foreach ($this->semestresDisponibles as $semestre)
                     <option wire:key="semestre-inscripcion-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
@@ -134,8 +109,8 @@
             </x-ui.select>
         </div>
 
-        <div class="w-full sm:w-48">
-            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
+        <div class="w-full sm:w-52">
+            <x-ui.select wire:model.live="idProceso" placeholder="Todos los procesos">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
                     <option wire:key="proceso-inscripcion-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
@@ -145,8 +120,55 @@
             </x-ui.select>
         </div>
 
-        <div class="w-full sm:w-44">
-            <x-ui.select wire:model.live="idModalidad" placeholder="Filtrar por modalidad">
+        <flux:dropdown>
+            <flux:button class="w-full font-normal sm:w-auto" icon:trailing="chevron-down">
+                <x-slot name="icon">
+                    <x-ui.icon name="filter" size="5" />
+                </x-slot>
+                Estado
+                @if (count($this->estadosSeleccionados) > 0)
+                    <span
+                        class="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-index-500 px-1.5 text-[11px] leading-5 font-semibold text-white"
+                    >
+                        {{ count($this->estadosSeleccionados) }}
+                    </span>
+                @endif
+            </flux:button>
+
+            <flux:menu keep-open>
+                @foreach ($this->estados() as $estado)
+                    <flux:menu.checkbox
+                        wire:key="estado-{{ $estado->value }}"
+                        wire:model.live="filtroEstado.{{ $estado->value }}"
+                        class="font-normal"
+                    >
+                        <x-ui.icon
+                            :name="$estado->getIcon()"
+                            size="4"
+                            class="me-2 text-{{ $estado->getColor() }}-500"
+                        />
+                        {{ ucfirst(strtolower($estado->getNombre())) }}
+                    </flux:menu.checkbox>
+                @endforeach
+
+                @if (count($this->estadosSeleccionados) > 0)
+                    <flux:menu.separator />
+                    <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
+                        <x-slot name="icon">
+                            <x-ui.icon name="trash" size="4" class="me-2" />
+                        </x-slot>
+                        Limpiar estados
+                    </flux:menu.item>
+                @endif
+            </flux:menu>
+        </flux:dropdown>
+
+        <x-filtros.secundarios
+            :activos="$this->filtrosSecundariosActivos()"
+            limpiar="limpiarFiltrosSecundarios"
+            align="start"
+        >
+            <x-ui.select wire:model.live="idModalidad" label="Modalidad" placeholder="Todas las modalidades">
                 <option value="">Todas las modalidades</option>
                 @foreach ($this->modalidadesDisponibles as $modalidad)
                     <option wire:key="modalidad-inscripcion-{{ $modalidad->id_mad }}" value="{{ $modalidad->id_mad }}">
@@ -154,10 +176,8 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
 
-        <div class="w-full sm:w-44">
-            <x-ui.select wire:model.live="idLugarInscripcion" placeholder="Filtrar por lugar">
+            <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos los lugares">
                 <option value="">Todos los lugares</option>
                 @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
                     <option
@@ -168,10 +188,8 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
 
-        <div class="w-full sm:w-40">
-            <x-ui.select wire:model.live="filtroPago" placeholder="Filtrar por pago">
+            <x-ui.select wire:model.live="filtroPago" label="Pago" placeholder="Todos los pagos">
                 <option value="">Todos los pagos</option>
                 @foreach (App\Enums\EstadoObligacionPago::cases() as $estadoPago)
                     <option wire:key="pago-{{ $estadoPago->value }}" value="{{ $estadoPago->value }}">
@@ -179,10 +197,8 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
 
-        <div class="w-full sm:w-44">
-            <x-ui.select wire:model.live="filtroExpediente" placeholder="Filtrar por expedientes">
+            <x-ui.select wire:model.live="filtroExpediente" label="Expedientes" placeholder="Todos los expedientes">
                 <option value="">Todos los expedientes</option>
                 <option value="sin_carga">Sin carga</option>
                 @foreach (App\Enums\EstadoRevisionExpediente::cases() as $estadoExpediente)
@@ -191,10 +207,8 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
 
-        <div class="w-full sm:w-36">
-            <x-ui.select wire:model.live="idTurno" placeholder="Filtrar por turno">
+            <x-ui.select wire:model.live="idTurno" label="Turno" placeholder="Todos los turnos">
                 <option value="">Todos los turnos</option>
                 @foreach ($this->turnosDisponibles as $turno)
                     <option wire:key="turno-{{ $turno->id_tur }}" value="{{ $turno->id_tur }}">
@@ -202,10 +216,8 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
 
-        <div class="w-full sm:w-44">
-            <x-ui.select wire:model.live="idProcesoAulaFiltro" placeholder="Filtrar por aula">
+            <x-ui.select wire:model.live="idProcesoAulaFiltro" label="Aula" placeholder="Todas las aulas">
                 <option value="">Todas las aulas</option>
                 @foreach ($this->aulasProcesoDisponibles as $aulaOpcion)
                     <option wire:key="aula-proceso-{{ $aulaOpcion->id_pau }}" value="{{ $aulaOpcion->id_pau }}">
@@ -213,101 +225,18 @@
                     </option>
                 @endforeach
             </x-ui.select>
-        </div>
-
-        <flux:dropdown>
-            <flux:button class="font-normal" icon:trailing="chevron-down">
-                <x-slot name="icon">
-                    <x-ui.icon name="funnel" size="5" />
-                </x-slot>
-                Estado
-                @if (count($this->estadosSeleccionados) > 0)
-                    <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
-                @endif
-            </flux:button>
-
-            <flux:menu keep-open class="dark:bg-zinc-800">
-                @foreach ($this->estados() as $estado)
-                    <flux:menu.checkbox
-                        wire:key="estado-{{ $estado->value }}"
-                        wire:model.live="filtroEstado.{{ $estado->value }}"
-                        class="font-normal"
-                    >
-                        <div
-                            class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                        >
-                            <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
-                        </div>
-                        {{ ucfirst(strtolower($estado->getNombre())) }}
-                    </flux:menu.checkbox>
-                @endforeach
-
-                @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || count($this->estadosSeleccionados) > 0 || $filtroPago !== '' || $filtroExpediente !== '' || $idTurno !== '' || $idProcesoAulaFiltro !== '')
-                    <flux:menu.separator />
-                    @if ($idSemestre !== '' || $idProceso !== '' || $idModalidad !== '' || $idLugarInscripcion !== '' || $idTurno !== '' || $idProcesoAulaFiltro !== '')
-                        <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
-                            <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="x" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar filtros academicos
-                        </flux:menu.item>
-                    @endif
-                    @if (count($this->estadosSeleccionados) > 0)
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
-                            <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar estados
-                        </flux:menu.item>
-                    @endif
-                    @if ($filtroPago !== '')
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroPago" class="font-normal!">
-                            <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar pago
-                        </flux:menu.item>
-                    @endif
-                    @if ($filtroExpediente !== '')
-                        <flux:menu.item variant="danger" wire:click="limpiarFiltroExpediente" class="font-normal!">
-                            <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
-                            </x-slot>
-                            Limpiar expedientes
-                        </flux:menu.item>
-                    @endif
-                @endif
-            </flux:menu>
-        </flux:dropdown>
+        </x-filtros.secundarios>
     </div>
 
     <div class="relative">
         <x-table>
             <x-table.head>
                 <x-table.row>
-                    <x-table.heading class="min-w-28">CODIGO</x-table.heading>
-                    <x-table.heading class="min-w-56">POSTULANTE</x-table.heading>
-                    <x-table.heading class="min-w-56">POSTULACION</x-table.heading>
-                    <x-table.heading class="min-w-24">ESTADO</x-table.heading>
-                    <x-table.heading class="min-w-36">TRAMITE</x-table.heading>
-                    <x-table.heading class="min-w-32">REGISTRO</x-table.heading>
-                    <x-table.heading class="w-20"></x-table.heading>
+                    <x-table.heading class="w-36">CODIGO</x-table.heading>
+                    <x-table.heading>POSTULANTE</x-table.heading>
+                    <x-table.heading>POSTULACION</x-table.heading>
+                    <x-table.heading class="w-44">ESTADO</x-table.heading>
+                    <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
                 </x-table.row>
             </x-table.head>
 
@@ -316,87 +245,91 @@
                     @php
                         $resumenPago = $this->resumenPago($inscripcion);
                         $resumenExpedientes = $this->resumenExpedientes($inscripcion);
+                        $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
+                        $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
+                        $aula = $inscripcion->procesoAula?->aula?->nombre_aul;
                     @endphp
                     <x-table.row wire:key="inscripcion-{{ $inscripcion->id_ins }}">
-                        <x-table.cell class="font-medium text-zinc-800 dark:text-zinc-100">
-                            {{ $inscripcion->codigo_ins }}
+                        <x-table.cell class="h-auto py-3 align-top">
+                            <p class="font-medium text-zinc-900 tabular-nums dark:text-zinc-100">{{ $inscripcion->codigo_ins }}</p>
+                            <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                {{ $inscripcion->fecha_inscripcion_ins?->format('d/m/Y · h:i a') }}
+                            </p>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-2">
-                            <div class="space-y-0.5">
-                                <p class="font-medium text-zinc-800 dark:text-zinc-100">
-                                    {{ trim(implode(' ', array_filter([
-                                            $inscripcion->persona?->apellido_paterno_per,
-                                            $inscripcion->persona?->apellido_materno_per,
-                                            $inscripcion->persona?->nombres_per,
-                                        ]))) }}
-                                </p>
-                                <div class="space-y-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                                    <p>DNI: {{ $inscripcion->persona?->numero_documento_per ?? 'SIN DOCUMENTO' }}</p>
-                                    <p>{{ $inscripcion->persona?->correo_electronico_per ?? 'Sin correo registrado' }}</p>
-                                </div>
-                            </div>
+
+                        <x-table.cell class="h-auto py-3 align-top whitespace-normal">
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">
+                                {{ trim(implode(' ', array_filter([
+                                        $inscripcion->persona?->apellido_paterno_per,
+                                        $inscripcion->persona?->apellido_materno_per,
+                                        $inscripcion->persona?->nombres_per,
+                                    ]))) }}
+                            </p>
+                            <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                DNI: <span class="tabular-nums">{{ $inscripcion->persona?->numero_documento_per ?? 'SIN DOCUMENTO' }}</span>
+                            </p>
+                            <p class="max-w-64 truncate text-xs text-zinc-400 dark:text-zinc-500">
+                                {{ $inscripcion->persona?->correo_electronico_per ?? 'Sin correo registrado' }}
+                            </p>
                         </x-table.cell>
-                        <x-table.cell class="whitespace-normal py-2">
-                            <div class="space-y-0.5">
-                                <p class="font-medium text-zinc-800 dark:text-zinc-100">
-                                    {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
-                                </p>
-                                <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    {{ $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE' }}
-                                </p>
-                                @php
-                                    $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
-                                    $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
-                                @endphp
+
+                        <x-table.cell class="h-auto py-3 align-top whitespace-normal">
+                            <p class="font-medium text-zinc-900 dark:text-zinc-100">
+                                {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
+                            </p>
+                            <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                                {{ $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE' }}
+                            </p>
+                            <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400 dark:text-zinc-500">
                                 @if ($modalidad || $turno)
-                                    <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                                        {{ implode(' · ', array_filter([$modalidad, $turno])) }}
-                                    </p>
+                                    <span>{{ implode(' · ', array_filter([$modalidad, $turno])) }}</span>
                                 @endif
-                                <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                                    Aula: {{ $inscripcion->procesoAula?->aula?->nombre_aul ?? 'SIN ASIGNAR' }}
-                                </p>
+                                <span
+                                    @class ([
+                                        'inline-flex items-center gap-1 rounded-md px-1.5 py-px',
+                                        'bg-index-50 text-index-600 dark:bg-index-500/10 dark:text-index-300' => $aula,
+                                        'bg-zinc-100 text-zinc-500 dark:bg-white/5 dark:text-zinc-400' => ! $aula,
+                                    ])
+                                >
+                                    <x-ui.icon name="building" size="3" />
+                                    Aula: {{ $aula ?? 'SIN ASIGNAR' }}
+                                </span>
                             </div>
                         </x-table.cell>
-                        <x-table.cell>
-                            <flux:badge color="{{ $inscripcion->estado_ins->getColor() }}" size="lg">
+
+                        <x-table.cell class="h-auto py-3 align-top">
+                            <flux:badge color="{{ $inscripcion->estado_ins->getColor() }}" size="sm">
                                 <x-slot name="icon">
-                                    <x-ui.icon :name="$inscripcion->estado_ins->getIcon()" size="4" class="me-1" />
+                                    <x-ui.icon :name="$inscripcion->estado_ins->getIcon()" size="3.5" class="me-1" />
                                 </x-slot>
                                 {{ $inscripcion->estado_ins->getNombre() }}
                             </flux:badge>
-                        </x-table.cell>
-                        <x-table.cell class="py-3 whitespace-normal">
-                            <div class="flex flex-col gap-1.5">
-                                <div class="flex items-center gap-1.5">
-                                    <flux:badge color="{{ $resumenPago['color'] }}" size="sm">
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="currency-circle-dollar" size="3" class="me-0.5" />
-                                        </x-slot>
-                                        {{ $resumenPago['label'] }}
-                                    </flux:badge>
-                                    <flux:badge color="{{ $resumenExpedientes['color'] }}" size="sm">
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="files" size="3" class="me-0.5" />
-                                        </x-slot>
-                                        {{ $resumenExpedientes['label'] }}
-                                    </flux:badge>
-                                </div>
-                                <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                                    Docs: {{ $resumenExpedientes['detalle'] }}
-                                </p>
+                            <div class="mt-1.5 flex flex-wrap items-center gap-1">
+                                <flux:badge color="{{ $resumenPago['color'] }}" size="sm" variant="pill" title="Pago">
+                                    <x-slot name="icon">
+                                        <x-ui.icon name="dollar-circle" size="3" class="me-0.5" />
+                                    </x-slot>
+                                    {{ $resumenPago['label'] }}
+                                </flux:badge>
+                                <flux:badge
+                                    color="{{ $resumenExpedientes['color'] }}"
+                                    size="sm"
+                                    variant="pill"
+                                    title="Documentos: {{ $resumenExpedientes['detalle'] }}"
+                                >
+                                    <x-slot name="icon">
+                                        <x-ui.icon name="copy" size="3" class="me-0.5" />
+                                    </x-slot>
+                                    {{ $resumenExpedientes['detalle'] }}
+                                </flux:badge>
                             </div>
                         </x-table.cell>
-                        <x-table.cell>{{ $inscripcion->fecha_inscripcion_ins?->format('d M Y, h:i a') }}</x-table.cell>
-                        <x-table.cell align="end">
-                            <flux:dropdown>
-                                <flux:button
-                                    icon:trailing="chevron-down"
-                                    size="sm"
-                                    variant="filled"
-                                    class="font-normal"
-                                >
-                                    Acciones
+                        <x-table.cell align="end" class="h-auto py-3 align-top">
+                            <flux:dropdown position="bottom" align="end">
+                                <flux:button size="sm" variant="subtle" square aria-label="Acciones">
+                                    <x-slot name="icon">
+                                        <x-ui.icon name="dots-vertical-rounded" size="5" />
+                                    </x-slot>
                                 </flux:button>
 
                                 <flux:menu>
@@ -407,7 +340,7 @@
                                                 wire:navigate
                                             >
                                                 <x-slot name="icon">
-                                                    <x-ui.icon name="shield-check" size="4" class="me-2" />
+                                                    <x-ui.icon name="check-shield" size="4" class="me-2" />
                                                 </x-slot>
                                                 Validar pago
                                             </flux:menu.item>
@@ -434,7 +367,7 @@
                                                 wire:navigate
                                             >
                                                 <x-slot name="icon">
-                                                    <x-ui.icon name="note-pencil" size="4" class="me-2" />
+                                                    <x-ui.icon name="pencil-square" size="4" class="me-2" />
                                                 </x-slot>
                                                 Continuar registro
                                             </flux:menu.item>
@@ -451,7 +384,7 @@
                                                 <x-slot name="icon">
                                                     <x-ui.icon name="x-circle" size="4" class="me-2" />
                                                 </x-slot>
-                                                Anular inscripcion
+                                                Anular inscripción
                                             </flux:menu.item>
                                         @endpermiso
                                     @endif
@@ -461,7 +394,7 @@
                                             <flux:menu.separator />
                                             <flux:menu.item wire:click="abrirModalAsignarAula({{ $inscripcion->id_ins }})">
                                                 <x-slot name="icon">
-                                                    <x-ui.icon name="building-office" size="4" class="me-2" />
+                                                    <x-ui.icon name="building" size="4" class="me-2" />
                                                 </x-slot>
                                                 {{ $inscripcion->id_proceso_aula ? 'Cambiar aula' : 'Asignar aula' }}
                                             </flux:menu.item>
@@ -484,9 +417,9 @@
                     </x-table.row>
                 @empty
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
-                        <x-table.cell colspan="7" class="h-auto py-10 text-center whitespace-normal">
+                        <x-table.cell colspan="5" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
-                                <x-ui.icon name="clipboard-text" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                <x-ui.icon name="clipboard-detail" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron inscripciones.</p>
                             </div>
                         </x-table.cell>
@@ -498,14 +431,14 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
-            <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+            <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
     </div>
 
@@ -526,17 +459,17 @@
     <flux:modal name="modal-anular-inscripcion" class="md:w-md!">
         <div class="space-y-5">
             <div>
-                <flux:heading size="lg">Anular inscripcion</flux:heading>
+                <flux:heading size="lg">Anular inscripción</flux:heading>
                 <flux:text class="mt-1"
-                    >Esta accion cambiara el estado de la inscripcion a anulado y no se podra revertir.</flux:text
+                    >Esta acción cambiará el estado de la inscripción a anulado y no se podrá revertir.</flux:text
                 >
             </div>
 
             <flux:field>
-                <flux:label>Motivo de anulacion</flux:label>
+                <flux:label>Motivo de anulación</flux:label>
                 <flux:textarea
                     wire:model="motivoAnulacion"
-                    placeholder="Describa el motivo de la anulacion (minimo 10 caracteres)"
+                    placeholder="Describa el motivo de la anulación (mínimo 10 caracteres)"
                     rows="3"
                 />
                 <flux:error name="motivoAnulacion" />
@@ -553,9 +486,9 @@
                     wire:target="anularInscripcion"
                 >
                     <x-slot name="icon">
-                        <x-ui.icon name="check-square-offset" size="4" />
+                        <x-ui.icon name="checkbox-checked" size="4" />
                     </x-slot>
-                    Confirmar anulacion
+                    Confirmar anulación
                 </flux:button>
             </div>
         </div>
@@ -650,7 +583,7 @@
                     <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_14rem]">
                         <flux:input x-model="buscar" placeholder="Buscar por nombre, lugar o piso..." clearable>
                             <x-slot name="icon">
-                                <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                                <x-ui.icon name="search" size="5" class="text-zinc-400 dark:text-zinc-500" />
                             </x-slot>
                         </flux:input>
 
@@ -669,8 +602,8 @@
                 <div class="min-h-0 flex-1 overflow-y-auto px-5">
                     <div class="space-y-2 pb-2">
                         <template x-if="filtradas.length === 0">
-                            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-8 text-center dark:border-zinc-700">
-                                <x-ui.icon name="building-office" size="10" class="mx-auto mb-3 text-zinc-400 dark:text-zinc-500" />
+                            <div class="rounded-xl border border-dashed border-zinc-300 px-6 py-8 text-center dark:border-white/[0.06]">
+                                <x-ui.icon name="building" size="10" class="mx-auto mb-3 text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400" x-text="buscar ? 'No se encontraron aulas con ese criterio.' : 'No hay aulas configuradas para este proceso.'"></p>
                             </div>
                         </template>
@@ -679,7 +612,7 @@
                             <div class="space-y-2">
                                 <div class="sticky top-0 z-10 flex items-center justify-between rounded-lg border border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95">
                                     <div class="flex items-center gap-2">
-                                        <x-ui.icon name="map-pin-area" size="4" class="text-zinc-400 dark:text-zinc-500" />
+                                        <x-ui.icon name="map" size="4" class="text-zinc-400 dark:text-zinc-500" />
                                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100" x-text="lugar"></p>
                                     </div>
                                     <p class="text-xs text-zinc-500 dark:text-zinc-400" x-text="aulasGrupo.length + ' aulas'"></p>
@@ -738,7 +671,7 @@
                         </flux:modal.close>
                         <flux:button variant="primary" class="font-normal" wire:click="guardarAulaInscripcion" wire:loading.attr="disabled" wire:target="guardarAulaInscripcion">
                             <x-slot name="icon">
-                                <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                                <x-ui.icon name="save" size="5" class="text-white" />
                             </x-slot>
                             Guardar
                         </flux:button>

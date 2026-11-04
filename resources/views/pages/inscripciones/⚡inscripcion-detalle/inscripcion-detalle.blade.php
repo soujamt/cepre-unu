@@ -1,186 +1,128 @@
 @section ('icon')
-    <x-header.icon icon="clipboard-text" />
+    <x-header.icon icon="clipboard-detail" />
 @endsection
 
 @section ('header')
-    <x-header.title>DETALLE DE INSCRIPCION</x-header.title>
+    <x-header.title>Detalle de inscripción</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>INSCRIPCIONES</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inscripciones.index') }}" wire:navigate>Inscripciones</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
         <x-breadcrumbs.item>{{ $inscripcionActual->codigo_ins }}</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
-    @php ($resumenPagoGeneral = $this->resumenPagoGeneral())
-    @php ($resumenExpedientesGeneral = $this->resumenExpedientesGeneral())
+    @php
+        $resumenPagoGeneral = $this->resumenPagoGeneral();
+        $resumenExpedientesGeneral = $this->resumenExpedientesGeneral();
+        $tonoPorColor = fn (string $color): string => match ($color) {
+            'green', 'emerald', 'lime' => 'success',
+            'amber', 'yellow', 'orange' => 'warning',
+            'red', 'rose' => 'danger',
+            'sky', 'blue', 'violet', 'purple', 'indigo' => 'info',
+            default => 'neutral',
+        };
+    @endphp
 
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div
-            class="relative overflow-hidden rounded-2xl border border-zinc-200 bg-linear-to-br from-white via-zinc-50 to-emerald-50 p-6 shadow-xs lg:flex-1 dark:border-white/10 dark:from-zinc-900 dark:via-zinc-900 dark:to-emerald-950/30"
-        >
-            <div
-                class="pointer-events-none absolute -top-16 right-0 size-40 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-500/10"
-            ></div>
-
-            <div class="relative space-y-4">
+    <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card sm:p-6 dark:border-white/[0.06] dark:bg-zinc-900">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0 space-y-3">
                 <div class="flex flex-wrap items-center gap-2">
-                    <flux:badge color="{{ $inscripcionActual->estado_ins->getColor() }}" size="lg">
+                    <flux:badge color="{{ $inscripcionActual->estado_ins->getColor() }}">
                         <x-slot name="icon">
                             <x-ui.icon :name="$inscripcionActual->estado_ins->getIcon()" size="4" class="me-1" />
                         </x-slot>
                         {{ $inscripcionActual->estado_ins->getNombre() }}
                     </flux:badge>
-                    <flux:badge color="zinc" size="lg">{{ $inscripcionActual->codigo_ins }}</flux:badge>
-                    <flux:badge
-                        color="{{ $resumenPagoGeneral['color'] }}"
-                        size="lg"
-                        >{{ $resumenPagoGeneral['label'] }}</flux:badge
+                    <span
+                        class="rounded-md border border-zinc-200/80 bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-600 tabular-nums dark:border-white/10 dark:bg-white/5 dark:text-zinc-300"
                     >
-                    <flux:badge
-                        color="{{ $resumenExpedientesGeneral['color'] }}"
-                        size="lg"
-                        >{{ $resumenExpedientesGeneral['label'] }}</flux:badge
-                    >
+                        {{ $inscripcionActual->codigo_ins }}
+                    </span>
                 </div>
 
-                <div class="space-y-2">
-                    <h2 class="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-white">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl dark:text-white">
                         {{ $this->nombrePostulante() }}
                     </h2>
-                    <p class="max-w-4xl text-sm text-zinc-600 dark:text-zinc-300">{{ $this->descripcionPostulacion() }}</p>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $this->descripcionPostulacion() }}</p>
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <div
-                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-                    >
-                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Convenio</p>
-                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $this->convenioResumen() }}</p>
-                    </div>
-
-                    <div
-                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-                    >
-                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Turno</p>
-                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $this->turnoResumen() }}</p>
-                    </div>
-
-                    <div
-                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-                    >
-                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Aula</p>
-                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $this->aulaResumen() }}</p>
-                    </div>
-
-                    <div
-                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-                    >
-                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pago</p>
-                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $resumenPagoGeneral['detalle'] }}</p>
-                    </div>
-
-                    <div
-                        class="rounded-xl border border-white/60 bg-white/80 px-4 py-3 backdrop-blur-sm dark:border-white/10 dark:bg-white/5"
-                    >
-                        <p class="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Expedientes</p>
-                        <p class="mt-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">{{ $resumenExpedientesGeneral['detalle'] }}</p>
-                    </div>
-                </div>
+                <dl class="flex flex-wrap gap-x-6 gap-y-2 pt-1 text-sm">
+                    @foreach ([
+                        ['icono' => 'discount', 'label' => 'Convenio', 'valor' => $this->convenioResumen()],
+                        ['icono' => 'clock', 'label' => 'Turno', 'valor' => $this->turnoResumen()],
+                        ['icono' => 'building', 'label' => 'Aula', 'valor' => $this->aulaResumen()],
+                    ] as $dato)
+                        <div class="flex items-center gap-2">
+                            <x-ui.icon :name="$dato['icono']" size="4" class="text-zinc-400 dark:text-zinc-500" />
+                            <dt class="text-zinc-500 dark:text-zinc-400">{{ $dato['label'] }}:</dt>
+                            <dd class="font-medium text-zinc-900 dark:text-zinc-100">{{ $dato['valor'] }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
             </div>
-        </div>
 
-        <flux:button variant="filled" wire:click="volverListado" class="font-normal">
-            <x-slot name="icon">
-                <x-ui.icon name="arrow-left" size="5" />
-            </x-slot>
-            Volver al listado
-        </flux:button>
-    </div>
-
-    <div class="grid gap-4 xl:grid-cols-4">
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Proceso</p>
-            <p class="mt-3 text-lg font-semibold text-zinc-900 dark:text-white">
-                {{ $inscripcionActual->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }}
-            </p>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                {{ $inscripcionActual->procesoOferta?->proceso?->semestre?->nombre_sem ?? 'SIN SEMESTRE' }}
-            </p>
-        </div>
-
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pago</p>
-                    <p class="mt-3 text-lg font-semibold text-zinc-900 dark:text-white">
-                        S/ {{ number_format((float) $inscripcionActual->obligacionesPago->sum('monto_pagado_iop'), 2) }}
-                    </p>
-                </div>
-                <flux:badge
-                    color="{{ $resumenPagoGeneral['color'] }}"
-                    size="lg"
-                    >{{ $resumenPagoGeneral['label'] }}</flux:badge
-                >
-            </div>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                {{ $inscripcionActual->obligacionesPago->count() }} obligacion(es)
-            </p>
-        </div>
-
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <div class="flex items-start justify-between gap-3">
-                <div>
-                    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Expedientes</p>
-                    <p class="mt-3 text-lg font-semibold text-zinc-900 dark:text-white">{{ $inscripcionActual->expedientes->count() }}</p>
-                </div>
-                <flux:badge
-                    color="{{ $resumenExpedientesGeneral['color'] }}"
-                    size="lg"
-                    >{{ $resumenExpedientesGeneral['label'] }}</flux:badge
-                >
-            </div>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">documento(s) registrados</p>
-        </div>
-
-        <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-            <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Registro</p>
-            <p class="mt-3 text-lg font-semibold text-zinc-900 dark:text-white">
-                {{ $inscripcionActual->fecha_inscripcion_ins?->format('d/m/Y') ?? 'N/A' }}
-            </p>
-            <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                {{ $inscripcionActual->fecha_inscripcion_ins?->format('h:i a') ?? 'Sin hora' }}
-            </p>
+            <flux:button wire:click="volverListado" class="shrink-0">
+                <x-slot name="icon">
+                    <x-ui.icon name="arrow-left" size="5" />
+                </x-slot>
+                Volver al listado
+            </flux:button>
         </div>
     </div>
 
-    <div class="grid gap-4 lg:grid-cols-2">
-        <flux:callout color="{{ $resumenPagoGeneral['color'] }}" icon="banknotes">
-            <div class="space-y-1">
-                <p class="text-sm font-medium">{{ $resumenPagoGeneral['label'] }}</p>
-                <p class="text-sm">{{ $resumenPagoGeneral['detalle'] }}</p>
-            </div>
-        </flux:callout>
+    <x-resumen>
+        <x-resumen.item
+            label="Proceso"
+            :value="$inscripcionActual->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO'"
+            icon="layers"
+            tono="info"
+            detalle-icon="calendar"
+            :detalle="$inscripcionActual->procesoOferta?->proceso?->semestre?->nombre_sem ?? 'Sin semestre'"
+            destacado
+        />
 
-        <flux:callout color="{{ $resumenExpedientesGeneral['color'] }}" icon="document-text">
-            <div class="space-y-1">
-                <p class="text-sm font-medium">{{ $resumenExpedientesGeneral['label'] }}</p>
-                <p class="text-sm">{{ $resumenExpedientesGeneral['detalle'] }}</p>
-            </div>
-        </flux:callout>
-    </div>
+        <x-resumen.item
+            label="Pago"
+            :value="'S/ '.number_format((float) $inscripcionActual->obligacionesPago->sum('monto_pagado_iop'), 2)"
+            icon="wallet"
+            :tono="$tonoPorColor($resumenPagoGeneral['color'])"
+            detalle-icon="dollar-circle"
+            :detalle="$resumenPagoGeneral['label']"
+            :title="$resumenPagoGeneral['detalle']"
+        />
+
+        <x-resumen.item
+            label="Expedientes"
+            :value="$inscripcionActual->expedientes->count()"
+            icon="folder-open"
+            :tono="$tonoPorColor($resumenExpedientesGeneral['color'])"
+            detalle-icon="file-detail"
+            :detalle="$resumenExpedientesGeneral['label']"
+            :title="$resumenExpedientesGeneral['detalle']"
+        />
+
+        <x-resumen.item
+            label="Registro"
+            :value="$inscripcionActual->fecha_inscripcion_ins?->format('d/m/Y') ?? 'N/A'"
+            icon="calendar-check"
+            detalle-icon="clock"
+            :detalle="$inscripcionActual->fecha_inscripcion_ins?->format('h:i a') ?? 'Sin hora'"
+        />
+    </x-resumen>
 
     <div class="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Informacion personal</p>
+                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Información personal</p>
                         <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Datos del postulante</h3>
                     </div>
                     <flux:badge color="zinc" size="lg">
@@ -190,11 +132,11 @@
 
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Numero de documento</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Número de documento</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->numero_documento_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Correo electronico</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Correo electrónico</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->correo_electronico_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
@@ -202,7 +144,7 @@
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->celular_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Telefono</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Teléfono</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->telefono_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
@@ -214,7 +156,7 @@
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->sexo_per?->value ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1 md:col-span-2">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Direccion</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Dirección</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->direccion_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
@@ -228,9 +170,9 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
-                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Postulacion</p>
-                <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Configuracion academica</h3>
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
+                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Postulación</p>
+                <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Configuración académica</h3>
 
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     <div class="space-y-1">
@@ -246,7 +188,7 @@
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Lugar de inscripcion</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Lugar de inscripción</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
@@ -262,7 +204,7 @@
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->convenioProceso?->convenio?->nombre_con ?? 'Sin convenio' }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Ano de graduacion</p>
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Año de graduación</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->anio_graduacion_ins ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
@@ -276,7 +218,7 @@
         </div>
 
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Pagos</p>
@@ -288,7 +230,7 @@
                 <div class="mt-5 space-y-3">
                     @forelse ($inscripcionActual->obligacionesPago as $obligacion)
                         <div
-                            class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                         >
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div>
@@ -321,24 +263,24 @@
                                     @endforeach
                                 </div>
                             @else
-                                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No hay pagos asociados a esta obligacion.</p>
+                                <p class="mt-3 text-sm text-zinc-500 dark:text-zinc-400">No hay pagos asociados a esta obligación.</p>
                             @endif
                         </div>
                     @empty
                         <div
-                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-400"
+                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
                         >
-                            Esta inscripcion no registra obligaciones de pago.
+                            Esta inscripción no registra obligaciones de pago.
                         </div>
                     @endforelse
                 </div>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Expedientes</p>
-                        <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Revision documental</h3>
+                        <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Revisión documental</h3>
                     </div>
                     <flux:badge color="zinc" size="lg">{{ $inscripcionActual->expedientes->count() }}</flux:badge>
                 </div>
@@ -346,7 +288,7 @@
                 <div class="mt-5 space-y-3">
                     @forelse ($inscripcionActual->expedientes as $expediente)
                         <div
-                            class="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+                            class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                         >
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
@@ -368,12 +310,12 @@
                                             rel="noopener noreferrer"
                                             class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                                         >
-                                            <x-ui.icon name="arrow-square-out" size="3.5" />
+                                            <x-ui.icon name="arrow-out-up-right-square" size="3.5" />
                                             Abrir
                                         </a>
                                     @endif
                                 </div>
-                                <p>Observacion: {{ $expediente->observacion_iex ?: 'Sin observacion' }}</p>
+                                <p>Observación: {{ $expediente->observacion_iex ?: 'Sin observación' }}</p>
                                 <p>
                                     Revision: {{ $expediente->revisado_en?->format('d/m/Y h:i a') ?? 'No registrada' }}
                                     @if ($expediente->usuarioRevisor)
@@ -403,7 +345,7 @@
                                         wire:click="abrirModalRevision({{ $expediente->id_iex }}, 'OBSERVADO')"
                                     >
                                         <x-slot name="icon">
-                                            <x-ui.icon name="info" size="3.5" />
+                                            <x-ui.icon name="info-circle" size="3.5" />
                                         </x-slot>
                                         Observar
                                     </flux:button>
@@ -422,9 +364,9 @@
                         </div>
                     @empty
                         <div
-                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/10 dark:bg-zinc-950/40 dark:text-zinc-400"
+                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
                         >
-                            Esta inscripcion no tiene expedientes registrados.
+                            Esta inscripción no tiene expedientes registrados.
                         </div>
                     @endforelse
                 </div>
@@ -449,7 +391,7 @@
                 <flux:label>{{ $estadoRevision === 'OBSERVADO' ? 'Observacion' : 'Motivo de rechazo' }}</flux:label>
                 <flux:textarea
                     wire:model="observacionRevision"
-                    placeholder="Describa el motivo (minimo 5 caracteres)"
+                    placeholder="Describa el motivo (mínimo 5 caracteres)"
                     rows="3"
                 />
                 <flux:error name="observacionRevision" />
@@ -464,7 +406,7 @@
                     wire:click="confirmarRevision"
                 >
                     <x-slot name="icon">
-                        <x-ui.icon name="check-square-offset" size="4" />
+                        <x-ui.icon name="checkbox-checked" size="4" />
                     </x-slot>
                     Confirmar
                 </flux:button>
