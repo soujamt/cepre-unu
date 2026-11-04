@@ -342,3 +342,11 @@ select:focus[data-flux-control] {
         transform: scaleX(0);
     }
 }
+
+/** Sin transiciones mientras se cambia de tema (evita el parpadeo) **/
+.cambiando-tema,
+.cambiando-tema *,
+.cambiando-tema *::before,
+.cambiando-tema *::after {
+    transition: none !important;
+}
