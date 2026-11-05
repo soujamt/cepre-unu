@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'sedes.*', 'tipos-expediente.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'lugares-inscripcion.*', 'modalidades.*', 'sedes.*', 'tipos-expediente.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -42,6 +42,18 @@ new class extends Component
                         'href' => route('mantenedor-colegios.index'),
                         'active' => $this->routeIs('mantenedor-colegios.*'),
                         'permiso' => 'colegio_indice',
+                    ],
+                    [
+                        'label' => 'LUGARES DE INSCRIPCIÓN',
+                        'href' => route('lugares-inscripcion.index'),
+                        'active' => $this->routeIs('lugares-inscripcion.*'),
+                        'permiso' => 'lugar_inscripcion_indice',
+                    ],
+                    [
+                        'label' => 'MODALIDADES',
+                        'href' => route('modalidades.index'),
+                        'active' => $this->routeIs('modalidades.*'),
+                        'permiso' => 'modalidad_indice',
                     ],
                     [
                         'label' => 'SEDES',

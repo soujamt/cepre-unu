@@ -46,6 +46,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:carrera_indice')
         ->name('carreras.index');
 
+    Route::livewire('/mantenedores/lugares-inscripcion', 'pages::mantenedores.lugares-inscripcion')
+        ->middleware('permiso:lugar_inscripcion_indice')
+        ->name('lugares-inscripcion.index');
+
+    Route::livewire('/mantenedores/modalidades', 'pages::mantenedores.modalidades')
+        ->middleware('permiso:modalidad_indice')
+        ->name('modalidades.index');
+
     Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
         ->middleware('permiso:sede_indice')
         ->name('sedes.index');
