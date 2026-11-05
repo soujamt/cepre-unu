@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -60,6 +60,12 @@ new class extends Component
                         'href' => route('modalidades.index'),
                         'active' => $this->routeIs('modalidades.*'),
                         'permiso' => 'modalidad_indice',
+                    ],
+                    [
+                        'label' => 'OFERTAS BASE',
+                        'href' => route('ofertas-base.index'),
+                        'active' => $this->routeIs('ofertas-base.*'),
+                        'permiso' => 'oferta_base_indice',
                     ],
                     [
                         'label' => 'SEDES',

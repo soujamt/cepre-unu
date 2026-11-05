@@ -58,6 +58,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:modalidad_indice')
         ->name('modalidades.index');
 
+    Route::livewire('/mantenedores/ofertas-base', 'pages::mantenedores.ofertas-base')
+        ->middleware('permiso:oferta_base_indice')
+        ->name('ofertas-base.index');
+
     Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
         ->middleware('permiso:sede_indice')
         ->name('sedes.index');
