@@ -1,14 +1,12 @@
 @php ($contextoProceso = $this->contextoProcesoPostulacion)
 @php ($procesoActivo = $this->procesoPostulacionActivo)
-<div
-class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
->
-<div class="space-y-1">
-    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 3</p>
-    <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Postulación</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la oferta activa del proceso vigente y deje listo el borrador de inscripción.</p>
-</div>
-</div>
+<x-inscripcion.encabezado-paso
+    :paso="3"
+    :total="count($this->pasos)"
+    :icono="$this->pasos[3]['icono']"
+    titulo="Postulación"
+    descripcion="Seleccione la oferta activa del proceso vigente y deje listo el borrador de inscripción."
+/>
 <div
 class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
 >

@@ -1,12 +1,10 @@
-<div
-class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
->
-<div class="space-y-1">
-    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 2</p>
-    <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Información general</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400">Registre la procedencia educativa y el historial de postulación del postulante.</p>
-</div>
-</div>
+<x-inscripcion.encabezado-paso
+    :paso="2"
+    :total="count($this->pasos)"
+    :icono="$this->pasos[2]['icono']"
+    titulo="Información general"
+    descripcion="Registre la procedencia educativa y el historial de postulación del postulante."
+/>
 <div
 class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
 >

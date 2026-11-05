@@ -1,15 +1,13 @@
 @php ($inscripcionBorrador = $this->inscripcionBorrador)
 @php ($reglaPagoSeleccionada = $this->reglaPagoSeleccionada)
 @php ($obligacionPagoSeleccionada = $this->obligacionPagoSeleccionada)
-<div
-class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
->
-<div class="space-y-1">
-    <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Paso 4</p>
-    <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">Pago</h3>
-    <p class="text-sm text-zinc-500 dark:text-zinc-400">Seleccione la regla de pago, busque la operación bancaria y valide el abono del postulante.</p>
-</div>
-</div>
+<x-inscripcion.encabezado-paso
+    :paso="4"
+    :total="count($this->pasos)"
+    :icono="$this->pasos[4]['icono']"
+    titulo="Pago"
+    descripcion="Seleccione la regla de pago, busque la operación bancaria y valide el abono del postulante."
+/>
 <div
 class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
 >
@@ -216,7 +214,6 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 <flux:button
                     type="button"
                     variant="primary"
-                    color="purple"
                     wire:click="buscarPagosPasoPago"
                     wire:loading.attr="disabled"
                     wire:target="buscarPagosPasoPago"
