@@ -16,7 +16,7 @@
     @php
         $actividadCards = [
             [
-                'label' => 'Inscripciones hoy',
+                'label' => 'Inscripciones',
                 'valor' => $this->actividadHoy['nuevas_inscripciones'],
                 'descripcion' => 'registros creados en la jornada actual',
                 'icon' => 'group',
@@ -24,7 +24,7 @@
                 'badge' => $this->actividadHoy['nuevas_inscripciones'] > 0 ? 'Con movimiento' : 'Sin altas',
             ],
             [
-                'label' => 'Pagos validados hoy',
+                'label' => 'Pagos validados',
                 'valor' => $this->actividadHoy['pagos_validados'],
                 'descripcion' => 'confirmaciones bancarias aprobadas',
                 'icon' => 'check-shield',
@@ -32,19 +32,13 @@
                 'badge' => $this->actividadHoy['pagos_validados'] > 0 ? 'Validando bien' : 'Sin validaciones',
             ],
             [
-                'label' => 'Expedientes revisados',
+                'label' => 'Expedientes',
                 'valor' => $this->actividadHoy['expedientes_revisados'],
                 'descripcion' => 'inscripciones con revisión documental hoy',
                 'icon' => 'copy',
                 'tono' => 'neutral',
                 'badge' => $this->actividadHoy['expedientes_revisados'] > 0 ? 'Equipo activo' : 'Sin revisión',
             ],
-        ];
-
-        $estadoInscripcionClasses = [
-            'ACTIVO' => 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300',
-            'PENDIENTE' => 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300',
-            'ANULADO' => 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300',
         ];
 
         $alertaStyles = [
@@ -83,6 +77,8 @@
                         Panel operativo del proceso de admisión. Aquí puedes revisar el estado del proceso vigente, la actividad del día y los puntos que necesitan atención.
                     </p>
                 </div>
+
+                <p class="pt-1 text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Actividad de hoy</p>
 
                 <x-resumen :columnas="3">
                     @foreach ($actividadCards as $card)
@@ -142,130 +138,143 @@
     </div>
 
     @if ($this->procesoActual)
+        <div class="space-y-3">
+            <div>
+                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen del proceso</p>
+                <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Estado de las inscripciones de {{ $this->procesoActual->nombre_pro }}</h3>
+            </div>
+
+            <x-resumen>
+                <x-resumen.item
+                    label="Total inscritas"
+                    :value="$this->estadisticas['total']"
+                    icon="group"
+                    tono="info"
+                    detalle-icon="check-circle"
+                    :detalle="$this->estadisticas['activas'].' activas · '.$this->estadisticas['pendientes'].' pendientes'"
+                />
+
+                <x-resumen.item
+                    label="Activas"
+                    :value="$this->estadisticas['activas']"
+                    icon="check-circle"
+                    tono="success"
+                    detalle-icon="check"
+                    detalle="Expedientes y pago completos"
+                />
+
+                <x-resumen.item
+                    label="Pago pendiente"
+                    :value="$this->estadisticas['pago_pendiente']"
+                    icon="dollar-circle"
+                    :tono="$this->estadisticas['pago_pendiente'] > 0 ? 'warning' : 'success'"
+                    :detalle-icon="$this->estadisticas['pago_pendiente'] > 0 ? 'clock' : 'check'"
+                    :detalle="$this->estadisticas['pago_pendiente'] > 0 ? 'Con saldo por cobrar' : 'Pagos al día'"
+                />
+
+                <x-resumen.item
+                    label="Docs observados"
+                    :value="$this->estadisticas['docs_observados']"
+                    icon="file-search"
+                    :tono="$this->estadisticas['docs_observados'] > 0 ? 'warning' : 'success'"
+                    :detalle-icon="$this->estadisticas['docs_observados'] > 0 ? 'alert-triangle' : 'check'"
+                    :detalle="$this->estadisticas['docs_observados'] > 0 ? 'Observados o rechazados' : 'Sin observaciones'"
+                />
+            </x-resumen>
+        </div>
+
         <div class="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.9fr)]">
-            <div class="space-y-5">
-                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-zinc-500 dark:text-zinc-400">Total inscritas</p>
-                        <p class="text-4xl font-semibold text-zinc-900 dark:text-white">
-                            {{ $this->estadisticas['total'] }}
-                        </p>
-                        <p class="text-xs text-zinc-400 dark:text-zinc-500">
-                            {{ $this->estadisticas['activas'] }} activas · {{ $this->estadisticas['pendientes'] }} pendientes
-                        </p>
-                    </div>
-                    <div
-                        class="flex size-12 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 dark:bg-white/10 dark:text-zinc-300"
-                    >
-                        <x-ui.icon name="group" size="6" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-5 shadow-card dark:border-emerald-500/20 dark:bg-emerald-500/5">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-emerald-700 dark:text-emerald-300">Activas</p>
-                        <p class="text-4xl font-semibold text-zinc-900 dark:text-white">
-                            {{ $this->estadisticas['activas'] }}
-                        </p>
-                        <p class="text-xs text-emerald-700/80 dark:text-emerald-300/80">expedientes y pago completos</p>
-                    </div>
-                    <div
-                        class="flex size-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300"
-                    >
-                        <x-ui.icon name="check-circle" size="6" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-amber-200/80 bg-amber-50/50 p-5 shadow-card dark:border-amber-500/20 dark:bg-amber-500/5">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-amber-700 dark:text-amber-300">Pago pendiente</p>
-                        <p class="text-4xl font-semibold text-zinc-900 dark:text-white">
-                            {{ $this->estadisticas['pago_pendiente'] }}
-                        </p>
-                        <p class="text-xs text-amber-700/80 dark:text-amber-300/80">con saldo por cobrar</p>
-                    </div>
-                    <div
-                        class="flex size-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300"
-                    >
-                        <x-ui.icon name="dollar-circle" size="6" />
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-red-200/80 bg-red-50/50 p-5 shadow-card dark:border-red-500/20 dark:bg-red-500/5">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-red-700 dark:text-red-300">Docs observados</p>
-                        <p class="text-4xl font-semibold text-zinc-900 dark:text-white">
-                            {{ $this->estadisticas['docs_observados'] }}
-                        </p>
-                        <p class="text-xs text-red-700/80 dark:text-red-300/80">observados o rechazados</p>
-                    </div>
-                    <div
-                        class="flex size-12 items-center justify-center rounded-xl bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-300"
-                    >
-                        <x-ui.icon name="alert-triangle" size="6" />
-                    </div>
-                </div>
-            </div>
-                </div>
-
-                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
-                    <div class="mb-4 flex items-center justify-between gap-3">
+                @php
+                    $puedeVerInscripciones = auth()->user()?->hasPermisoAccion('inscripcion_indice') ?? false;
+                    $tipoTitulo = fn (?string $texto): string => preg_replace_callback(
+                        '/(?<=\s)(De|Del|La|Las|Los|Y|E|En|Con|Para)(?=\s)/u',
+                        fn (array $conector): string => mb_strtolower($conector[1], 'UTF-8'),
+                        \Illuminate\Support\Str::title(mb_strtolower((string) $texto, 'UTF-8')),
+                    );
+                @endphp
+                <div class="flex h-full flex-col rounded-xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
+                    <div class="flex items-center justify-between gap-3 border-b border-zinc-200/80 px-5 py-4 dark:border-white/[0.06]">
                         <div>
-                            <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Actividad reciente</p>
-                            <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Últimas inscripciones del proceso</h3>
+                            <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Últimas inscripciones</h3>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-400">Registros más recientes del proceso {{ $this->procesoActual->nombre_pro }}</p>
                         </div>
+
+                        @if ($puedeVerInscripciones && $this->inscripcionesRecientes->isNotEmpty())
+                            <a
+                                href="{{ route('inscripciones.index') }}"
+                                wire:navigate
+                                class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-index-600 hover:text-index-700 dark:text-index-300 dark:hover:text-index-200"
+                            >
+                                Ver todas
+                                <x-ui.icon name="chevron-right" size="4" />
+                            </a>
+                        @endif
                     </div>
 
                     @if ($this->inscripcionesRecientes->isEmpty())
-                        <div class="rounded-xl border border-dashed border-zinc-200/80 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400">
-                            Aún no hay inscripciones recientes para mostrar en este proceso.
+                        <div class="flex flex-1 flex-col items-center justify-center gap-2 px-5 py-10 text-center">
+                            <x-ui.icon name="clipboard-detail" size="8" class="text-zinc-300 dark:text-zinc-600" />
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">Aún no hay inscripciones en este proceso.</p>
                         </div>
                     @else
-                        <div class="space-y-3">
+                        <ul class="divide-y divide-zinc-200/80 dark:divide-white/[0.06]">
                             @foreach ($this->inscripcionesRecientes as $inscripcion)
-                                <div class="flex flex-col gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/70 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40 sm:flex-row sm:items-center sm:justify-between">
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-zinc-900 dark:text-white">
-                                            {{ $inscripcion->persona?->apellido_paterno_per }} {{ $inscripcion->persona?->apellido_materno_per }}, {{ $inscripcion->persona?->nombres_per }}
-                                        </p>
-                                        <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                            {{ $inscripcion->codigo_ins }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'Sin carrera' }}
-                                        </p>
-                                    </div>
+                                @php
+                                    $persona = $inscripcion->persona;
+                                    $iniciales = mb_strtoupper(
+                                        mb_substr((string) $persona?->nombres_per, 0, 1).mb_substr((string) $persona?->apellido_paterno_per, 0, 1),
+                                        'UTF-8',
+                                    );
+                                    $nombreCompleto = trim($tipoTitulo($persona?->nombres_per).' '.$tipoTitulo($persona?->apellido_paterno_per).' '.$tipoTitulo($persona?->apellido_materno_per));
+                                    $carrera = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car;
+                                    $fecha = $inscripcion->fecha_inscripcion_ins;
+                                @endphp
+                                <li wire:key="inscripcion-reciente-{{ $inscripcion->id_ins }}">
+                                    <a
+                                        @if ($puedeVerInscripciones)
+                                            href="{{ route('inscripciones.detalle', encode($inscripcion->id_ins)) }}"
+                                            wire:navigate
+                                        @endif
+                                        @class ([
+                                            'flex items-center gap-3 px-5 py-3',
+                                            'transition-colors hover:bg-zinc-50 dark:hover:bg-white/[0.03]' => $puedeVerInscripciones,
+                                        ])
+                                    >
+                                        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                                            {{ $iniciales ?: '?' }}
+                                        </span>
 
-                                    <div class="flex flex-wrap items-center gap-2 text-xs">
-                                        @php
-                                            $estadoInscripcion = strtoupper($inscripcion->estado_ins?->value ?? '');
-                                            $estadoBadgeClass = $estadoInscripcionClasses[$estadoInscripcion] ?? 'border-zinc-200 bg-white text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300';
-                                        @endphp
-                                        <span class="rounded-full border px-3 py-1 font-medium {{ $estadoBadgeClass }}">
-                                            {{ $inscripcion->estado_ins?->value ?? '—' }}
+                                        <span class="min-w-0 flex-1">
+                                            <span class="block truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $nombreCompleto ?: 'Sin datos del postulante' }}</span>
+                                            <span class="block truncate text-xs text-zinc-500 dark:text-zinc-400">
+                                                {{ $carrera ? $tipoTitulo($carrera) : 'Sin carrera' }}
+                                                <span class="text-zinc-300 dark:text-zinc-600">·</span>
+                                                <span class="font-mono">{{ $inscripcion->codigo_ins }}</span>
+                                            </span>
                                         </span>
-                                        <span class="rounded-full border border-zinc-200 bg-white px-3 py-1 font-medium text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
-                                            {{ $inscripcion->fecha_inscripcion_ins?->format('d/m H:i') ?? 'Sin fecha' }}
+
+                                        <span class="flex shrink-0 flex-col items-end gap-1">
+                                            @if ($inscripcion->estado_ins)
+                                                <flux:badge size="sm" color="{{ $inscripcion->estado_ins->getColor() }}">{{ $tipoTitulo($inscripcion->estado_ins->getNombre()) }}</flux:badge>
+                                            @endif
+                                            <span class="text-xs text-zinc-400 tabular-nums dark:text-zinc-500" @if ($fecha) title="{{ $fecha->format('d/m/Y h:i a') }}" @endif>
+                                                {{ $fecha?->diffForHumans() ?? 'Sin fecha' }}
+                                            </span>
                                         </span>
-                                    </div>
-                                </div>
+                                    </a>
+                                </li>
                             @endforeach
-                        </div>
+                        </ul>
                     @endif
                 </div>
-            </div>
 
-            <div class="space-y-5">
-                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
-                    <div class="mb-4">
-                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Atención inmediata</p>
-                        <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Alertas operativas</h3>
+                <div class="h-full rounded-xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
+                    <div class="border-b border-zinc-200/80 px-5 py-4 dark:border-white/[0.06]">
+                        <h3 class="text-sm font-semibold text-zinc-900 dark:text-white">Alertas operativas</h3>
+                        <p class="text-xs text-zinc-500 dark:text-zinc-400">Puntos que necesitan atención en el proceso</p>
                     </div>
+
+                    <div class="p-5">
 
                     @if ($this->alertasOperativas->isEmpty())
                         <div class="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 text-sm text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -314,8 +323,8 @@
                             @endforeach
                         </div>
                     @endif
+                    </div>
                 </div>
-            </div>
         </div>
     @else
         <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-500/20 dark:bg-amber-500/5">
