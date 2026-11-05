@@ -155,7 +155,9 @@ class extends Component
             $alertas->push([
                 'tipo' => 'pago',
                 'titulo' => 'Pagos por regularizar',
-                'detalle' => $this->estadisticas['pago_pendiente'].' inscripciones con saldo pendiente o pago parcial.',
+                'detalle' => $this->estadisticas['pago_pendiente'] === 1
+                    ? '1 inscripción con saldo pendiente o pago parcial.'
+                    : $this->estadisticas['pago_pendiente'].' inscripciones con saldo pendiente o pago parcial.',
                 'tono' => 'warning',
             ]);
         }
@@ -164,7 +166,9 @@ class extends Component
             $alertas->push([
                 'tipo' => 'expediente',
                 'titulo' => 'Expedientes observados',
-                'detalle' => $this->estadisticas['docs_observados'].' inscripciones requieren revisión documental.',
+                'detalle' => $this->estadisticas['docs_observados'] === 1
+                    ? '1 inscripción requiere revisión documental.'
+                    : $this->estadisticas['docs_observados'].' inscripciones requieren revisión documental.',
                 'tono' => 'info',
             ]);
         }
