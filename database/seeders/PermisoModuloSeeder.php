@@ -112,6 +112,16 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
+                'clave_permiso' => 'turno',
+                'nombre_permiso' => 'TURNOS',
+                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+            ],
+            [
+                'clave_permiso' => 'concepto_pago',
+                'nombre_permiso' => 'CONCEPTOS DE PAGO',
+                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+            ],
+            [
                 'clave_permiso' => 'proceso',
                 'nombre_permiso' => 'PROCESOS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],

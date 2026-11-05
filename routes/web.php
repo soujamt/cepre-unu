@@ -46,6 +46,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:carrera_indice')
         ->name('carreras.index');
 
+    Route::livewire('/mantenedores/conceptos-pago', 'pages::mantenedores.conceptos-pago')
+        ->middleware('permiso:concepto_pago_indice')
+        ->name('conceptos-pago.index');
+
     Route::livewire('/mantenedores/lugares-inscripcion', 'pages::mantenedores.lugares-inscripcion')
         ->middleware('permiso:lugar_inscripcion_indice')
         ->name('lugares-inscripcion.index');
@@ -65,6 +69,10 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
         ->middleware('permiso:tipo_expediente_indice')
         ->name('tipos-expediente.index');
+
+    Route::livewire('/mantenedores/turnos', 'pages::mantenedores.turnos')
+        ->middleware('permiso:turno_indice')
+        ->name('turnos.index');
 
     // Configuración Académica
     Route::livewire('/configuracion-academica/procesos', 'pages::configuracion-academica.procesos')

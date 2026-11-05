@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'lugares-inscripcion.*', 'modalidades.*', 'sedes.*', 'tipos-expediente.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -42,6 +42,12 @@ new class extends Component
                         'href' => route('mantenedor-colegios.index'),
                         'active' => $this->routeIs('mantenedor-colegios.*'),
                         'permiso' => 'colegio_indice',
+                    ],
+                    [
+                        'label' => 'CONCEPTOS DE PAGO',
+                        'href' => route('conceptos-pago.index'),
+                        'active' => $this->routeIs('conceptos-pago.*'),
+                        'permiso' => 'concepto_pago_indice',
                     ],
                     [
                         'label' => 'LUGARES DE INSCRIPCIÓN',
@@ -66,6 +72,12 @@ new class extends Component
                         'href' => route('tipos-expediente.index'),
                         'active' => $this->routeIs('tipos-expediente.*'),
                         'permiso' => 'tipo_expediente_indice',
+                    ],
+                    [
+                        'label' => 'TURNOS',
+                        'href' => route('turnos.index'),
+                        'active' => $this->routeIs('turnos.*'),
+                        'permiso' => 'turno_indice',
                     ],
                 ],
             ],
