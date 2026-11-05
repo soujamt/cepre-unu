@@ -377,7 +377,8 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800"
+            x-anchor.bottom-start.offset.4="$root"
+            class="absolute z-50 max-h-60 w-full overflow-y-auto rounded-lg border border-zinc-200/80 bg-white shadow-pop dark:border-white/10 dark:bg-zinc-800"
             x-cloak
         >
             <div class="p-1">
