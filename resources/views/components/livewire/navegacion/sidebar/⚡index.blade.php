@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'mantenedor-colegios.*', 'tipos-expediente.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'sedes.*', 'tipos-expediente.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -32,10 +32,22 @@ new class extends Component
                         'permiso' => 'aula_indice',
                     ],
                     [
+                        'label' => 'CARRERAS',
+                        'href' => route('carreras.index'),
+                        'active' => $this->routeIs('carreras.*'),
+                        'permiso' => 'carrera_indice',
+                    ],
+                    [
                         'label' => 'COLEGIOS',
                         'href' => route('mantenedor-colegios.index'),
                         'active' => $this->routeIs('mantenedor-colegios.*'),
                         'permiso' => 'colegio_indice',
+                    ],
+                    [
+                        'label' => 'SEDES',
+                        'href' => route('sedes.index'),
+                        'active' => $this->routeIs('sedes.*'),
+                        'permiso' => 'sede_indice',
                     ],
                     [
                         'label' => 'TIPOS DE EXPEDIENTE',

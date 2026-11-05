@@ -42,6 +42,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:aula_indice')
         ->name('mantenedor-aulas.index');
 
+    Route::livewire('/mantenedores/carreras', 'pages::mantenedores.carreras')
+        ->middleware('permiso:carrera_indice')
+        ->name('carreras.index');
+
+    Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
+        ->middleware('permiso:sede_indice')
+        ->name('sedes.index');
+
     Route::livewire('/mantenedores/colegios', 'pages::mantenedores.colegios')
         ->middleware('permiso:colegio_indice')
         ->name('mantenedor-colegios.index');
