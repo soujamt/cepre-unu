@@ -202,7 +202,7 @@
                             {{ $this->procesoSeleccionado?->nombre_pro ?? 'Seleccione un proceso' }}
                         </p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ $this->procesoSeleccionado ? $this->procesoSeleccionado->fecha_inicio_pro?->format('d/m/Y').' al '.$this->procesoSeleccionado->fecha_fin_pro?->format('d/m/Y') : 'Sin proceso seleccionado' }}
+                            {{ $this->procesoSeleccionado ? $this->procesoSeleccionado->fecha_inicio_pro?->format('d/m/Y h:i a').' al '.$this->procesoSeleccionado->fecha_fin_pro?->format('d/m/Y h:i a') : 'Sin proceso seleccionado' }}
                         </p>
                     </div>
 

@@ -106,7 +106,7 @@ class extends Component
                 },
             ],
             'procesoForm.fecha_inicio' => ['required', 'date'],
-            'procesoForm.fecha_fin' => ['required', 'date', 'after_or_equal:procesoForm.fecha_inicio'],
+            'procesoForm.fecha_fin' => ['required', 'date', 'after:procesoForm.fecha_inicio'],
         ];
     }
 
@@ -118,9 +118,9 @@ class extends Component
         return [
             'procesoForm.nombre.required' => 'El nombre es obligatorio.',
             'procesoForm.nombre.regex' => 'El nombre debe tener el formato AAAA-N, por ejemplo 2026-2.',
-            'procesoForm.fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
-            'procesoForm.fecha_fin.required' => 'La fecha de fin es obligatoria.',
-            'procesoForm.fecha_fin.after_or_equal' => 'La fecha final no puede ser menor que la fecha inicial.',
+            'procesoForm.fecha_inicio.required' => 'La fecha y hora de apertura es obligatoria.',
+            'procesoForm.fecha_fin.required' => 'La fecha y hora de cierre es obligatoria.',
+            'procesoForm.fecha_fin.after' => 'El cierre debe ser posterior a la apertura.',
         ];
     }
 
@@ -163,8 +163,8 @@ class extends Component
         $this->editingId = $proceso->id_pro;
         $this->procesoForm = [
             'nombre' => $proceso->nombre_pro,
-            'fecha_inicio' => $proceso->fecha_inicio_pro?->format('Y-m-d') ?? '',
-            'fecha_fin' => $proceso->fecha_fin_pro?->format('Y-m-d') ?? '',
+            'fecha_inicio' => $proceso->fecha_inicio_pro?->format('Y-m-d\TH:i') ?? '',
+            'fecha_fin' => $proceso->fecha_fin_pro?->format('Y-m-d\TH:i') ?? '',
         ];
         $this->tituloModal = 'Editar proceso';
         $this->isEdit = true;

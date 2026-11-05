@@ -15,7 +15,7 @@ class ProcesoInscripcionResolver
     {
         app(EstadoAcademicoSynchronizer::class)->sync($fecha);
 
-        $fechaReferencia = ($fecha ?? now())->toDateString();
+        $momento = $fecha ?? now();
 
         $proceso = Proceso::query()
             ->withCount([
@@ -23,35 +23,35 @@ class ProcesoInscripcionResolver
                     ->where('estado_pof', EstadoProceso::Habilitado->value),
             ])
             ->where('estado_pro', EstadoProceso::Habilitado->value)
-            ->whereDate('fecha_inicio_pro', '<=', $fechaReferencia)
-            ->whereDate('fecha_fin_pro', '>=', $fechaReferencia)
+            ->where('fecha_inicio_pro', '<=', $momento)
+            ->where('fecha_fin_pro', '>=', $momento)
             ->orderBy('fecha_inicio_pro')
             ->first();
 
         if ($proceso === null) {
             $ultimoProcesoCerrado = Proceso::query()
-                ->whereDate('fecha_fin_pro', '<', $fechaReferencia)
+                ->where('fecha_fin_pro', '<', $momento)
                 ->orderByDesc('fecha_fin_pro')
                 ->first();
 
             if ($ultimoProcesoCerrado?->fecha_fin_pro !== null) {
                 return [
                     'disponible' => false,
-                    'mensaje' => 'El ultimo proceso de inscripcion cerro el '.$ultimoProcesoCerrado->fecha_fin_pro->format('d/m/Y').'.',
+                    'mensaje' => 'El último proceso de inscripción cerró el '.$ultimoProcesoCerrado->fecha_fin_pro->format('d/m/Y \a \l\a\s h:i a').'.',
                     'proceso' => null,
                 ];
             }
 
             $proximoProceso = Proceso::query()
                 ->where('estado_pro', EstadoProceso::Habilitado->value)
-                ->whereDate('fecha_inicio_pro', '>', $fechaReferencia)
+                ->where('fecha_inicio_pro', '>', $momento)
                 ->orderBy('fecha_inicio_pro')
                 ->first();
 
             if ($proximoProceso?->fecha_inicio_pro !== null) {
                 return [
                     'disponible' => false,
-                    'mensaje' => 'El proximo proceso de inscripcion inicia el '.$proximoProceso->fecha_inicio_pro->format('d/m/Y').'.',
+                    'mensaje' => 'El próximo proceso de inscripción inicia el '.$proximoProceso->fecha_inicio_pro->format('d/m/Y \a \l\a\s h:i a').'.',
                     'proceso' => null,
                 ];
             }

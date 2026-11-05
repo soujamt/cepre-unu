@@ -83,8 +83,8 @@
                 <x-table.row>
                     <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
                     <x-table.heading>NOMBRE</x-table.heading>
-                    <x-table.heading>INICIO</x-table.heading>
-                    <x-table.heading>FIN</x-table.heading>
+                    <x-table.heading>APERTURA</x-table.heading>
+                    <x-table.heading>CIERRE</x-table.heading>
                     <x-table.heading>USO</x-table.heading>
                     <x-table.heading>ESTADO</x-table.heading>
                     <x-table.heading>REGISTRO</x-table.heading>
@@ -97,8 +97,14 @@
                     <x-table.row>
                         <x-table.cell>{{ $this->procesos->firstItem() + $loop->index }}</x-table.cell>
                         <x-table.cell class="font-medium text-zinc-800 dark:text-zinc-100">{{ $proceso->nombre_pro }}</x-table.cell>
-                        <x-table.cell>{{ $proceso->fecha_inicio_pro->format('d/m/Y') }}</x-table.cell>
-                        <x-table.cell>{{ $proceso->fecha_fin_pro->format('d/m/Y') }}</x-table.cell>
+                        <x-table.cell class="h-auto py-2">
+                            <span class="block tabular-nums">{{ $proceso->fecha_inicio_pro->format('d/m/Y') }}</span>
+                            <span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $proceso->fecha_inicio_pro->format('h:i a') }}</span>
+                        </x-table.cell>
+                        <x-table.cell class="h-auto py-2">
+                            <span class="block tabular-nums">{{ $proceso->fecha_fin_pro->format('d/m/Y') }}</span>
+                            <span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $proceso->fecha_fin_pro->format('h:i a') }}</span>
+                        </x-table.cell>
                         <x-table.cell>
                             {{ $proceso->procesos_oferta_count + $proceso->convenios_proceso_count + $proceso->reglas_pago_count + $proceso->requisitos_expediente_count }}
                         </x-table.cell>
@@ -208,8 +214,9 @@
                         />
 
                         <x-ui.input
-                            label="Fecha inicio"
-                            type="date"
+                            label="Apertura (fecha y hora)"
+                            type="datetime-local"
+                            hint="Desde este momento se aceptan inscripciones."
                             wire:model="procesoForm.fecha_inicio"
                             :invalid="$errors->has('procesoForm.fecha_inicio')"
                             :error="$errors->first('procesoForm.fecha_inicio')"
@@ -218,8 +225,9 @@
                         />
 
                         <x-ui.input
-                            label="Fecha fin"
-                            type="date"
+                            label="Cierre (fecha y hora)"
+                            type="datetime-local"
+                            hint="A esta hora el proceso se cierra automáticamente."
                             wire:model="procesoForm.fecha_fin"
                             :invalid="$errors->has('procesoForm.fecha_fin')"
                             :error="$errors->first('procesoForm.fecha_fin')"

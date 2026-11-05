@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Proceso de admisión. Su nombre identifica el periodo con el formato
- * AAAA-N (por ejemplo 2026-2) y sus fechas delimitan la inscripción.
+ * AAAA-N (por ejemplo 2026-2). La inscripción se abre en la fecha y hora de
+ * inicio y se cierra en la fecha y hora de fin (hora de America/Lima).
  */
 #[Fillable(['codigo_pro', 'nombre_pro', 'fecha_inicio_pro', 'fecha_fin_pro', 'estado_pro'])]
 #[Table('tbl_proceso', key: 'id_pro')]
@@ -20,8 +21,8 @@ class Proceso extends LegacyModel
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
-            'fecha_inicio_pro' => 'date',
-            'fecha_fin_pro' => 'date',
+            'fecha_inicio_pro' => 'datetime',
+            'fecha_fin_pro' => 'datetime',
             'estado_pro' => EstadoProceso::class,
         ]);
     }

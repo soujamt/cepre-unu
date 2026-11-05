@@ -1122,7 +1122,7 @@
                                     <div class="lg:col-span-6">
                                         <x-ui.input
                                             label="Vigencia"
-                                            :value="$procesoActivo ? $procesoActivo->fecha_inicio_pro?->format('d/m/Y').' al '.$procesoActivo->fecha_fin_pro?->format('d/m/Y') : null"
+                                            :value="$procesoActivo ? $procesoActivo->fecha_inicio_pro?->format('d/m/Y h:i a').' al '.$procesoActivo->fecha_fin_pro?->format('d/m/Y h:i a') : null"
                                             disabled
                                             floating
                                         />
@@ -1135,7 +1135,7 @@
                                     heading="{{ $contextoProceso['mensaje'] }}"
                                 >
                                     <p class="text-sm">
-                                        Ventana activa: {{ $procesoActivo?->fecha_inicio_pro?->format('d/m/Y') }} - {{ $procesoActivo?->fecha_fin_pro?->format('d/m/Y') }}
+                                        Ventana activa: {{ $procesoActivo?->fecha_inicio_pro?->format('d/m/Y h:i a') }} - {{ $procesoActivo?->fecha_fin_pro?->format('d/m/Y h:i a') }}
                                     </p>
                                 </flux:callout>
                             </section>

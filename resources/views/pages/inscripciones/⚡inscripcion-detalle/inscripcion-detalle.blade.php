@@ -84,7 +84,7 @@
             icon="layers"
             tono="info"
             detalle-icon="calendar"
-            :detalle="($inscripcionActual->procesoOferta?->proceso?->fecha_inicio_pro?->format('d/m/Y') ?? 'Sin fechas').' al '.($inscripcionActual->procesoOferta?->proceso?->fecha_fin_pro?->format('d/m/Y') ?? '—')"
+            :detalle="($inscripcionActual->procesoOferta?->proceso?->fecha_inicio_pro?->format('d/m/Y h:i a') ?? 'Sin fechas').' al '.($inscripcionActual->procesoOferta?->proceso?->fecha_fin_pro?->format('d/m/Y h:i a') ?? '—')"
             destacado
         />
 

@@ -245,8 +245,8 @@ class extends Component
     private function resolverProcesoActualPorDefecto(): string
     {
         $procesoVigente = Proceso::query()
-            ->whereDate('fecha_inicio_pro', '<=', now()->toDateString())
-            ->whereDate('fecha_fin_pro', '>=', now()->toDateString())
+            ->where('fecha_inicio_pro', '<=', now())
+            ->where('fecha_fin_pro', '>=', now())
             ->orderByDesc('fecha_inicio_pro')
             ->orderByDesc('id_pro')
             ->value('id_pro');

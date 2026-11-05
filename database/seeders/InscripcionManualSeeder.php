@@ -325,8 +325,8 @@ class InscripcionManualSeeder extends Seeder
             ->firstOrFail();
 
         $proceso->update([
-            'fecha_inicio_pro' => today()->subDays(15),
-            'fecha_fin_pro' => today()->addDays(30),
+            'fecha_inicio_pro' => today()->subDays(15)->startOfDay(),
+            'fecha_fin_pro' => today()->addDays(30)->endOfDay(),
             'estado_pro' => 'HABILITADO',
         ]);
     }

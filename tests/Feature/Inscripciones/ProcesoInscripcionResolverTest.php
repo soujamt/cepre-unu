@@ -65,7 +65,7 @@ test('resolver indicates when there is no active process for the current date', 
     $contexto = app(ProcesoInscripcionResolver::class)->resolver();
 
     expect($contexto['disponible'])->toBeFalse()
-        ->and($contexto['mensaje'])->toBe('El ultimo proceso de inscripcion cerro el 30/04/2026.')
+        ->and($contexto['mensaje'])->toBe('El último proceso de inscripción cerró el 30/04/2026 a las 11:59 pm.')
         ->and($contexto['proceso'])->toBeNull();
 
     expect(Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail()->estado_pro)
@@ -93,6 +93,39 @@ test('resolver indicates when the active process has no enabled offers', functio
         ->and($contexto['mensaje'])->toBe('El proceso activo no tiene ofertas habilitadas para inscripcion.')
         ->and($contexto['proceso'])->not->toBeNull()
         ->and($contexto['proceso']?->id_pro)->toBe($proceso->id_pro);
+
+    Carbon::setTestNow();
+});
+
+test('resolver opens and closes the process at the exact configured times', function () {
+    sembrarConfiguracionAcademicaInicial();
+
+    $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
+    $proceso->update([
+        'fecha_inicio_pro' => '2026-04-15 08:00:00',
+        'fecha_fin_pro' => '2026-04-20 18:00:00',
+    ]);
+
+    $resolver = app(ProcesoInscripcionResolver::class);
+
+    Carbon::setTestNow('2026-04-15 07:59:00');
+    $antesDeAbrir = $resolver->resolver();
+
+    expect($antesDeAbrir['disponible'])->toBeFalse()
+        ->and($antesDeAbrir['mensaje'])->toBe('El próximo proceso de inscripción inicia el 15/04/2026 a las 08:00 am.');
+
+    Carbon::setTestNow('2026-04-15 08:00:00');
+    expect($resolver->resolver()['disponible'])->toBeTrue();
+
+    Carbon::setTestNow('2026-04-20 18:00:00');
+    expect($resolver->resolver()['disponible'])->toBeTrue();
+
+    Carbon::setTestNow('2026-04-20 18:01:00');
+    $despuesDeCerrar = $resolver->resolver();
+
+    expect($despuesDeCerrar['disponible'])->toBeFalse()
+        ->and($despuesDeCerrar['mensaje'])->toBe('El último proceso de inscripción cerró el 20/04/2026 a las 06:00 pm.')
+        ->and($proceso->fresh()->estado_pro)->toBe(EstadoProceso::Cerrado);
 
     Carbon::setTestNow();
 });

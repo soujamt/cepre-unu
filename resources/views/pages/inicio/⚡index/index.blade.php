@@ -114,8 +114,8 @@
                         </div>
 
                         <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-                            <p><span class="font-medium text-zinc-900 dark:text-white">Inicio:</span> {{ $this->procesoActual->fecha_inicio_pro?->format('d/m/Y') ?? '—' }}</p>
-                            <p><span class="font-medium text-zinc-900 dark:text-white">Cierre:</span> {{ $this->procesoActual->fecha_fin_pro?->format('d/m/Y') ?? '—' }}</p>
+                            <p><span class="font-medium text-zinc-900 dark:text-white">Apertura:</span> {{ $this->procesoActual->fecha_inicio_pro?->format('d/m/Y h:i a') ?? '—' }}</p>
+                            <p><span class="font-medium text-zinc-900 dark:text-white">Cierre:</span> {{ $this->procesoActual->fecha_fin_pro?->format('d/m/Y h:i a') ?? '—' }}</p>
                         </div>
 
                         <div class="grid gap-3 sm:grid-cols-2">

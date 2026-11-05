@@ -87,14 +87,16 @@ test('authorized users can register a proceso', function () {
 
     Livewire::test('pages::configuracion-academica.procesos')
         ->set('procesoForm.nombre', '2026-2')
-        ->set('procesoForm.fecha_inicio', '2026-01-10')
-        ->set('procesoForm.fecha_fin', '2026-03-15')
+        ->set('procesoForm.fecha_inicio', '2026-01-10T08:00')
+        ->set('procesoForm.fecha_fin', '2026-03-15T18:30')
         ->call('guardar')
         ->assertHasNoErrors();
 
     $this->assertDatabaseHas('tbl_proceso', [
         'codigo_pro' => '2026_2',
         'nombre_pro' => '2026-2',
+        'fecha_inicio_pro' => '2026-01-10 08:00:00',
+        'fecha_fin_pro' => '2026-03-15 18:30:00',
         'estado_pro' => 'HABILITADO',
         'id_usuario_creador' => $usuario->id_usu,
         'id_usuario_actualizador' => $usuario->id_usu,
