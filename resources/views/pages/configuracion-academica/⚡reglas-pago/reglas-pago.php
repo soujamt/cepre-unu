@@ -6,7 +6,6 @@ use App\Models\ConvenioProceso;
 use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
 use App\Models\ReglaPago;
-use App\Models\Semestre;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -31,9 +30,6 @@ class extends Component
 
     #[Url(as: 'q')]
     public string $buscar = '';
-
-    #[Url(as: 'semestre')]
-    public string $idSemestre = '';
 
     #[Url(as: 'proceso')]
     public string $idProceso = '';
@@ -86,12 +82,6 @@ class extends Component
 
     public function updatedBuscar(): void
     {
-        $this->resetPage();
-    }
-
-    public function updatedIdSemestre(): void
-    {
-        $this->idProceso = '';
         $this->resetPage();
     }
 
@@ -384,27 +374,9 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresFiltroDisponibles(): Collection
-    {
-        return Semestre::query()
-            ->where(function (Builder $query): void {
-                $query->whereHas('procesos.reglasPago')
-                    ->orWhere(function (Builder $builder): void {
-                        $builder->where('estado_sem', EstadoCatalogo::Habilitado->value)
-                            ->whereHas('procesos', fn (Builder $procesoQuery) => $procesoQuery->where('estado_pro', EstadoCatalogo::Habilitado->value));
-                    });
-            })
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
-    #[Computed]
     public function procesosFiltroDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->where(function (Builder $query): void {
                 $query->whereHas('reglasPago')
                     ->orWhere('estado_pro', EstadoCatalogo::Habilitado->value);
@@ -421,7 +393,6 @@ class extends Component
             : null;
 
         return Proceso::query()
-            ->with('semestre')
             ->where(function (Builder $query) use ($procesoSeleccionado): void {
                 $query->where('estado_pro', EstadoCatalogo::Habilitado->value);
 
@@ -461,7 +432,6 @@ class extends Component
 
     public function limpiarFiltrosAcademicos(): void
     {
-        $this->idSemestre = '';
         $this->idProceso = '';
         $this->resetPage();
     }
@@ -667,7 +637,7 @@ class extends Component
         return ReglaPago::query()
             ->with([
                 'conceptoPago',
-                'proceso.semestre',
+                'proceso',
                 'modalidadAdmision',
                 'convenioProceso.convenio',
             ])
@@ -680,18 +650,13 @@ class extends Component
                         ->where('nombre_cpg', 'like', "%{$search}%")
                         ->orWhere('codigo_cpg', 'like', "%{$search}%"))
                         ->orWhereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
-                            ->where('nombre_pro', 'like', "%{$search}%")
-                            ->orWhereHas('semestre', fn (Builder $semestreQuery) => $semestreQuery
-                                ->where('nombre_sem', 'like', "%{$search}%")))
+                            ->where('nombre_pro', 'like', "%{$search}%"))
                         ->orWhereHas('modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
                             ->where('nombre_mad', 'like', "%{$search}%"))
                         ->orWhereHas('convenioProceso.convenio', fn (Builder $convenioQuery) => $convenioQuery
                             ->where('nombre_con', 'like', "%{$search}%"));
                 });
             })
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query
-                ->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
-                    ->where('id_semestre', (int) $this->idSemestre)))
             ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
             ->when($this->estadosSeleccionados !== [], fn (Builder $query) => $query->whereIn('estado_rpa', $this->estadosSeleccionados))
             ->orderByDesc('id_rpa')

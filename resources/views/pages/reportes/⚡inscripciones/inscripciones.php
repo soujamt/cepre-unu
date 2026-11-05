@@ -8,7 +8,6 @@ use App\Models\Inscripcion;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,9 +26,6 @@ new
 class extends Component
 {
     use AuthorizesPermisos;
-
-    #[Url(as: 'semestre')]
-    public string $idSemestre = '';
 
     #[Url(as: 'proceso')]
     public string $idProceso = '';
@@ -50,20 +46,14 @@ class extends Component
     {
         $this->autorizarPermiso('reporte_inscripcion', 'indice');
 
-        if ($this->idSemestre === '') {
-            $this->idSemestre = $this->resolverSemestreActualPorDefecto();
+        if ($this->idProceso === '') {
+            $this->idProceso = $this->resolverProcesoActualPorDefecto();
         }
-    }
-
-    public function updatedIdSemestre(): void
-    {
-        $this->idProceso = '';
     }
 
     public function limpiarFiltros(): void
     {
-        $this->idSemestre = $this->resolverSemestreActualPorDefecto();
-        $this->idProceso = '';
+        $this->idProceso = $this->resolverProcesoActualPorDefecto();
         $this->idModalidad = '';
         $this->idLugarInscripcion = '';
         $this->idTurno = '';
@@ -92,22 +82,10 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresDisponibles(): Collection
-    {
-        return Semestre::query()
-            ->whereHas('procesos.procesosOferta.inscripciones')
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
-    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
             ->whereHas('procesosOferta.inscripciones')
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -150,7 +128,7 @@ class extends Component
     {
         return $this->baseInscripcionesQuery()
             ->with([
-                'procesoOferta.proceso.semestre',
+                'procesoOferta.proceso',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
@@ -240,9 +218,6 @@ class extends Component
     private function baseInscripcionesQuery(): Builder
     {
         return Inscripcion::query()
-            ->when(filled($this->idSemestre), function (Builder $query): void {
-                $query->whereHas('procesoOferta.proceso', fn (Builder $builder) => $builder->where('id_semestre', (int) $this->idSemestre));
-            })
             ->when(filled($this->idProceso), function (Builder $query): void {
                 $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
             })
@@ -264,31 +239,31 @@ class extends Component
             ->when(filled($this->estadoInscripcion), fn (Builder $query) => $query->where('estado_ins', $this->estadoInscripcion));
     }
 
-    private function resolverSemestreActualPorDefecto(): string
+    /**
+     * Proceso vigente según sus fechas o, si no hay, el más reciente con inscripciones.
+     */
+    private function resolverProcesoActualPorDefecto(): string
     {
-        $semestre = Semestre::query()
-            ->whereDate('fecha_inicio_inscripcion_sem', '<=', now()->toDateString())
-            ->whereDate('fecha_fin_inscripcion_sem', '>=', now()->toDateString())
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->first();
+        $procesoVigente = Proceso::query()
+            ->whereDate('fecha_inicio_pro', '<=', now()->toDateString())
+            ->whereDate('fecha_fin_pro', '>=', now()->toDateString())
+            ->orderByDesc('fecha_inicio_pro')
+            ->orderByDesc('id_pro')
+            ->value('id_pro');
 
-        if ($semestre !== null) {
-            return (string) $semestre->id_sem;
+        if ($procesoVigente !== null) {
+            return (string) $procesoVigente;
         }
 
-        return (string) (Semestre::query()
-            ->whereHas('procesos.procesosOferta.inscripciones')
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->value('id_sem') ?? '');
+        return (string) (Proceso::query()
+            ->whereHas('procesosOferta.inscripciones')
+            ->orderByDesc('fecha_inicio_pro')
+            ->orderByDesc('id_pro')
+            ->value('id_pro') ?? '');
     }
 
     private function aplicarFiltrosRelacionados(Builder $query): void
     {
-        if (filled($this->idSemestre)) {
-            $query->whereHas('procesoOferta.proceso', fn (Builder $builder) => $builder->where('id_semestre', (int) $this->idSemestre));
-        }
 
         if (filled($this->idProceso)) {
             $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
@@ -297,9 +272,6 @@ class extends Component
 
     private function aplicarFiltrosTurno(Builder $query): void
     {
-        if (filled($this->idSemestre)) {
-            $query->whereHas('procesoOferta.proceso', fn (Builder $builder) => $builder->where('id_semestre', (int) $this->idSemestre));
-        }
 
         if (filled($this->idProceso)) {
             $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));

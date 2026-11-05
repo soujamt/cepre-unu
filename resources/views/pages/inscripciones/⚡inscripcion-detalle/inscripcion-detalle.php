@@ -46,7 +46,7 @@ class extends Component
                 'persona.identidadEtnica',
                 'persona.lenguaNativa',
                 'persona.lenguaExtranjera',
-                'procesoOferta.proceso.semestre',
+                'procesoOferta.proceso',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',

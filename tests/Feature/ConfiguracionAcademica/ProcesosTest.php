@@ -5,7 +5,6 @@ use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,28 +83,18 @@ test('authorized users can register a proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.procesos')
-        ->set('procesoForm.id_semestre', (string) $semestre->id_sem)
-        ->set('procesoForm.nombre', 'Proceso ordinario 2026-I')
+        ->set('procesoForm.nombre', '2026-2')
         ->set('procesoForm.fecha_inicio', '2026-01-10')
         ->set('procesoForm.fecha_fin', '2026-03-15')
         ->call('guardar')
         ->assertHasNoErrors();
 
     $this->assertDatabaseHas('tbl_proceso', [
-        'id_semestre' => $semestre->id_sem,
-        'codigo_pro' => 'proceso_ordinario_2026_i',
-        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+        'codigo_pro' => '2026_2',
+        'nombre_pro' => '2026-2',
         'estado_pro' => 'HABILITADO',
         'id_usuario_creador' => $usuario->id_usu,
         'id_usuario_actualizador' => $usuario->id_usu,
@@ -116,24 +105,7 @@ test('authorized users can update a proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_editar']);
 
-    $semestreA = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
-    $semestreB = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_ii',
-        'nombre_sem' => 'SEMESTRE 2026-II',
-        'fecha_inicio_inscripcion_sem' => '2026-04-01',
-        'fecha_fin_inscripcion_sem' => '2026-07-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestreA->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -145,8 +117,7 @@ test('authorized users can update a proceso', function () {
 
     Livewire::test('pages::configuracion-academica.procesos')
         ->call('cargarProceso', $proceso->id_pro)
-        ->set('procesoForm.id_semestre', (string) $semestreB->id_sem)
-        ->set('procesoForm.nombre', 'Proceso extraordinario 2026-II')
+        ->set('procesoForm.nombre', '2026-3')
         ->set('procesoForm.fecha_inicio', '2026-04-10')
         ->set('procesoForm.fecha_fin', '2026-07-15')
         ->call('guardar')
@@ -154,9 +125,8 @@ test('authorized users can update a proceso', function () {
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
-        'id_semestre' => $semestreB->id_sem,
-        'codigo_pro' => 'proceso_extraordinario_2026_ii',
-        'nombre_pro' => 'PROCESO EXTRAORDINARIO 2026-II',
+        'codigo_pro' => '2026_3',
+        'nombre_pro' => '2026-3',
         'id_usuario_actualizador' => $usuario->id_usu,
     ]);
 });
@@ -165,16 +135,7 @@ test('authorized users can change state of a proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_estado']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -195,22 +156,13 @@ test('authorized users can change state of a proceso', function () {
     ]);
 });
 
-test('semester filter includes closed semestres for historical process queries', function () {
+test('closed procesos are listed for historical queries', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice']);
 
-    $semestreCerrado = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'CERRADO',
-    ]);
-
-    Proceso::query()->create([
-        'id_semestre' => $semestreCerrado->id_sem,
-        'codigo_pro' => 'proceso_ordinario_2026_i',
-        'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
+    $procesoCerrado = Proceso::query()->create([
+        'codigo_pro' => '2026_1',
+        'nombre_pro' => '2026-1',
         'fecha_inicio_pro' => '2026-01-10',
         'fecha_fin_pro' => '2026-03-15',
         'estado_pro' => 'CERRADO',
@@ -219,7 +171,7 @@ test('semester filter includes closed semestres for historical process queries',
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.procesos')
-        ->assertSee($semestreCerrado->nombre_sem);
+        ->assertSee($procesoCerrado->nombre_pro);
 });
 
 test('expired proceso is synchronized as cerrado when listing page is loaded', function () {
@@ -228,16 +180,7 @@ test('expired proceso is synchronized as cerrado when listing page is loaded', f
 
     Carbon::setTestNow('2026-04-21 09:00:00');
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-04-30',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -263,16 +206,7 @@ test('expired proceso cannot be reenabled manually', function () {
 
     Carbon::setTestNow('2026-04-21 09:00:00');
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-04-30',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -297,16 +231,7 @@ test('authorized users can delete a proceso without configuraciones relacionadas
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_eliminar']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -326,20 +251,19 @@ test('authorized users can delete a proceso without configuraciones relacionadas
     expect($procesoEliminado?->id_usuario_eliminador)->toBe($usuario->id_usu);
 });
 
-test('proceso requires semestre and valid date range', function () {
+test('proceso requires the AAAA-N name format and a valid date range', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.procesos')
-        ->set('procesoForm.id_semestre', '')
         ->set('procesoForm.nombre', 'Proceso 2026-I')
         ->set('procesoForm.fecha_inicio', '2026-07-31')
         ->set('procesoForm.fecha_fin', '2026-04-01')
         ->call('guardar')
         ->assertHasErrors([
-            'procesoForm.id_semestre',
+            'procesoForm.nombre' => 'regex',
             'procesoForm.fecha_fin',
         ]);
 });

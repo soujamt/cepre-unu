@@ -23,7 +23,6 @@ use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\RequisitoExpediente;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
@@ -49,7 +48,7 @@ class InscripcionManualSeeder extends Seeder
         $this->activarProcesoDemo();
 
         $proceso = Proceso::query()
-            ->where('codigo_pro', 'ordinario_2026_1')
+            ->where('codigo_pro', '2026_1')
             ->firstOrFail();
 
         $turno = Turno::query()
@@ -321,19 +320,9 @@ class InscripcionManualSeeder extends Seeder
 
     private function activarProcesoDemo(): void
     {
-        $semestre = Semestre::query()
-            ->where('codigo_sem', '2026_1')
-            ->firstOrFail();
-
         $proceso = Proceso::query()
-            ->where('codigo_pro', 'ordinario_2026_1')
+            ->where('codigo_pro', '2026_1')
             ->firstOrFail();
-
-        $semestre->update([
-            'fecha_inicio_inscripcion_sem' => today()->subDays(15),
-            'fecha_fin_inscripcion_sem' => today()->addDays(30),
-            'estado_sem' => 'HABILITADO',
-        ]);
 
         $proceso->update([
             'fecha_inicio_pro' => today()->subDays(15),

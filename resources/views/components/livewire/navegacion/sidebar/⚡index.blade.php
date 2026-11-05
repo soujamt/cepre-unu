@@ -50,7 +50,6 @@ new class extends Component
                 'icon' => 'cog',
                 'active' => $this->routeIs(
                     'configuraciones.*',
-                    'semestres.*',
                     'procesos.*',
                     'ofertas.*',
                     'convenios.*',
@@ -60,7 +59,6 @@ new class extends Component
                     'aulas.*'
                 ),
                 'items' => [
-                    ['label' => 'SEMESTRES', 'href' => route('semestres.index'), 'active' => $this->routeIs('semestres.*'), 'permiso' => 'semestre_indice'],
                     ['label' => 'PROCESOS', 'href' => route('procesos.index'), 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
                     ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],

@@ -7,7 +7,6 @@ use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -208,16 +207,7 @@ test('authenticated users cannot delete an aula with proceso assignments', funct
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_eliminar']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_1',
-        'nombre_sem' => 'SEMESTRE 2026-1',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_1',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-1',
         'fecha_inicio_pro' => '2026-01-10',

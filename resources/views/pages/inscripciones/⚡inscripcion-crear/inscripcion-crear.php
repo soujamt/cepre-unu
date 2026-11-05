@@ -259,7 +259,7 @@ class extends Component
             ->with([
                 'persona.ubigeoNacimiento',
                 'persona.ubigeoDomicilio',
-                'procesoOferta.proceso.semestre',
+                'procesoOferta.proceso',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.turno',
@@ -519,7 +519,7 @@ class extends Component
 
         return ProcesoOferta::query()
             ->with([
-                'proceso.semestre',
+                'proceso',
                 'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
                 'ofertaBase.sedeCarrera.sede',
@@ -632,7 +632,7 @@ class extends Component
         return Inscripcion::query()
             ->with([
                 'persona',
-                'procesoOferta.proceso.semestre',
+                'procesoOferta.proceso',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',

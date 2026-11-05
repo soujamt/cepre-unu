@@ -30,17 +30,6 @@
             </flux:input>
         </div>
 
-        <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
-                <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
-                    <option wire:key="semestre-proceso-filtro-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                        {{ $semestre->nombre_sem }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-        </div>
-
         <div class="w-full sm:w-auto">
             <flux:dropdown>
                 <flux:button class="w-full font-normal" icon:trailing="chevron-down">
@@ -63,17 +52,8 @@
                         </flux:menu.checkbox>
                     @endforeach
 
-                    @if ($idSemestre !== '' || count($this->estadosSeleccionados) > 0)
+                    @if (count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-                        @if ($idSemestre !== '')
-                            <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
-                                <x-slot name="icon">
-                                    <x-ui.icon name="x" size="4" class="me-2" />
-                                </x-slot>
-                                Limpiar filtro académico
-                            </flux:menu.item>
-                        @endif
-
                         @if (count($this->estadosSeleccionados) > 0)
                             <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                                 <x-slot name="icon">
@@ -103,7 +83,6 @@
                 <x-table.row>
                     <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
                     <x-table.heading>NOMBRE</x-table.heading>
-                    <x-table.heading>SEMESTRE</x-table.heading>
                     <x-table.heading>INICIO</x-table.heading>
                     <x-table.heading>FIN</x-table.heading>
                     <x-table.heading>USO</x-table.heading>
@@ -118,7 +97,6 @@
                     <x-table.row>
                         <x-table.cell>{{ $this->procesos->firstItem() + $loop->index }}</x-table.cell>
                         <x-table.cell class="font-medium text-zinc-800 dark:text-zinc-100">{{ $proceso->nombre_pro }}</x-table.cell>
-                        <x-table.cell>{{ $proceso->semestre?->nombre_sem }}</x-table.cell>
                         <x-table.cell>{{ $proceso->fecha_inicio_pro->format('d/m/Y') }}</x-table.cell>
                         <x-table.cell>{{ $proceso->fecha_fin_pro->format('d/m/Y') }}</x-table.cell>
                         <x-table.cell>
@@ -178,7 +156,7 @@
                     </x-table.row>
                 @empty
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
-                        <x-table.cell colspan="9" class="h-auto py-10 text-center whitespace-normal">
+                        <x-table.cell colspan="8" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <x-ui.icon name="receipt" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron procesos.</p>
@@ -192,12 +170,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -218,29 +196,13 @@
 
                 <form wire:submit="guardar" class="space-y-5">
                     <div class="space-y-5 px-5">
-                        <x-ui.select
-                            label="Semestre"
-                            wire:model.live="procesoForm.id_semestre"
-                            :invalid="$errors->has('procesoForm.id_semestre')"
-                            :error="$errors->first('procesoForm.id_semestre')"
-                            required
-                            floating
-                        >
-                            <option value="">Seleccionar semestre</option>
-                            @foreach ($this->semestresDisponibles as $semestre)
-                                <option wire:key="semestre-disponible-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                                    {{ $semestre->nombre_sem }}
-                                </option>
-                            @endforeach
-                        </x-ui.select>
-
                         <x-ui.input
                             label="Nombre"
                             type="text"
                             wire:model="procesoForm.nombre"
                             :invalid="$errors->has('procesoForm.nombre')"
                             :error="$errors->first('procesoForm.nombre')"
-                            hint="El código se genera automáticamente desde el nombre."
+                            hint="Use el formato AAAA-N, por ejemplo 2026-2 (año y número del periodo)."
                             required
                             floating
                         />

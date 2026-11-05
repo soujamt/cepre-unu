@@ -18,7 +18,6 @@ class ProcesoInscripcionResolver
         $fechaReferencia = ($fecha ?? now())->toDateString();
 
         $proceso = Proceso::query()
-            ->with('semestre')
             ->withCount([
                 'procesosOferta as ofertas_activas_count' => fn ($query) => $query
                     ->where('estado_pof', EstadoProceso::Habilitado->value),
@@ -26,16 +25,11 @@ class ProcesoInscripcionResolver
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->whereDate('fecha_inicio_pro', '<=', $fechaReferencia)
             ->whereDate('fecha_fin_pro', '>=', $fechaReferencia)
-            ->whereHas('semestre', fn ($query) => $query
-                ->where('estado_sem', EstadoProceso::Habilitado->value)
-                ->whereDate('fecha_inicio_inscripcion_sem', '<=', $fechaReferencia)
-                ->whereDate('fecha_fin_inscripcion_sem', '>=', $fechaReferencia))
             ->orderBy('fecha_inicio_pro')
             ->first();
 
         if ($proceso === null) {
             $ultimoProcesoCerrado = Proceso::query()
-                ->with('semestre')
                 ->whereDate('fecha_fin_pro', '<', $fechaReferencia)
                 ->orderByDesc('fecha_fin_pro')
                 ->first();
@@ -49,7 +43,6 @@ class ProcesoInscripcionResolver
             }
 
             $proximoProceso = Proceso::query()
-                ->with('semestre')
                 ->where('estado_pro', EstadoProceso::Habilitado->value)
                 ->whereDate('fecha_inicio_pro', '>', $fechaReferencia)
                 ->orderBy('fecha_inicio_pro')

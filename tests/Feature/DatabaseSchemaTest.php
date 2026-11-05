@@ -224,17 +224,9 @@ function createInscripcionContext(): array
         'nombre_tur' => 'Manana',
         'estado_tur' => 'HABILITADO',
     ], 'id_tur');
-    $semestreId = (int) DB::table('tbl_semestre')->insertGetId([
-        'codigo_sem' => fake()->unique()->lexify('SEM????'),
-        'nombre_sem' => '2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-01',
-        'fecha_fin_inscripcion_sem' => '2026-06-30',
-        'estado_sem' => 'HABILITADO',
-    ], 'id_sem');
     $procesoId = (int) DB::table('tbl_proceso')->insertGetId([
-        'id_semestre' => $semestreId,
         'codigo_pro' => fake()->unique()->lexify('PRO????'),
-        'nombre_pro' => 'Ordinario 2026-I',
+        'nombre_pro' => '2026-1',
         'fecha_inicio_pro' => '2026-01-01',
         'fecha_fin_pro' => '2026-03-31',
         'estado_pro' => 'HABILITADO',

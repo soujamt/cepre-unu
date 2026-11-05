@@ -6,37 +6,25 @@ use App\Models\Inscripcion;
 use App\Models\ProcesoOferta;
 
 /**
- * Genera el codigo visible de una inscripcion con el formato
- * {AA}{S}{PRO}{NNNN}: los dos ultimos digitos del anio y el numero del
- * semestre (de codigo_sem, por ejemplo "2026_1"), las tres primeras letras
- * del codigo del proceso en mayusculas y el correlativo de la inscripcion
- * dentro del proceso con cuatro digitos. Ejemplo: 261ORD0001.
+ * Genera el código visible de una inscripción con el formato {AA}{N}{NNNN}:
+ * los dos últimos dígitos del año y el número del periodo, tomados del nombre
+ * del proceso (por ejemplo "2026-2"), y el correlativo de la inscripción dentro
+ * del proceso con cuatro dígitos. Ejemplo: 2620001.
  */
 class GeneradorCodigoInscripcion
 {
     public function generar(Inscripcion $inscripcion): string
     {
-        $procesoOferta = ProcesoOferta::query()
-            ->with(['proceso.semestre'])
-            ->find($inscripcion->id_proceso_oferta);
+        $proceso = ProcesoOferta::query()
+            ->with('proceso')
+            ->find($inscripcion->id_proceso_oferta)
+            ?->proceso;
 
-        $proceso = $procesoOferta?->proceso;
-        $semestre = $proceso?->semestre;
+        $anio = $proceso?->anioPeriodo() ?? (int) now()->format('Y');
+        $numeroPeriodo = $proceso?->numeroPeriodo() ?? 0;
 
-        [$anio, $numeroSemestre] = array_pad(
-            explode('_', (string) ($semestre?->codigo_sem ?? '0_0')),
-            2,
-            '0',
-        );
-
-        $anio = substr($anio, -2);
-
-        $codigoProceso = mb_strtoupper(
-            mb_substr((string) ($proceso?->codigo_pro ?? 'PRO'), 0, 3, 'UTF-8'),
-            'UTF-8',
-        );
-
-        $correlativo = Inscripcion::query()
+        // Incluye las inscripciones eliminadas para no reutilizar un correlativo
+        $correlativo = Inscripcion::withTrashed()
             ->whereHas(
                 'procesoOferta',
                 fn ($query) => $query->where('id_proceso', $proceso?->id_pro),
@@ -44,6 +32,6 @@ class GeneradorCodigoInscripcion
             ->where('id_ins', '<=', $inscripcion->id_ins)
             ->count();
 
-        return "{$anio}{$numeroSemestre}{$codigoProceso}".str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
+        return substr((string) $anio, -2).$numeroPeriodo.str_pad((string) $correlativo, 4, '0', STR_PAD_LEFT);
     }
 }

@@ -18,7 +18,7 @@
     <x-resumen
         class="transition-opacity duration-200"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
+        wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
     >
         <x-resumen.item
             label="Total inscritas"
@@ -98,23 +98,12 @@
     {{-- Filtros principales + filtros secundarios --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
 
-        <div class="w-full sm:w-36">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Semestre">
-                <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
-                    <option wire:key="semestre-inscripcion-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                        {{ $semestre->nombre_sem }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-        </div>
-
-        <div class="w-full sm:w-52">
+        <div class="w-full sm:w-44">
             <x-ui.select wire:model.live="idProceso" placeholder="Todos los procesos">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
                     <option wire:key="proceso-inscripcion-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                        Proceso {{ $proceso->nombre_pro }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -431,12 +420,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

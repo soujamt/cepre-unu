@@ -13,7 +13,6 @@ use App\Models\ProcesoOferta;
 use App\Models\Rol;
 use App\Models\Sede;
 use App\Models\SedeCarrera;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
@@ -209,20 +208,11 @@ test('users can filter ofertas base by modalidad and lugar de inscripcion', func
         ->assertDontSee((string) $contextoA['ofertaBase']->codigo_externo_ofb);
 });
 
-test('closed semester loads its procesos in ofertas filters', function () {
+test('closed procesos are listed in ofertas filters', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_indice']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'CERRADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -233,8 +223,6 @@ test('closed semester loads its procesos in ofertas filters', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.ofertas')
-        ->assertSee($semestre->nombre_sem)
-        ->set('idSemestre', (string) $semestre->id_sem)
         ->assertSee($proceso->nombre_pro);
 });
 
@@ -255,16 +243,7 @@ test('users can select all visible ofertas base except already assigned ones', f
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_crear']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -305,16 +284,7 @@ test('authorized users can register multiple ofertas por proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_crear']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -359,16 +329,7 @@ test('authorized users can update an oferta por proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_indice', 'oferta_editar']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $procesoA = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -377,7 +338,6 @@ test('authorized users can update an oferta por proceso', function () {
     ]);
 
     $procesoB = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_extraordinario_2026_i',
         'nombre_pro' => 'PROCESO EXTRAORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-02-01',
@@ -418,16 +378,7 @@ test('authorized users can change state of an oferta por proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_indice', 'oferta_estado']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -461,16 +412,7 @@ test('authorized users can delete an oferta por proceso without inscripciones', 
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_indice', 'oferta_eliminar']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',
@@ -503,16 +445,7 @@ test('oferta validates duplicate combination and required fields', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOferta($usuario, ['oferta_crear']);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-01-10',

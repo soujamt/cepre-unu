@@ -30,23 +30,13 @@
             </flux:input>
         </div>
 
-        <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
-                <option value="">Todos los semestres</option>
-                @foreach ($this->semestresFiltroDisponibles as $semestre)
-                    <option wire:key="semestre-regla-pago-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                        {{ $semestre->nombre_sem }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-        </div>
 
         <div class="w-full sm:w-52">
-            <x-ui.select wire:model.live="idProceso" wire:key="reglas-proceso-filtro-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}" placeholder="Filtrar por proceso">
+            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosFiltroDisponibles as $proceso)
                     <option wire:key="proceso-regla-pago-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                        {{ $proceso->nombre_pro }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -74,9 +64,9 @@
                         </flux:menu.checkbox>
                     @endforeach
 
-                    @if ($idSemestre !== '' || $idProceso !== '' || count($this->estadosSeleccionados) > 0)
+                    @if ($idProceso !== '' || count($this->estadosSeleccionados) > 0)
                         <flux:menu.separator />
-                        @if ($idSemestre !== '' || $idProceso !== '')
+                        @if ($idProceso !== '')
                             <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
                                 <x-slot name="icon">
                                     <x-ui.icon name="x" size="4" class="me-2" />
@@ -151,9 +141,6 @@
                                             {{ $reglaPago->convenioProceso->convenio->nombre_con }}
                                         </flux:badge>
                                     @endif
-                                </div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">
-                                    {{ $reglaPago->proceso?->semestre?->nombre_sem }}
                                 </div>
                             </div>
                         </x-table.cell>
@@ -259,12 +246,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idProceso, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -330,7 +317,7 @@
                                             wire:key="regla-proceso-{{ $proceso->id_pro }}"
                                             value="{{ $proceso->id_pro }}"
                                         >
-                                            {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                            {{ $proceso->nombre_pro }}
                                         </option>
                                     @endforeach
                                 </x-ui.select>

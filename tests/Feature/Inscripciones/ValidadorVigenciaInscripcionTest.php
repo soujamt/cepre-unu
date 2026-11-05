@@ -43,7 +43,7 @@ beforeEach(function () {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
 
-    $this->proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $this->proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
     $this->procesoOferta = ProcesoOferta::query()
         ->where('id_proceso', $this->proceso->id_pro)
         ->where('estado_pof', EstadoProceso::Habilitado->value)

@@ -21,7 +21,7 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-1">
                 <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Resumen operativo del proceso</h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por semestre, proceso, modalidad, turno, lugar y convenio.</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por proceso, modalidad, turno, lugar y convenio.</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -51,16 +51,6 @@
         </div>
 
         <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-            <div class="w-full sm:w-40">
-                <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
-                    <option value="">Todos los semestres</option>
-                    @foreach ($this->semestresDisponibles as $semestre)
-                        <option wire:key="reporte-semestre-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                            {{ $semestre->nombre_sem }}
-                        </option>
-                    @endforeach
-                </x-ui.select>
-            </div>
 
             <div class="w-full sm:w-56">
                 <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
@@ -125,7 +115,7 @@
 
     <x-resumen
         wire:loading.class="opacity-60"
-        wire:target="idSemestre,idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
+        wire:target="idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
     >
         <x-resumen.item
             label="Total inscritos"

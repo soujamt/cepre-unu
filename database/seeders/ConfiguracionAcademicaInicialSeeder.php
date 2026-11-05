@@ -14,7 +14,6 @@ use App\Models\Proceso;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\RequisitoExpediente;
-use App\Models\Semestre;
 use App\Models\TipoExpediente;
 use App\Models\Turno;
 use Illuminate\Database\Seeder;
@@ -23,21 +22,10 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
 {
     public function run(): void
     {
-        $semestre = Semestre::query()->updateOrCreate(
-            ['codigo_sem' => '2026_1'],
-            [
-                'nombre_sem' => '2026-1',
-                'fecha_inicio_inscripcion_sem' => '2026-04-01',
-                'fecha_fin_inscripcion_sem' => '2026-04-30',
-                'estado_sem' => EstadoProceso::Habilitado->value,
-            ],
-        );
-
         $proceso = Proceso::query()->updateOrCreate(
-            ['codigo_pro' => 'ordinario_2026_1'],
+            ['codigo_pro' => '2026_1'],
             [
-                'id_semestre' => $semestre->id_sem,
-                'nombre_pro' => 'ORDINARIO',
+                'nombre_pro' => '2026-1',
                 'fecha_inicio_pro' => '2026-04-01',
                 'fecha_fin_pro' => '2026-04-30',
                 'estado_pro' => EstadoProceso::Habilitado->value,

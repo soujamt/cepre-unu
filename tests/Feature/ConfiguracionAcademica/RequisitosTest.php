@@ -6,7 +6,6 @@ use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\RequisitoExpediente;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\TipoExpediente;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -57,16 +56,8 @@ function otorgarPermisosRequisito(Usuario $usuario, array $claves): void
 
 function crearProcesoRequisito(int $indice): Proceso
 {
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "semestre_2026_{$indice}",
-        'nombre_sem' => "SEMESTRE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
 
     return Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "proceso_{$indice}",
         'nombre_pro' => "PROCESO {$indice}",
         'fecha_inicio_pro' => '2026-01-10',
@@ -143,20 +134,11 @@ test('new enabled procesos are available in requisito form even without requisit
         ->assertSee($proceso->nombre_pro);
 });
 
-test('requisito filters include historical semesters and enabled current semesters', function () {
+test('requisito filters include historical and enabled current procesos', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosRequisito($usuario, ['requisito_expediente_indice']);
 
-    $semestreHistorico = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_1',
-        'nombre_sem' => '2026-1',
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'CERRADO',
-    ]);
-
     $procesoHistorico = Proceso::query()->create([
-        'id_semestre' => $semestreHistorico->id_sem,
         'codigo_pro' => 'ordinario_2026_1',
         'nombre_pro' => 'ORDINARIO',
         'fecha_inicio_pro' => '2026-01-10',
@@ -178,11 +160,8 @@ test('requisito filters include historical semesters and enabled current semeste
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.requisitos')
-        ->assertSee($semestreHistorico->nombre_sem)
         ->assertSee($procesoHistorico->nombre_pro)
-        ->assertSee($procesoActual->semestre->nombre_sem)
-        ->set('idSemestre', (string) $semestreHistorico->id_sem)
-        ->assertSee($procesoHistorico->nombre_pro);
+        ->assertSee($procesoActual->nombre_pro);
 });
 
 test('authorized users can update a requisito', function () {

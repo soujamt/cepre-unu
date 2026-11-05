@@ -20,27 +20,11 @@
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div class="space-y-5">
             <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
-                <div class="grid gap-4 lg:grid-cols-4">
-                    <div class="min-w-0">
-                        <x-ui.select
-                            label="Semestre"
-                            wire:model.live="idSemestre"
-                            floating
-                        >
-                            <option value="">Todos los semestres</option>
-                            @foreach ($this->semestresDisponibles as $semestre)
-                                <option wire:key="semestre-aula-asignar-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                                    {{ $semestre->nombre_sem }}
-                                </option>
-                            @endforeach
-                        </x-ui.select>
-                    </div>
-
+                <div class="grid gap-4 lg:grid-cols-3">
                     <div class="min-w-0">
                         <x-ui.select
                             label="Proceso"
                             wire:model.live="idProceso"
-                            wire:key="aulas-asignar-proceso-select-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}"
                             :invalid="$errors->has('idProceso')"
                             :error="$errors->first('idProceso')"
                             required
@@ -49,7 +33,7 @@
                             <option value="">Seleccionar proceso</option>
                             @foreach ($this->procesosDisponibles as $proceso)
                                 <option wire:key="proceso-asignar-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                                    {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                    {{ $proceso->nombre_pro }}
                                 </option>
                             @endforeach
                         </x-ui.select>
@@ -188,12 +172,12 @@
                     <div
                         class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
                         wire:loading
-                        wire:target="buscar, idSemestre, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
+                        wire:target="buscar, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
                     ></div>
                     <div
                         class="absolute inset-0 flex items-center justify-center"
                         wire:loading.flex
-                        wire:target="buscar, idSemestre, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
+                        wire:target="buscar, idProceso, idTurno, seleccionadas, guardar, seleccionarTodasLasAulasVisibles, limpiarSeleccionadasVisibles"
                     >
                         <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
                     </div>
@@ -218,7 +202,7 @@
                             {{ $this->procesoSeleccionado?->nombre_pro ?? 'Seleccione un proceso' }}
                         </p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ $this->procesoSeleccionado?->semestre?->nombre_sem ?? 'Sin semestre seleccionado' }}
+                            {{ $this->procesoSeleccionado ? $this->procesoSeleccionado->fecha_inicio_pro?->format('d/m/Y').' al '.$this->procesoSeleccionado->fecha_fin_pro?->format('d/m/Y') : 'Sin proceso seleccionado' }}
                         </p>
                     </div>
 

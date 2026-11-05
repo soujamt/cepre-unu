@@ -69,7 +69,7 @@
                     <div class="grid gap-5 px-6 py-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(18rem,0.9fr)]">
                         <div class="space-y-4">
                             <flux:callout variant="warning" icon="exclamation-circle" heading="{{ $contextoProceso['mensaje'] }}">
-                                <p class="text-sm">Cuando se habilite un semestre y un proceso vigentes con ofertas activas, este formulario volverá a estar disponible automáticamente.</p>
+                                <p class="text-sm">Cuando se habilite un proceso vigente con ofertas activas, este formulario volverá a estar disponible automáticamente.</p>
                             </flux:callout>
 
                             <div class="space-y-2">
@@ -79,8 +79,7 @@
                                     class="divide-y divide-zinc-200/80 rounded-xl border border-zinc-200/80 bg-zinc-50/60 dark:divide-white/[0.06] dark:border-white/[0.06] dark:bg-zinc-950/40"
                                 >
                                     @foreach ([
-                                        ['icono' => 'calendar', 'titulo' => 'Semestre', 'texto' => 'Debe encontrarse vigente según sus fechas de inscripción.'],
-                                        ['icono' => 'cog', 'titulo' => 'Proceso', 'texto' => 'Debe estar habilitado y dentro de su ventana de atención.'],
+                                        ['icono' => 'calendar', 'titulo' => 'Proceso', 'texto' => 'Debe estar habilitado y con la fecha actual dentro de su periodo de inscripción.'],
                                         ['icono' => 'layers', 'titulo' => 'Ofertas', 'texto' => 'Se requiere al menos una oferta activa para continuar con la postulación.'],
                                     ] as $requisito)
                                         <li class="flex items-start gap-3 px-4 py-3">
@@ -109,7 +108,7 @@
                                 <div class="space-y-3">
                                     <div class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/[0.06] dark:bg-zinc-900/60 shadow-card">
                                         <x-ui.icon name="calendar-check" size="5" class="mt-0.5 text-emerald-500" />
-                                        <p class="text-sm text-zinc-600 dark:text-zinc-300">Verifique que las fechas del semestre y del proceso incluyan el día actual.</p>
+                                        <p class="text-sm text-zinc-600 dark:text-zinc-300">Verifique que las fechas de inicio y fin del proceso incluyan el día actual.</p>
                                     </div>
 
                                     <div class="flex items-start gap-3 rounded-xl border border-zinc-200/80 bg-white/80 p-3 dark:border-white/[0.06] dark:bg-zinc-900/60 shadow-card">
@@ -1113,8 +1112,8 @@
                                 <div class="grid gap-4 lg:grid-cols-12">
                                     <div class="lg:col-span-6">
                                         <x-ui.input
-                                            label="Semestre"
-                                            :value="$procesoActivo?->semestre?->nombre_sem"
+                                            label="Proceso"
+                                            :value="$procesoActivo?->nombre_pro"
                                             disabled
                                             floating
                                         />
@@ -1122,8 +1121,8 @@
 
                                     <div class="lg:col-span-6">
                                         <x-ui.input
-                                            label="Proceso"
-                                            :value="$procesoActivo?->nombre_pro"
+                                            label="Vigencia"
+                                            :value="$procesoActivo ? $procesoActivo->fecha_inicio_pro?->format('d/m/Y').' al '.$procesoActivo->fecha_fin_pro?->format('d/m/Y') : null"
                                             disabled
                                             floating
                                         />

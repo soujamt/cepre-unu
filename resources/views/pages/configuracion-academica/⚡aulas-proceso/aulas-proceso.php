@@ -3,7 +3,6 @@
 use App\Enums\EstadoCatalogo;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -31,9 +30,6 @@ class extends Component
 
     #[Url(as: 'proceso')]
     public string $idProceso = '';
-
-    #[Url(as: 'semestre')]
-    public string $idSemestre = '';
 
     #[Url(as: 'turno')]
     public string $idTurno = '';
@@ -68,13 +64,6 @@ class extends Component
         $this->resetPage();
     }
 
-    public function updatedIdSemestre(): void
-    {
-        $this->idProceso = '';
-        $this->idTurno = '';
-        $this->resetPage();
-    }
-
     public function updatedIdTurno(): void
     {
         $this->resetPage();
@@ -87,7 +76,6 @@ class extends Component
 
     public function limpiarFiltrosAcademicos(): void
     {
-        $this->idSemestre = '';
         $this->idProceso = '';
         $this->idTurno = '';
         $this->resetPage();
@@ -114,21 +102,9 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresDisponibles(): Collection
-    {
-        return Semestre::query()
-            ->whereHas('procesos')
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
-    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -140,12 +116,6 @@ class extends Component
             ->whereHas('procesoAulas', function (Builder $query): void {
                 if (filled($this->idProceso)) {
                     $query->where('id_proceso', (int) $this->idProceso);
-
-                    return;
-                }
-
-                if (filled($this->idSemestre)) {
-                    $query->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery->where('id_semestre', (int) $this->idSemestre));
                 }
             })
             ->where('estado_tur', EstadoCatalogo::Habilitado->value)
@@ -157,7 +127,7 @@ class extends Component
     public function asignaciones(): LengthAwarePaginator
     {
         return ProcesoAula::query()
-            ->with(['proceso.semestre', 'aula', 'turno'])
+            ->with(['proceso', 'aula', 'turno'])
             ->withCount('inscripciones')
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
@@ -169,15 +139,9 @@ class extends Component
                             ->orWhere('piso_aul', 'like', "%{$search}%");
                     })->orWhereHas('proceso', function (Builder $procesoQuery) use ($search): void {
                         $procesoQuery->where('nombre_pro', 'like', "%{$search}%")
-                            ->orWhere('codigo_pro', 'like', "%{$search}%")
-                            ->orWhereHas('semestre', fn (Builder $semestreQuery) => $semestreQuery
-                                ->where('nombre_sem', 'like', "%{$search}%"));
+                            ->orWhere('codigo_pro', 'like', "%{$search}%");
                     });
                 });
-            })
-            ->when(filled($this->idSemestre), function (Builder $query): void {
-                $query->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
-                    ->where('id_semestre', (int) $this->idSemestre));
             })
             ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
             ->when(filled($this->idTurno), fn (Builder $query) => $query->where('id_turno', (int) $this->idTurno))

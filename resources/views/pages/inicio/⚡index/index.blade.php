@@ -114,7 +114,6 @@
                         </div>
 
                         <div class="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
-                            <p><span class="font-medium text-zinc-900 dark:text-white">Semestre:</span> {{ $this->procesoActual->semestre?->nombre_sem }}</p>
                             <p><span class="font-medium text-zinc-900 dark:text-white">Inicio:</span> {{ $this->procesoActual->fecha_inicio_pro?->format('d/m/Y') ?? '—' }}</p>
                             <p><span class="font-medium text-zinc-900 dark:text-white">Cierre:</span> {{ $this->procesoActual->fecha_fin_pro?->format('d/m/Y') ?? '—' }}</p>
                         </div>
@@ -363,7 +362,7 @@
             ],
             [
                 'label' => 'Conf. Académica',
-                'descripcion' => 'Administra semestres, procesos, ofertas y convenios',
+                'descripcion' => 'Administra procesos, ofertas, aulas y convenios',
                 'icon' => 'cog',
                 'href' => route('procesos.index'),
                 'icon_class' => 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',

@@ -4,7 +4,6 @@ use App\Enums\EstadoCatalogo;
 use App\Models\Aula;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,8 +25,6 @@ class extends Component
 
     public string $idProceso = '';
 
-    public string $idSemestre = '';
-
     public string $idTurno = '';
 
     /**
@@ -47,13 +44,6 @@ class extends Component
 
     public function updatedBuscar(): void {}
 
-    public function updatedIdSemestre(): void
-    {
-        $this->idProceso = '';
-        $this->idTurno = '';
-        $this->limpiarSeleccionadasVisibles();
-    }
-
     public function updatedIdProceso(): void
     {
         $this->idTurno = '';
@@ -66,21 +56,9 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresDisponibles(): Collection
-    {
-        return Semestre::query()
-            ->whereHas('procesos')
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
-    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -93,7 +71,6 @@ class extends Component
         }
 
         return Proceso::query()
-            ->with('semestre')
             ->find((int) $this->idProceso);
     }
 

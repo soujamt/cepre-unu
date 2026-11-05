@@ -10,7 +10,6 @@ use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\ReglaPago;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -59,20 +58,12 @@ function otorgarPermisosReglaPago(Usuario $usuario, array $claves): void
 }
 
 /**
- * @return array{semestre: Semestre, proceso: Proceso, conceptoPago: ConceptoPago, modalidad: ModalidadAdmision, convenioProceso: ConvenioProceso}
+ * @return array{proceso: Proceso, conceptoPago: ConceptoPago, modalidad: ModalidadAdmision, convenioProceso: ConvenioProceso}
  */
 function crearContextoReglaPago(int $indice, bool $permiteCuotasConcepto = true): array
 {
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "semestre_2026_{$indice}",
-        'nombre_sem' => "SEMESTRE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
 
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "proceso_{$indice}",
         'nombre_pro' => "PROCESO {$indice}",
         'fecha_inicio_pro' => '2026-01-10',
@@ -112,7 +103,7 @@ function crearContextoReglaPago(int $indice, bool $permiteCuotasConcepto = true)
         'estado_cpr' => 'HABILITADO',
     ]);
 
-    return compact('semestre', 'proceso', 'conceptoPago', 'modalidad', 'convenioProceso');
+    return compact('proceso', 'conceptoPago', 'modalidad', 'convenioProceso');
 }
 
 test('authorized users can access reglas de pago page', function () {
@@ -185,12 +176,11 @@ test('new enabled procesos are available in regla pago form even without reglas 
         ->assertSee($contexto['proceso']->nombre_pro);
 });
 
-test('regla pago filters include current enabled semestre and historical semestre with reglas', function () {
+test('regla pago filters include the current enabled proceso and the historical proceso with reglas', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosReglaPago($usuario, ['regla_pago_indice']);
 
     $contextoHistorico = crearContextoReglaPago(10);
-    $contextoHistorico['semestre']->update(['estado_sem' => 'CERRADO']);
     $contextoHistorico['proceso']->update(['estado_pro' => 'CERRADO']);
 
     ReglaPago::query()->create([
@@ -213,9 +203,7 @@ test('regla pago filters include current enabled semestre and historical semestr
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->assertSee($contextoHistorico['semestre']->nombre_sem)
-        ->assertSee($contextoActual['semestre']->nombre_sem)
-        ->set('idSemestre', (string) $contextoActual['semestre']->id_sem)
+        ->assertSee($contextoHistorico['proceso']->nombre_pro)
         ->assertSee($contextoActual['proceso']->nombre_pro);
 });
 

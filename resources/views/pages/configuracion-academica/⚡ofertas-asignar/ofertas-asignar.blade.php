@@ -33,7 +33,7 @@
                             <option value="">Seleccionar proceso</option>
                             @foreach ($this->procesosDisponibles as $proceso)
                                 <option wire:key="proceso-asignar-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                                    {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                    {{ $proceso->nombre_pro }}
                                 </option>
                             @endforeach
                         </x-ui.select>
@@ -226,7 +226,7 @@
                             {{ $this->procesoSeleccionado?->nombre_pro ?? 'Seleccione un proceso' }}
                         </p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ $this->procesoSeleccionado?->semestre?->nombre_sem ?? 'Sin semestre seleccionado' }}
+                            {{ $this->procesoSeleccionado ? $this->procesoSeleccionado->fecha_inicio_pro?->format('d/m/Y').' al '.$this->procesoSeleccionado->fecha_fin_pro?->format('d/m/Y') : 'Sin proceso seleccionado' }}
                         </p>
                     </div>
 

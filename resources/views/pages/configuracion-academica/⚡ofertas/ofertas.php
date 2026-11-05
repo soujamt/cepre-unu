@@ -5,7 +5,6 @@ use App\Enums\EstadoProceso;
 use App\Models\OfertaBase;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,9 +29,6 @@ class extends Component
 
     #[Url(as: 'q')]
     public string $buscar = '';
-
-    #[Url(as: 'semestre')]
-    public string $idSemestre = '';
 
     #[Url(as: 'proceso')]
     public string $idProceso = '';
@@ -71,12 +67,6 @@ class extends Component
 
     public function updatedBuscar(): void
     {
-        $this->resetPage();
-    }
-
-    public function updatedIdSemestre(): void
-    {
-        $this->idProceso = '';
         $this->resetPage();
     }
 
@@ -168,21 +158,9 @@ class extends Component
     }
 
     #[Computed]
-    public function semestresDisponibles(): Collection
-    {
-        return Semestre::query()
-            ->whereHas('procesos')
-            ->orderByDesc('fecha_inicio_inscripcion_sem')
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
-    #[Computed]
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -221,7 +199,6 @@ class extends Component
 
     public function limpiarFiltrosAcademicos(): void
     {
-        $this->idSemestre = '';
         $this->idProceso = '';
         $this->idTurno = '';
         $this->resetPage();
@@ -381,7 +358,7 @@ class extends Component
     {
         return ProcesoOferta::query()
             ->with([
-                'proceso.semestre',
+                'proceso',
                 'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
                 'ofertaBase.sedeCarrera.sede',
@@ -395,9 +372,7 @@ class extends Component
                 $query->where(function (Builder $innerQuery) use ($search): void {
                     $innerQuery->whereHas('proceso', function (Builder $procesoQuery) use ($search): void {
                         $procesoQuery->where('nombre_pro', 'like', "%{$search}%")
-                            ->orWhere('codigo_pro', 'like', "%{$search}%")
-                            ->orWhereHas('semestre', fn (Builder $semestreQuery) => $semestreQuery
-                                ->where('nombre_sem', 'like', "%{$search}%"));
+                            ->orWhere('codigo_pro', 'like', "%{$search}%");
                     })->orWhereHas('ofertaBase', function (Builder $ofertaBaseQuery) use ($search): void {
                         $ofertaBaseQuery->where('codigo_externo_ofb', 'like', "%{$search}%")
                             ->orWhereHas('modalidadLugarInscripcion.modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
@@ -411,10 +386,6 @@ class extends Component
                     })->orWhereHas('turno', fn (Builder $turnoQuery) => $turnoQuery
                         ->where('nombre_tur', 'like', "%{$search}%"));
                 });
-            })
-            ->when(filled($this->idSemestre), function (Builder $query): void {
-                $query->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
-                    ->where('id_semestre', (int) $this->idSemestre));
             })
             ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
             ->when(filled($this->idTurno), fn (Builder $query) => $query->where('id_turno', (int) $this->idTurno))
@@ -474,9 +445,6 @@ class extends Component
 
     private function aplicarFiltrosRelacionados(Builder $query): void
     {
-        $query->when(filled($this->idSemestre), fn (Builder $builder) => $builder
-            ->whereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
-                ->where('id_semestre', (int) $this->idSemestre)))
-            ->when(filled($this->idProceso), fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+        $query->when(filled($this->idProceso), fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
     }
 };

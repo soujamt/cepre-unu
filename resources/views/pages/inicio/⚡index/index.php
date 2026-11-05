@@ -26,7 +26,6 @@ class extends Component
     public function procesoActual(): ?Proceso
     {
         return Proceso::query()
-            ->with('semestre')
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->latest('id_pro')
             ->first();

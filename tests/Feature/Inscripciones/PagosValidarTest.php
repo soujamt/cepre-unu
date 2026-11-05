@@ -27,7 +27,6 @@ use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\Sede;
 use App\Models\SedeCarrera;
-use App\Models\Semestre;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
@@ -118,16 +117,7 @@ function crearContextoPagoValidar(array $opciones = []): array
         'estado_ubi' => 'HABILITADO',
     ]);
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => 'semestre_2026_i',
-        'nombre_sem' => 'SEMESTRE 2026-I',
-        'fecha_inicio_inscripcion_sem' => '2026-03-01',
-        'fecha_fin_inscripcion_sem' => '2026-06-30',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => 'proceso_ordinario_2026_i',
         'nombre_pro' => 'PROCESO ORDINARIO 2026-I',
         'fecha_inicio_pro' => '2026-03-01',
