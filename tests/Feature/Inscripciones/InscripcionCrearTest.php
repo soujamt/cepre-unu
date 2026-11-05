@@ -307,7 +307,7 @@ test('authorized users can access nueva inscripcion page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.crear'))
         ->assertOk()
-        ->assertSee('NUEVA INSCRIPCION');
+        ->assertSee('Nueva inscripción');
 });
 
 test('users can register personal information for a new inscripcion draft', function () {
@@ -1160,7 +1160,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     $this->actingAs($usuario)
         ->get(route('inscripciones.continuar', encode($inscripcion->id_ins)))
         ->assertOk()
-        ->assertSee('NUEVA INSCRIPCION');
+        ->assertSee('Nueva inscripción');
 
     $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
     $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col} | {$colegio->ubigeo->nombre_departamento_ubi} / {$colegio->ubigeo->nombre_provincia_ubi} / {$colegio->ubigeo->nombre_distrito_ubi}";
