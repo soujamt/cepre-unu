@@ -312,7 +312,7 @@ trait GestionaPasoPersonal
 
         if ($numeroDocumento === '') {
             $this->reniecTipoMensaje = 'warning';
-            $this->reniecMensaje = 'Ingrese el numero de documento antes de buscar datos.';
+            $this->reniecMensaje = 'Ingrese el número de documento antes de buscar datos.';
 
             return;
         }
@@ -339,7 +339,7 @@ trait GestionaPasoPersonal
 
         if (strlen($numeroDocumento) !== 8) {
             $this->reniecTipoMensaje = 'warning';
-            $this->reniecMensaje = 'Ingrese un DNI valido de 8 digitos para consultar RENIEC.';
+            $this->reniecMensaje = 'Ingrese un DNI válido de 8 dígitos para consultar RENIEC.';
 
             return;
         }
@@ -347,7 +347,7 @@ trait GestionaPasoPersonal
         $resultado = app(ReniecService::class)->consultar($numeroDocumento);
 
         if (! ($resultado['success'] ?? false)) {
-            $this->reniecTipoMensaje = 'error';
+            $this->reniecTipoMensaje = ($resultado['disponible'] ?? true) === false ? 'warning' : 'error';
             $this->reniecMensaje = (string) ($resultado['message'] ?? 'No se pudo consultar RENIEC.');
 
             return;

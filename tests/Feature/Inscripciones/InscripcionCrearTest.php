@@ -520,6 +520,25 @@ test('dni can be consulted with reniec and autofill personal names when there is
         ->assertSet('reniecTipoMensaje', 'success');
 });
 
+test('dni lookup shows a friendly warning when reniec is not configured', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $catalogos = crearCatalogosPasoPersonal();
+
+    Config::set('services.reniec.url', null);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
+        ->set('personaForm.numero_documento', '46027897')
+        ->call('buscarDatosPersona')
+        ->assertSet('reniecTipoMensaje', 'warning')
+        ->assertSet('reniecMensaje', 'La consulta a RENIEC no está disponible en este momento. Complete los datos manualmente.')
+        ->assertDontSee('URL_API_RENIEC');
+});
+
 test('reniec lookup clears stale complementary data from a previously loaded local person', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
