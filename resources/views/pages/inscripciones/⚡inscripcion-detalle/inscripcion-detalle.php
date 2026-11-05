@@ -19,7 +19,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('DETALLE DE INSCRIPCION')]
+#[Title('Detalle de inscripción')]
 class extends Component
 {
     use AuthorizesPermisos;

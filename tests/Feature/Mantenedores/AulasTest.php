@@ -62,7 +62,7 @@ test('authorized users can access aulas page', function () {
     $this->actingAs($usuario)
         ->get(route('mantenedor-aulas.index'))
         ->assertOk()
-        ->assertSee('AULAS');
+        ->assertSee('Aulas');
 });
 
 test('authenticated users without permiso cannot access aulas page', function () {

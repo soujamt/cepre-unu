@@ -60,7 +60,7 @@ test('authorized users can access the users page', function () {
     $this->actingAs($usuario)
         ->get(route('usuarios.index'))
         ->assertOk()
-        ->assertSee('USUARIOS');
+        ->assertSee('Usuarios');
 });
 
 test('authorized users can register a user with roles from the modal', function () {

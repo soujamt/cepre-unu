@@ -73,7 +73,7 @@ test('authorized users can access convenios page', function () {
     $this->actingAs($usuario)
         ->get(route('convenios.index'))
         ->assertOk()
-        ->assertSee('CONVENIOS');
+        ->assertSee('Convenios');
 });
 
 test('authenticated users without permiso cannot access convenios page', function () {

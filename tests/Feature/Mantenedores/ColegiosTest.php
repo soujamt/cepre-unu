@@ -77,7 +77,7 @@ test('authorized users can access colegios page', function () {
     $this->actingAs($usuario)
         ->get(route('mantenedor-colegios.index'))
         ->assertOk()
-        ->assertSee('COLEGIOS');
+        ->assertSee('Colegios');
 });
 
 test('authenticated users without permiso cannot access colegios page', function () {

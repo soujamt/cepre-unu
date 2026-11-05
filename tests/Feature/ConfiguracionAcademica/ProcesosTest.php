@@ -68,7 +68,7 @@ test('authorized users can access procesos page', function () {
     $this->actingAs($usuario)
         ->get(route('procesos.index'))
         ->assertOk()
-        ->assertSee('PROCESOS');
+        ->assertSee('Procesos');
 });
 
 test('authenticated users without permiso cannot access procesos page', function () {

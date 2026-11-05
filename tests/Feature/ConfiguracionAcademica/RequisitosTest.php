@@ -84,7 +84,7 @@ test('authorized users can access requisitos page', function () {
     $this->actingAs($usuario)
         ->get(route('requisitos.index'))
         ->assertOk()
-        ->assertSee('REQUISITOS');
+        ->assertSee('Requisitos');
 });
 
 test('authenticated users without permiso cannot access requisitos page', function () {

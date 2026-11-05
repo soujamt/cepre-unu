@@ -249,7 +249,7 @@ test('authorized users can access inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.index'))
         ->assertOk()
-        ->assertSee('INSCRIPCIONES');
+        ->assertSee('Inscripciones');
 });
 
 test('authenticated users without permiso cannot access inscripciones page', function () {
@@ -352,7 +352,7 @@ test('authorized users can access inscripcion detail page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($contextoActivo['inscripcion']->id_ins)))
         ->assertOk()
-        ->assertSee('DETALLE DE INSCRIPCION')
+        ->assertSee('Detalle de inscripción')
         ->assertSee($contextoActivo['inscripcion']->codigo_ins)
         ->assertSee($contextoActivo['persona']->numero_documento_per)
         ->assertSee($contextoActivo['proceso']->nombre_pro)

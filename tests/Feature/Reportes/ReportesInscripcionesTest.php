@@ -258,7 +258,7 @@ test('authorized users can access reportes de inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('reportes.inscripciones.index'))
         ->assertOk()
-        ->assertSee('REPORTES DE INSCRIPCIONES');
+        ->assertSee('Reportes de inscripciones');
 });
 
 test('users without reporte permiso cannot access reportes de inscripciones page', function () {

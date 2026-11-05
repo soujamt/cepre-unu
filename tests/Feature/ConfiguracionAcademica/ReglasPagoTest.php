@@ -113,7 +113,7 @@ test('authorized users can access reglas de pago page', function () {
     $this->actingAs($usuario)
         ->get(route('reglas-pago.index'))
         ->assertOk()
-        ->assertSee('REGLAS DE PAGO');
+        ->assertSee('Reglas de pago');
 });
 
 test('authenticated users without permiso cannot access reglas de pago page', function () {

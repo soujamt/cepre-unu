@@ -11,7 +11,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.auth')]
-#[Title('INICIO DE SESIÓN')]
+#[Title('Inicio de sesión')]
 class extends Component
 {
     private const MAX_LOGIN_ATTEMPTS = 5;

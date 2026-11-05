@@ -172,7 +172,7 @@ test('authorized users can access ofertas page', function () {
     $this->actingAs($usuario)
         ->get(route('ofertas.index'))
         ->assertOk()
-        ->assertSee('OFERTAS');
+        ->assertSee('Ofertas');
 });
 
 test('authorized users can access asignar ofertas page', function () {
@@ -182,7 +182,7 @@ test('authorized users can access asignar ofertas page', function () {
     $this->actingAs($usuario)
         ->get(route('ofertas.asignar'))
         ->assertOk()
-        ->assertSee('ASIGNAR OFERTAS');
+        ->assertSee('Asignar ofertas');
 });
 
 test('users can filter ofertas base by modalidad and lugar de inscripcion', function () {

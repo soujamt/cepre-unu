@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 new
 #[Layout('layouts.app')]
-#[Title('REPORTES DE INSCRIPCIONES')]
+#[Title('Reportes de inscripciones')]
 class extends Component
 {
     use AuthorizesPermisos;

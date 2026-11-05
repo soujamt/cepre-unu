@@ -19,7 +19,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('ASIGNAR OFERTAS')]
+#[Title('Asignar ofertas')]
 class extends Component
 {
     use AuthorizesPermisos;

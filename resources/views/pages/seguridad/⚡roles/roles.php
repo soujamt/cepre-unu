@@ -15,7 +15,7 @@ use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
-#[Title('ROLES')]
+#[Title('Roles')]
 class extends Component
 {
     use AuthorizesPermisos;

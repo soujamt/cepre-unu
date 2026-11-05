@@ -57,7 +57,7 @@ test('authenticated users with permiso can access the permisos page', function (
     $this->actingAs($usuario)
         ->get(route('permisos.index'))
         ->assertOk()
-        ->assertSee('PERMISOS');
+        ->assertSee('Permisos');
 });
 
 test('authenticated users without permiso cannot access the permisos page', function () {
@@ -281,5 +281,5 @@ test('administrador role can access permisos module without explicit permiso ass
     $this->actingAs($usuario)
         ->get(route('permisos.index'))
         ->assertOk()
-        ->assertSee('PERMISOS');
+        ->assertSee('Permisos');
 });

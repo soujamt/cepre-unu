@@ -106,7 +106,7 @@ test('authorized users can access aulas por proceso page', function () {
     $this->actingAs($usuario)
         ->get(route('aulas.index'))
         ->assertOk()
-        ->assertSee('AULAS POR PROCESO');
+        ->assertSee('Aulas por proceso');
 });
 
 test('users can filter aulas por proceso by proceso turno and estado', function () {

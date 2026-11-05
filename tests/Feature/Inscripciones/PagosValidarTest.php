@@ -277,7 +277,7 @@ test('authorized users can access validar pagos page', function () {
     $this->actingAs($usuario)
         ->get(route('pagos.validar'))
         ->assertOk()
-        ->assertSee('VALIDAR PAGOS');
+        ->assertSee('Validar pagos');
 });
 
 test('users can search pending obligations and find imported payments', function () {

@@ -59,7 +59,7 @@ test('authorized users can access tipos de expediente page', function () {
     $this->actingAs($usuario)
         ->get(route('tipos-expediente.index'))
         ->assertOk()
-        ->assertSee('TIPOS DE EXPEDIENTE');
+        ->assertSee('Tipos de expediente');
 });
 
 test('authenticated users without permiso cannot access tipos de expediente page', function () {

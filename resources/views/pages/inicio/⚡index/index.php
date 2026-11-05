@@ -19,7 +19,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts::app')]
-#[Title('INICIO')]
+#[Title('Inicio')]
 class extends Component
 {
     #[Computed]
