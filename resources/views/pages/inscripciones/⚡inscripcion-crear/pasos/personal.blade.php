@@ -189,7 +189,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             <flux:callout
                 :variant="$calloutVariant"
                 :icon="$calloutIcon"
-                heading="Busqueda de datos"
+                heading="Búsqueda de datos"
             >
                 {{ $reniecMensaje }}
             </flux:callout>

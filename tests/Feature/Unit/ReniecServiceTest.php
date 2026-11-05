@@ -4,6 +4,7 @@ use App\Services\ReniecService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     Cache::flush();
@@ -71,29 +72,22 @@ it('returns validation error when the dni is invalid', function () {
     ]);
 });
 
-it('returns configuration error when the base url is missing', function () {
-    Config::set('services.reniec.url', null);
+it('hides missing configuration from the user and logs it', function (string $clave) {
+    Log::spy();
+    Config::set("services.reniec.{$clave}", null);
 
     $result = app(ReniecService::class)->consultar('46027897');
 
     expect($result)->toBe([
         'success' => false,
-        'message' => 'No se configuró URL_API_RENIEC.',
+        'message' => ReniecService::MENSAJE_NO_DISPONIBLE,
+        'disponible' => false,
     ]);
-});
 
-it('returns configuration error when the reniec token is missing', function () {
-    Config::set('services.reniec.token', null);
+    Log::shouldHaveReceived('warning')->once();
+})->with(['url', 'token']);
 
-    $result = app(ReniecService::class)->consultar('46027897');
-
-    expect($result)->toBe([
-        'success' => false,
-        'message' => 'No se configuró el token del servicio RENIEC.',
-    ]);
-});
-
-it('returns a provider error message when the api responds with invalid request', function () {
+it('returns a friendly message when the api responds with invalid request', function () {
     Http::fake([
         'https://api.decolecta.com/v1/reniec/dni*' => Http::response([
             'error' => 'Invalid request',
@@ -104,11 +98,12 @@ it('returns a provider error message when the api responds with invalid request'
 
     expect($result)->toBe([
         'success' => false,
-        'message' => 'La consulta enviada a RENIEC no es válida.',
+        'message' => 'RENIEC no pudo procesar la consulta. Verifique el número de DNI.',
     ]);
 });
 
-it('returns a friendly provider message when the api key is missing or the limit was exceeded', function () {
+it('hides the provider api key error from the user', function () {
+    Log::spy();
     Http::fake([
         'https://api.decolecta.com/v1/reniec/dni*' => Http::response([
             'error' => 'Apikey Required / Limit Exceeded',
@@ -119,6 +114,23 @@ it('returns a friendly provider message when the api key is missing or the limit
 
     expect($result)->toBe([
         'success' => false,
-        'message' => 'El servicio RENIEC no está disponible en este momento por configuración o límite de consultas.',
+        'message' => ReniecService::MENSAJE_NO_DISPONIBLE,
+        'disponible' => false,
+    ]);
+
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $mensaje): bool => str_contains($mensaje, 'Apikey Required'))->once();
+});
+
+it('returns a generic connection message without technical details when the request fails', function () {
+    Http::fake([
+        'https://api.decolecta.com/v1/reniec/dni*' => Http::response('Internal Server Error', 500),
+    ]);
+
+    $result = app(ReniecService::class)->consultar('46027897');
+
+    expect($result)->toBe([
+        'success' => false,
+        'message' => ReniecService::MENSAJE_SIN_CONEXION,
+        'disponible' => false,
     ]);
 });
