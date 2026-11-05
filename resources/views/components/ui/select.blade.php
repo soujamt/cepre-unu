@@ -87,7 +87,7 @@
                 if (! select) return;
 
                 this.options = Array.from(select.options)
-                    .filter(option => option.value !== '' && option.text.trim() !== '')
+                    .filter(option => ! option.hasAttribute('data-placeholder') && option.text.trim() !== '')
                     .map(option => ({ value: option.value, label: option.text }));
             },
 
@@ -129,6 +129,10 @@
             },
 
             isSelected(value) {
+                if (value === '') {
+                    return this.selectedIsEmpty();
+                }
+
                 return this.selected == value;
             },
 
@@ -141,7 +145,7 @@
         class="group/select relative block w-full min-w-0"
     >
         <select id="{{ $selectId }}" x-ref="realSelect" class="hidden">
-            <option value="">{{ $placeholder }}</option>
+            <option value="" data-placeholder>{{ $placeholder }}</option>
             {{ $slot }}
         </select>
 
@@ -247,7 +251,7 @@
                         }"
                         class="flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
-                        <span class="truncate" x-text="option.label || option.value"></span>
+                        <span class="truncate" :class="option.value === '' && 'text-zinc-500 dark:text-zinc-400'" x-text="option.label || option.value"></span>
                         <template x-if="isSelected(option.value)">
                             <x-ui.icon name="check-circle" size="4" class="text-accent shrink-0" />
                         </template>

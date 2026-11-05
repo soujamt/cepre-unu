@@ -82,7 +82,7 @@
                 const select = this.$refs.realSelect;
 
                 this.allItems = Array.from(select.options)
-                    .filter(option => option.value !== '')
+                    .filter(option => ! option.hasAttribute('data-placeholder') && option.text.trim() !== '')
                     .map(option => ({
                         value: option.value,
                         label: option.text,
@@ -152,7 +152,7 @@
         class="group/select relative block w-full"
     >
         <select x-ref="realSelect" class="hidden">
-            <option value="">{{ $placeholder }}</option>
+            <option value="" data-placeholder>{{ $placeholder }}</option>
             {{ $slot }}
         </select>
 
