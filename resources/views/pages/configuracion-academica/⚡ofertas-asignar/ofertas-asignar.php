@@ -19,7 +19,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('ASIGNAR OFERTAS')]
+#[Title('Asignar ofertas')]
 class extends Component
 {
     use AuthorizesPermisos;
@@ -101,7 +101,6 @@ class extends Component
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->with('semestre')
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->orderByDesc('id_pro')
             ->get();
@@ -149,7 +148,6 @@ class extends Component
         }
 
         return Proceso::query()
-            ->with('semestre')
             ->find($this->idProceso);
     }
 

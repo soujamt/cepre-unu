@@ -19,7 +19,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('DETALLE DE INSCRIPCION')]
+#[Title('Detalle de inscripción')]
 class extends Component
 {
     use AuthorizesPermisos;
@@ -46,7 +46,7 @@ class extends Component
                 'persona.identidadEtnica',
                 'persona.lenguaNativa',
                 'persona.lenguaExtranjera',
-                'procesoOferta.proceso.semestre',
+                'procesoOferta.proceso',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
@@ -94,7 +94,7 @@ class extends Component
         $lugar = $procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
         $turno = $procesoOferta?->turno?->nombre_tur ?? 'SIN TURNO';
 
-        return implode(' | ', [$carrera, $sede, $modalidad, $lugar, $turno]);
+        return implode(' · ', [$carrera, $sede, $modalidad, $lugar, $turno]);
     }
 
     /**
@@ -211,7 +211,7 @@ class extends Component
             return 'Sin aula asignada';
         }
 
-        return implode(' | ', array_filter([
+        return implode(' · ', array_filter([
             $procesoAula->aula->nombre_aul,
             $procesoAula->aula->piso_aul?->getNombre(),
             $procesoAula->aula->lugar_aul?->getNombre(),
@@ -231,7 +231,7 @@ class extends Component
     {
         $detalle = $pago->importacionBancoDetalle;
 
-        return implode(' | ', array_filter([
+        return implode(' · ', array_filter([
             $this->formatearDocumentoIdentidad($detalle?->numero_documento_ibd),
             $detalle?->numero_operacion_visible_ibd ?: $detalle?->numero_operacion_ibd,
             $pago->fecha_pago_ipa?->format('d/m/Y'),

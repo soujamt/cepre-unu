@@ -2,11 +2,9 @@
 
 use App\Enums\EstadoProceso;
 use App\Models\Proceso;
-use App\Models\Semestre;
 use App\Support\EstadoAcademicoSynchronizer;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -19,7 +17,7 @@ use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
-#[Title('PROCESOS')]
+#[Title('Procesos')]
 class extends Component
 {
     use AuthorizesPermisos;
@@ -28,9 +26,6 @@ class extends Component
     #[Url(as: 'q')]
     public string $buscar = '';
 
-    #[Url(as: 'semestre')]
-    public string $idSemestre = '';
-
     /**
      * @var array<string, bool>
      */
@@ -38,10 +33,9 @@ class extends Component
     public array $filtroEstado = [];
 
     /**
-     * @var array{id_semestre: string, nombre: string, fecha_inicio: string, fecha_fin: string}
+     * @var array{nombre: string, fecha_inicio: string, fecha_fin: string}
      */
     public array $procesoForm = [
-        'id_semestre' => '',
         'nombre' => '',
         'fecha_inicio' => '',
         'fecha_fin' => '',
@@ -63,11 +57,6 @@ class extends Component
         $this->resetPage();
     }
 
-    public function updatedIdSemestre(): void
-    {
-        $this->resetPage();
-    }
-
     public function updatedFiltroEstado(): void
     {
         $this->resetPage();
@@ -79,11 +68,11 @@ class extends Component
     protected function rules(): array
     {
         return [
-            'procesoForm.id_semestre' => ['required', 'integer', 'exists:tbl_semestre,id_sem'],
             'procesoForm.nombre' => [
                 'required',
                 'string',
                 'max:255',
+                'regex:'.Proceso::FORMATO_NOMBRE,
                 function (string $attribute, mixed $value, Closure $fail): void {
                     $nombreNormalizado = $this->normalizarTexto((string) $value) ?? '';
                     $nombre = $this->mayusculas($nombreNormalizado);
@@ -116,51 +105,8 @@ class extends Component
                     }
                 },
             ],
-            'procesoForm.fecha_inicio' => [
-                'required',
-                'date',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    $semestre = $this->semestreSeleccionado();
-
-                    if ($semestre === null || blank($value)) {
-                        return;
-                    }
-
-                    $fechaInicioSemestre = $semestre->fecha_inicio_inscripcion_sem?->format('Y-m-d');
-                    $fechaFinSemestre = $semestre->fecha_fin_inscripcion_sem?->format('Y-m-d');
-
-                    if ($fechaInicioSemestre !== null && (string) $value < $fechaInicioSemestre) {
-                        $fail('La fecha de inicio del proceso no puede ser menor que la fecha de inicio del semestre.');
-                    }
-
-                    if ($fechaFinSemestre !== null && (string) $value > $fechaFinSemestre) {
-                        $fail('La fecha de inicio del proceso no puede ser mayor que la fecha final del semestre.');
-                    }
-                },
-            ],
-            'procesoForm.fecha_fin' => [
-                'required',
-                'date',
-                'after_or_equal:procesoForm.fecha_inicio',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    $semestre = $this->semestreSeleccionado();
-
-                    if ($semestre === null || blank($value)) {
-                        return;
-                    }
-
-                    $fechaInicioSemestre = $semestre->fecha_inicio_inscripcion_sem?->format('Y-m-d');
-                    $fechaFinSemestre = $semestre->fecha_fin_inscripcion_sem?->format('Y-m-d');
-
-                    if ($fechaInicioSemestre !== null && (string) $value < $fechaInicioSemestre) {
-                        $fail('La fecha final del proceso no puede ser menor que la fecha de inicio del semestre.');
-                    }
-
-                    if ($fechaFinSemestre !== null && (string) $value > $fechaFinSemestre) {
-                        $fail('La fecha final del proceso no puede ser mayor que la fecha final del semestre.');
-                    }
-                },
-            ],
+            'procesoForm.fecha_inicio' => ['required', 'date'],
+            'procesoForm.fecha_fin' => ['required', 'date', 'after:procesoForm.fecha_inicio'],
         ];
     }
 
@@ -170,12 +116,11 @@ class extends Component
     protected function messages(): array
     {
         return [
-            'procesoForm.id_semestre.required' => 'El semestre es obligatorio.',
-            'procesoForm.id_semestre.exists' => 'El semestre seleccionado no es valido.',
             'procesoForm.nombre.required' => 'El nombre es obligatorio.',
-            'procesoForm.fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
-            'procesoForm.fecha_fin.required' => 'La fecha de fin es obligatoria.',
-            'procesoForm.fecha_fin.after_or_equal' => 'La fecha final no puede ser menor que la fecha inicial.',
+            'procesoForm.nombre.regex' => 'El nombre debe tener el formato AAAA-N, por ejemplo 2026-2.',
+            'procesoForm.fecha_inicio.required' => 'La fecha y hora de apertura es obligatoria.',
+            'procesoForm.fecha_fin.required' => 'La fecha y hora de cierre es obligatoria.',
+            'procesoForm.fecha_fin.after' => 'El cierre debe ser posterior a la apertura.',
         ];
     }
 
@@ -194,25 +139,9 @@ class extends Component
             ->all();
     }
 
-    #[Computed]
-    public function semestresDisponibles(): Collection
-    {
-        app(EstadoAcademicoSynchronizer::class)->sync();
-
-        return Semestre::query()
-            ->orderByDesc('id_sem')
-            ->get();
-    }
-
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
-    }
-
-    public function limpiarFiltrosAcademicos(): void
-    {
-        $this->idSemestre = '';
-        $this->resetPage();
     }
 
     public function cargarProceso(?int $id = null): void
@@ -233,10 +162,9 @@ class extends Component
 
         $this->editingId = $proceso->id_pro;
         $this->procesoForm = [
-            'id_semestre' => (string) $proceso->id_semestre,
             'nombre' => $proceso->nombre_pro,
-            'fecha_inicio' => $proceso->fecha_inicio_pro?->format('Y-m-d') ?? '',
-            'fecha_fin' => $proceso->fecha_fin_pro?->format('Y-m-d') ?? '',
+            'fecha_inicio' => $proceso->fecha_inicio_pro?->format('Y-m-d\TH:i') ?? '',
+            'fecha_fin' => $proceso->fecha_fin_pro?->format('Y-m-d\TH:i') ?? '',
         ];
         $this->tituloModal = 'Editar proceso';
         $this->isEdit = true;
@@ -253,7 +181,6 @@ class extends Component
             DB::transaction(function () use ($data): void {
                 $nombreNormalizado = $this->normalizarTexto($data['procesoForm']['nombre']) ?? '';
                 $payload = [
-                    'id_semestre' => (int) $data['procesoForm']['id_semestre'],
                     'codigo_pro' => $this->generarCodigo($nombreNormalizado),
                     'nombre_pro' => $this->mayusculas($nombreNormalizado),
                     'fecha_inicio_pro' => $data['procesoForm']['fecha_inicio'],
@@ -395,7 +322,6 @@ class extends Component
         $this->reset(['editingId', 'isEdit']);
         $this->tituloModal = 'Nuevo proceso';
         $this->procesoForm = [
-            'id_semestre' => '',
             'nombre' => '',
             'fecha_inicio' => '',
             'fecha_fin' => '',
@@ -409,19 +335,15 @@ class extends Component
         app(EstadoAcademicoSynchronizer::class)->sync();
 
         return Proceso::query()
-            ->with('semestre')
             ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 
                 $query->where(function (Builder $innerQuery) use ($search): void {
                     $innerQuery->where('codigo_pro', 'like', "%{$search}%")
-                        ->orWhere('nombre_pro', 'like', "%{$search}%")
-                        ->orWhereHas('semestre', fn (Builder $semestreQuery) => $semestreQuery
-                            ->where('nombre_sem', 'like', "%{$search}%"));
+                        ->orWhere('nombre_pro', 'like', "%{$search}%");
                 });
             })
-            ->when(filled($this->idSemestre), fn (Builder $query) => $query->where('id_semestre', (int) $this->idSemestre))
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_pro', $this->estadosSeleccionados);
             })
@@ -448,14 +370,5 @@ class extends Component
     private function mayusculas(string $valor): string
     {
         return mb_strtoupper($valor, 'UTF-8');
-    }
-
-    private function semestreSeleccionado(): ?Semestre
-    {
-        if (blank($this->procesoForm['id_semestre'])) {
-            return null;
-        }
-
-        return Semestre::query()->find((int) $this->procesoForm['id_semestre']);
     }
 };

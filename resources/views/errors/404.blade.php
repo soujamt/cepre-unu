@@ -4,7 +4,7 @@
 @section ('title', 'Página no encontrada')
 
 @section ('illustration')
-    <i class="ki-duotone ki-question text-7xl text-red-600"></i>
+    <x-ui.icon name="help-circle" size="10" />
 @endsection
 
 @section ('message')

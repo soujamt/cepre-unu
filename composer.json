@@ -9,24 +9,24 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
-        "hashids/hashids": "^5.0",
-        "laravel/framework": "^13.0",
-        "laravel/tinker": "^3.0",
-        "livewire/flux": "^2.13",
-        "livewire/livewire": "^4.2",
-        "maatwebsite/excel": "^3.1.70"
+        "php": "^8.3",
+        "hashids/hashids": "^5.0.2",
+        "laravel/framework": "^13.40",
+        "laravel/tinker": "^3.0.2",
+        "livewire/flux": "^2.21",
+        "livewire/livewire": "^4.4.8",
+        "maatwebsite/excel": "^4.0.6"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/boost": "^2.3",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.29",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^12.0",
-        "pestphp/pest": "^4.0",
+        "fakerphp/faker": "^1.24.1",
+        "laravel/boost": "^2.10.4",
+        "laravel/pail": "^1.2.7",
+        "laravel/pint": "^1.32.1",
+        "laravel/sail": "^1.69",
+        "mockery/mockery": "^1.6.15",
+        "nunomaduro/collision": "^8.9.5",
+        "phpunit/phpunit": "^12.5.33",
+        "pestphp/pest": "^4.7.8",
         "pestphp/pest-plugin-laravel": "^4.1"
     },
     "autoload": {
@@ -55,7 +55,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"npm run dev\" --names=server,queue,vite --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

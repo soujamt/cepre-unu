@@ -28,8 +28,8 @@ enum TipoLenguaMaternaPersona: string implements PresentableEnum
     public function getIcon(): string
     {
         return match ($this) {
-            self::Nativa => 'language',
-            self::Extranjera => 'globe-alt',
+            self::Nativa => 'translate',
+            self::Extranjera => 'globe',
         };
     }
 

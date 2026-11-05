@@ -19,14 +19,13 @@ use Livewire\Component;
 
 new
 #[Layout('layouts::app')]
-#[Title('INICIO')]
+#[Title('Inicio')]
 class extends Component
 {
     #[Computed]
     public function procesoActual(): ?Proceso
     {
         return Proceso::query()
-            ->with('semestre')
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->latest('id_pro')
             ->first();

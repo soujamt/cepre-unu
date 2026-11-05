@@ -307,7 +307,7 @@ test('authorized users can access nueva inscripcion page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.crear'))
         ->assertOk()
-        ->assertSee('NUEVA INSCRIPCION');
+        ->assertSee('Nueva inscripción');
 });
 
 test('users can register personal information for a new inscripcion draft', function () {
@@ -824,7 +824,7 @@ test('users can register postulacion and create an inscripcion draft', function 
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'ordinario_2026_1')
+        ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -873,7 +873,7 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->and($inscripcion?->veces_postula_unu_ins)->toBe(0)
         ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
         ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
-        ->and($inscripcion?->codigo_ins)->toStartWith('261ORD');
+        ->and($inscripcion?->codigo_ins)->toBe('2610001');
 
     Carbon\Carbon::setTestNow();
 });
@@ -888,7 +888,7 @@ test('postulacion assigns the first aula with capacity by configured order', fun
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
-    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
     $procesoOferta = ProcesoOferta::query()
         ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
         ->where('id_proceso', $proceso->id_pro)
@@ -935,7 +935,7 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
-    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
     $procesoOferta = ProcesoOferta::query()
         ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
         ->where('id_proceso', $proceso->id_pro)
@@ -992,7 +992,7 @@ test('postulacion only assigns aulas from the selected turno', function () {
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
-    $proceso = Proceso::query()->where('codigo_pro', 'ordinario_2026_1')->firstOrFail();
+    $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
 
     $procesoOfertaManana = ProcesoOferta::query()
         ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
@@ -1124,7 +1124,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'ordinario_2026_1')
+        ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -1160,7 +1160,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     $this->actingAs($usuario)
         ->get(route('inscripciones.continuar', encode($inscripcion->id_ins)))
         ->assertOk()
-        ->assertSee('NUEVA INSCRIPCION');
+        ->assertSee('Nueva inscripción');
 
     $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
     $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col} | {$colegio->ubigeo->nombre_departamento_ubi} / {$colegio->ubigeo->nombre_provincia_ubi} / {$colegio->ubigeo->nombre_distrito_ubi}";
@@ -1250,7 +1250,7 @@ test('users can validate a bank payment from the payment step and continue to ex
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'ordinario_2026_1')
+        ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -1391,7 +1391,7 @@ test('users can complete a payment obligation with multiple cuotas from the wiza
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'ordinario_2026_1')
+        ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()
@@ -1584,7 +1584,7 @@ test('users can save expediente review and activate the inscripcion when all req
     ]);
 
     $proceso = Proceso::query()
-        ->where('codigo_pro', 'ordinario_2026_1')
+        ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
     $procesoOferta = ProcesoOferta::query()

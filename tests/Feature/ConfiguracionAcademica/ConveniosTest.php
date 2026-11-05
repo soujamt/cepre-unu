@@ -7,7 +7,6 @@ use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -57,16 +56,8 @@ function otorgarPermisosConvenio(Usuario $usuario, array $claves): void
 
 function crearProcesoConvenio(int $indice): Proceso
 {
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "semestre_2026_{$indice}",
-        'nombre_sem' => "SEMESTRE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
 
     return Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "proceso_{$indice}",
         'nombre_pro' => "PROCESO {$indice}",
         'fecha_inicio_pro' => '2026-01-10',
@@ -82,7 +73,7 @@ test('authorized users can access convenios page', function () {
     $this->actingAs($usuario)
         ->get(route('convenios.index'))
         ->assertOk()
-        ->assertSee('CONVENIOS');
+        ->assertSee('Convenios');
 });
 
 test('authenticated users without permiso cannot access convenios page', function () {
@@ -152,12 +143,11 @@ test('new enabled procesos are available in convenio form even without convenios
         ->assertSee($proceso->nombre_pro);
 });
 
-test('historical convenio filters include closed semestre and its proceso', function () {
+test('historical convenio filters include the closed proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConvenio($usuario, ['convenio_indice']);
 
     $proceso = crearProcesoConvenio(10);
-    $proceso->semestre->update(['estado_sem' => 'CERRADO']);
     $proceso->update(['estado_pro' => 'CERRADO']);
 
     $convenio = Convenio::query()->create([
@@ -181,18 +171,14 @@ test('historical convenio filters include closed semestre and its proceso', func
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.convenios')
-        ->assertSee($proceso->semestre->nombre_sem)
-        ->assertSee($proceso->nombre_pro)
-        ->set('idSemestre', (string) $proceso->id_semestre)
         ->assertSee($proceso->nombre_pro);
 });
 
-test('convenio filters include current enabled semestre even without convenios and historical semestre with records', function () {
+test('convenio filters include the current enabled proceso without convenios and the historical proceso with records', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConvenio($usuario, ['convenio_indice']);
 
     $procesoHistorico = crearProcesoConvenio(11);
-    $procesoHistorico->semestre->update(['estado_sem' => 'CERRADO']);
     $procesoHistorico->update(['estado_pro' => 'CERRADO']);
 
     $convenio = Convenio::query()->create([
@@ -218,9 +204,7 @@ test('convenio filters include current enabled semestre even without convenios a
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.convenios')
-        ->assertSee($procesoHistorico->semestre->nombre_sem)
-        ->assertSee($procesoActual->semestre->nombre_sem)
-        ->set('idSemestre', (string) $procesoActual->id_semestre)
+        ->assertSee($procesoHistorico->nombre_pro)
         ->assertSee($procesoActual->nombre_pro);
 });
 

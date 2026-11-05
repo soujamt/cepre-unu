@@ -1,7 +1,7 @@
 @blaze
 
 @props ([
-    'icon' => 'warning-circle',
+    'icon' => 'alert-circle',
     'bag' => 'default',
     'message' => null,
     'deep' => true,

@@ -4,15 +4,18 @@
         "codex",
         "copilot"
     ],
+    "cloud": false,
     "guidelines": true,
     "herd_mcp": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "sail": false,
     "skills": [
+        "infer-conventions",
+        "laravel-best-practices",
+        "testing-best-practices",
         "fluxui-development",
         "livewire-development",
-        "pest-testing",
         "tailwindcss-development"
     ]
 }

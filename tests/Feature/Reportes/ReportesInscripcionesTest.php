@@ -24,7 +24,6 @@ use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\Sede;
 use App\Models\SedeCarrera;
-use App\Models\Semestre;
 use App\Models\TipoDocumento;
 use App\Models\TipoExpediente;
 use App\Models\Turno;
@@ -137,16 +136,7 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO',
         ],
     );
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "rep-sem-{$indice}",
-        'nombre_sem' => "REPORTE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-04-01',
-        'fecha_fin_inscripcion_sem' => '2026-04-30',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "REP-PRO-{$indice}",
         'nombre_pro' => "PROCESO REPORTE {$indice}",
         'fecha_inicio_pro' => '2026-04-01',
@@ -268,7 +258,7 @@ test('authorized users can access reportes de inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('reportes.inscripciones.index'))
         ->assertOk()
-        ->assertSee('REPORTES DE INSCRIPCIONES');
+        ->assertSee('Reportes de inscripciones');
 });
 
 test('users without reporte permiso cannot access reportes de inscripciones page', function () {
@@ -316,9 +306,9 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'estado_tex' => 'HABILITADO',
     ]);
 
-    $contextoAnterior['proceso']->semestre->update([
-        'fecha_inicio_inscripcion_sem' => '2026-01-01',
-        'fecha_fin_inscripcion_sem' => '2026-02-28',
+    $contextoAnterior['proceso']->update([
+        'fecha_inicio_pro' => '2026-01-01',
+        'fecha_fin_pro' => '2026-02-28',
     ]);
 
     DB::table('tbl_inscripcion_obligacion_pago')->insert([
@@ -344,12 +334,12 @@ test('reportes de inscripciones defaults to current semester and filters data', 
     $this->actingAs($usuario);
 
     Livewire::test('pages::reportes.inscripciones')
-        ->assertSet('idSemestre', (string) $contextoActual['proceso']->id_semestre)
+        ->assertSet('idProceso', (string) $contextoActual['proceso']->id_pro)
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('MODALIDAD REPORTE 2')
         ->assertSee('HIJOS UNU')
         ->assertDontSee('CARRERA REPORTE 3')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('CARRERA REPORTE 3')
         ->set('idProceso', (string) $contextoActual['proceso']->id_pro)
@@ -370,7 +360,7 @@ test('authorized users can export reporte inscripciones to excel respecting acti
     $this->actingAs($usuario);
 
     Livewire::test('pages::reportes.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->set('idProceso', (string) $contextoA['proceso']->id_pro)
         ->call('exportarExcel');
 
@@ -397,7 +387,7 @@ test('users without exportar_excel permiso cannot export reporte inscripciones',
     $this->actingAs($usuario);
 
     Livewire::test('pages::reportes.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->call('exportarExcel')
         ->assertForbidden();
 });

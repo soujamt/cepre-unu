@@ -6,7 +6,7 @@
     'required' => false,
     'floating' => false,
     'iconLeading' => null,
-    'iconTrailing' => 'caret-down',
+    'iconTrailing' => 'chevron-down',
     'invalid' => null,
     'disabled' => false,
     'loading' => false,
@@ -30,7 +30,7 @@
     $controlClasses = \App\Helpers\Flux::classes()
         ->add('w-full min-w-0 rounded-lg border text-left disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
-        ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 dark:text-zinc-300')
+        ->add('bg-white dark:bg-control dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 dark:text-zinc-300')
         ->add($floating ? 'h-12 pt-5.5 pb-1.5 text-base sm:text-sm leading-5.5' : 'h-10 py-2 text-base sm:text-sm leading-5.5')
         ->add($paddingLeft)
         ->add($paddingRight)
@@ -87,7 +87,7 @@
                 if (! select) return;
 
                 this.options = Array.from(select.options)
-                    .filter(option => option.value !== '' && option.text.trim() !== '')
+                    .filter(option => ! option.hasAttribute('data-placeholder') && option.text.trim() !== '')
                     .map(option => ({ value: option.value, label: option.text }));
             },
 
@@ -129,6 +129,10 @@
             },
 
             isSelected(value) {
+                if (value === '') {
+                    return this.selectedIsEmpty();
+                }
+
                 return this.selected == value;
             },
 
@@ -141,7 +145,7 @@
         class="group/select relative block w-full min-w-0"
     >
         <select id="{{ $selectId }}" x-ref="realSelect" class="hidden">
-            <option value="">{{ $placeholder }}</option>
+            <option value="" data-placeholder>{{ $placeholder }}</option>
             {{ $slot }}
         </select>
 
@@ -227,7 +231,8 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute z-50 mt-1 max-h-45 w-full overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800"
+            x-anchor.bottom-start.offset.4="$root"
+            class="absolute z-50 max-h-45 w-full overflow-y-auto rounded-lg border border-zinc-200/80 bg-white shadow-pop dark:border-white/10 dark:bg-zinc-800"
         >
             <div class="p-1">
                 <template x-if="options.length === 0">
@@ -246,7 +251,7 @@
                         }"
                         class="flex w-full cursor-pointer items-center justify-between rounded-md p-2 text-left text-sm transition duration-150 ease-in-out focus:outline-none"
                     >
-                        <span class="truncate" x-text="option.label || option.value"></span>
+                        <span class="truncate" :class="option.value === '' && 'text-zinc-500 dark:text-zinc-400'" x-text="option.label || option.value"></span>
                         <template x-if="isSelected(option.value)">
                             <x-ui.icon name="check-circle" size="4" class="text-accent shrink-0" />
                         </template>

@@ -8,7 +8,7 @@
     'invalid' => null,
     'disabled' => false,
     'placeholder' => 'Seleccionar...',
-    'iconLeading' => 'magnifying-glass',
+    'iconLeading' => 'search',
 ])
 
 @php
@@ -24,7 +24,7 @@
     $controlClasses = \App\Helpers\Flux::classes()
         ->add('block w-full rounded-lg border disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
-        ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
+        ->add('bg-white dark:bg-control dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
         ->add($floating ? 'text-base sm:text-sm h-12 pt-5.5 pb-1.5 leading-5.5' : 'text-base sm:text-sm py-2 h-10 leading-5.5')
         ->add('ps-10 pe-10')
         ->add($floating ? 'placeholder:text-transparent' : '')
@@ -82,7 +82,7 @@
                 const select = this.$refs.realSelect;
 
                 this.allItems = Array.from(select.options)
-                    .filter(option => option.value !== '')
+                    .filter(option => ! option.hasAttribute('data-placeholder') && option.text.trim() !== '')
                     .map(option => ({
                         value: option.value,
                         label: option.text,
@@ -152,7 +152,7 @@
         class="group/select relative block w-full"
     >
         <select x-ref="realSelect" class="hidden">
-            <option value="">{{ $placeholder }}</option>
+            <option value="" data-placeholder>{{ $placeholder }}</option>
             {{ $slot }}
         </select>
 
@@ -216,7 +216,7 @@
             </button>
 
             <div x-show="!value" x-cloak class="pointer-events-none">
-                <x-ui.icon name="caret-down" size="5" class="text-zinc-400 dark:text-white/60" />
+                <x-ui.icon name="chevron-down" size="5" class="text-zinc-400 dark:text-white/60" />
             </div>
         </div>
 
@@ -228,7 +228,8 @@
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800"
+            x-anchor.bottom-start.offset.4="$root"
+            class="absolute z-50 max-h-60 w-full overflow-y-auto rounded-lg border border-zinc-200/80 bg-white shadow-pop dark:border-white/10 dark:bg-zinc-800"
             x-cloak
         >
             <div class="p-1">

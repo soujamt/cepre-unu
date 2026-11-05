@@ -42,6 +42,30 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:aula_indice')
         ->name('mantenedor-aulas.index');
 
+    Route::livewire('/mantenedores/carreras', 'pages::mantenedores.carreras')
+        ->middleware('permiso:carrera_indice')
+        ->name('carreras.index');
+
+    Route::livewire('/mantenedores/conceptos-pago', 'pages::mantenedores.conceptos-pago')
+        ->middleware('permiso:concepto_pago_indice')
+        ->name('conceptos-pago.index');
+
+    Route::livewire('/mantenedores/lugares-inscripcion', 'pages::mantenedores.lugares-inscripcion')
+        ->middleware('permiso:lugar_inscripcion_indice')
+        ->name('lugares-inscripcion.index');
+
+    Route::livewire('/mantenedores/modalidades', 'pages::mantenedores.modalidades')
+        ->middleware('permiso:modalidad_indice')
+        ->name('modalidades.index');
+
+    Route::livewire('/mantenedores/ofertas-base', 'pages::mantenedores.ofertas-base')
+        ->middleware('permiso:oferta_base_indice')
+        ->name('ofertas-base.index');
+
+    Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
+        ->middleware('permiso:sede_indice')
+        ->name('sedes.index');
+
     Route::livewire('/mantenedores/colegios', 'pages::mantenedores.colegios')
         ->middleware('permiso:colegio_indice')
         ->name('mantenedor-colegios.index');
@@ -50,11 +74,11 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:tipo_expediente_indice')
         ->name('tipos-expediente.index');
 
-    // Configuración Académica
-    Route::livewire('/configuracion-academica/semestres', 'pages::configuracion-academica.semestres')
-        ->middleware('permiso:semestre_indice')
-        ->name('semestres.index');
+    Route::livewire('/mantenedores/turnos', 'pages::mantenedores.turnos')
+        ->middleware('permiso:turno_indice')
+        ->name('turnos.index');
 
+    // Configuración Académica
     Route::livewire('/configuracion-academica/procesos', 'pages::configuracion-academica.procesos')
         ->middleware('permiso:proceso_indice')
         ->name('procesos.index');

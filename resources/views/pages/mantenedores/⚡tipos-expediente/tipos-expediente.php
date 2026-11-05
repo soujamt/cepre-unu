@@ -15,7 +15,7 @@ use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
-#[Title('TIPOS DE EXPEDIENTE')]
+#[Title('Tipos de expediente')]
 class extends Component
 {
     use AuthorizesPermisos;

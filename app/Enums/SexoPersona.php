@@ -32,7 +32,7 @@ enum SexoPersona: string implements PresentableEnum
         return match ($this) {
             self::Masculino => 'user',
             self::Femenino => 'user',
-            self::Otro => 'users',
+            self::Otro => 'group',
         };
     }
 

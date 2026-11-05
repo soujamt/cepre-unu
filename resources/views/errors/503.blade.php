@@ -4,7 +4,7 @@
 @section ('title', 'Servicio no disponible')
 
 @section ('illustration')
-    <i class="ki-duotone ki-cross-circle text-7xl text-red-600"></i>
+    <x-ui.icon name="x-circle" size="10" />
 @endsection
 
 @section ('message')

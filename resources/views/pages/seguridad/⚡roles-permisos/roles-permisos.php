@@ -14,7 +14,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('ASIGNAR PERMISOS')]
+#[Title('Permisos del rol')]
 class extends Component
 {
     use AuthorizesPermisos;

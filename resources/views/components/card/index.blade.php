@@ -1,10 +1,10 @@
 @props([
-    'headerClass' => 'px-4 pt-2 pb-3',
-    'bodyClass' => 'rounded-md border border-zinc-200 bg-white px-4 py-4 dark:border-zinc-700 dark:bg-zinc-800',
-    'footerClass' => 'px-4 pt-3 pb-2',
+    'headerClass' => 'px-3 pt-2 pb-2.5',
+    'bodyClass' => 'rounded-[0.65rem] border border-zinc-200/80 bg-white px-4 py-4 shadow-xs dark:border-white/[0.06] dark:bg-zinc-900 dark:shadow-none',
+    'footerClass' => 'px-3 pt-2.5 pb-1.5',
 ])
 
-<div {{ $attributes->merge(['class' => 'rounded-lg border border-zinc-200 bg-zinc-100 p-1 shadow-xs dark:border-zinc-800 dark:bg-zinc-900']) }}>
+<div {{ $attributes->merge(['class' => 'rounded-xl border border-zinc-200/80 bg-zinc-50 p-1 dark:border-white/[0.06] dark:bg-zinc-950/60']) }}>
     @if (isset($header))
         <div class="{{ $headerClass }}">{{ $header }}</div>
     @endif

@@ -7,7 +7,6 @@ use App\Models\PermisoAccion;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Rol;
-use App\Models\Semestre;
 use App\Models\Turno;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,20 +62,11 @@ function otorgarPermisosAulaProceso(Usuario $usuario, array $claves): void
 }
 
 /**
- * @return array{semestre: Semestre, proceso: Proceso, aula: Aula, turno: Turno, asignacion: ProcesoAula}
+ * @return array{proceso: Proceso, aula: Aula, turno: Turno, asignacion: ProcesoAula}
  */
 function crearAulaProcesoContexto(int $indice, string $estado = 'HABILITADO'): array
 {
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "semestre_2026_{$indice}",
-        'nombre_sem' => "SEMESTRE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-01-05',
-        'fecha_fin_inscripcion_sem' => '2026-03-31',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "proceso_ordinario_2026_{$indice}",
         'nombre_pro' => "PROCESO ORDINARIO 2026-{$indice}",
         'fecha_inicio_pro' => '2026-01-10',
@@ -106,7 +96,7 @@ function crearAulaProcesoContexto(int $indice, string $estado = 'HABILITADO'): a
         'estado_pau' => $estado,
     ]);
 
-    return compact('semestre', 'proceso', 'aula', 'turno', 'asignacion');
+    return compact('proceso', 'aula', 'turno', 'asignacion');
 }
 
 test('authorized users can access aulas por proceso page', function () {
@@ -116,10 +106,10 @@ test('authorized users can access aulas por proceso page', function () {
     $this->actingAs($usuario)
         ->get(route('aulas.index'))
         ->assertOk()
-        ->assertSee('AULAS POR PROCESO');
+        ->assertSee('Aulas por proceso');
 });
 
-test('users can filter aulas por proceso by semestre proceso turno and estado', function () {
+test('users can filter aulas por proceso by proceso turno and estado', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAulaProceso($usuario, ['aula_proceso_indice']);
 
@@ -131,10 +121,6 @@ test('users can filter aulas por proceso by semestre proceso turno and estado', 
     Livewire::test('pages::configuracion-academica.aulas-proceso')
         ->assertSee($contextoA['aula']->nombre_aul)
         ->assertSee($contextoB['aula']->nombre_aul)
-        ->set('idSemestre', (string) $contextoA['semestre']->id_sem)
-        ->assertSee($contextoA['aula']->nombre_aul)
-        ->assertDontSee($contextoB['aula']->nombre_aul)
-        ->set('idSemestre', '')
         ->set('idProceso', (string) $contextoB['proceso']->id_pro)
         ->assertDontSee($contextoA['aula']->nombre_aul)
         ->assertSee($contextoB['aula']->nombre_aul)
@@ -148,7 +134,7 @@ test('users can filter aulas por proceso by semestre proceso turno and estado', 
         ->assertSee($contextoB['aula']->nombre_aul);
 });
 
-test('asignar aulas filters procesos by semestre', function () {
+test('asignar aulas lists every proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAulaProceso($usuario, ['aula_proceso_crear']);
 
@@ -159,10 +145,7 @@ test('asignar aulas filters procesos by semestre', function () {
 
     Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
         ->assertSee($contextoA['proceso']->nombre_pro)
-        ->assertSee($contextoB['proceso']->nombre_pro)
-        ->set('idSemestre', (string) $contextoA['semestre']->id_sem)
-        ->assertSee($contextoA['proceso']->nombre_pro)
-        ->assertDontSee($contextoB['proceso']->nombre_pro);
+        ->assertSee($contextoB['proceso']->nombre_pro);
 });
 
 test('asignar aulas allows the same aula in different turnos for one proceso', function () {
@@ -180,7 +163,6 @@ test('asignar aulas allows the same aula in different turnos for one proceso', f
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
-        ->set('idSemestre', (string) $contexto['semestre']->id_sem)
         ->set('idProceso', (string) $contexto['proceso']->id_pro)
         ->set('idTurno', (string) $turnoTarde->id_tur)
         ->set("seleccionadas.{$contexto['aula']->id_aul}", true)
@@ -211,7 +193,6 @@ test('asignar aulas restores a soft deleted assignment for the same proceso turn
     $this->actingAs($usuario);
 
     Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
-        ->set('idSemestre', (string) $contexto['semestre']->id_sem)
         ->set('idProceso', (string) $contexto['proceso']->id_pro)
         ->set('idTurno', (string) $contexto['turno']->id_tur)
         ->set("seleccionadas.{$contexto['aula']->id_aul}", true)

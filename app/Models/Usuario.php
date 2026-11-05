@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use WeakMap;
 
 #[Table('tbl_usuario', key: 'id_usu')]
 #[Fillable(['usuario_usu', 'clave_usu', 'correo_usu', 'nombres_usu', 'estado_usu', 'remember_token'])]
@@ -36,6 +37,11 @@ class Usuario extends Authenticatable
     public const UPDATED_AT = 'actualizado_en';
 
     public const DELETED_AT = 'eliminado_en';
+
+    /**
+     * @var WeakMap<object, array<int|string, array{administrador: bool, claves: array<string, true>}>>|null
+     */
+    private static ?WeakMap $permisosPorSolicitud = null;
 
     /**
      * @return array<string, string>
@@ -109,6 +115,14 @@ class Usuario extends Authenticatable
                 ->values();
         }
 
+        return $this->permisoAccionesDeRoles();
+    }
+
+    /**
+     * Acciones habilitadas que el usuario obtiene de sus roles habilitados.
+     */
+    private function permisoAccionesDeRoles(): Collection
+    {
         return $this->roles()
             ->where('estado_rol', EstadoCatalogo::Habilitado->value)
             ->with([
@@ -136,34 +150,55 @@ class Usuario extends Authenticatable
 
     public function hasPermisoAccion(string $clave): bool
     {
-        if ($this->esAdministrador()) {
-            return true;
-        }
+        $permisos = $this->permisosDeLaSolicitud();
 
-        return $this->roles()
-            ->where('estado_rol', EstadoCatalogo::Habilitado->value)
-            ->whereHas('rolPermisoAcciones', function ($rolePermissionQuery) use ($clave): void {
-                $rolePermissionQuery->whereHas('permisoAccion', function ($permissionActionQuery) use ($clave): void {
-                    $permissionActionQuery
-                        ->where('clave_peracc', $clave)
-                        ->where('estado_peracc', EstadoCatalogo::Habilitado->value)
-                        ->whereHas('permiso', function ($permissionQuery): void {
-                            $permissionQuery->where('estado_permiso', EstadoCatalogo::Habilitado->value);
-                        })
-                        ->whereHas('accion', function ($actionQuery): void {
-                            $actionQuery->where('estado_accion', EstadoCatalogo::Habilitado->value);
-                        });
-                });
-            })
-            ->exists();
+        return $permisos['administrador'] || isset($permisos['claves'][$clave]);
     }
 
     public function esAdministrador(): bool
     {
-        return $this->roles()
-            ->where('estado_rol', EstadoCatalogo::Habilitado->value)
-            ->where('nombre_rol', 'ADMINISTRADOR')
-            ->exists();
+        return $this->permisosDeLaSolicitud()['administrador'];
+    }
+
+    /**
+     * Descarta los permisos cacheados en la solicitud actual, por ejemplo
+     * después de cambiar roles o permisos.
+     */
+    public static function olvidarPermisosEnCache(): void
+    {
+        if (self::$permisosPorSolicitud !== null) {
+            unset(self::$permisosPorSolicitud[request()]);
+        }
+    }
+
+    /**
+     * Permisos del usuario calculados una sola vez por solicitud. Se guardan en
+     * un WeakMap indexado por la solicitud, así nunca pasan a otra solicitud.
+     *
+     * @return array{administrador: bool, claves: array<string, true>}
+     */
+    private function permisosDeLaSolicitud(): array
+    {
+        self::$permisosPorSolicitud ??= new WeakMap;
+
+        $solicitud = request();
+        $porUsuario = self::$permisosPorSolicitud[$solicitud] ?? [];
+
+        if (! isset($porUsuario[$this->getKey()])) {
+            $administrador = $this->roles()
+                ->where('estado_rol', EstadoCatalogo::Habilitado->value)
+                ->where('nombre_rol', 'ADMINISTRADOR')
+                ->exists();
+
+            $claves = $administrador
+                ? []
+                : $this->permisoAccionesDeRoles()->pluck('clave_peracc')->flip()->map(fn (): bool => true)->all();
+
+            $porUsuario[$this->getKey()] = ['administrador' => $administrador, 'claves' => $claves];
+            self::$permisosPorSolicitud[$solicitud] = $porUsuario;
+        }
+
+        return $porUsuario[$this->getKey()];
     }
 
     public function pagosValidados(): HasMany

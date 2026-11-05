@@ -1,38 +1,38 @@
 @section ('icon')
-    <x-header.icon icon="shield-check" />
+    <x-header.icon icon="check-shield" />
 @endsection
 
 @section ('header')
-    <x-header.title>VALIDAR PAGOS</x-header.title>
+    <x-header.title>Validar pagos</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('pagos.index') }}" wire:navigate>PAGOS</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('pagos.index') }}" wire:navigate>Pagos</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('pagos.validar') }}" wire:navigate>VALIDAR PAGOS</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('pagos.validar') }}" wire:navigate>Validar pagos</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
     <div class="grid gap-5 xl:grid-cols-[24rem_minmax(0,1fr)]">
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div class="space-y-1">
                         <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">BUSCAR OBLIGACION</h3>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                            Busque por codigo de inscripcion, DNI o nombre del postulante.
+                            Busque por código de inscripción, DNI o nombre del postulante.
                         </p>
                     </div>
 
                     <x-ui.input
-                        label="Inscripcion o postulante"
+                        label="Inscripción o postulante"
                         type="text"
                         wire:model.live.debounce.400ms="buscarObligacion"
-                        iconLeading="magnifying-glass"
+                        iconLeading="search"
                         floating
                     />
 
@@ -44,12 +44,12 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="mb-4 flex items-center justify-between gap-3">
                     <div>
                         <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">OBLIGACIONES PENDIENTES</h3>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                            Seleccione la obligacion sobre la que se validara el pago.
+                            Seleccione la obligación sobre la que se validará el pago.
                         </p>
                     </div>
 
@@ -90,7 +90,7 @@
                             </div>
                         </button>
                     @empty
-                        <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/10">
+                        <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/[0.06]">
                             <div class="flex flex-col items-center justify-center space-y-3">
                                 <x-ui.icon name="wallet" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">No se encontraron obligaciones pendientes con ese criterio.</p>
@@ -104,11 +104,11 @@
         <div class="space-y-5">
             @if ($this->obligacionSeleccionada)
                 @php($obligacionSeleccionada = $this->obligacionSeleccionada)
-                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div class="space-y-2">
                             <div class="space-y-1">
-                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Obligacion seleccionada</p>
+                                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Obligación seleccionada</p>
                                 <h3 class="text-base font-semibold text-zinc-800 dark:text-zinc-100">{{ $this->resumenObligacion($obligacionSeleccionada) }}</h3>
                             </div>
 
@@ -126,18 +126,18 @@
                             </flux:badge>
 
                             <flux:button variant="ghost" size="sm" wire:click="limpiarSeleccionObligacion">
-                                Cambiar obligacion
+                                Cambiar obligación
                             </flux:button>
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="space-y-5">
                         <div class="space-y-1">
                             <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">BUSCAR PAGO IMPORTADO</h3>
                             <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                Valide por DNI, operacion visible y fecha del pago registrado por el banco.
+                                Valide por DNI, operación visible y fecha del pago registrado por el banco.
                             </p>
                         </div>
 
@@ -153,7 +153,7 @@
                             />
 
                             <x-ui.input
-                                label="Operacion"
+                                label="Operación"
                                 type="text"
                                 wire:model.live="numeroOperacionBusqueda"
                                 :invalid="$errors->has('numeroOperacionBusqueda')"
@@ -180,7 +180,7 @@
 
                             <flux:button variant="primary" wire:click="buscarPagos" class="font-normal">
                                 <x-slot name="icon">
-                                    <x-ui.icon name="magnifying-glass" size="5" class="text-white" />
+                                    <x-ui.icon name="search" size="5" class="text-white" />
                                 </x-slot>
                                 Buscar pago
                             </flux:button>
@@ -188,13 +188,13 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="space-y-4">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <h3 class="text-sm font-semibold tracking-wide text-zinc-800 dark:text-zinc-100">RESULTADOS DE LA BUSQUEDA</h3>
                                 <p class="text-sm text-zinc-500 dark:text-zinc-400">
-                                    Seleccione el pago correcto y confirme la validacion.
+                                    Seleccione el pago correcto y confirme la validación.
                                 </p>
                             </div>
 
@@ -242,7 +242,7 @@
                                 @endforeach
                             </div>
 
-                            <div class="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-zinc-950/40">
+                            <div class="flex flex-col gap-3 rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/[0.06] dark:bg-zinc-950/40">
                                 <div class="space-y-1">
                                     <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
                                         {{ $this->detalleSeleccionado ? $this->resumenDetalle($this->detalleSeleccionado) : 'Seleccione un pago para continuar' }}
@@ -265,16 +265,16 @@
                                 </flux:button>
                             </div>
                         @elseif ($busquedaRealizada)
-                            <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/10">
+                            <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/[0.06]">
                                 <div class="flex flex-col items-center justify-center space-y-3">
                                     <x-ui.icon name="receipt" size="12" class="text-zinc-400 dark:text-zinc-500" />
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">No se encontraron pagos importados con ese DNI, operacion y fecha.</p>
+                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">No se encontraron pagos importados con ese DNI, operación y fecha.</p>
                                 </div>
                             </div>
                         @else
-                            <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/10">
+                            <div class="rounded-xl border border-dashed border-zinc-300 px-5 py-10 text-center dark:border-white/[0.06]">
                                 <div class="flex flex-col items-center justify-center space-y-3">
-                                    <x-ui.icon name="magnifying-glass" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                    <x-ui.icon name="search" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                     <p class="text-sm text-zinc-500 dark:text-zinc-400">Complete la busqueda para ver pagos disponibles.</p>
                                 </div>
                             </div>
@@ -282,12 +282,12 @@
                     </div>
                 </div>
             @else
-                <div class="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-xs dark:border-white/10 dark:bg-zinc-900">
+                <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        <x-ui.icon name="shield-check" size="14" class="text-zinc-400 dark:text-zinc-500" />
-                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Seleccione una obligacion de pago para iniciar la validacion.</p>
+                        <x-ui.icon name="check-shield" size="14" class="text-zinc-400 dark:text-zinc-500" />
+                        <p class="text-sm font-medium text-zinc-700 dark:text-zinc-200">Seleccione una obligación de pago para iniciar la validación.</p>
                         <p class="max-w-md text-sm text-zinc-500 dark:text-zinc-400">
-                            Una vez seleccionada, podra buscar el pago importado por DNI, operacion visible y fecha del deposito.
+                            Una vez seleccionada, podrá buscar el pago importado por DNI, operación visible y fecha del depósito.
                         </p>
                     </div>
                 </div>

@@ -1,16 +1,16 @@
 @section ('icon')
-    <x-header.icon icon="building-office" />
+    <x-header.icon icon="building" />
 @endsection
 
 @section ('header')
-    <x-header.title>AULAS POR PROCESO</x-header.title>
+    <x-header.title>Aulas por proceso</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('aulas.index') }}" wire:navigate>AULAS POR PROCESO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('aulas.index') }}" wire:navigate>Aulas por proceso</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
@@ -25,7 +25,7 @@
         <div class="flex-1">
             <flux:input wire:model.live.debounce.500ms="buscar" placeholder="Buscar aulas por proceso" clearable>
                 <x-slot name="icon">
-                    <x-ui.icon name="magnifying-glass" size="5" class="text-zinc-400 dark:text-zinc-500" />
+                    <x-ui.icon name="search" size="5" class="text-zinc-400 dark:text-zinc-500" />
                 </x-slot>
             </flux:input>
         </div>
@@ -38,7 +38,7 @@
                 wire:navigate
             >
                 <x-slot name="icon">
-                    <x-ui.icon name="stack-plus" size="5" class="text-white" />
+                    <x-ui.icon name="layers-plus-alt" size="5" class="text-white" />
                 </x-slot>
                 Asignar aulas
             </flux:button>
@@ -46,23 +46,13 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3">
-        <div class="w-full sm:w-40">
-            <x-ui.select wire:model.live="idSemestre" placeholder="Filtrar por semestre">
-                <option value="">Todos los semestres</option>
-                @foreach ($this->semestresDisponibles as $semestre)
-                    <option wire:key="semestre-aula-proceso-{{ $semestre->id_sem }}" value="{{ $semestre->id_sem }}">
-                        {{ $semestre->nombre_sem }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-        </div>
 
         <div class="w-full sm:w-56">
-            <x-ui.select wire:model.live="idProceso" wire:key="aulas-proceso-select-{{ $idSemestre !== '' ? $idSemestre : 'todos' }}" placeholder="Filtrar por proceso">
+            <x-ui.select wire:model.live="idProceso" placeholder="Filtrar por proceso">
                 <option value="">Todos los procesos</option>
                 @foreach ($this->procesosDisponibles as $proceso)
                     <option wire:key="proceso-filtro-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                        {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                        {{ $proceso->nombre_pro }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -82,49 +72,37 @@
         <flux:dropdown>
             <flux:button class="font-normal" icon:trailing="chevron-down">
                 <x-slot name="icon">
-                    <x-ui.icon name="funnel" size="5" />
+                    <x-ui.icon name="filter" size="5" />
                 </x-slot>
                 Estado
                 @if (count($this->estadosSeleccionados) > 0)
-                    <flux:badge color="zinc" class="ms-2">{{ count($this->estadosSeleccionados) }}</flux:badge>
+                    <span class="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-index-500 px-1.5 text-[11px] leading-5 font-semibold text-white">{{ count($this->estadosSeleccionados) }}</span>
                 @endif
             </flux:button>
 
             <flux:menu keep-open class="dark:bg-zinc-800">
                 @foreach ($this->estados() as $estado)
                     <flux:menu.checkbox wire:model.live="filtroEstado.{{ $estado->value }}" class="font-normal">
-                        <div
-                            class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                        >
-                            <x-ui.icon :name="$estado->getIcon()" size="4" class="text-{{ $estado->getColor() }}-500" />
-                        </div>
+                        <x-ui.icon :name="$estado->getIcon()" size="4" class="me-2 text-{{ $estado->getColor() }}-500" />
                         {{ ucfirst(strtolower($estado->getNombre())) }}
                     </flux:menu.checkbox>
                 @endforeach
 
-                @if ($idSemestre !== '' || $idProceso !== '' || count($this->estadosSeleccionados) > 0)
+                @if ($idProceso !== '' || count($this->estadosSeleccionados) > 0)
                     <flux:menu.separator />
-                    @if ($idSemestre !== '' || $idProceso !== '')
+                    @if ($idProceso !== '')
                         <flux:menu.item wire:click="limpiarFiltrosAcademicos" class="font-normal!">
                             <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="x" size="4" />
-                                </div>
+                                <x-ui.icon name="x" size="4" class="me-2" />
                             </x-slot>
-                            Limpiar filtros academicos
+                            Limpiar filtros académicos
                         </flux:menu.item>
                     @endif
 
                     @if (count($this->estadosSeleccionados) > 0)
                         <flux:menu.item variant="danger" wire:click="limpiarFiltroEstado" class="font-normal!">
                             <x-slot name="icon">
-                                <div
-                                    class="me-1.5 flex size-6 items-center justify-center rounded-sm border border-zinc-200 bg-white shadow-xs dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black"
-                                >
-                                    <x-ui.icon name="trash" size="4" />
-                                </div>
+                                <x-ui.icon name="trash" size="4" class="me-2" />
                             </x-slot>
                             Limpiar estados
                         </flux:menu.item>
@@ -139,15 +117,15 @@
             <x-table.head>
                 <x-table.row>
                     <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
-                    <x-table.heading class="min-w-56">PROCESO</x-table.heading>
-                    <x-table.heading class="min-w-44">AULA</x-table.heading>
-                    <x-table.heading class="min-w-32">LUGAR</x-table.heading>
-                    <x-table.heading class="min-w-32">TURNO</x-table.heading>
+                    <x-table.heading>PROCESO</x-table.heading>
+                    <x-table.heading>AULA</x-table.heading>
+                    <x-table.heading>LUGAR</x-table.heading>
+                    <x-table.heading>TURNO</x-table.heading>
                     <x-table.heading class="w-24">CAPACIDAD</x-table.heading>
                     <x-table.heading class="w-24">INSCRITOS</x-table.heading>
                     <x-table.heading class="w-32">ESTADO</x-table.heading>
-                    <x-table.heading class="min-w-35">REGISTRO</x-table.heading>
-                    <x-table.heading class="w-24"></x-table.heading>
+                    <x-table.heading>REGISTRO</x-table.heading>
+                    <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
                 </x-table.row>
             </x-table.head>
 
@@ -158,12 +136,11 @@
                         <x-table.cell>
                             <div class="space-y-0">
                                 <div class="font-medium text-zinc-800 dark:text-zinc-100">{{ $asignacion->proceso?->nombre_pro }}</div>
-                                <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $asignacion->proceso?->semestre?->nombre_sem }}</div>
                             </div>
                         </x-table.cell>
                         <x-table.cell>
                             <div class="flex items-center gap-2">
-                                <x-ui.icon name="building-office" size="4" class="text-zinc-400" />
+                                <x-ui.icon name="building" size="4" class="text-zinc-400" />
                                 <span class="font-medium text-zinc-800 dark:text-zinc-100">
                                     {{ $asignacion->aula?->nombre_aul }}
                                 </span>
@@ -183,19 +160,21 @@
                         </x-table.cell>
                         <x-table.cell>{{ $asignacion->inscripciones_count }}</x-table.cell>
                         <x-table.cell>
-                            <flux:badge color="{{ $asignacion->estado_pau->getColor() }}" size="lg">
+                            <flux:badge color="{{ $asignacion->estado_pau->getColor() }}">
                                 <x-slot name="icon">
                                     <x-ui.icon :name="$asignacion->estado_pau->getIcon()" size="4" class="me-1" />
                                 </x-slot>
                                 {{ $asignacion->estado_pau->getNombre() }}
                             </flux:badge>
                         </x-table.cell>
-                        <x-table.cell>{{ $asignacion->creado_en->format('d M Y, h:i a') }}</x-table.cell>
+                        <x-table.cell class="h-auto py-2"><span class="block tabular-nums">{{ $asignacion->creado_en->format('d/m/Y') }}</span><span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $asignacion->creado_en->format('h:i a') }}</span></x-table.cell>
                         <x-table.cell>
                             @if ($puedeGestionarAcciones)
-                                <flux:dropdown>
-                                    <flux:button icon:trailing="chevron-down" size="sm" variant="filled" class="font-normal">
-                                        Acciones
+                                <flux:dropdown position="bottom" align="end">
+                                    <flux:button size="sm" variant="subtle" square aria-label="Acciones">
+                                        <x-slot name="icon">
+                                            <x-ui.icon name="dots-vertical-rounded" size="5" />
+                                        </x-slot>
                                     </flux:button>
                                     <flux:menu>
                                         @permiso ('aula_proceso_editar')
@@ -210,7 +189,7 @@
                                         @permiso ('aula_proceso_estado')
                                             <flux:menu.item wire:click="$js.cargarAlertaEstado({{ $asignacion->id_pau }}, '{{ $asignacion->aula?->nombre_aul }}')">
                                                 <x-slot name="icon">
-                                                    <x-ui.icon name="arrows-clockwise" size="4" class="me-2" />
+                                                    <x-ui.icon name="refresh-cw" size="4" class="me-2" />
                                                 </x-slot>
                                                 Estado
                                             </flux:menu.item>
@@ -236,7 +215,7 @@
                     <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
                         <x-table.cell colspan="10" class="h-auto py-10 text-center whitespace-normal">
                             <div class="flex flex-col items-center justify-center space-y-3">
-                                <x-ui.icon name="building-office" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                                <x-ui.icon name="building" size="12" class="text-zinc-400 dark:text-zinc-500" />
                                 <p class="text-zinc-500 dark:text-zinc-400">No se encontraron asignaciones con los filtros aplicados.</p>
                             </div>
                         </x-table.cell>
@@ -248,14 +227,14 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idSemestre, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idSemestre, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
+            wire:target="buscar, idProceso, idTurno, filtroEstado, limpiarFiltrosAcademicos, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
-            <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+            <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
     </div>
 
@@ -292,7 +271,7 @@
                         <flux:spacer />
                         <flux:button variant="primary" type="submit" class="font-normal">
                             <x-slot name="icon">
-                                <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                                <x-ui.icon name="save" size="5" class="text-white" />
                             </x-slot>
                             Guardar
                         </flux:button>
@@ -308,8 +287,8 @@
         this.$js.cargarAlertaEstado = (id_asignacion, nombre) => {
             this.$dispatch('alert', {
                 type: 'question',
-                title: 'Confirmacion requerida',
-                message: '¿Esta seguro de que desea cambiar el estado del aula "' + nombre + '" en este proceso?',
+                title: 'Confirmación requerida',
+                message: '¿Está seguro de que desea cambiar el estado del aula "' + nombre + '" en este proceso?',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Aceptar',
@@ -322,8 +301,8 @@
         this.$js.cargarAlertaEliminar = (id_asignacion, nombre) => {
             this.$dispatch('alert', {
                 type: 'error',
-                title: 'Atencion',
-                message: '¿Esta seguro de que desea eliminar la asignacion del aula "' + nombre + '"? Esta accion es irreversible.',
+                title: 'Atención',
+                message: '¿Está seguro de que desea eliminar la asignación del aula "' + nombre + '"? Esta acción es irreversible.',
                 showCancel: true,
                 showConfirm: true,
                 confirmText: 'Eliminar',

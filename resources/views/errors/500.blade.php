@@ -4,7 +4,7 @@
 @section ('title', 'Error del servidor')
 
 @section ('illustration')
-    <i class="ki-duotone ki-information-1 text-7xl text-red-600"></i>
+    <x-ui.icon name="info-circle" size="10" />
 @endsection
 
 @section ('message')

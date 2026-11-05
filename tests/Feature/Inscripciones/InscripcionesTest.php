@@ -21,7 +21,6 @@ use App\Models\ProcesoOferta;
 use App\Models\Rol;
 use App\Models\Sede;
 use App\Models\SedeCarrera;
-use App\Models\Semestre;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
@@ -132,16 +131,7 @@ function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENT
         ],
     );
 
-    $semestre = Semestre::query()->create([
-        'codigo_sem' => "semestre_2026_{$indice}",
-        'nombre_sem' => "SEMESTRE 2026-{$indice}",
-        'fecha_inicio_inscripcion_sem' => '2026-03-01',
-        'fecha_fin_inscripcion_sem' => '2026-06-30',
-        'estado_sem' => 'HABILITADO',
-    ]);
-
     $proceso = Proceso::query()->create([
-        'id_semestre' => $semestre->id_sem,
         'codigo_pro' => "proceso_{$indice}",
         'nombre_pro' => "PROCESO {$indice}",
         'fecha_inicio_pro' => '2026-03-01',
@@ -259,7 +249,7 @@ test('authorized users can access inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.index'))
         ->assertOk()
-        ->assertSee('INSCRIPCIONES');
+        ->assertSee('Inscripciones');
 });
 
 test('authenticated users without permiso cannot access inscripciones page', function () {
@@ -280,7 +270,7 @@ test('users can filter inscripciones by search process and state', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->assertSee('INS-1')
         ->assertSee('INS-2')
         ->assertSee($contextoPendiente['aula']->nombre_aul)
@@ -298,41 +288,39 @@ test('users can filter inscripciones by search process and state', function () {
         ->assertDontSee('INS-1');
 });
 
-test('list defaults to current semester and can filter by semester modalidad and lugar', function () {
+test('list defaults to the current proceso and can filter by proceso modalidad and lugar', function () {
     Carbon::setTestNow('2026-04-17 09:30:00');
 
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
 
-    $contextoSemestreActual = crearContextoListadoInscripcion(9, 'ACTIVO');
-    $contextoOtroSemestre = crearContextoListadoInscripcion(10, 'ACTIVO');
+    $contextoProcesoActual = crearContextoListadoInscripcion(9, 'ACTIVO');
+    $contextoOtroProceso = crearContextoListadoInscripcion(10, 'ACTIVO');
 
-    $contextoSemestreActual['proceso']->semestre->update([
-        'fecha_inicio_inscripcion_sem' => '2026-04-01',
-        'fecha_fin_inscripcion_sem' => '2026-04-30',
-        'nombre_sem' => 'SEMESTRE ACTUAL',
+    $contextoProcesoActual['proceso']->update([
+        'fecha_inicio_pro' => '2026-04-01',
+        'fecha_fin_pro' => '2026-04-30',
     ]);
 
-    $contextoOtroSemestre['proceso']->semestre->update([
-        'fecha_inicio_inscripcion_sem' => '2026-01-01',
-        'fecha_fin_inscripcion_sem' => '2026-02-28',
-        'nombre_sem' => 'SEMESTRE ANTERIOR',
+    $contextoOtroProceso['proceso']->update([
+        'fecha_inicio_pro' => '2026-01-01',
+        'fecha_fin_pro' => '2026-02-28',
     ]);
 
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->assertSet('idSemestre', (string) $contextoSemestreActual['proceso']->id_semestre)
+        ->assertSet('idProceso', (string) $contextoProcesoActual['proceso']->id_pro)
         ->assertSee('INS-9')
         ->assertDontSee('INS-10')
-        ->set('idSemestre', (string) $contextoOtroSemestre['proceso']->id_semestre)
+        ->set('idProceso', (string) $contextoOtroProceso['proceso']->id_pro)
         ->assertSee('INS-10')
         ->assertDontSee('INS-9')
-        ->set('idSemestre', (string) $contextoSemestreActual['proceso']->id_semestre)
-        ->set('idModalidad', (string) $contextoSemestreActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('idProceso', (string) $contextoProcesoActual['proceso']->id_pro)
+        ->set('idModalidad', (string) $contextoProcesoActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
         ->assertSee('INS-9')
         ->assertDontSee('INS-10')
-        ->set('idLugarInscripcion', (string) $contextoSemestreActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('idLugarInscripcion', (string) $contextoProcesoActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
         ->assertSee('INS-9')
         ->assertDontSee('INS-10');
 
@@ -350,7 +338,7 @@ test('inscripciones summary shows counts by state', function () {
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->assertSee('3')
         ->assertSee('1');
 });
@@ -364,7 +352,7 @@ test('authorized users can access inscripcion detail page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($contextoActivo['inscripcion']->id_ins)))
         ->assertOk()
-        ->assertSee('DETALLE DE INSCRIPCION')
+        ->assertSee('Detalle de inscripción')
         ->assertSee($contextoActivo['inscripcion']->codigo_ins)
         ->assertSee($contextoActivo['persona']->numero_documento_per)
         ->assertSee($contextoActivo['proceso']->nombre_pro)
@@ -401,7 +389,7 @@ test('list shows detail action for active and pending inscripciones and continue
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->assertSee('Ver detalle')
         ->assertSee('Continuar registro');
 });
@@ -415,7 +403,7 @@ test('report list does not show continue action when user lacks inscripcion crea
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->assertDontSee('Continuar registro');
 });
 
@@ -450,7 +438,7 @@ test('users can export inscripciones to excel preserving current filters', funct
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->set('filtroEstado.PENDIENTE', true)
         ->call('exportarExcel');
 
@@ -483,7 +471,7 @@ test('users without export permiso cannot export inscripciones to excel', functi
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idSemestre', '')
+        ->set('idProceso', '')
         ->call('exportarExcel')
         ->assertForbidden();
 });

@@ -1,25 +1,25 @@
 @section ('icon')
-    <x-header.icon icon="stack-plus" />
+    <x-header.icon icon="layers-plus-alt" />
 @endsection
 
 @section ('header')
-    <x-header.title>ASIGNAR OFERTAS</x-header.title>
+    <x-header.title>Asignar ofertas</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
-        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>INICIO</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('ofertas.index') }}" wire:navigate>OFERTAS</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('ofertas.index') }}" wire:navigate>Ofertas</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('ofertas.asignar') }}" wire:navigate>ASIGNAR</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('ofertas.asignar') }}" wire:navigate>Asignar</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
     <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div class="space-y-5">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="grid gap-4 lg:grid-cols-2">
                     <div class="min-w-0">
                         <x-ui.select
@@ -33,7 +33,7 @@
                             <option value="">Seleccionar proceso</option>
                             @foreach ($this->procesosDisponibles as $proceso)
                                 <option wire:key="proceso-asignar-{{ $proceso->id_pro }}" value="{{ $proceso->id_pro }}">
-                                    {{ $proceso->nombre_pro }} | {{ $proceso->semestre?->nombre_sem }}
+                                    {{ $proceso->nombre_pro }}
                                 </option>
                             @endforeach
                         </x-ui.select>
@@ -59,14 +59,14 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="grid gap-4 lg:grid-cols-3">
                     <div class="min-w-0">
                         <x-ui.input
                             label="Buscar oferta base"
                             type="text"
                             wire:model.live.debounce.400ms="buscar"
-                            iconLeading="magnifying-glass"
+                            iconLeading="search"
                             floating
                         />
                     </div>
@@ -91,7 +91,7 @@
 
                     <div class="min-w-0">
                         <x-ui.select
-                            label="Lugar inscripcion"
+                            label="Lugar inscripción"
                             wire:model.live="idLugarInscripcion"
                             :invalid="$errors->has('idLugarInscripcion')"
                             :error="$errors->first('idLugarInscripcion')"
@@ -141,9 +141,9 @@
                         <x-table.head>
                             <x-table.row>
                                 <x-table.heading class="w-16 max-w-16">SEL.</x-table.heading>
-                                <x-table.heading class="min-w-20">COD.</x-table.heading>
-                                <x-table.heading class="min-w-80">OFERTA BASE</x-table.heading>
-                                <x-table.heading class="min-w-24">ASIGNADA</x-table.heading>
+                                <x-table.heading>COD.</x-table.heading>
+                                <x-table.heading>OFERTA BASE</x-table.heading>
+                                <x-table.heading>ASIGNADA</x-table.heading>
                             </x-table.row>
                         </x-table.head>
 
@@ -203,22 +203,22 @@
                         wire:loading.flex
                         wire:target="buscar, idProceso, idTurno, idModalidad, idLugarInscripcion, seleccionadas, guardar, seleccionarTodasLasOfertasVisibles, limpiarSeleccionadasVisibles"
                     >
-                        <x-ui.icon name="spinner-gap" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
+                        <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
                     </div>
                 </div>
             @else
-                <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                     <div class="flex flex-col items-center justify-center space-y-3">
-                        <x-ui.icon name="funnel" size="12" class="text-zinc-400 dark:text-zinc-500" />
+                        <x-ui.icon name="filter" size="12" class="text-zinc-400 dark:text-zinc-500" />
                         <p class="text-zinc-700 dark:text-zinc-200">Seleccione modalidad y lugar de inscripcion para ver las ofertas disponibles.</p>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Luego podra seleccionar varias ofertas en una sola carga.</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Luego podrá seleccionar varias ofertas en una sola carga.</p>
                     </div>
                 </div>
             @endif
         </div>
 
         <div class="space-y-4">
-            <div class="rounded-xl border border-zinc-200 bg-white p-5 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
                 <div class="space-y-4">
                     <div>
                         <p class="text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400">Proceso</p>
@@ -226,7 +226,7 @@
                             {{ $this->procesoSeleccionado?->nombre_pro ?? 'Seleccione un proceso' }}
                         </p>
                         <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            {{ $this->procesoSeleccionado?->semestre?->nombre_sem ?? 'Sin semestre seleccionado' }}
+                            {{ $this->procesoSeleccionado ? $this->procesoSeleccionado->fecha_inicio_pro?->format('d/m/Y h:i a').' al '.$this->procesoSeleccionado->fecha_fin_pro?->format('d/m/Y h:i a') : 'Sin proceso seleccionado' }}
                         </p>
                     </div>
 
@@ -255,7 +255,7 @@
 
                     <flux:button variant="primary" class="w-full font-normal" wire:click="guardar">
                         <x-slot name="icon">
-                            <x-ui.icon name="floppy-disk" size="5" class="text-white" />
+                            <x-ui.icon name="save" size="5" class="text-white" />
                         </x-slot>
                         Registrar seleccionadas
                     </flux:button>

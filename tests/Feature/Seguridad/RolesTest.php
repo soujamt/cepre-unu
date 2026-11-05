@@ -58,7 +58,7 @@ test('authorized users can access the roles page', function () {
     $this->actingAs($usuario)
         ->get(route('roles.index'))
         ->assertOk()
-        ->assertSee('ROLES');
+        ->assertSee('Roles');
 });
 
 test('authorized users can register a role', function () {

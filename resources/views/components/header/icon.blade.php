@@ -1,7 +1,7 @@
-@props (['icon' => 'house-simple'])
+@props (['icon' => 'home'])
 
 <div
-    class="flex size-10 items-center justify-center rounded-lg border border-zinc-100 bg-zinc-50 shadow-xs inset-shadow-xs inset-shadow-white/15 dark:border-zinc-800 dark:bg-zinc-900/50 dark:shadow-black/40"
+    class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-index-100 bg-index-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] dark:border-index-500/20 dark:bg-index-500/10 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
 >
-    <x-ui.icon :name="$icon" size="6" class="text-index-500 dark:text-index-200" />
+    <x-ui.icon :name="$icon" size="5" class="text-index-500 dark:text-index-300" />
 </div>

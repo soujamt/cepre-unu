@@ -16,7 +16,7 @@ use Livewire\Component;
 
 new
 #[Layout('layouts.app')]
-#[Title('VALIDAR PAGOS')]
+#[Title('Validar pagos')]
 class extends Component
 {
     use AuthorizesPermisos;

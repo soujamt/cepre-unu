@@ -36,29 +36,16 @@ test('academic initial seeder creates a usable base configuration', function () 
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
 
-    $semestreId = DB::table('tbl_semestre')
-        ->where('codigo_sem', '2026_1')
-        ->value('id_sem');
-
-    $procesoId = DB::table('tbl_proceso')
-        ->where('codigo_pro', 'ordinario_2026_1')
-        ->value('id_pro');
-
-    expect($semestreId)->not->toBeNull();
-    expect($procesoId)->not->toBeNull();
-
-    $semestre = DB::table('tbl_semestre')
-        ->where('id_sem', $semestreId)
+    $proceso = DB::table('tbl_proceso')
+        ->where('codigo_pro', '2026_1')
         ->first();
 
-    expect((string) $semestre->fecha_inicio_inscripcion_sem)->toStartWith('2026-04-01');
-    expect((string) $semestre->fecha_fin_inscripcion_sem)->toStartWith('2026-04-30');
+    expect($proceso)->not->toBeNull();
+    expect($proceso->nombre_pro)->toBe('2026-1');
+    expect((string) $proceso->fecha_inicio_pro)->toStartWith('2026-04-01');
+    expect((string) $proceso->fecha_fin_pro)->toStartWith('2026-04-30');
 
-    expect(DB::table('tbl_proceso')
-        ->where('id_pro', $procesoId)
-        ->where('id_semestre', $semestreId)
-        ->where('nombre_pro', 'ORDINARIO')
-        ->exists())->toBeTrue();
+    $procesoId = $proceso->id_pro;
 
     $ofertasEsperadas = DB::table('tbl_oferta_base as ofb')
         ->join('tbl_modalidad_lugar_inscripcion as mli', 'mli.id_mli', '=', 'ofb.id_modalidad_lugar_inscripcion')

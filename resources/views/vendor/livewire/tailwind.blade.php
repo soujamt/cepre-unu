@@ -76,7 +76,7 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                     @if ($paginator->onFirstPage())
                         <flux:button disabled>
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-left" size="5" />
+                                <x-ui.icon name="chevron-left" size="5" />
                             </x-slot>
                         </flux:button>
                     @else
@@ -87,7 +87,7 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                             dusk="previousPage{{ $paginator->getPageName() == 'page' ? '' : '.' . $paginator->getPageName() }}.after"
                         >
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-left" size="5" />
+                                <x-ui.icon name="chevron-left" size="5" />
                             </x-slot>
                         </flux:button>
                     @endif
@@ -143,13 +143,13 @@ $scrollIntoViewJsSnippet = ($scrollTo !== false)
                             dusk="nextPage{{ $paginator->getPageName() == 'page' ? '' : '.' . $paginator->getPageName() }}.after"
                         >
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-right" size="5" />
+                                <x-ui.icon name="chevron-right" size="5" />
                             </x-slot>
                         </flux:button>
                     @else
                         <flux:button disabled>
                             <x-slot name="icon">
-                                <x-ui.icon name="caret-right" size="5" />
+                                <x-ui.icon name="chevron-right" size="5" />
                             </x-slot>
                         </flux:button>
                     @endif

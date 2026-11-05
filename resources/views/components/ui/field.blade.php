@@ -73,7 +73,7 @@
 
     @if ($invalid && $error)
         <p class="flex items-center gap-1 text-xs font-medium {{ $hintClasses }}">
-            <x-ui.icon name="warning-circle" size="4" />
+            <x-ui.icon name="alert-circle" size="4" />
             {{ $error }}
         </p>
     @elseif ($hint)

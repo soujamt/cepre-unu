@@ -95,7 +95,7 @@ test('authorized users can access pagos page', function () {
     $this->actingAs($usuario)
         ->get(route('pagos.index'))
         ->assertOk()
-        ->assertSee('PAGOS');
+        ->assertSee('Pagos');
 });
 
 test('authenticated users without permiso cannot access pagos page', function () {

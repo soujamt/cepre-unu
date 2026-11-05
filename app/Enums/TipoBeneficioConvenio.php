@@ -34,9 +34,9 @@ enum TipoBeneficioConvenio: string implements PresentableEnum
     public function getIcon(): string
     {
         return match ($this) {
-            self::ExoneracionTotal => 'badge-percent',
-            self::ExoneracionParcial => 'ticket-percent',
-            self::Descuento => 'receipt-percent',
+            self::ExoneracionTotal => 'discount',
+            self::ExoneracionParcial => 'discount',
+            self::Descuento => 'percentage',
         };
     }
 

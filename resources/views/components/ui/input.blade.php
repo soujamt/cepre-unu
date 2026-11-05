@@ -34,7 +34,7 @@
     $inputClasses = \App\Helpers\Flux::classes()
         ->add('peer block w-full rounded-lg border disabled:shadow-none dark:shadow-none')
         ->add('appearance-none')
-        ->add('bg-white dark:bg-zinc-800 dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
+        ->add('bg-white dark:bg-control dark:disabled:bg-white/7 text-zinc-700 disabled:text-zinc-500 placeholder-zinc-400 disabled:placeholder-zinc-400/70 dark:text-zinc-300 dark:disabled:text-zinc-400 dark:placeholder-zinc-400 dark:disabled:placeholder-zinc-500')
         ->add($heightClasses)
         ->add($paddingLeft)
         ->add($paddingRight)
@@ -109,15 +109,11 @@
                 <button
                     type="button"
                     x-on:click="showPassword = !showPassword"
-                    class="flex items-center justify-center text-zinc-400 transition-colors hover:text-zinc-600 focus:outline-none dark:text-white/60 dark:hover:text-white"
+                    class="-me-1.5 flex size-8 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 focus-visible:ring-1 focus-visible:ring-accent focus-visible:outline-none dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white"
                     :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                 >
-                    <span x-show="!showPassword">
-                        <x-ui.icon name="eye" size="5" />
-                    </span>
-                    <span x-show="showPassword" x-cloak>
-                        <x-ui.icon name="eye-slash" size="5" />
-                    </span>
+                    <x-ui.icon name="eye" size="5" x-show="!showPassword" />
+                    <x-ui.icon name="eye-slash" size="5" x-show="showPassword" x-cloak />
                 </button>
             @elseif ($iconTrailing)
                 <div class="pointer-events-none">

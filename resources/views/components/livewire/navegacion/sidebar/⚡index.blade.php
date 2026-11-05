@@ -12,7 +12,7 @@ new class extends Component
         return [
             [
                 'label' => 'SEGURIDAD',
-                'icon' => 'shield-check',
+                'icon' => 'check-shield',
                 'active' => $this->routeIs('seguridad.*', 'usuarios.*', 'roles.*', 'permisos.*'),
                 'items' => [
                     ['label' => 'USUARIOS', 'href' => route('usuarios.index'), 'active' => $this->routeIs('usuarios.*'), 'permiso' => 'usuario_indice'],
@@ -22,8 +22,8 @@ new class extends Component
             ],
             [
                 'label' => 'MANTENEDORES',
-                'icon' => 'folders',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'mantenedor-colegios.*', 'tipos-expediente.*'),
+                'icon' => 'folder',
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -32,10 +32,46 @@ new class extends Component
                         'permiso' => 'aula_indice',
                     ],
                     [
+                        'label' => 'CARRERAS',
+                        'href' => route('carreras.index'),
+                        'active' => $this->routeIs('carreras.*'),
+                        'permiso' => 'carrera_indice',
+                    ],
+                    [
                         'label' => 'COLEGIOS',
                         'href' => route('mantenedor-colegios.index'),
                         'active' => $this->routeIs('mantenedor-colegios.*'),
                         'permiso' => 'colegio_indice',
+                    ],
+                    [
+                        'label' => 'CONCEPTOS DE PAGO',
+                        'href' => route('conceptos-pago.index'),
+                        'active' => $this->routeIs('conceptos-pago.*'),
+                        'permiso' => 'concepto_pago_indice',
+                    ],
+                    [
+                        'label' => 'LUGARES DE INSCRIPCIÓN',
+                        'href' => route('lugares-inscripcion.index'),
+                        'active' => $this->routeIs('lugares-inscripcion.*'),
+                        'permiso' => 'lugar_inscripcion_indice',
+                    ],
+                    [
+                        'label' => 'MODALIDADES',
+                        'href' => route('modalidades.index'),
+                        'active' => $this->routeIs('modalidades.*'),
+                        'permiso' => 'modalidad_indice',
+                    ],
+                    [
+                        'label' => 'OFERTAS BASE',
+                        'href' => route('ofertas-base.index'),
+                        'active' => $this->routeIs('ofertas-base.*'),
+                        'permiso' => 'oferta_base_indice',
+                    ],
+                    [
+                        'label' => 'SEDES',
+                        'href' => route('sedes.index'),
+                        'active' => $this->routeIs('sedes.*'),
+                        'permiso' => 'sede_indice',
                     ],
                     [
                         'label' => 'TIPOS DE EXPEDIENTE',
@@ -43,14 +79,19 @@ new class extends Component
                         'active' => $this->routeIs('tipos-expediente.*'),
                         'permiso' => 'tipo_expediente_indice',
                     ],
+                    [
+                        'label' => 'TURNOS',
+                        'href' => route('turnos.index'),
+                        'active' => $this->routeIs('turnos.*'),
+                        'permiso' => 'turno_indice',
+                    ],
                 ],
             ],
             [
                 'label' => 'CONF. ACADEMICA',
-                'icon' => 'gear-six',
+                'icon' => 'cog',
                 'active' => $this->routeIs(
                     'configuraciones.*',
-                    'semestres.*',
                     'procesos.*',
                     'ofertas.*',
                     'convenios.*',
@@ -60,7 +101,6 @@ new class extends Component
                     'aulas.*'
                 ),
                 'items' => [
-                    ['label' => 'SEMESTRES', 'href' => route('semestres.index'), 'active' => $this->routeIs('semestres.*'), 'permiso' => 'semestre_indice'],
                     ['label' => 'PROCESOS', 'href' => route('procesos.index'), 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
                     ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
@@ -71,7 +111,7 @@ new class extends Component
             ],
             [
                 'label' => 'INSCRIPCIONES',
-                'icon' => 'clipboard-text',
+                'icon' => 'clipboard-detail',
                 'active' => $this->routeIs('inscripciones.*', 'pagos.*'),
                 'items' => [
                     ['label' => 'INSCRIPCIONES', 'href' => route('inscripciones.index'), 'active' => $this->routeIs('inscripciones.*'), 'permiso' => 'inscripcion_indice'],
@@ -81,7 +121,7 @@ new class extends Component
             ],
             [
                 'label' => 'REPORTES',
-                'icon' => 'chart-bar',
+                'icon' => 'bar-chart',
                 'active' => $this->routeIs('reportes.*'),
                 'items' => [
                     [
@@ -106,14 +146,17 @@ new class extends Component
     <x-sidebar.panel>
         <x-slot:header>
             <div
-                class="flex size-10 items-center justify-center rounded-md border border-zinc-200/80 bg-white shadow-sm shadow-zinc-950/5 dark:border-white/10 dark:bg-zinc-950/70 dark:shadow-black/20">
+                class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-zinc-200/80 bg-white shadow-xs dark:border-white/10 dark:bg-zinc-900 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                 <img src="{{ asset('assets/media/logo_unu.png') }}" alt="Logo UNU" class="w-6" />
             </div>
-            CEPRE UNU
+            <div class="min-w-0 leading-tight">
+                <p class="text-[15px] font-semibold text-zinc-900 dark:text-white">CEPRE UNU</p>
+                <p class="truncate text-xs text-zinc-500 dark:text-zinc-400">Centro Preuniversitario</p>
+            </div>
         </x-slot:header>
 
         <x-sidebar.item label="INICIO" href="{{ route('inicio') }}" :active="request()->routeIs('inicio')"
-            wire:key="menu-inicio" icon="house-simple" />
+            wire:key="menu-inicio" icon="home" />
 
         @foreach ($this->gruposMenu() as $grupo)
         @php
