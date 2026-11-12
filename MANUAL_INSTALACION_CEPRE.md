@@ -2,10 +2,12 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE INSTALACION DEL SISTEMA
 
-**Versión:** 1.0  
+**Versión:** 1.1  
 **Sistema:** CEPRE UNU  
 **Dirigido a:** personal técnico, soporte, desarrollo e implementación  
-**Fecha:** Junio 2026
+**Fecha:** Noviembre 2026
+
+> **Cambios en la versión 1.1:** se agregó la sección 6.16, sobre la instalación automatizada con scripts y el uso del sistema en una red local con IP estática.
 
 ---
 
@@ -403,6 +405,127 @@ Sin embargo, si el proyecto ya está siendo servido por Herd mediante Nginx loca
 
 1. dejar Herd activo;
 2. ejecutar `npm run dev` si se trabajará con hot reload.
+
+## 6.16. Instalación automatizada con scripts y uso en red local
+
+El repositorio incluye scripts para Windows que automatizan los pasos 6.9 a 6.14 y permiten usar el sistema desde otros equipos de la red local, accediendo por la IP estática del equipo servidor.
+
+| Archivo | Uso |
+|---|---|
+| `instalar-entorno.bat` | Instala todo y crea la base de datos limpia. **Se ejecuta una sola vez.** |
+| `iniciar-red-local.bat` | Levanta el sistema en `http://IP:PUERTO`. **Se ejecuta cada vez que se quiera usar.** |
+| `.env.red-local.example` | Plantilla del `.env` para el equipo servidor. |
+| `instalar-entorno.ps1` / `iniciar-red-local.ps1` | Lógica de los scripts; los `.bat` los llaman. Ver la ayuda con `Get-Help .\iniciar-red-local.ps1 -Full`. |
+
+### 6.16.1. Requisitos previos
+
+1. Laravel Herd instalado (provee PHP, Composer y Node.js).
+2. MySQL en funcionamiento (Herd Pro o una instalación aparte).
+3. Git instalado.
+
+### 6.16.2. Paso 1: descargar el proyecto
+
+```powershell
+git clone https://github.com/soujamt/cepre-unu.git
+cd cepre-unu
+```
+
+Se debe usar la rama `main`, que contiene la versión estable.
+
+### 6.16.3. Paso 2: instalar el entorno con la base de datos limpia
+
+1. Hacer doble clic en `instalar-entorno.bat`.
+2. Si no existe `.env`, el script lo crea desde `.env.red-local.example` y se detiene para que se revisen los datos de MySQL (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`). Guardar el archivo y presionar Enter.
+3. Escribir el nombre de la base de datos cuando el script lo pida, para confirmar.
+
+El script:
+
+- instala las dependencias PHP (sin las de desarrollo cuando `APP_ENV=production`);
+- genera `APP_KEY`;
+- crea la base de datos si no existe;
+- **borra y recrea todas las tablas** y carga los catálogos;
+- crea `public/storage`;
+- instala las dependencias JS y compila los assets.
+
+La base queda con:
+
+- seguridad: permisos, rol `ADMINISTRADOR` y usuario `superadmin`;
+- mantenedores: carreras, sedes con sus carreras, modalidades, lugares de inscripción con sus modalidades, ofertas base, turnos, conceptos de pago y tipos de expediente;
+- catálogos generales: ubigeo, países, nacionalidades, colegios, tipos de documento, estados civiles, lenguas, identidades étnicas y discapacidades.
+
+La base queda **sin** procesos, ofertas por proceso, aulas por proceso, convenios, reglas de pago, requisitos, inscripciones ni importaciones del banco. Esa configuración se realiza desde el sistema, siguiendo el orden de `FLUJO_PROCESOS_CEPRE.md`.
+
+Las aulas tampoco se cargan, porque deben registrarse las aulas reales en `Mantenedores > Aulas`. Para pruebas, se pueden agregar 20 aulas genéricas ejecutando desde una consola:
+
+```powershell
+.\instalar-entorno.bat -ConAulasDeEjemplo
+```
+
+> **Advertencia:** `instalar-entorno` borra todos los datos de la base configurada. No debe usarse para actualizar un sistema que ya tiene información (ver 6.16.7).
+
+### 6.16.4. Paso 3: fijar la IP del equipo servidor
+
+Los demás equipos acceden por la IP del servidor, por lo que esta no debe cambiar. Hay dos opciones:
+
+1. **IP estática en Windows:** `Configuración > Red e Internet > Ethernet (o Wi-Fi) > Asignación de IP > Editar > Manual`, y registrar dirección IPv4, máscara, puerta de enlace y DNS.
+2. **Reserva DHCP en el router:** asignar siempre la misma IP a la dirección MAC del servidor.
+
+También se debe verificar que la red esté marcada como **Privada** (`Configuración > Red e Internet > Propiedades de la red`). En una red Pública, Windows bloquea las conexiones entrantes.
+
+### 6.16.5. Paso 4: configurar e iniciar el sistema en la red local
+
+1. Abrir `iniciar-red-local.bat` con el Bloc de notas y ajustar:
+
+   ```bat
+   set IP=192.168.1.50
+   set PUERTO=8000
+   ```
+
+2. Guardar el archivo.
+3. **La primera vez**, hacer clic derecho sobre `iniciar-red-local.bat` y elegir `Ejecutar como administrador`, para que se cree la regla del firewall. Las siguientes veces basta con doble clic.
+
+El script:
+
+- verifica que la IP pertenezca al equipo y avisa si es asignada por DHCP o si la red es Pública;
+- escribe `APP_URL=http://IP:PUERTO` en el `.env` (necesario para que funcionen los enlaces a los expedientes cargados);
+- compila los assets si faltan y elimina `public/hot`;
+- regenera las cachés de Laravel;
+- crea la regla de firewall `CEPRE UNU (TCP PUERTO)` para redes Privadas y de Dominio;
+- inicia el servidor.
+
+Desde cualquier equipo de la red se ingresa a `http://IP:PUERTO`, por ejemplo `http://192.168.1.50:8000`.
+
+### 6.16.6. Uso diario
+
+1. Encender el equipo servidor y verificar que MySQL esté activo.
+2. Hacer doble clic en `iniciar-red-local.bat`.
+3. Mantener abierta la ventana mientras se use el sistema. Al cerrarla, o con `Ctrl+C`, el sistema deja de estar disponible.
+
+### 6.16.7. Actualizar a una nueva versión
+
+Para actualizar **sin perder datos**, no usar `instalar-entorno`. En una consola, dentro de la carpeta del proyecto:
+
+```powershell
+git pull origin main
+composer install --no-dev --optimize-autoloader
+php artisan migrate --force
+.\iniciar-red-local.bat -Compilar
+```
+
+La opción `-Compilar` vuelve a generar los assets del frontend con la nueva versión.
+
+### 6.16.8. Limitaciones y problemas frecuentes
+
+`iniciar-red-local` usa el servidor integrado de PHP (`php artisan serve`), que en Windows atiende una petición a la vez. Es adecuado para pocos usuarios simultáneos, por ejemplo 3 a 5 gestores. Para más usuarios se recomienda un servidor web como Nginx (ver secciones 9 y 10).
+
+| Problema | Causa probable | Solución |
+|---|---|---|
+| Los otros equipos no cargan la página | Firewall o red Pública | Ejecutar el `.bat` como administrador una vez y marcar la red como Privada. |
+| El script avisa que la IP no pertenece al equipo | La IP del `.bat` no coincide con la del adaptador | Corregir `IP` en el `.bat` o fijar la IP del equipo (6.16.4). |
+| La página carga sin estilos | Assets no compilados o existe `public/hot` | Ejecutar `.\iniciar-red-local.bat -Compilar`. |
+| Error 500 al ingresar | MySQL detenido o datos `DB_*` incorrectos | Iniciar MySQL y revisar el `.env`. Ver `storage/logs`. |
+| Los enlaces a expedientes no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
+| Los scripts no se ejecutan | Política de ejecución de PowerShell | Usar siempre los `.bat`, que ya la omiten para estos scripts. |
 
 ## 7. Verificación de la instalación local
 
