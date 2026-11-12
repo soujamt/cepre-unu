@@ -420,7 +420,7 @@ El repositorio incluye scripts para Windows que automatizan los pasos 6.9 a 6.14
 ### 6.16.1. Requisitos previos
 
 1. Laravel Herd instalado (provee PHP, Composer y Node.js).
-2. MySQL en funcionamiento (Herd Pro o una instalación aparte).
+2. MySQL en funcionamiento: Herd Pro, una instalación aparte o el contenedor Docker del proyecto (ver 6.16.9).
 3. Git instalado.
 
 ### 6.16.2. Paso 1: descargar el proyecto
@@ -526,6 +526,44 @@ La opción `-Compilar` vuelve a generar los assets del frontend con la nueva ver
 | Error 500 al ingresar | MySQL detenido o datos `DB_*` incorrectos | Iniciar MySQL y revisar el `.env`. Ver `storage/logs`. |
 | Los enlaces a expedientes no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
 | Los scripts no se ejecutan | Política de ejecución de PowerShell | Usar siempre los `.bat`, que ya la omiten para estos scripts. |
+
+### 6.16.9. MySQL con Docker (opcional)
+
+Si no se cuenta con MySQL, la carpeta `docker/` incluye un contenedor MySQL 8.4 ya configurado (utf8mb4, zona horaria `America/Lima`). Requiere Docker Desktop.
+
+1. En la carpeta `docker/`, copiar la plantilla y cambiar las contraseñas:
+
+   ```powershell
+   cd docker
+   copy .env.example .env
+   notepad .env
+   ```
+
+2. Levantar el contenedor y verificar que figure como `healthy`:
+
+   ```powershell
+   docker compose up -d
+   docker compose ps
+   ```
+
+3. En el `.env` de Laravel (raíz del proyecto), usar los mismos valores de `docker/.env`: `DB_PORT` = `MYSQL_PORT`, `DB_DATABASE` = `MYSQL_DATABASE`, `DB_USERNAME` = `MYSQL_USER` y `DB_PASSWORD` = `MYSQL_PASSWORD`. Por ejemplo:
+
+   ```env
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=unu_db_cepre
+   DB_USERNAME=cepre_unu
+   DB_PASSWORD=la_clave_de_MYSQL_PASSWORD
+   ```
+
+4. Continuar con `instalar-entorno.bat` (6.16.3).
+
+Notas:
+
+- Si el puerto 3306 ya está ocupado por otro MySQL, cambiar `MYSQL_PORT` (por ejemplo a `3307`) y usar el mismo valor en `DB_PORT`.
+- MySQL solo escucha en `127.0.0.1`: los demás equipos acceden al sistema web, no a la base de datos.
+- El contenedor se reinicia solo al encender el equipo, siempre que Docker Desktop esté configurado para iniciar con Windows.
+- Los datos se guardan en el volumen `cepre-unu-mysql-data`. `docker compose down` los conserva; **`docker compose down -v` los elimina**.
 
 ## 7. Verificación de la instalación local
 
