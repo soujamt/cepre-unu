@@ -1,0 +1,58 @@
+# ---------------------------------------------------------------
+# CEPRE UNU - Contenedor MySQL
+# ---------------------------------------------------------------
+# Requisito: Docker Desktop (Windows/macOS) o Docker Engine (Linux).
+#
+# Uso, desde esta carpeta (docker/):
+#   1. copy .env.example .env      (Windows)  /  cp .env.example .env
+#   2. editar .env y cambiar las contrasenas
+#   3. docker compose up -d        -> levanta MySQL en segundo plano
+#   4. docker compose ps           -> debe mostrar "healthy"
+#
+# Otros comandos:
+#   docker compose stop            -> detiene MySQL (conserva los datos)
+#   docker compose start           -> lo vuelve a iniciar
+#   docker compose logs -f mysql   -> ver el registro
+#   docker compose down            -> elimina el contenedor (conserva los datos)
+#   docker compose down -v         -> elimina el contenedor Y LOS DATOS
+#
+# En el .env de Laravel (raiz del proyecto) usar los mismos valores:
+#   DB_HOST=127.0.0.1
+#   DB_PORT=<MYSQL_PORT>
+#   DB_DATABASE=<MYSQL_DATABASE>
+#   DB_USERNAME=<MYSQL_USER>
+#   DB_PASSWORD=<MYSQL_PASSWORD>
+# ---------------------------------------------------------------
+
+name: cepre-unu
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: cepre-unu-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD en docker/.env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-unu_db_cepre}
+      MYSQL_USER: ${MYSQL_USER:-cepre_unu}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD en docker/.env}
+      TZ: America/Lima
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      # Solo accesible desde este equipo. Para abrirlo a la red local,
+      # cambiar MYSQL_BIND a 0.0.0.0 en docker/.env (no recomendado).
+      - "${MYSQL_BIND:-127.0.0.1}:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql-data:
+    name: cepre-unu-mysql-data
