@@ -18,6 +18,16 @@ class Carrera extends LegacyModel
         ]);
     }
 
+    public function procesoCarreras(): HasMany
+    {
+        return $this->hasMany(ProcesoCarrera::class, 'id_carrera', 'id_car');
+    }
+
+    public function inscripciones(): HasMany
+    {
+        return $this->hasMany(Inscripcion::class, 'id_carrera', 'id_car');
+    }
+
     public function sedeCarreras(): HasMany
     {
         return $this->hasMany(SedeCarrera::class, 'id_carrera', 'id_car');

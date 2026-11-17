@@ -1,13 +1,10 @@
 <?php
 
 use App\Enums\EstadoCatalogo;
-use App\Models\Carrera;
 use App\Models\Sede;
-use App\Models\SedeCarrera;
 use App\Models\Ubigeo;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -49,17 +46,6 @@ class extends Component
     public bool $isEdit = false;
 
     public ?int $editingId = null;
-
-    public ?int $sedeCarrerasId = null;
-
-    public string $sedeCarrerasNombre = '';
-
-    /**
-     * Ids (como texto) de las carreras marcadas en el modal de carreras.
-     *
-     * @var array<int, string>
-     */
-    public array $carrerasSeleccionadas = [];
 
     public function mount(): void
     {
@@ -224,139 +210,6 @@ class extends Component
         $this->resetForm();
     }
 
-    public function cargarCarrerasSede(int $id): void
-    {
-        $this->autorizarPermiso('sede', 'editar');
-
-        $sede = Sede::query()->findOrFail($id);
-
-        $this->sedeCarrerasId = $sede->id_sed;
-        $this->sedeCarrerasNombre = $sede->nombre_sed;
-        $this->carrerasSeleccionadas = SedeCarrera::query()
-            ->where('id_sede', $sede->id_sed)
-            ->where('estado_sca', EstadoCatalogo::Habilitado->value)
-            ->pluck('id_carrera')
-            ->map(fn (int $idCarrera): string => (string) $idCarrera)
-            ->values()
-            ->all();
-
-        unset($this->carrerasDisponibles);
-        $this->resetValidation();
-        $this->modal('modal-sede-carreras')->show();
-    }
-
-    /**
-     * Carreras que se pueden marcar: las habilitadas y las que la sede ya
-     * tiene asignadas (aunque estén deshabilitadas, para poder quitarlas).
-     *
-     * @return EloquentCollection<int, Carrera>
-     */
-    #[Computed]
-    public function carrerasDisponibles(): EloquentCollection
-    {
-        if ($this->sedeCarrerasId === null) {
-            return new EloquentCollection;
-        }
-
-        return Carrera::query()
-            ->where(function (Builder $query): void {
-                $query->where('estado_car', EstadoCatalogo::Habilitado->value)
-                    ->orWhereHas('sedeCarreras', fn (Builder $sedeCarreras) => $sedeCarreras->where('id_sede', $this->sedeCarrerasId));
-            })
-            ->orderBy('nombre_car')
-            ->get();
-    }
-
-    /**
-     * Sincroniza las carreras de la sede: crea o reactiva las marcadas y, de
-     * las desmarcadas, elimina las que no tienen ofertas y deshabilita las
-     * que sí, para no romper las ofertas ya configuradas.
-     */
-    public function guardarCarreras(): void
-    {
-        $this->autorizarPermiso('sede', 'editar');
-
-        if ($this->sedeCarrerasId === null) {
-            return;
-        }
-
-        $this->validate([
-            'carrerasSeleccionadas' => ['array'],
-            'carrerasSeleccionadas.*' => ['integer', 'exists:tbl_carrera,id_car'],
-        ], [
-            'carrerasSeleccionadas.*.exists' => 'Una de las carreras seleccionadas ya no existe.',
-        ]);
-
-        $seleccionadas = collect($this->carrerasSeleccionadas)
-            ->map(fn (string|int $idCarrera): int => (int) $idCarrera)
-            ->unique()
-            ->values();
-
-        try {
-            DB::transaction(function () use ($seleccionadas): void {
-                $sede = Sede::query()->findOrFail($this->sedeCarrerasId);
-
-                $asignaciones = SedeCarrera::query()
-                    ->withTrashed()
-                    ->withCount('ofertasBase')
-                    ->where('id_sede', $sede->id_sed)
-                    ->get()
-                    ->keyBy('id_carrera');
-
-                $carreras = Carrera::query()->whereIn('id_car', $seleccionadas)->get()->keyBy('id_car');
-
-                foreach ($seleccionadas as $idCarrera) {
-                    $asignacion = $asignaciones->get($idCarrera);
-
-                    if ($asignacion === null) {
-                        SedeCarrera::query()->create([
-                            'id_sede' => $sede->id_sed,
-                            'id_carrera' => $idCarrera,
-                            'codigo_externo_sca' => $this->generarCodigoExterno($sede, $carreras->get($idCarrera)),
-                            'estado_sca' => EstadoCatalogo::Habilitado->value,
-                        ]);
-
-                        continue;
-                    }
-
-                    if ($asignacion->trashed()) {
-                        $asignacion->restore();
-                    }
-
-                    if ($asignacion->estado_sca !== EstadoCatalogo::Habilitado) {
-                        $asignacion->update(['estado_sca' => EstadoCatalogo::Habilitado->value]);
-                    }
-                }
-
-                foreach ($asignaciones as $idCarrera => $asignacion) {
-                    if ($asignacion->trashed() || $seleccionadas->contains($idCarrera)) {
-                        continue;
-                    }
-
-                    if ($asignacion->ofertas_base_count > 0) {
-                        if ($asignacion->estado_sca !== EstadoCatalogo::Deshabilitado) {
-                            $asignacion->update(['estado_sca' => EstadoCatalogo::Deshabilitado->value]);
-                        }
-
-                        continue;
-                    }
-
-                    $asignacion->delete();
-                }
-            });
-        } catch (Throwable $throwable) {
-            report($throwable);
-            $this->dispatch('toast', message: 'No se pudieron guardar las carreras de la sede.', type: 'error');
-
-            return;
-        }
-
-        unset($this->sedes);
-        $this->modal('modal-sede-carreras')->close();
-        $this->reset(['sedeCarrerasId', 'sedeCarrerasNombre', 'carrerasSeleccionadas']);
-        $this->dispatch('toast', message: 'Carreras de la sede actualizadas.', type: 'success');
-    }
-
     #[On('sede-cambiar-estado')]
     public function cambiarEstado(?int $id_sede = null): void
     {
@@ -404,17 +257,13 @@ class extends Component
             DB::transaction(function () use ($id_sede): void {
                 $sede = Sede::query()
                     ->withCount([
-                        'sedeCarreras' => fn (Builder $query) => $query->withTrashed(),
-                        'lugaresInscripcion' => fn (Builder $query) => $query->withTrashed(),
+                        'procesoCarreras' => fn (Builder $query) => $query->withTrashed(),
+                        'inscripciones' => fn (Builder $query) => $query->withTrashed(),
                     ])
                     ->findOrFail($id_sede);
 
-                if ($sede->sede_carreras_count > 0) {
-                    throw new RuntimeException('La sede tiene carreras asignadas y no puede eliminarse. Puede deshabilitarla.');
-                }
-
-                if ($sede->lugares_inscripcion_count > 0) {
-                    throw new RuntimeException('La sede tiene lugares de inscripción y no puede eliminarse. Puede deshabilitarla.');
+                if ($sede->proceso_carreras_count > 0 || $sede->inscripciones_count > 0) {
+                    throw new RuntimeException('La sede se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.');
                 }
 
                 $sede->delete();
@@ -458,7 +307,7 @@ class extends Component
         return Sede::query()
             ->with('ubigeo')
             ->withCount([
-                'sedeCarreras as carreras_habilitadas_count' => fn (Builder $query) => $query->where('estado_sca', EstadoCatalogo::Habilitado->value),
+                'inscripciones as inscripciones_count' => fn (Builder $query) => $query->whereNot('estado_ins', 'ANULADO'),
             ])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
@@ -474,24 +323,6 @@ class extends Component
             })
             ->orderBy('nombre_sed')
             ->paginate(10);
-    }
-
-    /**
-     * Código externo de la asignación sede-carrera, con el formato de los
-     * datos iniciales (SEDE-CARRERA); si ya existe, agrega un correlativo.
-     */
-    private function generarCodigoExterno(Sede $sede, ?Carrera $carrera): string
-    {
-        $base = $sede->codigo_sed.'-'.($carrera?->codigo_car ?? 'CAR');
-        $codigo = $base;
-        $correlativo = 2;
-
-        while (SedeCarrera::query()->withTrashed()->where('codigo_externo_sca', $codigo)->exists()) {
-            $codigo = "{$base}-{$correlativo}";
-            $correlativo++;
-        }
-
-        return $codigo;
     }
 
     /**

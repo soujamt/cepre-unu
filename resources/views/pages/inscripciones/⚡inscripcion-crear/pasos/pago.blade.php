@@ -98,8 +98,8 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 </div>
                 <div class="lg:col-span-4">
                     <x-ui.input
-                        label="Oferta seleccionada"
-                        :value="$this->descripcionProcesoOferta($inscripcionBorrador->procesoOferta)"
+                        label="Postulación"
+                        :value="$this->descripcionPostulacion($inscripcionBorrador)"
                         disabled
                         floating
                     />

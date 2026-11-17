@@ -24,6 +24,16 @@ class Sede extends LegacyModel
         return $this->belongsTo(Ubigeo::class, 'id_ubigeo', 'id_ubi');
     }
 
+    public function procesoCarreras(): HasMany
+    {
+        return $this->hasMany(ProcesoCarrera::class, 'id_sede', 'id_sed');
+    }
+
+    public function inscripciones(): HasMany
+    {
+        return $this->hasMany(Inscripcion::class, 'id_sede', 'id_sed');
+    }
+
     public function lugaresInscripcion(): HasMany
     {
         return $this->hasMany(LugarInscripcion::class, 'id_sede', 'id_sed');

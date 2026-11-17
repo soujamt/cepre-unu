@@ -89,14 +89,11 @@
                     @endforeach
                 </x-ui.select>
 
-                <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos">
-                    <option value="">Todos los lugares</option>
-                    @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                        <option
-                            wire:key="reporte-lugar-{{ $lugarInscripcion->id_lin }}"
-                            value="{{ $lugarInscripcion->id_lin }}"
-                        >
-                            {{ $lugarInscripcion->nombre_lin }}
+                <x-ui.select wire:model.live="idSede" label="Sede" placeholder="Todas">
+                    <option value="">Todas las sedes</option>
+                    @foreach ($this->sedesDisponibles as $sede)
+                        <option wire:key="reporte-sede-{{ $sede->id_sed }}" value="{{ $sede->id_sed }}">
+                            {{ $sede->nombre_sed }}
                         </option>
                     @endforeach
                 </x-ui.select>
@@ -115,7 +112,7 @@
 
     <x-resumen
         wire:loading.class="opacity-60"
-        wire:target="idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
+        wire:target="idProceso,idModalidad,idSede,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
     >
         <x-resumen.item
             label="Total inscritos"

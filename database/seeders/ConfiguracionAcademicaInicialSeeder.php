@@ -4,13 +4,14 @@ namespace Database\Seeders;
 
 use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoProceso;
+use App\Models\Carrera;
 use App\Models\ConceptoPago;
 use App\Models\ModalidadAdmision;
-use App\Models\OfertaBase;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
+use App\Models\ProcesoModalidad;
 use App\Models\ReglaPago;
-use App\Models\Turno;
+use App\Models\Sede;
 use Illuminate\Database\Seeder;
 
 class ConfiguracionAcademicaInicialSeeder extends Seeder
@@ -27,28 +28,24 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
             ],
         );
 
-        $turnoManana = Turno::query()->where('codigo_tur', 'MAN')->firstOrFail();
-        $modalidadExoneracion = ModalidadAdmision::query()->where('codigo_mad', '2')->firstOrFail();
-
-        $ofertasBase = OfertaBase::query()
-            ->where('estado_ofb', EstadoCatalogo::Habilitado->value)
-            ->whereHas('modalidadLugarInscripcion', function ($query) use ($modalidadExoneracion): void {
-                $query
-                    ->where('id_modalidad_admision', $modalidadExoneracion->id_mad)
-                    ->where('id_lugar_inscripcion', 603);
-            })
+        $modalidades = ModalidadAdmision::query()
+            ->where('estado_mad', EstadoCatalogo::Habilitado->value)
+            ->whereNotNull('condicion_egreso_mad')
             ->get();
 
-        foreach ($ofertasBase as $ofertaBase) {
-            ProcesoOferta::query()->updateOrCreate(
-                [
-                    'id_proceso' => $proceso->id_pro,
-                    'id_oferta_base' => $ofertaBase->id_ofb,
-                    'id_turno' => $turnoManana->id_tur,
-                ],
-                [
-                    'estado_pof' => EstadoProceso::Habilitado->value,
-                ],
+        foreach ($modalidades as $modalidad) {
+            ProcesoModalidad::query()->updateOrCreate(
+                ['id_proceso' => $proceso->id_pro, 'id_modalidad_admision' => $modalidad->id_mad],
+                ['estado_pmo' => EstadoCatalogo::Habilitado->value],
+            );
+        }
+
+        $sedePrincipal = Sede::query()->where('codigo_sed', 'SEDCAL')->firstOrFail();
+
+        foreach (Carrera::query()->where('estado_car', EstadoCatalogo::Habilitado->value)->get() as $carrera) {
+            ProcesoCarrera::query()->updateOrCreate(
+                ['id_proceso' => $proceso->id_pro, 'id_sede' => $sedePrincipal->id_sed, 'id_carrera' => $carrera->id_car],
+                ['estado_pca' => EstadoCatalogo::Habilitado->value],
             );
         }
 

@@ -131,17 +131,15 @@ class extends Component
 
     /**
      * @var array{
-     *   id_modalidad_admision:string,
-     *   id_lugar_inscripcion:string,
-     *   id_turno:string,
-     *   id_proceso_oferta:string
+     *   id_sede:string,
+     *   id_carrera:string,
+     *   id_turno:string
      * }
      */
     public array $postulacionForm = [
-        'id_modalidad_admision' => '',
-        'id_lugar_inscripcion' => '',
+        'id_sede' => '',
+        'id_carrera' => '',
         'id_turno' => '',
-        'id_proceso_oferta' => '',
     ];
 
     /**
@@ -210,10 +208,11 @@ class extends Component
             ->with([
                 'persona.ubigeoNacimiento',
                 'persona.ubigeoDomicilio',
-                'procesoOferta.proceso',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-                'procesoOferta.turno',
+                'proceso',
+                'sede',
+                'modalidadAdmision',
+                'carrera',
+                'turno',
                 'paisColegio',
                 'colegio.ubigeo',
                 'obligacionesPago.reglaPago.conceptoPago',
@@ -246,11 +245,11 @@ class extends Component
         return Inscripcion::query()
             ->with([
                 'persona',
-                'procesoOferta.proceso',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-                'procesoOferta.ofertaBase.sedeCarrera.carrera',
-                'procesoOferta.turno',
+                'proceso',
+                'sede',
+                'modalidadAdmision',
+                'carrera',
+                'turno',
             ])
             ->find($this->inscripcionId);
     }
@@ -261,7 +260,7 @@ class extends Component
         return [
             1 => ['titulo' => 'Información personal', 'descripcion' => 'Datos base del postulante', 'icono' => 'user'],
             2 => ['titulo' => 'Información general', 'descripcion' => 'Datos complementarios', 'icono' => 'note-book'],
-            3 => ['titulo' => 'Postulación', 'descripcion' => 'Proceso, oferta y colegio', 'icono' => 'school'],
+            3 => ['titulo' => 'Postulación', 'descripcion' => 'Sede, carrera y turno', 'icono' => 'school'],
             4 => ['titulo' => 'Pago', 'descripcion' => 'Validación del pago bancario', 'icono' => 'credit-card'],
         ];
     }
@@ -295,12 +294,7 @@ class extends Component
             'veces_postula_otras' => 0,
             'observacion' => '',
         ];
-        $this->postulacionForm = [
-            'id_modalidad_admision' => '',
-            'id_lugar_inscripcion' => '',
-            'id_turno' => '',
-            'id_proceso_oferta' => '',
-        ];
+        $this->resetPostulacionForm();
         $this->pagoForm = $this->formularioPagoBase();
         $this->resultadoPagoDetalleIds = [];
         $this->busquedaPagoRealizada = false;
@@ -385,7 +379,16 @@ class extends Component
     {
         $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
 
-        app(ValidadorVigenciaInscripcion::class)->ofertaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
+        if ($inscripcion->id_proceso !== $procesoActivo->id_pro) {
+            throw new RuntimeException('La inscripción no pertenece al proceso activo.');
+        }
+
+        app(ValidadorVigenciaInscripcion::class)->postulacionVigente(
+            (int) $inscripcion->id_sede,
+            (int) $inscripcion->id_carrera,
+            (int) $inscripcion->id_modalidad_admision,
+            $procesoActivo,
+        );
     }
 
     private function nullableUpper(?string $valor): ?string

@@ -64,7 +64,7 @@ trait GestionaPasoGeneral
     protected function rulesPasoGeneral(): array
     {
         return [
-            'generalForm.anio_graduacion' => ['required', 'integer', 'digits:4', 'min:1950', 'max:'.((int) now()->format('Y'))],
+            'generalForm.anio_graduacion' => ['required', 'integer', 'digits:4', 'min:1950', 'max:'.((int) now()->format('Y') + 2)],
             'generalForm.id_pais_colegio' => ['required', 'integer', 'exists:tbl_pais,id_pai'],
             'generalForm.id_tipo_colegio' => ['required', 'integer', 'exists:tbl_tipo_colegio,id_tco'],
             'generalForm.id_colegio' => [
@@ -113,6 +113,7 @@ trait GestionaPasoGeneral
         return [
             'generalForm.anio_graduacion.required' => 'El ano de graduacion es obligatorio.',
             'generalForm.anio_graduacion.integer' => 'El ano de graduacion debe ser numerico.',
+            'generalForm.anio_graduacion.max' => 'El ano de egreso no puede ser mayor a '.((int) now()->format('Y') + 2).' (alumnos de 4.° de secundaria).',
             'generalForm.id_pais_colegio.required' => 'El pais del colegio es obligatorio.',
             'generalForm.id_tipo_colegio.required' => 'El tipo de colegio es obligatorio.',
             'generalForm.veces_postula_unu.required' => 'Debe indicar cuantas veces postulo a la UNU.',

@@ -78,11 +78,11 @@
     <x-resumen>
         <x-resumen.item
             label="Proceso"
-            :value="$inscripcionActual->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO'"
+            :value="$inscripcionActual->proceso?->nombre_pro ?? 'SIN PROCESO'"
             icon="layers"
             tono="info"
             detalle-icon="calendar"
-            :detalle="($inscripcionActual->procesoOferta?->proceso?->fecha_inicio_pro?->format('d/m/Y h:i a') ?? 'Sin fechas').' al '.($inscripcionActual->procesoOferta?->proceso?->fecha_fin_pro?->format('d/m/Y h:i a') ?? '—')"
+            :detalle="($inscripcionActual->proceso?->fecha_inicio_pro?->format('d/m/Y h:i a') ?? 'Sin fechas').' al '.($inscripcionActual->proceso?->fecha_fin_pro?->format('d/m/Y h:i a') ?? '—')"
             destacado
         />
 
@@ -174,23 +174,19 @@
                 <div class="mt-5 grid gap-4 md:grid-cols-2">
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Carrera</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'No registrado' }}</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->carrera?->nombre_car ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Sede</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'No registrado' }}</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->sede?->nombre_sed ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Modalidad</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'No registrado' }}</p>
-                    </div>
-                    <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Lugar de inscripción</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'No registrado' }}</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->modalidadAdmision?->nombre_mad ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Turno</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->procesoOferta?->turno?->nombre_tur ?? 'No registrado' }}</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->turno?->nombre_tur ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Aula asignada</p>

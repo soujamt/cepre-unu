@@ -139,10 +139,25 @@ class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize,
             $this->stringOrNull($persona?->identidadEtnica?->nombre_iet),
             $this->stringOrNull($persona?->lenguaNativa?->codigo_lna),
             $this->stringOrNull($persona?->lenguaExtranjera?->codigo_lex),
-            $this->stringOrNull($inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->codigo_lin),
-            $this->stringOrNull($inscripcion->procesoOferta?->ofertaBase?->codigo_externo_ofb),
+            $this->lugarInscripcion($inscripcion),
+            $this->stringOrNull($inscripcion->carrera?->nombre_car),
             $this->stringOrNull($inscripcion->observacion_ins ?: $persona?->observacion_per),
         ];
+    }
+
+    /**
+     * Admisión entrega los códigos de lugar y carrera al cierre del proceso y
+     * cambian en cada uno; mientras tanto se exporta el nombre para que se
+     * reemplace a mano: "SEDE / MODALIDAD".
+     */
+    private function lugarInscripcion(Inscripcion $inscripcion): ?string
+    {
+        $partes = array_filter([
+            $inscripcion->sede?->nombre_sed,
+            $inscripcion->modalidadAdmision?->nombre_mad,
+        ]);
+
+        return $partes === [] ? null : implode(' / ', $partes);
     }
 
     private function codigoSexo(null|SexoPersona|string $sexo): ?string

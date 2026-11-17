@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'turnos.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'modalidades.*', 'sedes.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -50,22 +50,10 @@ new class extends Component
                         'permiso' => 'concepto_pago_indice',
                     ],
                     [
-                        'label' => 'LUGARES DE INSCRIPCIÓN',
-                        'href' => route('lugares-inscripcion.index'),
-                        'active' => $this->routeIs('lugares-inscripcion.*'),
-                        'permiso' => 'lugar_inscripcion_indice',
-                    ],
-                    [
                         'label' => 'MODALIDADES',
                         'href' => route('modalidades.index'),
                         'active' => $this->routeIs('modalidades.*'),
                         'permiso' => 'modalidad_indice',
-                    ],
-                    [
-                        'label' => 'OFERTAS BASE',
-                        'href' => route('ofertas-base.index'),
-                        'active' => $this->routeIs('ofertas-base.*'),
-                        'permiso' => 'oferta_base_indice',
                     ],
                     [
                         'label' => 'SEDES',
@@ -94,7 +82,7 @@ new class extends Component
                 'items' => [
                     ['label' => 'PROCESOS', 'href' => route('procesos.index'), 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
-                    ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
+                    ['label' => 'OFERTA DEL PROCESO', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
                 ],
             ],

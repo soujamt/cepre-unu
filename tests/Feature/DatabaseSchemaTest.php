@@ -105,13 +105,16 @@ it('enforces unique document per persona', function (): void {
         ->toThrow(QueryException::class);
 });
 
-it('enforces one inscription per person and process offer', function (): void {
-    $context = createInscripcionContext();
-
-    insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], 'INS-001');
-
-    expect(fn (): bool => insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], 'INS-002'))
-        ->toThrow(QueryException::class);
+it('stores sede, modalidad, carrera and turno directly on the inscription', function (): void {
+    expect(Schema::hasColumns('tbl_inscripcion', [
+        'id_proceso',
+        'id_sede',
+        'id_modalidad_admision',
+        'id_carrera',
+        'id_turno',
+    ]))->toBeTrue()
+        ->and(Schema::hasColumn('tbl_proceso', 'anio_egreso_max_ordinario_pro'))->toBeTrue()
+        ->and(Schema::hasColumn('tbl_modalidad_admision', 'condicion_egreso_mad'))->toBeTrue();
 });
 
 it('prevents bank import details from being reused across inscription payments', function (): void {
@@ -281,17 +284,6 @@ function createInscripcionContext(): array
         'persona_id' => $personaId,
         'proceso_oferta_id' => $procesoOfertaId,
     ];
-}
-
-function insertInscripcion(int $personaId, int $procesoOfertaId, string $codigo): bool
-{
-    return DB::table('tbl_inscripcion')->insert([
-        'codigo_ins' => $codigo,
-        'id_persona' => $personaId,
-        'id_proceso_oferta' => $procesoOfertaId,
-        'fecha_inscripcion_ins' => now(),
-        'estado_ins' => 'PENDIENTE',
-    ]);
 }
 
 /**

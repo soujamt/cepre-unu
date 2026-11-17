@@ -3,11 +3,7 @@
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ConceptoPagoSeeder;
 use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
-use Database\Seeders\OfertaBaseSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
@@ -24,11 +20,7 @@ test('academic initial seeder creates a usable base configuration', function () 
         UbigeoSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
@@ -45,18 +37,15 @@ test('academic initial seeder creates a usable base configuration', function () 
 
     $procesoId = $proceso->id_pro;
 
-    $ofertasEsperadas = DB::table('tbl_oferta_base as ofb')
-        ->join('tbl_modalidad_lugar_inscripcion as mli', 'mli.id_mli', '=', 'ofb.id_modalidad_lugar_inscripcion')
-        ->where('mli.id_modalidad_admision', 2)
-        ->where('mli.id_lugar_inscripcion', 603)
-        ->count();
-
-    expect($ofertasEsperadas)->toBe(23);
-
-    expect(DB::table('tbl_proceso_oferta')
+    expect(DB::table('tbl_proceso_modalidad')
         ->where('id_proceso', $procesoId)
-        ->where('id_turno', 1)
-        ->count())->toBe($ofertasEsperadas);
+        ->where('estado_pmo', 'HABILITADO')
+        ->count())->toBe(2);
+
+    expect(DB::table('tbl_proceso_carrera')
+        ->where('id_proceso', $procesoId)
+        ->where('estado_pca', 'HABILITADO')
+        ->count())->toBe(DB::table('tbl_carrera')->where('estado_car', 'HABILITADO')->count());
 
     expect(DB::table('tbl_regla_pago')
         ->where('id_proceso', $procesoId)

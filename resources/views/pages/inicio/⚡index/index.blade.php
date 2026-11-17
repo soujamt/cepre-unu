@@ -218,7 +218,7 @@
                                         'UTF-8',
                                     );
                                     $nombreCompleto = trim($tipoTitulo($persona?->nombres_per).' '.$tipoTitulo($persona?->apellido_paterno_per).' '.$tipoTitulo($persona?->apellido_materno_per));
-                                    $carrera = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car;
+                                    $carrera = $inscripcion->carrera?->nombre_car;
                                     $fecha = $inscripcion->fecha_inscripcion_ins;
                                 @endphp
                                 <li wire:key="inscripcion-reciente-{{ $inscripcion->id_ins }}">

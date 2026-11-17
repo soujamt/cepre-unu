@@ -5,8 +5,8 @@ use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Inscripcion;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
+use App\Models\Sede;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Turno;
@@ -43,8 +43,8 @@ class extends Component
     #[Url(as: 'modalidad')]
     public string $idModalidad = '';
 
-    #[Url(as: 'lugar')]
-    public string $idLugarInscripcion = '';
+    #[Url(as: 'sede')]
+    public string $idSede = '';
 
     #[Url(as: 'pagina')]
     public int $porPagina = 10;
@@ -88,7 +88,7 @@ class extends Component
         $this->resetPage();
     }
 
-    public function updatedIdLugarInscripcion(): void
+    public function updatedIdSede(): void
     {
         $this->resetPage();
     }
@@ -137,7 +137,7 @@ class extends Component
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->whereHas('procesosOferta.inscripciones')
+            ->whereHas('inscripciones')
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -146,7 +146,7 @@ class extends Component
     public function modalidadesDisponibles(): Collection
     {
         return ModalidadAdmision::query()
-            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
             ->orderBy('nombre_mad')
@@ -154,13 +154,13 @@ class extends Component
     }
 
     #[Computed]
-    public function lugaresInscripcionDisponibles(): Collection
+    public function sedesDisponibles(): Collection
     {
-        return LugarInscripcion::query()
-            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+        return Sede::query()
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
-            ->orderBy('nombre_lin')
+            ->orderBy('nombre_sed')
             ->get();
     }
 
@@ -168,7 +168,7 @@ class extends Component
     public function turnosDisponibles(): Collection
     {
         return Turno::query()
-            ->whereHas('procesosOferta.inscripciones', function (Builder $query): void {
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
             ->orderBy('nombre_tur')
@@ -260,7 +260,7 @@ class extends Component
     {
         $this->idProceso = $this->resolverProcesoActualPorDefecto();
         $this->idModalidad = '';
-        $this->idLugarInscripcion = '';
+        $this->idSede = '';
         $this->idTurno = '';
         $this->idProcesoAulaFiltro = '';
         $this->resetPage();
@@ -269,7 +269,7 @@ class extends Component
     public function limpiarFiltrosSecundarios(): void
     {
         $this->idModalidad = '';
-        $this->idLugarInscripcion = '';
+        $this->idSede = '';
         $this->filtroPago = '';
         $this->idTurno = '';
         $this->idProcesoAulaFiltro = '';
@@ -280,7 +280,7 @@ class extends Component
     {
         return collect([
             $this->idModalidad,
-            $this->idLugarInscripcion,
+            $this->idSede,
             $this->filtroPago,
             $this->idTurno,
             $this->idProcesoAulaFiltro,
@@ -300,7 +300,7 @@ class extends Component
         $this->autorizarPermiso('inscripcion', 'editar');
 
         $inscripcion = Inscripcion::query()
-            ->with(['procesoOferta.proceso', 'procesoOferta.turno', 'procesoAula.aula'])
+            ->with(['proceso', 'turno', 'procesoAula.aula'])
             ->findOrFail($idInscripcion);
 
         if (! $this->puedeAsignarAula($inscripcion)) {
@@ -327,7 +327,7 @@ class extends Component
         $this->modal('modal-asignar-aula')->show();
 
         $json = json_encode([
-            'turno' => $inscripcion->procesoOferta?->turno?->nombre_tur ?? '',
+            'turno' => $inscripcion->turno?->nombre_tur ?? '',
             'aulas' => $aulasData,
         ], JSON_THROW_ON_ERROR);
         $this->js("window.dispatchEvent(new CustomEvent('cargar-aulas-modal', { detail: {$json} }))");
@@ -340,12 +340,10 @@ class extends Component
             return new Collection;
         }
 
-        $inscripcion = Inscripcion::query()
-            ->with('procesoOferta')
-            ->findOrFail($this->idInscripcionAula);
+        $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAula);
 
-        $idProceso = $inscripcion->procesoOferta?->id_proceso;
-        $idTurno = $inscripcion->procesoOferta?->id_turno;
+        $idProceso = $inscripcion->id_proceso;
+        $idTurno = $inscripcion->id_turno;
 
         if ($idProceso === null || $idTurno === null) {
             return new Collection;
@@ -390,7 +388,6 @@ class extends Component
 
                 $inscripcion = Inscripcion::query()
                     ->lockForUpdate()
-                    ->with('procesoOferta')
                     ->findOrFail($this->idInscripcionAula);
 
                 if (! $this->puedeAsignarAula($inscripcion)) {
@@ -565,26 +562,20 @@ class extends Component
                                 ->orWhere('apellido_materno_per', 'like', "%{$texto}%")
                                 ->orWhere('nombres_per', 'like', "%{$texto}%");
                         })
-                        ->orWhereHas('procesoOferta.proceso', fn (Builder $procesoQuery) => $procesoQuery
+                        ->orWhereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
                             ->where('nombre_pro', 'like', "%{$texto}%"))
-                        ->orWhereHas('procesoOferta.ofertaBase.sedeCarrera.carrera', fn (Builder $carreraQuery) => $carreraQuery
+                        ->orWhereHas('carrera', fn (Builder $carreraQuery) => $carreraQuery
                             ->where('nombre_car', 'like', "%{$texto}%"));
                 });
             })
             ->when(filled($this->idProceso), function (Builder $query): void {
-                $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+                $query->where('id_proceso', (int) $this->idProceso);
             })
             ->when(filled($this->idModalidad), function (Builder $query): void {
-                $query->whereHas(
-                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                    fn (Builder $builder) => $builder->where('id_modalidad_admision', (int) $this->idModalidad)
-                );
+                $query->where('id_modalidad_admision', (int) $this->idModalidad);
             })
-            ->when(filled($this->idLugarInscripcion), function (Builder $query): void {
-                $query->whereHas(
-                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                    fn (Builder $builder) => $builder->where('id_lugar_inscripcion', (int) $this->idLugarInscripcion)
-                );
+            ->when(filled($this->idSede), function (Builder $query): void {
+                $query->where('id_sede', (int) $this->idSede);
             })
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_ins', $this->estadosSeleccionados);
@@ -593,7 +584,7 @@ class extends Component
                 $query->whereHas('obligacionesPago', fn (Builder $q) => $q->where('estado_iop', $this->filtroPago));
             })
             ->when(filled($this->idTurno), function (Builder $query): void {
-                $query->whereHas('procesoOferta', fn (Builder $q) => $q->where('id_turno', (int) $this->idTurno));
+                $query->where('id_turno', (int) $this->idTurno);
             })
             ->when(filled($this->idProcesoAulaFiltro), function (Builder $query): void {
                 $query->where('id_proceso_aula', (int) $this->idProcesoAulaFiltro);
@@ -607,11 +598,11 @@ class extends Component
     {
         return [
             'persona',
-            'procesoOferta.proceso',
-            'procesoOferta.ofertaBase.sedeCarrera.carrera',
-            'procesoOferta.ofertaBase.sedeCarrera.sede',
-            'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'procesoOferta.turno',
+            'proceso',
+            'carrera',
+            'sede',
+            'modalidadAdmision',
+            'turno',
             'procesoAula.aula',
             'procesoAula.turno',
             'obligacionesPago',
@@ -637,7 +628,9 @@ class extends Component
             'paisColegio',
             'colegio',
             'tipoColegio',
-            'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+            'sede',
+            'modalidadAdmision',
+            'carrera',
         ];
     }
 
@@ -663,7 +656,7 @@ class extends Component
         }
 
         return (string) (Proceso::query()
-            ->whereHas('procesosOferta.inscripciones')
+            ->whereHas('inscripciones')
             ->orderByDesc('fecha_inicio_pro')
             ->orderByDesc('id_pro')
             ->value('id_pro') ?? '');
@@ -672,7 +665,7 @@ class extends Component
     private function aplicarFiltrosRelacionados(Builder $query): void
     {
         if (filled($this->idProceso)) {
-            $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+            $query->where('id_proceso', (int) $this->idProceso);
         }
     }
 

@@ -98,12 +98,7 @@ class PermisoModuloSeeder extends Seeder
             ],
             [
                 'clave_permiso' => 'modalidad',
-                'nombre_permiso' => 'MODALIDADES DE ADMISIÓN',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
-                'clave_permiso' => 'lugar_inscripcion',
-                'nombre_permiso' => 'LUGARES DE INSCRIPCIÓN',
+                'nombre_permiso' => 'MODALIDADES',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
@@ -117,18 +112,13 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
-                'clave_permiso' => 'oferta_base',
-                'nombre_permiso' => 'OFERTAS BASE',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
                 'clave_permiso' => 'proceso',
                 'nombre_permiso' => 'PROCESOS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
                 'clave_permiso' => 'oferta',
-                'nombre_permiso' => 'OFERTAS',
+                'nombre_permiso' => 'OFERTA DEL PROCESO',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [

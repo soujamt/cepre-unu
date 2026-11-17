@@ -18,6 +18,11 @@ class Turno extends LegacyModel
         ]);
     }
 
+    public function inscripciones(): HasMany
+    {
+        return $this->hasMany(Inscripcion::class, 'id_turno', 'id_tur');
+    }
+
     public function procesosOferta(): HasMany
     {
         return $this->hasMany(ProcesoOferta::class, 'id_turno', 'id_tur');

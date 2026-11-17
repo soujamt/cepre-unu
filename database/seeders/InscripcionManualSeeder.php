@@ -12,13 +12,14 @@ use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Models\LenguaNativa;
+use App\Models\ModalidadAdmision;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
 use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\TipoColegio;
@@ -52,16 +53,13 @@ class InscripcionManualSeeder extends Seeder
             ->where('codigo_tur', 'MAN')
             ->firstOrFail();
 
-        $procesoOfertas = ProcesoOferta::query()
+        $procesoCarreras = ProcesoCarrera::query()
             ->where('id_proceso', $proceso->id_pro)
-            ->where('id_turno', $turno->id_tur)
-            ->whereHas('ofertaBase.modalidadLugarInscripcion', function ($query): void {
-                $query
-                    ->where('id_modalidad_admision', 2)
-                    ->where('id_lugar_inscripcion', 603);
-            })
-            ->orderBy('id_pof')
+            ->where('estado_pca', 'HABILITADO')
+            ->orderBy('id_pca')
             ->get();
+
+        $modalidadOrdinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
 
         $reglaPago = ReglaPago::query()
             ->where('id_proceso', $proceso->id_pro)
@@ -117,11 +115,11 @@ class InscripcionManualSeeder extends Seeder
         foreach (range(1, 50) as $indice) {
             $ubigeo = $ubigeos->values()->get(($indice - 1) % $ubigeos->count());
             $colegio = $this->resolverColegio($colegios, $ubigeo?->id_ubi);
-            $procesoOferta = $procesoOfertas->values()->get(($indice - 1) % $procesoOfertas->count());
+            $procesoCarrera = $procesoCarreras->values()->get(($indice - 1) % $procesoCarreras->count());
             $numeroDocumento = (string) (76000000 + $indice);
             $codigoInscripcion = sprintf('MANUAL-INS-%03d', $indice);
 
-            if ($ubigeo === null || $colegio === null || $procesoOferta === null) {
+            if ($ubigeo === null || $colegio === null || $procesoCarrera === null) {
                 continue;
             }
 
@@ -160,7 +158,11 @@ class InscripcionManualSeeder extends Seeder
                 ['codigo_ins' => $codigoInscripcion],
                 [
                     'id_persona' => $persona->id_per,
-                    'id_proceso_oferta' => $procesoOferta->id_pof,
+                    'id_proceso' => $proceso->id_pro,
+                    'id_sede' => $procesoCarrera->id_sede,
+                    'id_modalidad_admision' => $modalidadOrdinario->id_mad,
+                    'id_carrera' => $procesoCarrera->id_carrera,
+                    'id_turno' => $turno->id_tur,
                     'fecha_inscripcion_ins' => now()->subDays(50 - $indice),
                     'estado_ins' => 'ACTIVO',
                     'anio_graduacion_ins' => (int) now()->subYears(1 + ($indice % 3))->format('Y'),

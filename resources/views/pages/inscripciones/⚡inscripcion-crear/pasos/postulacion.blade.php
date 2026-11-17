@@ -5,7 +5,7 @@
     :total="count($this->pasos)"
     :icono="$this->pasos[3]['icono']"
     titulo="Postulación"
-    descripcion="Seleccione la oferta activa del proceso vigente y deje listo el borrador de inscripción."
+    descripcion="Elija sede, carrera y turno del proceso vigente; la modalidad sale del año de egreso."
 />
 <div
 class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900"
@@ -31,7 +31,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             icon="exclamation-circle"
             heading="{{ $contextoProceso['mensaje'] }}"
         >
-            <p class="text-sm">No podremos continuar con la postulación hasta que exista un proceso habilitado y con ofertas activas.</p>
+            <p class="text-sm">No podremos continuar con la postulación hasta que exista un proceso habilitado con carreras y modalidades activas.</p>
         </flux:callout>
 
         <div class="flex gap-3">
@@ -90,129 +90,105 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             </flux:callout>
         </section>
 
+        @php ($modalidadPostulacion = $this->modalidadPostulacion)
+
         <section
             class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
         >
             <div class="space-y-1">
-                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Selección de oferta</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">La selección se construye en cascada para mostrar solo combinaciones válidas del proceso actual.</p>
+                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Modalidad</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Se asigna sola según el año de egreso ingresado en el paso anterior.</p>
+            </div>
+
+            @if ($modalidadPostulacion)
+                <flux:callout variant="success" icon="check-circle" heading="{{ $modalidadPostulacion->nombre_mad }}">
+                    <p class="text-sm">
+                        Año de egreso {{ $generalForm['anio_graduacion'] }}: {{ mb_strtolower($modalidadPostulacion->condicion_egreso_mad?->getNombre() ?? '', 'UTF-8') }}.
+                    </p>
+                </flux:callout>
+            @else
+                <flux:callout variant="warning" icon="exclamation-triangle" heading="Sin modalidad para el año de egreso {{ $generalForm['anio_graduacion'] }}">
+                    <p class="text-sm">El proceso activo no tiene habilitada la modalidad que corresponde. Revise Configuración académica › Oferta del proceso.</p>
+                </flux:callout>
+            @endif
+        </section>
+
+        <section
+            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
+        >
+            <div class="space-y-1">
+                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Sede, carrera y turno</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Solo se muestran las carreras habilitadas en la sede para este proceso.</p>
             </div>
 
             <div class="grid gap-4 lg:grid-cols-12">
-                {{-- Modalidad: siempre visible --}}
-                <div class="lg:col-span-6">
+                <div class="lg:col-span-5">
                     <x-ui.select
-                        label="Modalidad"
-                        wire:model.live="postulacionForm.id_modalidad_admision"
-                        :invalid="$errors->has('postulacionForm.id_modalidad_admision')"
-                        :error="$errors->first('postulacionForm.id_modalidad_admision')"
+                        label="Sede"
+                        name="id_sede"
+                        wire:model.live="postulacionForm.id_sede"
+                        :invalid="$errors->has('postulacionForm.id_sede')"
+                        :error="$errors->first('postulacionForm.id_sede')"
                         required
                         floating
                     >
-                        <option value="">Seleccionar modalidad</option>
-                        @foreach ($this->modalidadesPostulacionDisponibles as $modalidad)
-                            <option value="{{ $modalidad['id'] }}">
-                                {{ $modalidad['nombre'] }}
-                            </option>
+                        <option value="">Seleccionar sede</option>
+                        @foreach ($this->sedesPostulacionDisponibles as $sede)
+                            <option value="{{ $sede['id'] }}">{{ $sede['nombre'] }}</option>
                         @endforeach
                     </x-ui.select>
                 </div>
 
-                {{-- Lugar: aparece tras seleccionar modalidad --}}
-                @if ($postulacionForm['id_modalidad_admision'] !== '')
-                    <div
-                        class="lg:col-span-6"
-                        wire:key="lugar-{{ $postulacionForm['id_modalidad_admision'] }}"
+                <div class="lg:col-span-7" wire:key="carrera-sede-{{ $postulacionForm['id_sede'] }}">
+                    <x-ui.select-filter
+                        label="Carrera profesional"
+                        name="id_carrera"
+                        wire:model.live="postulacionForm.id_carrera"
+                        :invalid="$errors->has('postulacionForm.id_carrera')"
+                        :error="$errors->first('postulacionForm.id_carrera')"
+                        :disabled="$postulacionForm['id_sede'] === ''"
+                        required
+                        floating
                     >
-                        <x-ui.select
-                            label="Lugar de inscripción"
-                            wire:model.live="postulacionForm.id_lugar_inscripcion"
-                            :invalid="$errors->has('postulacionForm.id_lugar_inscripcion')"
-                            :error="$errors->first('postulacionForm.id_lugar_inscripcion')"
-                            required
-                            floating
-                        >
-                            <option value="">Seleccionar lugar</option>
-                            @foreach ($this->lugaresPostulacionDisponibles as $lugar)
-                                <option value="{{ $lugar['id'] }}">{{ $lugar['nombre'] }}</option>
-                            @endforeach
-                        </x-ui.select>
-                    </div>
-                @endif
+                        <option value="">{{ $postulacionForm['id_sede'] === '' ? 'Primero seleccione la sede' : 'Seleccionar carrera' }}</option>
+                        @foreach ($this->carrerasPostulacionDisponibles as $carrera)
+                            <option value="{{ $carrera['id'] }}">{{ $carrera['nombre'] }}</option>
+                        @endforeach
+                    </x-ui.select-filter>
+                </div>
 
-                {{-- Turno: aparece tras seleccionar lugar --}}
-                @if ($postulacionForm['id_lugar_inscripcion'] !== '')
-                    <div
-                        class="lg:col-span-4"
-                        wire:key="turno-{{ $postulacionForm['id_modalidad_admision'] }}-{{ $postulacionForm['id_lugar_inscripcion'] }}"
-                    >
-                        <x-ui.select
-                            label="Turno"
-                            wire:model.live="postulacionForm.id_turno"
-                            :invalid="$errors->has('postulacionForm.id_turno')"
-                            :error="$errors->first('postulacionForm.id_turno')"
-                            required
-                            floating
-                        >
-                            <option value="">Seleccionar turno</option>
-                            @foreach ($this->turnosPostulacionDisponibles as $turno)
-                                <option value="{{ $turno['id'] }}">{{ $turno['nombre'] }}</option>
-                            @endforeach
-                        </x-ui.select>
+                <fieldset class="lg:col-span-12">
+                    <legend class="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">Turno <span aria-hidden="true">*</span></legend>
+                    <div class="flex flex-wrap gap-3">
+                        @forelse ($this->turnosPostulacionDisponibles as $turno)
+                            <label
+                                wire:key="turno-{{ $turno['id'] }}"
+                                class="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-200/80 bg-white px-3 py-2 text-sm text-zinc-700 has-[:checked]:border-zinc-900 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:has-[:checked]:border-white"
+                            >
+                                <input
+                                    type="radio"
+                                    name="id_turno"
+                                    value="{{ $turno['id'] }}"
+                                    wire:model.live="postulacionForm.id_turno"
+                                    required
+                                    @if ($errors->has('postulacionForm.id_turno')) aria-invalid="true" aria-describedby="error-turno" @endif
+                                    class="size-4 border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800"
+                                />
+                                {{ $turno['nombre'] }}
+                            </label>
+                        @empty
+                            <p class="text-sm text-zinc-500 dark:text-zinc-400">El proceso no tiene aulas asignadas en ningún turno.</p>
+                        @endforelse
                     </div>
-                @endif
-
-                {{-- Oferta: aparece tras seleccionar turno --}}
-                @if ($postulacionForm['id_turno'] !== '')
-                    <div
-                        class="lg:col-span-8"
-                        wire:key="oferta-{{ $postulacionForm['id_modalidad_admision'] }}-{{ $postulacionForm['id_lugar_inscripcion'] }}-{{ $postulacionForm['id_turno'] }}"
-                    >
-                        <x-ui.select-filter
-                            label="Oferta"
-                            wire:model.live="postulacionForm.id_proceso_oferta"
-                            :invalid="$errors->has('postulacionForm.id_proceso_oferta')"
-                            :error="$errors->first('postulacionForm.id_proceso_oferta')"
-                            required
-                            floating
-                        >
-                            <option value="">Seleccionar oferta</option>
-                            @foreach ($this->procesoOfertasPostulacionDisponibles as $procesoOferta)
-                                <option value="{{ $procesoOferta->id_pof }}">
-                                    {{ $this->descripcionProcesoOferta($procesoOferta) }}
-                                </option>
-                            @endforeach
-                        </x-ui.select-filter>
-                    </div>
-                @endif
+                    @error('postulacionForm.id_turno')
+                        <p id="error-turno" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </fieldset>
             </div>
-        </section>
-
-        <section
-            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
-        >
-            <div class="space-y-1">
-                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de postulación</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Antes de continuar, revise que la modalidad y la oferta sean las correctas.</p>
-            </div>
-
-            @php ($ofertaSeleccionada = $this->procesoOfertasPostulacionDisponibles->firstWhere('id_pof', (int) $postulacionForm['id_proceso_oferta']))
-
-            <flux:callout
-                variant="{{ $ofertaSeleccionada ? 'success' : 'secondary' }}"
-                icon="{{ $ofertaSeleccionada ? 'check-circle' : 'information-circle' }}"
-                heading="{{ $ofertaSeleccionada ? 'La postulacion ya tiene una oferta seleccionada.' : 'Complete modalidad, lugar, turno y oferta para continuar.' }}"
-            >
-                @if ($ofertaSeleccionada)
-                    <div class="space-y-1 text-sm">
-                        <p><span class="font-medium">Oferta:</span> {{ $this->descripcionProcesoOferta($ofertaSeleccionada) }}</p>
-                    </div>
-                @endif
-            </flux:callout>
         </section>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se creará o actualizará el borrador de inscripción con la oferta seleccionada.</p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se creará o actualizará el borrador de inscripción y se asignará un aula.</p>
 
             <div class="flex gap-3">
                 <flux:button

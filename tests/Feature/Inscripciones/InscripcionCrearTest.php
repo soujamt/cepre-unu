@@ -17,6 +17,7 @@ use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
+use App\Models\ModalidadAdmision;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\Permiso;
@@ -24,7 +25,8 @@ use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
+use App\Models\ProcesoModalidad;
 use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\TipoColegio;
@@ -41,13 +43,9 @@ use Database\Seeders\EstadoCivilSeeder;
 use Database\Seeders\IdentidadEtnicaSeeder;
 use Database\Seeders\LenguaExtranjeraSeeder;
 use Database\Seeders\LenguaNativaSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
 use Database\Seeders\NacionalidadSeeder;
-use Database\Seeders\OfertaBaseSeeder;
 use Database\Seeders\PaisSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
 use Database\Seeders\TipoColegioSeeder;
 use Database\Seeders\TipoDiscapacidadSeeder;
@@ -214,15 +212,38 @@ function sembrarConfiguracionAcademicaParaInscripcion(): void
         ColegioSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
+}
+
+/**
+ * Primera carrera habilitada del proceso semilla 2026-1 con el turno MAÑANA y
+ * la modalidad ORDINARIO, para armar postulaciones de prueba. Con $conAula
+ * le asigna un aula al turno para que se pueda elegir.
+ */
+function postulacionDePrueba(bool $conAula = false): object
+{
+    $procesoCarrera = ProcesoCarrera::query()
+        ->whereHas('proceso', fn ($query) => $query->where('codigo_pro', '2026_1'))
+        ->orderBy('id_pca')
+        ->firstOrFail();
+    $turno = Turno::query()->where('codigo_tur', 'MAN')->firstOrFail();
+
+    if ($conAula) {
+        crearAulaParaProcesoInscripcion($procesoCarrera->proceso, $turno, 'AULA PRUEBA', 'UAP', 'PISO 1', 40);
+    }
+
+    return (object) [
+        'id_proceso' => $procesoCarrera->id_proceso,
+        'id_sede' => $procesoCarrera->id_sede,
+        'id_carrera' => $procesoCarrera->id_carrera,
+        'id_modalidad_admision' => ModalidadAdmision::query()->where('codigo_mad', 'ORD')->value('id_mad'),
+        'id_turno' => $turno->id_tur,
+        'turno' => $turno,
+    ];
 }
 
 function crearPersonaParaPostulacion(string $numeroDocumento): Persona
@@ -723,7 +744,7 @@ test('general information validates future graduation year and required postulat
         ->set('personaId', $persona->id_per)
         ->set('inscripcionId', 1)
         ->set('pasoActual', 2)
-        ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 1))
+        ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 3))
         ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
         ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
@@ -839,14 +860,7 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba(conAula: true);
 
     $this->actingAs($usuario);
 
@@ -861,10 +875,9 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertSet('pasoActual', 4)
@@ -874,12 +887,54 @@ test('users can register postulacion and create an inscripcion draft', function 
 
     expect($inscripcion)->not->toBeNull()
         ->and($inscripcion?->id_persona)->toBe($persona->id_per)
-        ->and($inscripcion?->id_proceso_oferta)->toBe($procesoOferta->id_pof)
+        ->and($inscripcion?->id_carrera)->toBe($procesoOferta->id_carrera)
+        ->and($inscripcion?->modalidadAdmision?->codigo_mad)->toBe('EXT')
+        ->and($inscripcion?->id_turno)->toBe($procesoOferta->id_turno)
         ->and($inscripcion?->estado_ins?->value)->toBe('PENDIENTE')
         ->and($inscripcion?->veces_postula_unu_ins)->toBe(0)
         ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
         ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
         ->and($inscripcion?->codigo_ins)->toBe('2610001');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('postulacion is blocked when the proceso has no modalidad for the graduation year', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $persona = crearPersonaParaPostulacion('46027811');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $postulacion = postulacionDePrueba(conAula: true);
+
+    ProcesoModalidad::query()
+        ->where('id_proceso', $postulacion->id_proceso)
+        ->whereHas('modalidadAdmision', fn ($query) => $query->where('codigo_mad', 'EXT'))
+        ->update(['estado_pmo' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->call('guardarPasoPostulacion')
+        ->assertSet('pasoActual', 3)
+        ->assertDispatched('toast', message: 'El proceso activo no tiene habilitada una modalidad para el año de egreso ingresado. Revise la oferta del proceso.', type: 'warning');
+
+    expect(Inscripcion::query()->count())->toBe(0);
 
     Carbon\Carbon::setTestNow();
 });
@@ -895,10 +950,7 @@ test('postulacion assigns the first aula with capacity by configured order', fun
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $procesoOferta = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 2);
     crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
@@ -915,10 +967,9 @@ test('postulacion assigns the first aula with capacity by configured order', fun
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
@@ -942,10 +993,7 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $procesoOferta = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 1);
     $segundaAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
@@ -953,7 +1001,11 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     Inscripcion::query()->create([
         'codigo_ins' => 'OCUPADO-001',
         'id_persona' => $personaOcupante->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'id_proceso_aula' => $primerAula['procesoAula']->id_pau,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => EstadoInscripcion::Pendiente->value,
@@ -971,10 +1023,9 @@ test('postulacion skips full aulas and assigns the next available aula', functio
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
@@ -1000,10 +1051,7 @@ test('postulacion only assigns aulas from the selected turno', function () {
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
 
-    $procesoOfertaManana = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOfertaManana = postulacionDePrueba();
 
     $turnoTarde = Turno::query()
         ->where('id_tur', '!=', $procesoOfertaManana->id_turno)
@@ -1018,13 +1066,9 @@ test('postulacion only assigns aulas from the selected turno', function () {
         ]);
     }
 
-    $procesoOfertaTarde = ProcesoOferta::query()->create([
-        'id_proceso' => $proceso->id_pro,
-        'id_oferta_base' => $procesoOfertaManana->id_oferta_base,
-        'id_turno' => $turnoTarde->id_tur,
-        'estado_pof' => 'HABILITADO',
-    ]);
-    $procesoOfertaTarde->load('ofertaBase.modalidadLugarInscripcion', 'turno');
+    $procesoOfertaTarde = clone $procesoOfertaManana;
+    $procesoOfertaTarde->id_turno = $turnoTarde->id_tur;
+    $procesoOfertaTarde->turno = $turnoTarde;
 
     crearAulaParaProcesoInscripcion($proceso, $procesoOfertaManana->turno, 'AULA MANANA', 'UAP', 'PISO 1', 40);
     $aulaTarde = crearAulaParaProcesoInscripcion($proceso, $procesoOfertaTarde->turno, 'AULA TARDE', 'UAP', 'PISO 2', 50);
@@ -1041,10 +1085,9 @@ test('postulacion only assigns aulas from the selected turno', function () {
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOfertaTarde->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOfertaTarde->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOfertaTarde->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOfertaTarde->id_pof)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
@@ -1133,19 +1176,16 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => '26IPRO0001',
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'fecha_inscripcion_ins' => '2026-04-15 10:00:00',
         'estado_ins' => EstadoInscripcion::Pendiente->value,
         'anio_graduacion_ins' => 2025,
@@ -1180,10 +1220,9 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->assertSet('generalForm.id_colegio', $colegio->id_col)
         ->assertSet('generalForm.veces_postula_unu', 1)
         ->assertSet('generalForm.veces_postula_otras', 2)
-        ->assertSet('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->assertSet('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->assertSet('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->assertSet('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->assertSet('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->assertSet('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->assertSet('pagoForm.numero_documento', '46027897')
         ->assertSet('colegioLabel', $colegioLabel)
         ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: $colegio->id_col, label: $colegioLabel);
@@ -1253,14 +1292,7 @@ test('validating a bank payment from the payment step activates the inscripcion'
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba(conAula: true);
 
     $reglaPago = ReglaPago::query()
         ->where('id_proceso', $proceso->id_pro)
@@ -1308,10 +1340,9 @@ test('validating a bank payment from the payment step activates the inscripcion'
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->call('guardarPasoPostulacion')
         ->assertSet('pasoActual', 4)
         ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
@@ -1395,14 +1426,7 @@ test('users can complete a payment obligation with multiple cuotas from the wiza
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba(conAula: true);
 
     $reglaPago = ReglaPago::query()
         ->where('id_proceso', $proceso->id_pro)
@@ -1478,10 +1502,9 @@ test('users can complete a payment obligation with multiple cuotas from the wiza
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
         ->call('guardarPasoPostulacion')
         ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
         ->set('pagoForm.numero_operacion', '41676')
@@ -1542,10 +1565,7 @@ test('buscarPagosPasoPago is blocked when proceso is no longer active', function
     $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
@@ -1561,7 +1581,11 @@ test('buscarPagosPasoPago is blocked when proceso is no longer active', function
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => 'TEST-PAGO-001',
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => EstadoInscripcion::Pendiente->value,
     ]);
@@ -1588,10 +1612,7 @@ test('confirmarPasoPago is blocked when proceso is no longer active', function (
     $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
@@ -1607,7 +1628,11 @@ test('confirmarPasoPago is blocked when proceso is no longer active', function (
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => 'TEST-PAGO-002',
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => EstadoInscripcion::Pendiente->value,
     ]);

@@ -46,7 +46,7 @@ class extends Component
         }
 
         $base = Inscripcion::query()
-            ->whereHas('procesoOferta', fn (Builder $q) => $q->where('id_proceso', $proceso->id_pro));
+            ->where('id_proceso', $proceso->id_pro);
 
         $counts = (clone $base)->selectRaw('
             COUNT(*) as total,
@@ -90,12 +90,12 @@ class extends Component
         return [
             'nuevas_inscripciones' => Inscripcion::query()
                 ->whereDate('fecha_inscripcion_ins', $fechaReferencia)
-                ->whereHas('procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
+                ->where('id_proceso', $proceso->id_pro)
                 ->count(),
             'pagos_validados' => InscripcionPago::query()
                 ->where('estado_validacion_ipa', EstadoValidacionPago::Verificado->value)
                 ->whereDate('validado_en', $fechaReferencia)
-                ->whereHas('obligacionPago.inscripcion.procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
+                ->whereHas('obligacionPago.inscripcion', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
                 ->count(),
         ];
     }
@@ -139,10 +139,10 @@ class extends Component
         return Inscripcion::query()
             ->with([
                 'persona',
-                'procesoOferta.ofertaBase.sedeCarrera.carrera',
-                'procesoOferta.turno',
+                'carrera',
+                'turno',
             ])
-            ->whereHas('procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
+            ->where('id_proceso', $proceso->id_pro)
             ->latest('fecha_inscripcion_ins')
             ->limit(6)
             ->get();

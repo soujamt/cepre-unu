@@ -38,12 +38,11 @@ class extends Component
                 'persona.identidadEtnica',
                 'persona.lenguaNativa',
                 'persona.lenguaExtranjera',
-                'procesoOferta.proceso',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
-                'procesoOferta.ofertaBase.sedeCarrera.carrera',
-                'procesoOferta.ofertaBase.sedeCarrera.sede',
-                'procesoOferta.turno',
+                'proceso',
+                'sede',
+                'modalidadAdmision',
+                'carrera',
+                'turno',
                 'procesoAula.aula',
                 'procesoAula.turno',
                 'paisColegio',
@@ -74,15 +73,14 @@ class extends Component
 
     public function descripcionPostulacion(): string
     {
-        $procesoOferta = $this->inscripcionActual->procesoOferta;
+        $inscripcion = $this->inscripcionActual;
 
-        $carrera = $procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
-        $sede = $procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-        $modalidad = $procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
-        $lugar = $procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
-        $turno = $procesoOferta?->turno?->nombre_tur ?? 'SIN TURNO';
-
-        return implode(' · ', [$carrera, $sede, $modalidad, $lugar, $turno]);
+        return implode(' · ', [
+            $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA',
+            $inscripcion->sede?->nombre_sed ?? 'SIN SEDE',
+            $inscripcion->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
+            $inscripcion->turno?->nombre_tur ?? 'SIN TURNO',
+        ]);
     }
 
     /**
@@ -136,7 +134,7 @@ class extends Component
 
     public function turnoResumen(): string
     {
-        return $this->inscripcionActual->procesoOferta?->turno?->nombre_tur ?? 'Sin turno';
+        return $this->inscripcionActual->turno?->nombre_tur ?? 'Sin turno';
     }
 
     public function aulaResumen(): string

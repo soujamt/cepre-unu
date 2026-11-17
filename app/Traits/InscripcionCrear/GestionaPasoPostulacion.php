@@ -2,14 +2,17 @@
 
 namespace App\Traits\InscripcionCrear;
 
+use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
-use App\Enums\EstadoProceso;
 use App\Models\Inscripcion;
+use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoAula;
+use App\Models\ProcesoCarrera;
 use App\Support\AsignadorAulaInscripcion;
 use App\Support\GeneradorCodigoInscripcion;
 use App\Support\ProcesoInscripcionResolver;
+use App\Support\ResolvedorModalidadEgreso;
 use App\Support\ValidadorVigenciaInscripcion;
 use Closure;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -21,7 +24,8 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Paso 3 del asistente de inscripción: proceso, modalidad y oferta.
+ * Paso 3 del asistente de inscripción: sede, carrera y turno. La modalidad
+ * se asigna sola según el año de egreso.
  *
  * Lo usa el componente pages::inscripciones.inscripcion-crear, que declara
  * el estado (formularios y propiedades) sobre el que trabajan estos métodos.
@@ -30,32 +34,16 @@ trait GestionaPasoPostulacion
 {
     private function cargarPostulacionExistente(Inscripcion $inscripcion): void
     {
-        $procesoOferta = $inscripcion->procesoOferta;
-
         $this->postulacionForm = [
-            'id_modalidad_admision' => (string) ($procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision ?? ''),
-            'id_lugar_inscripcion' => (string) ($procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion ?? ''),
-            'id_turno' => (string) ($procesoOferta?->id_turno ?? ''),
-            'id_proceso_oferta' => (string) ($procesoOferta?->id_pof ?? ''),
+            'id_sede' => (string) ($inscripcion->id_sede ?? ''),
+            'id_carrera' => (string) ($inscripcion->id_carrera ?? ''),
+            'id_turno' => (string) ($inscripcion->id_turno ?? ''),
         ];
     }
 
-    public function updatedPostulacionFormIdModalidadAdmision(): void
+    public function updatedPostulacionFormIdSede(): void
     {
-        $this->postulacionForm['id_lugar_inscripcion'] = '';
-        $this->postulacionForm['id_turno'] = '';
-        $this->postulacionForm['id_proceso_oferta'] = '';
-    }
-
-    public function updatedPostulacionFormIdLugarInscripcion(): void
-    {
-        $this->postulacionForm['id_turno'] = '';
-        $this->postulacionForm['id_proceso_oferta'] = '';
-    }
-
-    public function updatedPostulacionFormIdTurno(): void
-    {
-        $this->postulacionForm['id_proceso_oferta'] = '';
+        $this->postulacionForm['id_carrera'] = '';
     }
 
     /**
@@ -81,8 +69,27 @@ trait GestionaPasoPostulacion
             && ! $this->contextoProcesoPostulacion()['disponible'];
     }
 
+    /**
+     * Modalidad que corresponde al año de egreso ingresado en el paso 2.
+     */
     #[Computed]
-    public function ofertasProcesoDisponibles(): EloquentCollection
+    public function modalidadPostulacion(): ?ModalidadAdmision
+    {
+        $proceso = $this->procesoPostulacionActivo();
+        $anioEgreso = $this->generalForm['anio_graduacion'] ?? '';
+
+        if ($proceso === null || ! is_numeric($anioEgreso)) {
+            return null;
+        }
+
+        return app(ResolvedorModalidadEgreso::class)->resolver($proceso, (int) $anioEgreso);
+    }
+
+    /**
+     * Carreras habilitadas en el proceso activo, con su sede.
+     */
+    #[Computed]
+    public function carrerasProcesoDisponibles(): EloquentCollection
     {
         $proceso = $this->procesoPostulacionActivo();
 
@@ -90,88 +97,74 @@ trait GestionaPasoPostulacion
             return new EloquentCollection;
         }
 
-        return ProcesoOferta::query()
-            ->with([
-                'proceso',
-                'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
-                'ofertaBase.sedeCarrera.sede',
-                'ofertaBase.sedeCarrera.carrera',
-                'turno',
-            ])
+        return ProcesoCarrera::query()
+            ->with(['sede', 'carrera'])
             ->where('id_proceso', $proceso->id_pro)
-            ->where('estado_pof', EstadoProceso::Habilitado->value)
+            ->where('estado_pca', EstadoCatalogo::Habilitado->value)
+            ->whereHas('sede', fn ($query) => $query->where('estado_sed', EstadoCatalogo::Habilitado->value))
+            ->whereHas('carrera', fn ($query) => $query->where('estado_car', EstadoCatalogo::Habilitado->value))
             ->get();
     }
 
+    /**
+     * @return Collection<int, array{id:string,nombre:string}>
+     */
     #[Computed]
-    public function modalidadesPostulacionDisponibles(): Collection
+    public function sedesPostulacionDisponibles(): Collection
     {
-        return $this->ofertasProcesoDisponibles()
-            ->map(function (ProcesoOferta $oferta): array {
-                return [
-                    'id' => (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->id_mad,
-                    'nombre' => $oferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
-                ];
-            })
-            ->filter(fn (array $modalidad): bool => filled($modalidad['id']))
+        return $this->carrerasProcesoDisponibles()
+            ->map(fn (ProcesoCarrera $procesoCarrera): array => [
+                'id' => (string) $procesoCarrera->id_sede,
+                'nombre' => $procesoCarrera->sede?->nombre_sed ?? 'SIN SEDE',
+            ])
             ->unique('id')
             ->sortBy('nombre')
             ->values();
     }
 
+    /**
+     * @return Collection<int, array{id:string,nombre:string}>
+     */
     #[Computed]
-    public function lugaresPostulacionDisponibles(): Collection
+    public function carrerasPostulacionDisponibles(): Collection
     {
-        return $this->ofertasProcesoDisponibles()
-            ->filter(fn (ProcesoOferta $oferta): bool => $this->postulacionForm['id_modalidad_admision'] !== ''
-                && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision'])
-            ->map(function (ProcesoOferta $oferta): array {
-                return [
-                    'id' => (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->id_lin,
-                    'nombre' => $oferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR',
-                ];
-            })
-            ->filter(fn (array $lugar): bool => filled($lugar['id']))
-            ->unique('id')
+        return $this->carrerasProcesoDisponibles()
+            ->filter(fn (ProcesoCarrera $procesoCarrera): bool => $this->postulacionForm['id_sede'] !== ''
+                && (string) $procesoCarrera->id_sede === (string) $this->postulacionForm['id_sede'])
+            ->map(fn (ProcesoCarrera $procesoCarrera): array => [
+                'id' => (string) $procesoCarrera->id_carrera,
+                'nombre' => $procesoCarrera->carrera?->nombre_car ?? 'SIN CARRERA',
+            ])
             ->sortBy('nombre')
             ->values();
     }
 
+    /**
+     * Turnos con al menos un aula habilitada en el proceso activo.
+     *
+     * @return Collection<int, array{id:string,nombre:string}>
+     */
     #[Computed]
     public function turnosPostulacionDisponibles(): Collection
     {
-        return $this->ofertasProcesoDisponibles()
-            ->filter(function (ProcesoOferta $oferta): bool {
-                return $this->postulacionForm['id_modalidad_admision'] !== ''
-                    && $this->postulacionForm['id_lugar_inscripcion'] !== ''
-                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision']
-                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion === (string) $this->postulacionForm['id_lugar_inscripcion'];
-            })
-            ->map(function (ProcesoOferta $oferta): array {
-                return [
-                    'id' => (string) $oferta->turno?->id_tur,
-                    'nombre' => $oferta->turno?->nombre_tur ?? 'SIN TURNO',
-                ];
-            })
-            ->filter(fn (array $turno): bool => filled($turno['id']))
+        $proceso = $this->procesoPostulacionActivo();
+
+        if ($proceso === null) {
+            return collect();
+        }
+
+        return ProcesoAula::query()
+            ->with('turno')
+            ->where('id_proceso', $proceso->id_pro)
+            ->where('estado_pau', EstadoCatalogo::Habilitado->value)
+            ->whereHas('aula', fn ($query) => $query->where('estado_aul', EstadoCatalogo::Habilitado->value))
+            ->get()
+            ->map(fn (ProcesoAula $procesoAula): array => [
+                'id' => (string) $procesoAula->id_turno,
+                'nombre' => $procesoAula->turno?->nombre_tur ?? 'SIN TURNO',
+            ])
             ->unique('id')
             ->sortBy('nombre')
-            ->values();
-    }
-
-    #[Computed]
-    public function procesoOfertasPostulacionDisponibles(): EloquentCollection
-    {
-        return $this->ofertasProcesoDisponibles()
-            ->filter(function (ProcesoOferta $oferta): bool {
-                return $this->postulacionForm['id_modalidad_admision'] !== ''
-                    && $this->postulacionForm['id_lugar_inscripcion'] !== ''
-                    && $this->postulacionForm['id_turno'] !== ''
-                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision === (string) $this->postulacionForm['id_modalidad_admision']
-                    && (string) $oferta->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion === (string) $this->postulacionForm['id_lugar_inscripcion']
-                    && (string) $oferta->id_turno === (string) $this->postulacionForm['id_turno'];
-            })
             ->values();
     }
 
@@ -181,47 +174,27 @@ trait GestionaPasoPostulacion
     protected function rulesPasoPostulacion(): array
     {
         return [
-            'postulacionForm.id_modalidad_admision' => [
+            'postulacionForm.id_sede' => [
                 'required',
                 function (string $attribute, mixed $value, Closure $fail): void {
-                    $valido = $this->modalidadesPostulacionDisponibles()
-                        ->contains(fn (array $modalidad): bool => $modalidad['id'] === (string) $value);
-
-                    if (! $valido) {
-                        $fail('La modalidad seleccionada no es valida para el proceso activo.');
+                    if (! $this->sedesPostulacionDisponibles()->contains('id', (string) $value)) {
+                        $fail('La sede seleccionada no es valida para el proceso activo.');
                     }
                 },
             ],
-            'postulacionForm.id_lugar_inscripcion' => [
+            'postulacionForm.id_carrera' => [
                 'required',
                 function (string $attribute, mixed $value, Closure $fail): void {
-                    $valido = $this->lugaresPostulacionDisponibles()
-                        ->contains(fn (array $lugar): bool => $lugar['id'] === (string) $value);
-
-                    if (! $valido) {
-                        $fail('El lugar de inscripcion seleccionado no es valido.');
+                    if (! $this->carrerasPostulacionDisponibles()->contains('id', (string) $value)) {
+                        $fail('La carrera seleccionada no esta habilitada en esa sede.');
                     }
                 },
             ],
             'postulacionForm.id_turno' => [
                 'required',
                 function (string $attribute, mixed $value, Closure $fail): void {
-                    $valido = $this->turnosPostulacionDisponibles()
-                        ->contains(fn (array $turno): bool => $turno['id'] === (string) $value);
-
-                    if (! $valido) {
+                    if (! $this->turnosPostulacionDisponibles()->contains('id', (string) $value)) {
                         $fail('El turno seleccionado no es valido.');
-                    }
-                },
-            ],
-            'postulacionForm.id_proceso_oferta' => [
-                'required',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    $valido = $this->procesoOfertasPostulacionDisponibles()
-                        ->contains(fn (ProcesoOferta $oferta): bool => (string) $oferta->id_pof === (string) $value);
-
-                    if (! $valido) {
-                        $fail('La oferta seleccionada no es valida para la postulacion.');
                     }
                 },
             ],
@@ -234,10 +207,9 @@ trait GestionaPasoPostulacion
     protected function messagesPasoPostulacion(): array
     {
         return [
-            'postulacionForm.id_modalidad_admision.required' => 'La modalidad es obligatoria.',
-            'postulacionForm.id_lugar_inscripcion.required' => 'El lugar de inscripcion es obligatorio.',
+            'postulacionForm.id_sede.required' => 'La sede es obligatoria.',
+            'postulacionForm.id_carrera.required' => 'La carrera es obligatoria.',
             'postulacionForm.id_turno.required' => 'El turno es obligatorio.',
-            'postulacionForm.id_proceso_oferta.required' => 'La oferta es obligatoria.',
         ];
     }
 
@@ -251,19 +223,23 @@ trait GestionaPasoPostulacion
             return;
         }
 
+        if (! $this->validarModalidadPostulacion()) {
+            return;
+        }
+
         // Verificar inscripcion duplicada en el mismo proceso (excepto edicion actual)
         $proceso = $contextoProceso['proceso'];
 
         $inscripcionExistente = Inscripcion::query()
-            ->with(['procesoOferta.ofertaBase.sedeCarrera.carrera'])
+            ->with(['carrera'])
             ->where('id_persona', $this->personaId)
             ->whereNotIn('estado_ins', [EstadoInscripcion::Anulado->value])
-            ->whereHas('procesoOferta', fn ($q) => $q->where('id_proceso', $proceso->id_pro))
+            ->where('id_proceso', $proceso->id_pro)
             ->when($this->inscripcionId, fn ($q) => $q->where('id_ins', '!=', $this->inscripcionId))
             ->first();
 
         if ($inscripcionExistente !== null) {
-            $carrera = $inscripcionExistente->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'otra carrera';
+            $carrera = $inscripcionExistente->carrera?->nombre_car ?? 'otra carrera';
             $codigo = (string) $inscripcionExistente->codigo_ins;
 
             $this->dispatch(
@@ -300,6 +276,10 @@ trait GestionaPasoPostulacion
             return;
         }
 
+        if (! $this->validarModalidadPostulacion()) {
+            return;
+        }
+
         $data = $this->validate(
             $this->rulesPasoPostulacion(),
             $this->messagesPasoPostulacion(),
@@ -312,10 +292,9 @@ trait GestionaPasoPostulacion
     {
         $this->resetPostulacionForm();
         $this->resetValidation([
-            'postulacionForm.id_modalidad_admision',
-            'postulacionForm.id_lugar_inscripcion',
+            'postulacionForm.id_sede',
+            'postulacionForm.id_carrera',
             'postulacionForm.id_turno',
-            'postulacionForm.id_proceso_oferta',
         ]);
         $this->pasoActual = 3;
 
@@ -334,14 +313,31 @@ trait GestionaPasoPostulacion
         try {
             DB::transaction(function () use ($data): void {
                 $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
-                app(ValidadorVigenciaInscripcion::class)->ofertaVigente(
-                    (int) $data['postulacionForm']['id_proceso_oferta'],
+                $modalidad = app(ResolvedorModalidadEgreso::class)
+                    ->resolver($procesoActivo, (int) $this->generalForm['anio_graduacion']);
+
+                if ($modalidad === null) {
+                    throw new RuntimeException('El proceso activo no tiene habilitada una modalidad para ese año de egreso.');
+                }
+
+                $postulacion = [
+                    'id_proceso' => $procesoActivo->id_pro,
+                    'id_sede' => (int) $data['postulacionForm']['id_sede'],
+                    'id_modalidad_admision' => $modalidad->id_mad,
+                    'id_carrera' => (int) $data['postulacionForm']['id_carrera'],
+                    'id_turno' => (int) $data['postulacionForm']['id_turno'],
+                ];
+
+                app(ValidadorVigenciaInscripcion::class)->postulacionVigente(
+                    $postulacion['id_sede'],
+                    $postulacion['id_carrera'],
+                    $postulacion['id_modalidad_admision'],
                     $procesoActivo,
                 );
 
                 $payload = [
                     'id_persona' => $this->personaId,
-                    'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
+                    ...$postulacion,
                     'fecha_inscripcion_ins' => now(),
                     'estado_ins' => EstadoInscripcion::Pendiente->value,
                     'anio_graduacion_ins' => (int) $this->generalForm['anio_graduacion'],
@@ -360,7 +356,10 @@ trait GestionaPasoPostulacion
                 } else {
                     $inscripcion = Inscripcion::query()->firstOrNew([
                         'id_persona' => $this->personaId,
-                        'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
+                        'id_proceso' => $procesoActivo->id_pro,
+                        'id_sede' => $postulacion['id_sede'],
+                        'id_carrera' => $postulacion['id_carrera'],
+                        'id_turno' => $postulacion['id_turno'],
                     ]);
 
                     $inscripcion->fill($payload);
@@ -429,28 +428,32 @@ trait GestionaPasoPostulacion
         return false;
     }
 
-    public function descripcionProcesoOferta(?ProcesoOferta $procesoOferta): string
+    /**
+     * Sin modalidad no hay postulación: avisa y devuelve al paso 2.
+     */
+    private function validarModalidadPostulacion(): bool
     {
-        if ($procesoOferta === null) {
-            return 'SIN OFERTA';
+        unset($this->modalidadPostulacion);
+
+        if ($this->modalidadPostulacion !== null) {
+            return true;
         }
 
-        $carrera = $procesoOferta->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
-        $sede = $procesoOferta->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-        $modalidad = $procesoOferta->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
-        $lugar = $procesoOferta->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
-        $turno = $procesoOferta->turno?->nombre_tur ?? 'SIN TURNO';
+        $this->dispatch(
+            'toast',
+            message: 'El proceso activo no tiene habilitada una modalidad para el año de egreso ingresado. Revise la oferta del proceso.',
+            type: 'warning',
+        );
 
-        return "{$carrera} | {$sede} | {$modalidad} | {$lugar} | {$turno}";
+        return false;
     }
 
     private function resetPostulacionForm(): void
     {
         $this->postulacionForm = [
-            'id_modalidad_admision' => '',
-            'id_lugar_inscripcion' => '',
+            'id_sede' => '',
+            'id_carrera' => '',
             'id_turno' => '',
-            'id_proceso_oferta' => '',
         ];
     }
 

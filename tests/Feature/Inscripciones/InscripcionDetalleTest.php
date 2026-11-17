@@ -4,24 +4,22 @@ use App\Enums\EstadoInscripcion;
 use App\Models\Accion;
 use App\Models\Aula;
 use App\Models\Inscripcion;
+use App\Models\ModalidadAdmision;
 use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
 use App\Models\Rol;
 use App\Models\TipoDocumento;
+use App\Models\Turno;
 use App\Models\Usuario;
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ConceptoPagoSeeder;
 use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
-use Database\Seeders\OfertaBaseSeeder;
 use Database\Seeders\PaisSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
 use Database\Seeders\TipoDocumentoSeeder;
 use Database\Seeders\TurnoSeeder;
@@ -90,11 +88,7 @@ function sembrarConfiguracionParaDetalle(): void
         UbigeoSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
@@ -110,10 +104,8 @@ test('detail page shows assigned aula information', function () {
     $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
     $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase', 'proceso'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
+    $procesoCarrera = ProcesoCarrera::query()->orderBy('id_pca')->firstOrFail();
+    $turno = Turno::query()->where('codigo_tur', 'MAN')->firstOrFail();
 
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
@@ -135,8 +127,8 @@ test('detail page shows assigned aula information', function () {
     ]);
 
     $procesoAula = ProcesoAula::query()->create([
-        'id_proceso' => $procesoOferta->id_proceso,
-        'id_turno' => $procesoOferta->id_turno,
+        'id_proceso' => $procesoCarrera->id_proceso,
+        'id_turno' => $turno->id_tur,
         'id_aula' => $aula->id_aul,
         'capacidad_pau' => 45,
         'estado_pau' => 'HABILITADO',
@@ -145,7 +137,11 @@ test('detail page shows assigned aula information', function () {
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => 'TEST-DET-AULA',
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoCarrera->id_proceso,
+        'id_sede' => $procesoCarrera->id_sede,
+        'id_modalidad_admision' => ModalidadAdmision::query()->where('codigo_mad', 'ORD')->value('id_mad'),
+        'id_carrera' => $procesoCarrera->id_carrera,
+        'id_turno' => $turno->id_tur,
         'id_proceso_aula' => $procesoAula->id_pau,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => EstadoInscripcion::Pendiente->value,

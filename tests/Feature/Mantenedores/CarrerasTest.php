@@ -4,9 +4,10 @@ use App\Models\Accion;
 use App\Models\Carrera;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
+use App\Models\Proceso;
+use App\Models\ProcesoCarrera;
 use App\Models\Rol;
 use App\Models\Sede;
-use App\Models\SedeCarrera;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -185,7 +186,7 @@ test('authorized users can change state of a carrera', function () {
     expect($carrera->fresh()->estado_car->value)->toBe('DESHABILITADO');
 });
 
-test('authorized users can delete a carrera without sedes', function () {
+test('authorized users can delete a carrera without procesos', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_eliminar']);
     $carrera = crearCarreraPrueba();
@@ -199,7 +200,7 @@ test('authorized users can delete a carrera without sedes', function () {
     $this->assertSoftDeleted('tbl_carrera', ['id_car' => $carrera->id_car], deletedAtColumn: 'eliminado_en');
 });
 
-test('carrera assigned to a sede cannot be deleted', function () {
+test('carrera enabled in a proceso cannot be deleted', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_eliminar']);
     $carrera = crearCarreraPrueba();
@@ -220,18 +221,25 @@ test('carrera assigned to a sede cannot be deleted', function () {
         'id_ubigeo' => $ubigeo->id_ubi,
         'estado_sed' => 'HABILITADO',
     ]);
-    SedeCarrera::query()->create([
+    $proceso = Proceso::query()->create([
+        'codigo_pro' => '2026_2',
+        'nombre_pro' => '2026-2',
+        'fecha_inicio_pro' => '2026-09-01 00:00:00',
+        'fecha_fin_pro' => '2026-12-31 23:59:59',
+        'estado_pro' => 'HABILITADO',
+    ]);
+    ProcesoCarrera::query()->create([
+        'id_proceso' => $proceso->id_pro,
         'id_sede' => $sede->id_sed,
         'id_carrera' => $carrera->id_car,
-        'codigo_externo_sca' => 'SEDCAL-ENF',
-        'estado_sca' => 'HABILITADO',
+        'estado_pca' => 'HABILITADO',
     ]);
 
     $this->actingAs($usuario);
 
     Livewire::test('pages::mantenedores.carreras')
         ->call('eliminar', $carrera->id_car)
-        ->assertDispatched('toast', message: 'La carrera está asignada a una sede y no puede eliminarse. Puede deshabilitarla.', type: 'error');
+        ->assertDispatched('toast', message: 'La carrera se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.', type: 'error');
 
     $this->assertNotSoftDeleted('tbl_carrera', ['id_car' => $carrera->id_car], deletedAtColumn: 'eliminado_en');
 });

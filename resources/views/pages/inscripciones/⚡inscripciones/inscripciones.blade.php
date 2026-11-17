@@ -18,7 +18,7 @@
     <x-resumen
         class="transition-opacity duration-200"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
+        wire:target="buscar, idProceso, idModalidad, idSede, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
     >
         <x-resumen.item
             label="Total inscritas"
@@ -166,14 +166,11 @@
                 @endforeach
             </x-ui.select>
 
-            <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos los lugares">
-                <option value="">Todos los lugares</option>
-                @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                    <option
-                        wire:key="lugar-inscripcion-{{ $lugarInscripcion->id_lin }}"
-                        value="{{ $lugarInscripcion->id_lin }}"
-                    >
-                        {{ $lugarInscripcion->nombre_lin }}
+            <x-ui.select wire:model.live="idSede" label="Sede" placeholder="Todas las sedes">
+                <option value="">Todas las sedes</option>
+                @foreach ($this->sedesDisponibles as $sede)
+                    <option wire:key="sede-inscripcion-{{ $sede->id_sed }}" value="{{ $sede->id_sed }}">
+                        {{ $sede->nombre_sed }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -223,8 +220,8 @@
                 @forelse ($this->inscripciones as $inscripcion)
                     @php
                         $resumenPago = $this->resumenPago($inscripcion);
-                        $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
-                        $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
+                        $modalidad = $inscripcion->modalidadAdmision?->nombre_mad;
+                        $turno = $inscripcion->turno?->nombre_tur;
                         $aula = $inscripcion->procesoAula?->aula?->nombre_aul;
                     @endphp
                     <x-table.row wire:key="inscripcion-{{ $inscripcion->id_ins }}">
@@ -253,10 +250,10 @@
 
                         <x-table.cell class="h-auto py-3 align-top whitespace-normal">
                             <p class="font-medium text-zinc-900 dark:text-zinc-100">
-                                {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
+                                {{ $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA' }}
                             </p>
                             <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                {{ $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE' }}
+                                {{ $inscripcion->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->sede?->nombre_sed ?? 'SIN SEDE' }}
                             </p>
                             <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400 dark:text-zinc-500">
                                 @if ($modalidad || $turno)
@@ -398,12 +395,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idSede, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idSede, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

@@ -66,13 +66,13 @@ trait GestionaPasoPago
     public function reglasPagoDisponibles(): EloquentCollection
     {
         $inscripcion = $this->inscripcionBorrador;
-        $procesoId = $inscripcion?->procesoOferta?->id_proceso;
+        $procesoId = $inscripcion?->id_proceso;
 
         if ($inscripcion === null || $procesoId === null) {
             return new EloquentCollection;
         }
 
-        $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
+        $modalidadId = $inscripcion->id_modalidad_admision;
         $fechaReferencia = now()->toDateString();
 
         return ReglaPago::query()
@@ -291,11 +291,7 @@ trait GestionaPasoPago
         }
 
         try {
-            $inscripcion = Inscripcion::query()
-                ->with([
-                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                ])
-                ->findOrFail($this->inscripcionId);
+            $inscripcion = Inscripcion::query()->findOrFail($this->inscripcionId);
 
             $this->validarInscripcionBorradorVigente($inscripcion);
             $reglaPago = app(ValidadorVigenciaInscripcion::class)->reglaPagoVigente(
@@ -333,6 +329,23 @@ trait GestionaPasoPago
         $this->limpiarBusquedaPago();
         $this->dispatch('toast', message: 'Pago validado correctamente. La inscripcion quedo activa.', type: 'success');
         $this->redirect(route('inscripciones.index'), navigate: true);
+    }
+
+    /**
+     * Resumen de la postulación: carrera, sede, modalidad y turno.
+     */
+    public function descripcionPostulacion(?Inscripcion $inscripcion): string
+    {
+        if ($inscripcion === null) {
+            return 'SIN POSTULACION';
+        }
+
+        return collect([
+            $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA',
+            $inscripcion->sede?->nombre_sed ?? 'SIN SEDE',
+            $inscripcion->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
+            $inscripcion->turno?->nombre_tur ?? 'SIN TURNO',
+        ])->implode(' | ');
     }
 
     public function descripcionReglaPago(ReglaPago $reglaPago): string

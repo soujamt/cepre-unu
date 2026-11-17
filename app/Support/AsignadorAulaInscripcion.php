@@ -40,15 +40,13 @@ class AsignadorAulaInscripcion
 
     public function validarCompatibilidad(ProcesoAula $procesoAula, Inscripcion $inscripcion): void
     {
-        $inscripcion->loadMissing('procesoOferta');
-
-        if ($inscripcion->procesoOferta === null) {
-            throw new \RuntimeException('La inscripcion no tiene una oferta de proceso valida.');
+        if ($inscripcion->id_proceso === null || $inscripcion->id_turno === null) {
+            throw new \RuntimeException('La inscripcion no tiene un proceso y turno validos.');
         }
 
         if (
-            $procesoAula->id_proceso !== $inscripcion->procesoOferta->id_proceso
-            || $procesoAula->id_turno !== $inscripcion->procesoOferta->id_turno
+            $procesoAula->id_proceso !== $inscripcion->id_proceso
+            || $procesoAula->id_turno !== $inscripcion->id_turno
         ) {
             throw new \RuntimeException('El aula seleccionada no corresponde al proceso y turno de la postulacion.');
         }

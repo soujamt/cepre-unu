@@ -6,21 +6,16 @@ use App\Models\Carrera;
 use App\Models\ConceptoPago;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
-use App\Models\ModalidadLugarInscripcion;
 use App\Models\Nacionalidad;
-use App\Models\OfertaBase;
 use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\Sede;
-use App\Models\SedeCarrera;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
@@ -83,7 +78,7 @@ function otorgarPermisosReporteInscripcion(Usuario $usuario, array $claves): voi
 }
 
 /**
- * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,lugar:LugarInscripcion,turno:Turno}
+ * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,sede:Sede,carrera:Carrera,turno:Turno}
  */
 function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO'): array
 {
@@ -153,50 +148,16 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO')
         'estado_sed' => 'HABILITADO',
     ]);
 
-    $lugar = LugarInscripcion::query()->create([
-        'codigo_lin' => "REP-LIN-{$indice}",
-        'nombre_lin' => "LUGAR REPORTE {$indice}",
-        'id_sede' => $sede->id_sed,
-        'estado_lin' => 'HABILITADO',
-    ]);
-
     $carrera = Carrera::query()->create([
         'codigo_car' => "REP-CAR-{$indice}",
         'nombre_car' => "CARRERA REPORTE {$indice}",
         'estado_car' => 'HABILITADO',
     ]);
 
-    $sedeCarrera = SedeCarrera::query()->create([
-        'id_sede' => $sede->id_sed,
-        'id_carrera' => $carrera->id_car,
-        'codigo_externo_sca' => "REP-SCA-{$indice}",
-        'estado_sca' => 'HABILITADO',
-    ]);
-
-    $modalidadLugar = ModalidadLugarInscripcion::query()->create([
-        'id_modalidad_admision' => $modalidad->id_mad,
-        'id_lugar_inscripcion' => $lugar->id_lin,
-        'estado_mli' => 'HABILITADO',
-    ]);
-
-    $ofertaBase = OfertaBase::query()->create([
-        'codigo_externo_ofb' => (string) (3700 + $indice),
-        'id_modalidad_lugar_inscripcion' => $modalidadLugar->id_mli,
-        'id_sede_carrera' => $sedeCarrera->id_sca,
-        'estado_ofb' => 'HABILITADO',
-    ]);
-
     $turno = Turno::query()->create([
         'codigo_tur' => "REP-TUR-{$indice}",
         'nombre_tur' => "TURNO REPORTE {$indice}",
         'estado_tur' => 'HABILITADO',
-    ]);
-
-    $procesoOferta = ProcesoOferta::query()->create([
-        'id_proceso' => $proceso->id_pro,
-        'id_oferta_base' => $ofertaBase->id_ofb,
-        'id_turno' => $turno->id_tur,
-        'estado_pof' => 'HABILITADO',
     ]);
 
     $persona = Persona::query()->create([
@@ -217,12 +178,16 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO')
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => "REP-INS-{$indice}",
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $proceso->id_pro,
+        'id_sede' => $sede->id_sed,
+        'id_modalidad_admision' => $modalidad->id_mad,
+        'id_carrera' => $carrera->id_car,
+        'id_turno' => $turno->id_tur,
         'fecha_inscripcion_ins' => '2026-04-17 09:00:00',
         'estado_ins' => $estado,
     ]);
 
-    return compact('inscripcion', 'proceso', 'modalidad', 'lugar', 'turno');
+    return compact('inscripcion', 'proceso', 'modalidad', 'sede', 'carrera', 'turno');
 }
 
 test('authorized users can access reportes de inscripciones page', function () {
@@ -308,7 +273,7 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         ->assertDontSee('CARRERA REPORTE 3');
 });
 
-test('authorized users can export reporte inscripciones to excel respecting active filters', function () {
+test('authorized users can export reporte inscripciones with names instead of admission codes', function () {
     Carbon::setTestNow('2026-04-17 09:30:00');
     Excel::fake();
 
@@ -328,8 +293,13 @@ test('authorized users can export reporte inscripciones to excel respecting acti
     Excel::assertDownloaded('reporte-inscripciones-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export) use ($contextoA): bool {
         $rows = $export->collection();
 
+        $fila = $rows->first();
+        $headings = $export->headings();
+
         expect($rows)->toHaveCount(1)
-            ->and($rows->first()[1])->toBe($contextoA['inscripcion']->persona->numero_documento_per);
+            ->and($fila[1])->toBe($contextoA['inscripcion']->persona->numero_documento_per)
+            ->and($fila[array_search('CODIGO_LUGAR_INSCRIPCION', $headings, true)])->toBe('SEDE REPORTE 10 / MODALIDAD REPORTE 10')
+            ->and($fila[array_search('CODIGO_CARRERA', $headings, true)])->toBe('CARRERA REPORTE 10');
 
         return true;
     });

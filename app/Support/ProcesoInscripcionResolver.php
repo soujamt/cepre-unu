@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoProceso;
 use App\Models\Proceso;
 use Carbon\CarbonInterface;
@@ -19,8 +20,10 @@ class ProcesoInscripcionResolver
 
         $proceso = Proceso::query()
             ->withCount([
-                'procesosOferta as ofertas_activas_count' => fn ($query) => $query
-                    ->where('estado_pof', EstadoProceso::Habilitado->value),
+                'procesoCarreras as carreras_activas_count' => fn ($query) => $query
+                    ->where('estado_pca', EstadoCatalogo::Habilitado->value),
+                'procesoModalidades as modalidades_activas_count' => fn ($query) => $query
+                    ->where('estado_pmo', EstadoCatalogo::Habilitado->value),
             ])
             ->where('estado_pro', EstadoProceso::Habilitado->value)
             ->where('fecha_inicio_pro', '<=', $momento)
@@ -63,10 +66,10 @@ class ProcesoInscripcionResolver
             ];
         }
 
-        if ((int) $proceso->ofertas_activas_count < 1) {
+        if ((int) $proceso->carreras_activas_count < 1 || (int) $proceso->modalidades_activas_count < 1) {
             return [
                 'disponible' => false,
-                'mensaje' => 'El proceso activo no tiene ofertas habilitadas para inscripcion.',
+                'mensaje' => 'El proceso activo no tiene carreras o modalidades habilitadas para inscripcion.',
                 'proceso' => $proceso,
             ];
         }

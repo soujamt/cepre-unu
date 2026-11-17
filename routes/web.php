@@ -50,17 +50,9 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:concepto_pago_indice')
         ->name('conceptos-pago.index');
 
-    Route::livewire('/mantenedores/lugares-inscripcion', 'pages::mantenedores.lugares-inscripcion')
-        ->middleware('permiso:lugar_inscripcion_indice')
-        ->name('lugares-inscripcion.index');
-
     Route::livewire('/mantenedores/modalidades', 'pages::mantenedores.modalidades')
         ->middleware('permiso:modalidad_indice')
         ->name('modalidades.index');
-
-    Route::livewire('/mantenedores/ofertas-base', 'pages::mantenedores.ofertas-base')
-        ->middleware('permiso:oferta_base_indice')
-        ->name('ofertas-base.index');
 
     Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
         ->middleware('permiso:sede_indice')
@@ -82,10 +74,6 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/ofertas', 'pages::configuracion-academica.ofertas')
         ->middleware('permiso:oferta_indice')
         ->name('ofertas.index');
-
-    Route::livewire('/configuracion-academica/ofertas/asignar', 'pages::configuracion-academica.ofertas-asignar')
-        ->middleware('permiso:oferta_crear')
-        ->name('ofertas.asignar');
 
     Route::livewire('/configuracion-academica/aulas', 'pages::configuracion-academica.aulas-proceso')
         ->middleware('permiso:aula_proceso_indice')

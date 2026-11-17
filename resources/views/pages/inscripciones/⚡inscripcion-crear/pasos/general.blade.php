@@ -56,20 +56,32 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
     >
         <div class="space-y-1">
             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Procedencia educativa</p>
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina el año de graduación, país del colegio y tipo de institución educativa.</p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Defina el año de egreso, país del colegio y tipo de institución educativa. El año de egreso define la modalidad.</p>
         </div>
 
         <div class="grid gap-4 lg:grid-cols-12">
             <div class="lg:col-span-4">
                 <x-ui.input
-                    label="Año de graduación"
-                    type="number"
-                    wire:model="generalForm.anio_graduacion"
+                    label="Año de egreso (secundaria)"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="4"
+                    pattern="\d{4}"
+                    wire:model.live.debounce.500ms="generalForm.anio_graduacion"
                     :invalid="$errors->has('generalForm.anio_graduacion')"
                     :error="$errors->first('generalForm.anio_graduacion')"
+                    hint="Año en que terminó o terminará la secundaria."
                     required
                     floating
                 />
+                @if ($this->modalidadPostulacion)
+                    <p class="mt-2 flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300" aria-live="polite">
+                        Modalidad:
+                        <flux:badge color="{{ $this->modalidadPostulacion->condicion_egreso_mad?->getColor() }}" size="sm">
+                            {{ $this->modalidadPostulacion->nombre_mad }}
+                        </flux:badge>
+                    </p>
+                @endif
             </div>
 
             <div class="lg:col-span-4">

@@ -234,13 +234,13 @@ class extends Component
             DB::transaction(function () use ($id_turno): void {
                 $turno = Turno::query()
                     ->withCount([
-                        'procesosOferta' => fn (Builder $query) => $query->withTrashed(),
+                        'inscripciones' => fn (Builder $query) => $query->withTrashed(),
                         'procesoAulas' => fn (Builder $query) => $query->withTrashed(),
                     ])
                     ->findOrFail($id_turno);
 
-                if ($turno->procesos_oferta_count > 0) {
-                    throw new RuntimeException('El turno se usa en ofertas de procesos y no puede eliminarse. Puede deshabilitarlo.');
+                if ($turno->inscripciones_count > 0) {
+                    throw new RuntimeException('El turno tiene inscripciones y no puede eliminarse. Puede deshabilitarlo.');
                 }
 
                 if ($turno->proceso_aulas_count > 0) {
@@ -284,7 +284,7 @@ class extends Component
     public function turnos(): LengthAwarePaginator
     {
         return Turno::query()
-            ->withCount('procesosOferta')
+            ->withCount('procesoAulas')
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 
