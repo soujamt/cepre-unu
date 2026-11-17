@@ -4,8 +4,6 @@ use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Accion;
 use App\Models\Carrera;
 use App\Models\ConceptoPago;
-use App\Models\Convenio;
-use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
 use App\Models\LugarInscripcion;
@@ -85,9 +83,9 @@ function otorgarPermisosReporteInscripcion(Usuario $usuario, array $claves): voi
 }
 
 /**
- * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,lugar:LugarInscripcion,turno:Turno,convenioProceso:ConvenioProceso}
+ * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,lugar:LugarInscripcion,turno:Turno}
  */
-function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO', ?string $nombreConvenio = null): array
+function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO'): array
 {
     $ubigeo = Ubigeo::query()->create([
         'id_ubi' => sprintf('2601%02d', $indice),
@@ -201,23 +199,6 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO',
         'estado_pof' => 'HABILITADO',
     ]);
 
-    $convenio = Convenio::query()->create([
-        'codigo_con' => "REP-CON-{$indice}",
-        'nombre_con' => $nombreConvenio ?? "CONVENIO REPORTE {$indice}",
-        'tipo_beneficio_con' => 'DESCUENTO',
-        'monto_descuento_con' => 100,
-        'estado_con' => 'HABILITADO',
-    ]);
-
-    $convenioProceso = ConvenioProceso::query()->create([
-        'id_convenio' => $convenio->id_con,
-        'id_proceso' => $proceso->id_pro,
-        'fecha_inicio_cpr' => '2026-04-01',
-        'fecha_fin_cpr' => '2026-04-30',
-        'cupo_maximo_cpr' => 10,
-        'estado_cpr' => 'HABILITADO',
-    ]);
-
     $persona = Persona::query()->create([
         'id_tipo_documento' => $tipoDocumento->id_tdo,
         'numero_documento_per' => (string) (7650000 + $indice),
@@ -237,12 +218,11 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO',
         'codigo_ins' => "REP-INS-{$indice}",
         'id_persona' => $persona->id_per,
         'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
         'fecha_inscripcion_ins' => '2026-04-17 09:00:00',
         'estado_ins' => $estado,
     ]);
 
-    return compact('inscripcion', 'proceso', 'modalidad', 'lugar', 'turno', 'convenioProceso');
+    return compact('inscripcion', 'proceso', 'modalidad', 'lugar', 'turno');
 }
 
 test('authorized users can access reportes de inscripciones page', function () {
@@ -273,8 +253,8 @@ test('reportes de inscripciones defaults to current semester and filters data', 
     $usuario = Usuario::factory()->create();
     otorgarPermisosReporteInscripcion($usuario, ['reporte_inscripcion_indice']);
 
-    $contextoActual = crearContextoReporteInscripcion(2, 'ACTIVO', 'HIJOS UNU');
-    $contextoAnterior = crearContextoReporteInscripcion(3, 'ANULADO', 'MUNICIPALIDAD');
+    $contextoActual = crearContextoReporteInscripcion(2, 'ACTIVO');
+    $contextoAnterior = crearContextoReporteInscripcion(3, 'ANULADO');
 
     $conceptoPago = ConceptoPago::query()->create([
         'codigo_cpg' => 'REP-CUOTA',
@@ -287,7 +267,6 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'id_concepto_pago' => $conceptoPago->id_cpg,
         'id_proceso' => $contextoActual['proceso']->id_pro,
         'id_modalidad_admision' => $contextoActual['modalidad']->id_mad,
-        'id_convenio_proceso' => $contextoActual['convenioProceso']->id_cpr,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => true,
         'monto_minimo_primera_cuota_rpa' => 250,
@@ -321,14 +300,12 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         ->assertSet('idProceso', (string) $contextoActual['proceso']->id_pro)
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('MODALIDAD REPORTE 2')
-        ->assertSee('HIJOS UNU')
         ->assertDontSee('CARRERA REPORTE 3')
         ->set('idProceso', '')
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('CARRERA REPORTE 3')
         ->set('idProceso', (string) $contextoActual['proceso']->id_pro)
-        ->assertSee('HIJOS UNU')
-        ->assertDontSee('MUNICIPALIDAD');
+        ->assertDontSee('CARRERA REPORTE 3');
 });
 
 test('authorized users can export reporte inscripciones to excel respecting active filters', function () {

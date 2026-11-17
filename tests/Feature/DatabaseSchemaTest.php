@@ -72,9 +72,8 @@ it('stores the external offer code and allows repeated place names with differen
     expect($insertB)->toBeTrue();
 });
 
-it('stores the enhanced payment rule fields for cuotas and convenios', function (): void {
+it('stores the enhanced payment rule fields for cuotas', function (): void {
     expect(Schema::hasColumns('tbl_regla_pago', [
-        'id_convenio_proceso',
         'permite_cuotas_rpa',
         'requiere_pago_completo_rpa',
     ]))->toBeTrue();
@@ -109,9 +108,9 @@ it('enforces unique document per persona', function (): void {
 it('enforces one inscription per person and process offer', function (): void {
     $context = createInscripcionContext();
 
-    insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], $context['convenio_proceso_id'], 'INS-001');
+    insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], 'INS-001');
 
-    expect(fn (): bool => insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], $context['convenio_proceso_id'], 'INS-002'))
+    expect(fn (): bool => insertInscripcion($context['persona_id'], $context['proceso_oferta_id'], 'INS-002'))
         ->toThrow(QueryException::class);
 });
 
@@ -164,7 +163,7 @@ function insertPersona(int $tipoDocumentoId, string $numeroDocumento): bool
 }
 
 /**
- * @return array{persona_id:int, proceso_oferta_id:int, convenio_proceso_id:int}
+ * @return array{persona_id:int, proceso_oferta_id:int}
  */
 function createInscripcionContext(): array
 {
@@ -253,22 +252,6 @@ function createInscripcionContext(): array
         'id_turno' => $turnoId,
         'estado_pof' => 'HABILITADO',
     ], 'id_pof');
-    $convenioId = (int) DB::table('tbl_convenio')->insertGetId([
-        'codigo_con' => fake()->unique()->lexify('CON????'),
-        'nombre_con' => 'Convenio General',
-        'tipo_beneficio_con' => 'DESCUENTO',
-        'monto_descuento_con' => 10,
-        'estado_con' => 'HABILITADO',
-    ], 'id_con');
-    $convenioProcesoId = (int) DB::table('tbl_convenio_proceso')->insertGetId([
-        'id_convenio' => $convenioId,
-        'id_proceso' => $procesoId,
-        'fecha_inicio_cpr' => '2026-01-01',
-        'fecha_fin_cpr' => '2026-03-31',
-        'cupo_maximo_cpr' => 100,
-        'cupo_usado_cpr' => 0,
-        'estado_cpr' => 'HABILITADO',
-    ], 'id_cpr');
     $personaId = (int) DB::table('tbl_persona')->insertGetId([
         'id_tipo_documento' => $tipoDocumentoId,
         'numero_documento_per' => fake()->unique()->numerify('########'),
@@ -297,17 +280,15 @@ function createInscripcionContext(): array
     return [
         'persona_id' => $personaId,
         'proceso_oferta_id' => $procesoOfertaId,
-        'convenio_proceso_id' => $convenioProcesoId,
     ];
 }
 
-function insertInscripcion(int $personaId, int $procesoOfertaId, int $convenioProcesoId, string $codigo): bool
+function insertInscripcion(int $personaId, int $procesoOfertaId, string $codigo): bool
 {
     return DB::table('tbl_inscripcion')->insert([
         'codigo_ins' => $codigo,
         'id_persona' => $personaId,
         'id_proceso_oferta' => $procesoOfertaId,
-        'id_convenio_proceso' => $convenioProcesoId,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => 'PENDIENTE',
     ]);
@@ -324,7 +305,6 @@ function createPagoContext(): array
         'codigo_ins' => 'INS-PAGO',
         'id_persona' => $inscripcionContext['persona_id'],
         'id_proceso_oferta' => $inscripcionContext['proceso_oferta_id'],
-        'id_convenio_proceso' => $inscripcionContext['convenio_proceso_id'],
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => 'PENDIENTE',
     ]);
@@ -347,7 +327,6 @@ function createPagoContext(): array
         'id_concepto_pago' => $conceptoPagoId,
         'id_proceso' => $procesoId,
         'id_modalidad_admision' => $modalidadId,
-        'id_convenio_proceso' => null,
         'monto_total_rpa' => 100,
         'permite_cuotas_rpa' => true,
         'monto_minimo_primera_cuota_rpa' => 50,

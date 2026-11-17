@@ -46,12 +46,10 @@ class extends Component
                 'procesoOferta.turno',
                 'procesoAula.aula',
                 'procesoAula.turno',
-                'convenioProceso.convenio',
                 'paisColegio',
                 'colegio.tipoColegio',
                 'tipoColegio',
                 'obligacionesPago.reglaPago.conceptoPago',
-                'obligacionesPago.reglaPago.convenioProceso.convenio',
                 'obligacionesPago.pagos.importacionBancoDetalle',
                 'obligacionesPago.pagos.usuarioValidador',
             ])
@@ -134,11 +132,6 @@ class extends Component
             'color' => 'amber',
             'detalle' => 'Monto cubierto: S/ '.number_format($montoPagado, 2).' de S/ '.number_format($montoTotal, 2),
         ];
-    }
-
-    public function convenioResumen(): string
-    {
-        return $this->inscripcionActual->convenioProceso?->convenio?->nombre_con ?? 'Sin convenio';
     }
 
     public function turnoResumen(): string

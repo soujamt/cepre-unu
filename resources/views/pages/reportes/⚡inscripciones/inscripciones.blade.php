@@ -21,7 +21,7 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-1">
                 <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Resumen operativo del proceso</h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por proceso, modalidad, turno, lugar y convenio.</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por proceso, modalidad, carrera y turno.</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -204,27 +204,27 @@
 
         <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Cobertura</p>
-            <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Por convenio</h3>
+            <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Por turno</h3>
 
             <div class="mt-5 space-y-3">
-                @forelse ($this->reportePorConvenio as $fila)
+                @forelse ($this->reportePorTurno as $fila)
                     <div
                         class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                     >
                         <div class="flex items-center justify-between gap-3">
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $fila['convenio'] }}</p>
+                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $fila['turno'] }}</p>
                             <flux:badge color="zinc" size="lg">{{ $fila['total'] }}</flux:badge>
                         </div>
                         <div class="mt-3 grid gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p>Cupo máximo: {{ $fila['cupo_maximo'] ?? 'No definido' }}</p>
-                            <p>Cupo disponible: {{ $fila['cupo_disponible'] ?? 'No aplica' }}</p>
+                            <p>Activas: {{ $fila['activas'] }}</p>
+                            <p>Pendientes: {{ $fila['pendientes'] }}</p>
                         </div>
                     </div>
                 @empty
                     <div
                         class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
                     >
-                        No hay convenios asociados en el filtro actual.
+                        No hay inscripciones en el filtro actual.
                     </div>
                 @endforelse
             </div>

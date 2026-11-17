@@ -192,40 +192,11 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
         >
             <div class="space-y-1">
-                <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Condición especial</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Si corresponde, seleccione un convenio vigente para este mismo proceso.</p>
-            </div>
-
-            <div class="grid gap-4 lg:grid-cols-12">
-                <div class="lg:col-span-12">
-                    <x-ui.select
-                        label="Convenio"
-                        wire:model.live="postulacionForm.id_convenio_proceso"
-                        :invalid="$errors->has('postulacionForm.id_convenio_proceso')"
-                        :error="$errors->first('postulacionForm.id_convenio_proceso')"
-                        floating
-                    >
-                        <option value="">Sin convenio</option>
-                        @foreach ($this->conveniosPostulacionDisponibles as $convenioProceso)
-                            <option value="{{ $convenioProceso->id_cpr }}">
-                                {{ $this->descripcionConvenioProceso($convenioProceso) }}
-                            </option>
-                        @endforeach
-                    </x-ui.select>
-                </div>
-            </div>
-        </section>
-
-        <section
-            class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
-        >
-            <div class="space-y-1">
                 <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Resumen de postulación</p>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Antes de continuar, revise que la modalidad, oferta y condición especial sean las correctas.</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Antes de continuar, revise que la modalidad y la oferta sean las correctas.</p>
             </div>
 
             @php ($ofertaSeleccionada = $this->procesoOfertasPostulacionDisponibles->firstWhere('id_pof', (int) $postulacionForm['id_proceso_oferta']))
-            @php ($convenioSeleccionado = $this->conveniosPostulacionDisponibles->firstWhere('id_cpr', (int) $postulacionForm['id_convenio_proceso']))
 
             <flux:callout
                 variant="{{ $ofertaSeleccionada ? 'success' : 'secondary' }}"
@@ -235,7 +206,6 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 @if ($ofertaSeleccionada)
                     <div class="space-y-1 text-sm">
                         <p><span class="font-medium">Oferta:</span> {{ $this->descripcionProcesoOferta($ofertaSeleccionada) }}</p>
-                        <p><span class="font-medium">Convenio:</span> {{ $this->descripcionConvenioProceso($convenioSeleccionado) }}</p>
                     </div>
                 @endif
             </flux:callout>

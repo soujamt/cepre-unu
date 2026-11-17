@@ -73,14 +73,12 @@ trait GestionaPasoPago
         }
 
         $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
-        $convenioProcesoId = $inscripcion->id_convenio_proceso;
         $fechaReferencia = now()->toDateString();
 
         return ReglaPago::query()
             ->with([
                 'conceptoPago',
                 'modalidadAdmision',
-                'convenioProceso.convenio',
             ])
             ->where('id_proceso', $procesoId)
             ->where('estado_rpa', EstadoCatalogo::Habilitado->value)
@@ -93,14 +91,6 @@ trait GestionaPasoPago
                     $query->orWhere('id_modalidad_admision', $modalidadId);
                 }
             })
-            ->where(function ($query) use ($convenioProcesoId): void {
-                $query->whereNull('id_convenio_proceso');
-
-                if ($convenioProcesoId !== null) {
-                    $query->orWhere('id_convenio_proceso', $convenioProcesoId);
-                }
-            })
-            ->orderBy('id_convenio_proceso')
             ->orderBy('monto_total_rpa')
             ->get();
     }
@@ -304,7 +294,6 @@ trait GestionaPasoPago
             $inscripcion = Inscripcion::query()
                 ->with([
                     'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                    'convenioProceso.convenio',
                 ])
                 ->findOrFail($this->inscripcionId);
 

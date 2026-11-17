@@ -136,11 +136,6 @@
                                     <flux:badge color="zinc" size="sm" class="whitespace-normal">
                                         {{ $reglaPago->modalidadAdmision?->nombre_mad ?? 'TODAS LAS MODALIDADES' }}
                                     </flux:badge>
-                                    @if ($reglaPago->convenioProceso?->convenio?->nombre_con)
-                                        <flux:badge color="sky" size="sm" class="whitespace-normal">
-                                            {{ $reglaPago->convenioProceso->convenio->nombre_con }}
-                                        </flux:badge>
-                                    @endif
                                 </div>
                             </div>
                         </x-table.cell>
@@ -331,7 +326,7 @@
                                 <div class="space-y-4">
                                     <div class="space-y-1">
                                         <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Aplicación</p>
-                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Permite acotar la regla por modalidad o convenio.</p>
+                                        <p class="text-sm text-zinc-500 dark:text-zinc-400">Permite acotar la regla por modalidad.</p>
                                     </div>
 
                                     <x-ui.select
@@ -349,25 +344,6 @@
                                                 value="{{ $modalidad->id_mad }}"
                                             >
                                                 {{ $modalidad->nombre_mad }}
-                                            </option>
-                                        @endforeach
-                                    </x-ui.select>
-
-                                    <x-ui.select
-                                        label="Convenio"
-                                        wire:model.live="reglaPagoForm.id_convenio_proceso"
-                                        :invalid="$errors->has('reglaPagoForm.id_convenio_proceso')"
-                                        :error="$errors->first('reglaPagoForm.id_convenio_proceso')"
-                                        hint="Opcional. Se filtra según el proceso elegido."
-                                        floating
-                                    >
-                                        <option value="">Sin convenio</option>
-                                        @foreach ($this->conveniosProcesoDisponibles as $convenioProceso)
-                                            <option
-                                                wire:key="regla-convenio-{{ $convenioProceso->id_cpr }}"
-                                                value="{{ $convenioProceso->id_cpr }}"
-                                            >
-                                                {{ $convenioProceso->convenio?->nombre_con }}
                                             </option>
                                         @endforeach
                                     </x-ui.select>

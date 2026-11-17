@@ -10,7 +10,6 @@ use App\Enums\EstadoProceso;
 use App\Enums\EstadoUsuario;
 use App\Enums\EstadoValidacionPago;
 use App\Enums\SexoPersona;
-use App\Enums\TipoBeneficioConvenio;
 
 dataset('presentable-enums', [
     EstadoCatalogo::class,
@@ -22,7 +21,6 @@ dataset('presentable-enums', [
     EstadoUsuario::class,
     EstadoValidacionPago::class,
     SexoPersona::class,
-    TipoBeneficioConvenio::class,
 ]);
 
 it('builds reusable option arrays for presentable enums', function (string $enumClass): void {

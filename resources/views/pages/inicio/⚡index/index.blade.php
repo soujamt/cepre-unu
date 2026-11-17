@@ -363,7 +363,7 @@
             ],
             [
                 'label' => 'Conf. Académica',
-                'descripcion' => 'Administra procesos, ofertas, aulas y convenios',
+                'descripcion' => 'Administra procesos, ofertas, aulas y reglas de pago',
                 'icon' => 'cog',
                 'href' => route('procesos.index'),
                 'icon_class' => 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',

@@ -5,7 +5,6 @@ use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
 use App\Enums\EstadoValidacionPago;
-use App\Models\ConvenioProceso;
 use App\Models\Inscripcion;
 use App\Models\InscripcionPago;
 use App\Models\Proceso;
@@ -110,33 +109,6 @@ class extends Component
             return collect();
         }
 
-        $conveniosComprometidos = ConvenioProceso::query()
-            ->withCount([
-                'inscripciones as inscritos_activos_count' => fn (Builder $query) => $query
-                    ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value),
-            ])
-            ->with('convenio')
-            ->where('id_proceso', $proceso->id_pro)
-            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
-            ->get()
-            ->filter(function (ConvenioProceso $convenioProceso): bool {
-                if ((int) $convenioProceso->cupo_maximo_cpr < 1) {
-                    return false;
-                }
-
-                return ((int) $convenioProceso->inscritos_activos_count / (int) $convenioProceso->cupo_maximo_cpr) >= 0.8;
-            })
-            ->sortByDesc(fn (ConvenioProceso $convenioProceso): float => (int) $convenioProceso->inscritos_activos_count / max((int) $convenioProceso->cupo_maximo_cpr, 1))
-            ->take(3)
-            ->map(function (ConvenioProceso $convenioProceso): array {
-                return [
-                    'tipo' => 'convenio',
-                    'titulo' => $convenioProceso->convenio?->nombre_con ?? 'CONVENIO',
-                    'detalle' => "{$convenioProceso->inscritos_activos_count} / {$convenioProceso->cupo_maximo_cpr} cupos utilizados",
-                    'tono' => ((int) $convenioProceso->inscritos_activos_count >= (int) $convenioProceso->cupo_maximo_cpr) ? 'danger' : 'warning',
-                ];
-            });
-
         $alertas = collect();
 
         if ($this->estadisticas['pago_pendiente'] > 0) {
@@ -151,7 +123,6 @@ class extends Component
         }
 
         return $alertas
-            ->merge($conveniosComprometidos)
             ->take(4)
             ->values();
     }
@@ -170,7 +141,6 @@ class extends Component
                 'persona',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
                 'procesoOferta.turno',
-                'convenioProceso.convenio',
             ])
             ->whereHas('procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
             ->latest('fecha_inscripcion_ins')

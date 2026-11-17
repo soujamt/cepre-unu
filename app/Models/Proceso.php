@@ -48,11 +48,6 @@ class Proceso extends LegacyModel
         return $this->hasMany(ProcesoOferta::class, 'id_proceso', 'id_pro');
     }
 
-    public function conveniosProceso(): HasMany
-    {
-        return $this->hasMany(ConvenioProceso::class, 'id_proceso', 'id_pro');
-    }
-
     public function reglasPago(): HasMany
     {
         return $this->hasMany(ReglaPago::class, 'id_proceso', 'id_pro');

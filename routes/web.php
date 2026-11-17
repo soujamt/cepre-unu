@@ -99,10 +99,6 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:regla_pago_indice')
         ->name('reglas-pago.index');
 
-    Route::livewire('/configuracion-academica/convenios', 'pages::configuracion-academica.convenios')
-        ->middleware('permiso:convenio_indice')
-        ->name('convenios.index');
-
     // Inscripciones
     Route::livewire('/inscripciones', 'pages::inscripciones.inscripciones')
         ->middleware('permiso:inscripcion_indice')

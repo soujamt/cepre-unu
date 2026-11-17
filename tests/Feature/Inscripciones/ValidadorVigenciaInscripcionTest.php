@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\EstadoProceso;
-use App\Models\ConvenioProceso;
 use App\Models\Inscripcion;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
@@ -66,37 +65,12 @@ test('a disabled offer is rejected', function () {
     $this->validador->ofertaVigente($this->procesoOferta->id_pof, $this->proceso);
 })->throws(RuntimeException::class, 'La oferta seleccionada ya no se encuentra disponible para el proceso activo.');
 
-test('without an agreement there is nothing to validate', function () {
-    expect($this->validador->convenioVigente(null, $this->proceso))->toBeNull();
-});
-
-test('an agreement is accepted inside its validity window', function () {
-    Carbon::setTestNow('2026-04-15 10:00:00');
-
-    $convenioProceso = ConvenioProceso::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
-
-    expect($this->validador->convenioVigente($convenioProceso->id_cpr, $this->proceso)?->id_cpr)
-        ->toBe($convenioProceso->id_cpr);
-});
-
-test('an expired agreement is rejected with its end date', function () {
-    Carbon::setTestNow('2026-05-10 10:00:00');
-
-    $convenioProceso = ConvenioProceso::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
-
-    $this->validador->convenioVigente($convenioProceso->id_cpr, $this->proceso);
-})->throws(
-    RuntimeException::class,
-    'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el 30/04/2026.',
-);
-
 test('a payment rule of the inscription process is accepted inside its validity window', function () {
     Carbon::setTestNow('2026-04-15 10:00:00');
 
     $reglaPago = ReglaPago::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
     $inscripcion = (new Inscripcion)->forceFill([
         'id_proceso_oferta' => $this->procesoOferta->id_pof,
-        'id_convenio_proceso' => null,
     ]);
 
     expect($this->validador->reglaPagoVigente($reglaPago->id_rpa, $inscripcion)->id_rpa)->toBe($reglaPago->id_rpa);
@@ -108,7 +82,6 @@ test('an expired payment rule is rejected with its end date', function () {
     $reglaPago = ReglaPago::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
     $inscripcion = (new Inscripcion)->forceFill([
         'id_proceso_oferta' => $this->procesoOferta->id_pof,
-        'id_convenio_proceso' => null,
     ]);
 
     $this->validador->reglaPagoVigente($reglaPago->id_rpa, $inscripcion);

@@ -58,20 +58,6 @@ test('academic initial seeder creates a usable base configuration', function () 
         ->where('id_turno', 1)
         ->count())->toBe($ofertasEsperadas);
 
-    expect(DB::table('tbl_convenio')
-        ->where('codigo_con', 'HIJO_TRABAJADOR')
-        ->where('monto_descuento_con', 200)
-        ->exists())->toBeTrue();
-
-    expect(DB::table('tbl_convenio')
-        ->where('codigo_con', 'MUNICIPALIDAD')
-        ->where('tipo_beneficio_con', 'EXONERACION_TOTAL')
-        ->exists())->toBeTrue();
-
-    expect(DB::table('tbl_convenio_proceso')
-        ->where('id_proceso', $procesoId)
-        ->count())->toBe(2);
-
     expect(DB::table('tbl_regla_pago')
         ->where('id_proceso', $procesoId)
         ->where('monto_total_rpa', 500)

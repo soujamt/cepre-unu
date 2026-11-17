@@ -132,7 +132,6 @@ class extends Component
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
                 'procesoOferta.turno',
-                'convenioProceso.convenio',
                 'obligacionesPago',
             ])
             ->get();
@@ -189,22 +188,16 @@ class extends Component
     }
 
     #[Computed]
-    public function reportePorConvenio(): Collection
+    public function reportePorTurno(): Collection
     {
         return $this->inscripcionesFiltradas
-            ->groupBy(fn (Inscripcion $inscripcion): string => (string) ($inscripcion->id_convenio_proceso ?? 'sin-convenio'))
-            ->map(function (Collection $inscripciones): array {
-                $primeraInscripcion = $inscripciones->first();
-                $convenioProceso = $primeraInscripcion?->convenioProceso;
-                $nombreConvenio = $convenioProceso?->convenio?->nombre_con ?? 'SIN CONVENIO';
-                $cupoMaximo = $convenioProceso?->cupo_maximo_cpr;
-                $total = $inscripciones->count();
-
+            ->groupBy(fn (Inscripcion $inscripcion): string => $inscripcion->procesoOferta?->turno?->nombre_tur ?? 'SIN TURNO')
+            ->map(function (Collection $inscripciones, string $turno): array {
                 return [
-                    'convenio' => $nombreConvenio,
-                    'total' => $total,
-                    'cupo_maximo' => $cupoMaximo,
-                    'cupo_disponible' => $cupoMaximo !== null ? max(0, (int) $cupoMaximo - $total) : null,
+                    'turno' => $turno,
+                    'total' => $inscripciones->count(),
+                    'activas' => $inscripciones->where('estado_ins', EstadoInscripcion::Activo)->count(),
+                    'pendientes' => $inscripciones->where('estado_ins', EstadoInscripcion::Pendiente)->count(),
                 ];
             })
             ->sortByDesc('total')

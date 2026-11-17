@@ -161,7 +161,6 @@ class InscripcionManualSeeder extends Seeder
                 [
                     'id_persona' => $persona->id_per,
                     'id_proceso_oferta' => $procesoOferta->id_pof,
-                    'id_convenio_proceso' => null,
                     'fecha_inscripcion_ins' => now()->subDays(50 - $indice),
                     'estado_ins' => 'ACTIVO',
                     'anio_graduacion_ins' => (int) now()->subYears(1 + ($indice % 3))->format('Y'),

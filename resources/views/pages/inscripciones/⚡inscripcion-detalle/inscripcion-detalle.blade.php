@@ -54,7 +54,6 @@
 
                 <dl class="flex flex-wrap gap-x-6 gap-y-2 pt-1 text-sm">
                     @foreach ([
-                        ['icono' => 'discount', 'label' => 'Convenio', 'valor' => $this->convenioResumen()],
                         ['icono' => 'clock', 'label' => 'Turno', 'valor' => $this->turnoResumen()],
                         ['icono' => 'building', 'label' => 'Aula', 'valor' => $this->aulaResumen()],
                     ] as $dato)
@@ -196,10 +195,6 @@
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Aula asignada</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $this->aulaResumen() }}</p>
-                    </div>
-                    <div class="space-y-1">
-                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Convenio</p>
-                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->convenioProceso?->convenio?->nombre_con ?? 'Sin convenio' }}</p>
                     </div>
                     <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Año de graduación</p>

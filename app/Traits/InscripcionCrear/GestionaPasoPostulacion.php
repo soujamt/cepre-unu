@@ -2,10 +2,8 @@
 
 namespace App\Traits\InscripcionCrear;
 
-use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoProceso;
-use App\Models\ConvenioProceso;
 use App\Models\Inscripcion;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
@@ -23,7 +21,7 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Paso 3 del asistente de inscripción: proceso, modalidad, oferta y convenio.
+ * Paso 3 del asistente de inscripción: proceso, modalidad y oferta.
  *
  * Lo usa el componente pages::inscripciones.inscripcion-crear, que declara
  * el estado (formularios y propiedades) sobre el que trabajan estos métodos.
@@ -39,7 +37,6 @@ trait GestionaPasoPostulacion
             'id_lugar_inscripcion' => (string) ($procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_lugar_inscripcion ?? ''),
             'id_turno' => (string) ($procesoOferta?->id_turno ?? ''),
             'id_proceso_oferta' => (string) ($procesoOferta?->id_pof ?? ''),
-            'id_convenio_proceso' => (string) ($inscripcion->id_convenio_proceso ?? ''),
         ];
     }
 
@@ -48,20 +45,17 @@ trait GestionaPasoPostulacion
         $this->postulacionForm['id_lugar_inscripcion'] = '';
         $this->postulacionForm['id_turno'] = '';
         $this->postulacionForm['id_proceso_oferta'] = '';
-        $this->postulacionForm['id_convenio_proceso'] = '';
     }
 
     public function updatedPostulacionFormIdLugarInscripcion(): void
     {
         $this->postulacionForm['id_turno'] = '';
         $this->postulacionForm['id_proceso_oferta'] = '';
-        $this->postulacionForm['id_convenio_proceso'] = '';
     }
 
     public function updatedPostulacionFormIdTurno(): void
     {
         $this->postulacionForm['id_proceso_oferta'] = '';
-        $this->postulacionForm['id_convenio_proceso'] = '';
     }
 
     /**
@@ -181,26 +175,6 @@ trait GestionaPasoPostulacion
             ->values();
     }
 
-    #[Computed]
-    public function conveniosPostulacionDisponibles(): EloquentCollection
-    {
-        $proceso = $this->procesoPostulacionActivo();
-
-        if ($proceso === null) {
-            return new EloquentCollection;
-        }
-
-        $fechaReferencia = now()->toDateString();
-
-        return ConvenioProceso::query()
-            ->with('convenio')
-            ->where('id_proceso', $proceso->id_pro)
-            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
-            ->whereDate('fecha_inicio_cpr', '<=', $fechaReferencia)
-            ->whereDate('fecha_fin_cpr', '>=', $fechaReferencia)
-            ->get();
-    }
-
     /**
      * @return array<string, mixed>
      */
@@ -248,33 +222,6 @@ trait GestionaPasoPostulacion
 
                     if (! $valido) {
                         $fail('La oferta seleccionada no es valida para la postulacion.');
-                    }
-                },
-            ],
-            'postulacionForm.id_convenio_proceso' => [
-                'nullable',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    if (blank($value)) {
-                        return;
-                    }
-
-                    $convenioProceso = $this->conveniosPostulacionDisponibles()
-                        ->first(fn (ConvenioProceso $convenioProceso): bool => (string) $convenioProceso->id_cpr === (string) $value);
-
-                    if ($convenioProceso === null) {
-                        $fail('El convenio seleccionado no es valido para el proceso activo.');
-
-                        return;
-                    }
-
-                    $inscritosEnConvenio = Inscripcion::query()
-                        ->where('id_convenio_proceso', $convenioProceso->id_cpr)
-                        ->whereNot('estado_ins', EstadoInscripcion::Anulado->value)
-                        ->when($this->inscripcionId !== null, fn ($query) => $query->whereNot('id_ins', $this->inscripcionId))
-                        ->count();
-
-                    if ($inscritosEnConvenio >= $convenioProceso->cupo_maximo_cpr) {
-                        $fail("El convenio seleccionado ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos).");
                     }
                 },
             ],
@@ -369,7 +316,6 @@ trait GestionaPasoPostulacion
             'postulacionForm.id_lugar_inscripcion',
             'postulacionForm.id_turno',
             'postulacionForm.id_proceso_oferta',
-            'postulacionForm.id_convenio_proceso',
         ]);
         $this->pasoActual = 3;
 
@@ -393,32 +339,9 @@ trait GestionaPasoPostulacion
                     $procesoActivo,
                 );
 
-                $idConvenioProceso = filled($data['postulacionForm']['id_convenio_proceso'])
-                    ? (int) $data['postulacionForm']['id_convenio_proceso']
-                    : null;
-
-                if ($idConvenioProceso !== null) {
-                    $convenioProceso = app(ValidadorVigenciaInscripcion::class)->convenioVigente(
-                        $idConvenioProceso,
-                        $procesoActivo,
-                        true,
-                    );
-
-                    $inscritos = Inscripcion::query()
-                        ->where('id_convenio_proceso', $idConvenioProceso)
-                        ->whereNot('estado_ins', EstadoInscripcion::Anulado->value)
-                        ->when($this->inscripcionId !== null, fn ($query) => $query->whereNot('id_ins', $this->inscripcionId))
-                        ->count();
-
-                    if ($inscritos >= $convenioProceso->cupo_maximo_cpr) {
-                        throw new RuntimeException("El convenio ya alcanzo su cupo maximo ({$convenioProceso->cupo_maximo_cpr} inscritos). No se puede registrar la inscripcion.");
-                    }
-                }
-
                 $payload = [
                     'id_persona' => $this->personaId,
                     'id_proceso_oferta' => (int) $data['postulacionForm']['id_proceso_oferta'],
-                    'id_convenio_proceso' => $idConvenioProceso,
                     'fecha_inscripcion_ins' => now(),
                     'estado_ins' => EstadoInscripcion::Pendiente->value,
                     'anio_graduacion_ins' => (int) $this->generalForm['anio_graduacion'],
@@ -521,15 +444,6 @@ trait GestionaPasoPostulacion
         return "{$carrera} | {$sede} | {$modalidad} | {$lugar} | {$turno}";
     }
 
-    public function descripcionConvenioProceso(?ConvenioProceso $convenioProceso): string
-    {
-        if ($convenioProceso === null) {
-            return 'Sin convenio';
-        }
-
-        return $convenioProceso->convenio?->nombre_con ?? 'SIN CONVENIO';
-    }
-
     private function resetPostulacionForm(): void
     {
         $this->postulacionForm = [
@@ -537,7 +451,6 @@ trait GestionaPasoPostulacion
             'id_lugar_inscripcion' => '',
             'id_turno' => '',
             'id_proceso_oferta' => '',
-            'id_convenio_proceso' => '',
         ];
     }
 

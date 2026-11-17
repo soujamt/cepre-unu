@@ -4,10 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoProceso;
-use App\Enums\TipoBeneficioConvenio;
 use App\Models\ConceptoPago;
-use App\Models\Convenio;
-use App\Models\ConvenioProceso;
 use App\Models\ModalidadAdmision;
 use App\Models\OfertaBase;
 use App\Models\Proceso;
@@ -55,45 +52,6 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
             );
         }
 
-        $convenioHijoTrabajador = Convenio::query()->updateOrCreate(
-            ['codigo_con' => 'HIJO_TRABAJADOR'],
-            [
-                'nombre_con' => 'HIJO DE TRABAJADOR',
-                'descripcion_con' => 'CONVENIO PARA HIJO DE TRABAJADOR UNU',
-                'tipo_beneficio_con' => TipoBeneficioConvenio::Descuento->value,
-                'monto_descuento_con' => 200.00,
-                'porcentaje_descuento_con' => null,
-                'estado_con' => EstadoCatalogo::Habilitado->value,
-            ],
-        );
-
-        $convenioMunicipalidad = Convenio::query()->updateOrCreate(
-            ['codigo_con' => 'MUNICIPALIDAD'],
-            [
-                'nombre_con' => 'MUNICIPALIDAD',
-                'descripcion_con' => 'CONVENIO CON MUNICIPALIDAD',
-                'tipo_beneficio_con' => TipoBeneficioConvenio::ExoneracionTotal->value,
-                'monto_descuento_con' => null,
-                'porcentaje_descuento_con' => null,
-                'estado_con' => EstadoCatalogo::Habilitado->value,
-            ],
-        );
-
-        foreach ([$convenioHijoTrabajador, $convenioMunicipalidad] as $convenio) {
-            ConvenioProceso::query()->updateOrCreate(
-                [
-                    'id_convenio' => $convenio->id_con,
-                    'id_proceso' => $proceso->id_pro,
-                ],
-                [
-                    'fecha_inicio_cpr' => '2026-04-01',
-                    'fecha_fin_cpr' => '2026-04-30',
-                    'cupo_maximo_cpr' => 100,
-                    'estado_cpr' => EstadoCatalogo::Habilitado->value,
-                ],
-            );
-        }
-
         $conceptoUnaCuota = ConceptoPago::query()->where('codigo_cpg', 'INS_UNA')->firstOrFail();
         $conceptoMasCuotas = ConceptoPago::query()->where('codigo_cpg', 'INS_CUO')->firstOrFail();
 
@@ -102,7 +60,6 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
                 'id_concepto_pago' => $conceptoUnaCuota->id_cpg,
                 'id_proceso' => $proceso->id_pro,
                 'id_modalidad_admision' => null,
-                'id_convenio_proceso' => null,
             ],
             [
                 'monto_total_rpa' => 500.00,
@@ -121,7 +78,6 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
                 'id_concepto_pago' => $conceptoMasCuotas->id_cpg,
                 'id_proceso' => $proceso->id_pro,
                 'id_modalidad_admision' => null,
-                'id_convenio_proceso' => null,
             ],
             [
                 'monto_total_rpa' => 550.00,
@@ -134,6 +90,5 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
                 'estado_rpa' => EstadoCatalogo::Habilitado->value,
             ],
         );
-
     }
 }

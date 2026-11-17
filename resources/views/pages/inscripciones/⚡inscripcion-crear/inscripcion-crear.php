@@ -134,8 +134,7 @@ class extends Component
      *   id_modalidad_admision:string,
      *   id_lugar_inscripcion:string,
      *   id_turno:string,
-     *   id_proceso_oferta:string,
-     *   id_convenio_proceso:string
+     *   id_proceso_oferta:string
      * }
      */
     public array $postulacionForm = [
@@ -143,7 +142,6 @@ class extends Component
         'id_lugar_inscripcion' => '',
         'id_turno' => '',
         'id_proceso_oferta' => '',
-        'id_convenio_proceso' => '',
     ];
 
     /**
@@ -216,7 +214,6 @@ class extends Component
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.turno',
-                'convenioProceso.convenio',
                 'paisColegio',
                 'colegio.ubigeo',
                 'obligacionesPago.reglaPago.conceptoPago',
@@ -254,7 +251,6 @@ class extends Component
                 'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
                 'procesoOferta.ofertaBase.sedeCarrera.carrera',
                 'procesoOferta.turno',
-                'convenioProceso.convenio',
             ])
             ->find($this->inscripcionId);
     }
@@ -304,7 +300,6 @@ class extends Component
             'id_lugar_inscripcion' => '',
             'id_turno' => '',
             'id_proceso_oferta' => '',
-            'id_convenio_proceso' => '',
         ];
         $this->pagoForm = $this->formularioPagoBase();
         $this->resultadoPagoDetalleIds = [];
@@ -391,7 +386,6 @@ class extends Component
         $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
 
         app(ValidadorVigenciaInscripcion::class)->ofertaVigente((int) $inscripcion->id_proceso_oferta, $procesoActivo);
-        app(ValidadorVigenciaInscripcion::class)->convenioVigente($inscripcion->id_convenio_proceso, $procesoActivo);
     }
 
     private function nullableUpper(?string $valor): ?string
