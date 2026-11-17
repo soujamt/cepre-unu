@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -74,12 +74,6 @@ new class extends Component
                         'permiso' => 'sede_indice',
                     ],
                     [
-                        'label' => 'TIPOS DE EXPEDIENTE',
-                        'href' => route('tipos-expediente.index'),
-                        'active' => $this->routeIs('tipos-expediente.*'),
-                        'permiso' => 'tipo_expediente_indice',
-                    ],
-                    [
                         'label' => 'TURNOS',
                         'href' => route('turnos.index'),
                         'active' => $this->routeIs('turnos.*'),
@@ -96,8 +90,6 @@ new class extends Component
                     'ofertas.*',
                     'convenios.*',
                     'reglas-pago.*',
-                    'requisitos.*',
-                    'requisitos-expediente.*',
                     'aulas.*'
                 ),
                 'items' => [
@@ -106,7 +98,6 @@ new class extends Component
                     ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'CONVENIOS', 'href' => route('convenios.index'), 'active' => $this->routeIs('convenios.*'), 'permiso' => 'convenio_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
-                    ['label' => 'REQUISITOS', 'href' => route('requisitos.index'), 'active' => $this->routeIs('requisitos.*', 'requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
                 ],
             ],
             [

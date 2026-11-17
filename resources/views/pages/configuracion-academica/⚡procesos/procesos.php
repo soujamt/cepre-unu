@@ -283,14 +283,13 @@ class extends Component
         try {
             DB::transaction(function () use ($id_proceso): void {
                 $proceso = Proceso::query()
-                    ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])
+                    ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago'])
                     ->findOrFail($id_proceso);
 
                 if (
                     $proceso->procesos_oferta_count > 0
                     || $proceso->convenios_proceso_count > 0
                     || $proceso->reglas_pago_count > 0
-                    || $proceso->requisitos_expediente_count > 0
                 ) {
                     throw new RuntimeException('El proceso tiene configuraciones relacionadas y no puede eliminarse.');
                 }
@@ -335,7 +334,7 @@ class extends Component
         app(EstadoAcademicoSynchronizer::class)->sync();
 
         return Proceso::query()
-            ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])
+            ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago'])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 

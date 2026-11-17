@@ -7,7 +7,6 @@ use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
-use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoUsuario;
 use App\Enums\EstadoValidacionPago;
 use App\Enums\SexoPersona;
@@ -20,7 +19,6 @@ dataset('presentable-enums', [
     EstadoInscripcion::class,
     EstadoObligacionPago::class,
     EstadoProceso::class,
-    EstadoRevisionExpediente::class,
     EstadoUsuario::class,
     EstadoValidacionPago::class,
     SexoPersona::class,

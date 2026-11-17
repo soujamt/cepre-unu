@@ -5,7 +5,6 @@ use App\Models\Proceso;
 use App\Support\ValidadorVigenciaInscripcion;
 use App\Traits\AuthorizesPermisos;
 use App\Traits\InscripcionCrear\GestionaCatalogosInscripcion;
-use App\Traits\InscripcionCrear\GestionaPasoExpedientes;
 use App\Traits\InscripcionCrear\GestionaPasoGeneral;
 use App\Traits\InscripcionCrear\GestionaPasoPago;
 use App\Traits\InscripcionCrear\GestionaPasoPersonal;
@@ -15,8 +14,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use Livewire\WithFileUploads;
 
 new
 #[Layout('layouts.app')]
@@ -25,12 +22,10 @@ class extends Component
 {
     use AuthorizesPermisos;
     use GestionaCatalogosInscripcion;
-    use GestionaPasoExpedientes;
     use GestionaPasoGeneral;
     use GestionaPasoPago;
     use GestionaPasoPersonal;
     use GestionaPasoPostulacion;
-    use WithFileUploads;
 
     public int $pasoActual = 1;
 
@@ -175,22 +170,6 @@ class extends Component
 
     public bool $busquedaPagoRealizada = false;
 
-    /**
-     * @var array<int, array{
-     *   id_tipo_expediente:string,
-     *   estado_revision:string,
-     *   observacion:string,
-     *   nombre_archivo:string,
-     *   archivo_url:string
-     * }>
-     */
-    public array $expedientesForm = [];
-
-    /**
-     * @var array<int, TemporaryUploadedFile|null>
-     */
-    public array $archivosExpediente = [];
-
     public ?int $personaId = null;
 
     public ?int $inscripcionId = null;
@@ -242,7 +221,6 @@ class extends Component
                 'colegio.ubigeo',
                 'obligacionesPago.reglaPago.conceptoPago',
                 'obligacionesPago.pagos.importacionBancoDetalle',
-                'expedientes.tipoExpediente',
             ])
             ->findOrFail($idInscripcion);
 
@@ -258,20 +236,7 @@ class extends Component
         $this->cargarInformacionGeneralExistente($inscripcion);
         $this->cargarPostulacionExistente($inscripcion);
         $this->cargarPagoExistente($inscripcion);
-        $this->pasoActual = $this->resolverPasoActualDesdeInscripcion($inscripcion);
-
-        if ($this->pasoActual >= 5) {
-            $this->inicializarExpedientesForm();
-        }
-    }
-
-    private function resolverPasoActualDesdeInscripcion(Inscripcion $inscripcion): int
-    {
-        if ($inscripcion->expedientes->isNotEmpty() || $this->tienePagoValidadoWizard) {
-            return 5;
-        }
-
-        return 4;
+        $this->pasoActual = 4;
     }
 
     #[Computed]
@@ -302,7 +267,6 @@ class extends Component
             2 => ['titulo' => 'Información general', 'descripcion' => 'Datos complementarios', 'icono' => 'note-book'],
             3 => ['titulo' => 'Postulación', 'descripcion' => 'Proceso, oferta y colegio', 'icono' => 'school'],
             4 => ['titulo' => 'Pago', 'descripcion' => 'Validación del pago bancario', 'icono' => 'credit-card'],
-            5 => ['titulo' => 'Expedientes', 'descripcion' => 'Carga y revisión de documentos', 'icono' => 'folder-open'],
         ];
     }
 
@@ -407,16 +371,6 @@ class extends Component
 
         if ($paso > 3) {
             $this->prepararPasoPago();
-        }
-
-        if ($paso > 4 && ! $this->tienePagoValidadoWizard) {
-            $this->dispatch('toast', message: 'Primero debe validar al menos un pago antes de continuar.', type: 'warning');
-
-            return;
-        }
-
-        if ($paso === 5) {
-            $this->inicializarExpedientesForm();
         }
 
         $this->pasoActual = $paso;

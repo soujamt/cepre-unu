@@ -13,8 +13,6 @@ use App\Models\OfertaBase;
 use App\Models\Proceso;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
-use App\Models\RequisitoExpediente;
-use App\Models\TipoExpediente;
 use App\Models\Turno;
 use Illuminate\Database\Seeder;
 
@@ -137,21 +135,5 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
             ],
         );
 
-        $tiposExpediente = TipoExpediente::query()
-            ->where('estado_tex', EstadoCatalogo::Habilitado->value)
-            ->get();
-
-        foreach ($tiposExpediente as $tipoExpediente) {
-            RequisitoExpediente::query()->updateOrCreate(
-                [
-                    'id_proceso' => $proceso->id_pro,
-                    'id_tipo_expediente' => $tipoExpediente->id_tex,
-                ],
-                [
-                    'obligatorio_rex' => true,
-                    'estado_rex' => EstadoCatalogo::Habilitado->value,
-                ],
-            );
-        }
     }
 }

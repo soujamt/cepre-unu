@@ -342,9 +342,8 @@ trait GestionaPasoPago
         unset($this->obligacionPagoSeleccionada, $this->detallePagoSeleccionado, $this->detallesPagoEncontrados, $this->tienePagoValidadoWizard);
 
         $this->limpiarBusquedaPago();
-        $this->pasoActual = 5;
-        $this->inicializarExpedientesForm();
-        $this->dispatch('toast', message: 'Pago validado correctamente. Puede continuar con los expedientes.', type: 'success');
+        $this->dispatch('toast', message: 'Pago validado correctamente. La inscripcion quedo activa.', type: 'success');
+        $this->redirect(route('inscripciones.index'), navigate: true);
     }
 
     public function descripcionReglaPago(ReglaPago $reglaPago): string

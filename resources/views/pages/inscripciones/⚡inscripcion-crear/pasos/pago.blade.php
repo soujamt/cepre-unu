@@ -330,24 +330,24 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 icon="check-circle"
                 heading="Pago validado correctamente"
             >
-                <p class="text-sm">Esta inscripción ya tiene un pago verificado. Puede continuar directamente al paso de expedientes.</p>
+                <p class="text-sm">Esta inscripción ya tiene un pago verificado y quedó activa.</p>
             </flux:callout>
             <div class="flex justify-end">
                 <flux:button
                     variant="primary"
                     type="button"
-                    wire:click="continuarPasoExpedientes"
+                    wire:click="volverListado"
                     class="font-normal"
                 >
                     <x-slot name="icon">
-                        <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
+                        <x-ui.icon name="arrow-left" size="5" class="text-white" />
                     </x-slot>
-                    Continuar a expedientes
+                    Volver al listado
                 </flux:button>
             </div>
         @else
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Cuando confirmemos el pago, quedará asociado a la inscripción y el wizard avanzará al paso de expedientes.</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Cuando confirmemos el pago, quedará asociado a la inscripción y esta quedará activa.</p>
 
                 <div class="flex gap-3">
                     <flux:button

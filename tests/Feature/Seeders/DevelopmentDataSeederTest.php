@@ -44,5 +44,4 @@ it('loads demo data for the user manual with 50 active inscriptions from Coronel
 
     expect(DB::table('tbl_inscripcion_obligacion_pago')->count())->toBe(50);
     expect(DB::table('tbl_inscripcion_pago')->count())->toBe(50);
-    expect(DB::table('tbl_inscripcion_expediente')->count())->toBeGreaterThanOrEqual(150);
 });

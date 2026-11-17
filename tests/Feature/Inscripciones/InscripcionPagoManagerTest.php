@@ -2,6 +2,7 @@
 
 use App\Enums\EstadoImportacionBanco;
 use App\Enums\EstadoImportacionBancoDetalle;
+use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\Carrera;
@@ -258,7 +259,7 @@ test('can search available imported payments by documento operacion y fecha', fu
     expect($resultados->sole()->id_ibd)->toBe($contexto['detalle']->id_ibd);
 });
 
-test('can associate an imported payment detail to an obligation and update balances', function () {
+test('associating an imported payment updates balances and activates the inscripcion', function () {
     $usuario = Usuario::factory()->create();
     $this->actingAs($usuario);
 
@@ -287,6 +288,7 @@ test('can associate an imported payment detail to an obligation and update balan
     expect((float) $contexto['obligacion']->monto_pagado_iop)->toBe(300.00);
     expect((float) $contexto['obligacion']->saldo_iop)->toBe(250.00);
     expect($contexto['obligacion']->estado_iop)->toBe(EstadoObligacionPago::Parcial);
+    expect($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Activo);
 
     $this->assertDatabaseHas('tbl_inscripcion_pago', [
         'id_ipa' => $pago->id_ipa,
@@ -327,6 +329,7 @@ test('requires the minimum amount for the first installment', function () {
 
     expect(InscripcionPago::query()->count())->toBe(0);
     expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Pendiente);
+    expect($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Pendiente);
 });
 
 test('requires full payment when the rule does not allow installments', function () {

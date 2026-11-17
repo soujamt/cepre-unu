@@ -70,10 +70,6 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:colegio_indice')
         ->name('mantenedor-colegios.index');
 
-    Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
-        ->middleware('permiso:tipo_expediente_indice')
-        ->name('tipos-expediente.index');
-
     Route::livewire('/mantenedores/turnos', 'pages::mantenedores.turnos')
         ->middleware('permiso:turno_indice')
         ->name('turnos.index');
@@ -106,10 +102,6 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/configuracion-academica/convenios', 'pages::configuracion-academica.convenios')
         ->middleware('permiso:convenio_indice')
         ->name('convenios.index');
-
-    Route::livewire('/configuracion-academica/requisitos', 'pages::configuracion-academica.requisitos')
-        ->middleware('permiso:requisito_expediente_indice')
-        ->name('requisitos.index');
 
     // Inscripciones
     Route::livewire('/inscripciones', 'pages::inscripciones.inscripciones')

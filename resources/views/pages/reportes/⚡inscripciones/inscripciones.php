@@ -2,7 +2,6 @@
 
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
-use App\Enums\EstadoRevisionExpediente;
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Inscripcion;
 use App\Models\LugarInscripcion;
@@ -135,7 +134,6 @@ class extends Component
                 'procesoOferta.turno',
                 'convenioProceso.convenio',
                 'obligacionesPago',
-                'expedientes',
             ])
             ->get();
     }
@@ -152,8 +150,6 @@ class extends Component
             'anuladas' => $inscripciones->where('estado_ins', EstadoInscripcion::Anulado)->count(),
             'pago_pendiente' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tienePagoPendiente($inscripcion))->count(),
             'pago_parcial' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tienePagoParcial($inscripcion))->count(),
-            'docs_observados' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tieneExpedienteObservado($inscripcion))->count(),
-            'docs_rechazados' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tieneExpedienteRechazado($inscripcion))->count(),
         ];
     }
 
@@ -185,7 +181,7 @@ class extends Component
                     'modalidad' => $modalidad,
                     'total' => $inscripciones->count(),
                     'pago_pendiente' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tienePagoPendiente($inscripcion))->count(),
-                    'docs_observados' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->tieneExpedienteObservado($inscripcion))->count(),
+                    'activas' => $inscripciones->where('estado_ins', EstadoInscripcion::Activo)->count(),
                 ];
             })
             ->sortByDesc('total')
@@ -346,20 +342,6 @@ class extends Component
     {
         return $inscripcion->obligacionesPago->contains(
             fn ($obligacion) => $obligacion->estado_iop === EstadoObligacionPago::Parcial
-        );
-    }
-
-    private function tieneExpedienteObservado(Inscripcion $inscripcion): bool
-    {
-        return $inscripcion->expedientes->contains(
-            fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Observado
-        );
-    }
-
-    private function tieneExpedienteRechazado(Inscripcion $inscripcion): bool
-    {
-        return $inscripcion->expedientes->contains(
-            fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Rechazado
         );
     }
 };

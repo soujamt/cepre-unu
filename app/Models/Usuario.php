@@ -205,9 +205,4 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(InscripcionPago::class, 'id_usuario_validador', 'id_usu');
     }
-
-    public function expedientesRevisados(): HasMany
-    {
-        return $this->hasMany(InscripcionExpediente::class, 'id_usuario_revisor', 'id_usu');
-    }
 }

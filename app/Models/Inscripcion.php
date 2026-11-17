@@ -56,11 +56,6 @@ class Inscripcion extends LegacyModel
         return $this->hasMany(InscripcionObligacionPago::class, 'id_inscripcion', 'id_ins');
     }
 
-    public function expedientes(): HasMany
-    {
-        return $this->hasMany(InscripcionExpediente::class, 'id_inscripcion', 'id_ins');
-    }
-
     public function procesoAula(): BelongsTo
     {
         return $this->belongsTo(ProcesoAula::class, 'id_proceso_aula', 'id_pau');

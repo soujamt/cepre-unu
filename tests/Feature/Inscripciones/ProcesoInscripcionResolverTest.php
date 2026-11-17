@@ -14,7 +14,6 @@ use Database\Seeders\ModalidadLugarInscripcionSeeder;
 use Database\Seeders\OfertaBaseSeeder;
 use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,7 +25,6 @@ function sembrarConfiguracionAcademicaInicial(): void
 {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         UbigeoSeeder::class,
         SedeSeeder::class,

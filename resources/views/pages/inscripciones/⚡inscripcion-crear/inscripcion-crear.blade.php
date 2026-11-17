@@ -253,8 +253,6 @@
                     @include('pages::inscripciones.⚡inscripcion-crear.pasos.postulacion')
                 @elseif ($pasoActual === 4)
                     @include('pages::inscripciones.⚡inscripcion-crear.pasos.pago')
-                @elseif ($pasoActual === 5)
-                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.expedientes')
                 @else
                 <div
                     class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900"

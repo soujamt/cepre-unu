@@ -8,7 +8,6 @@ use App\Models\Convenio;
 use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\ModalidadLugarInscripcion;
@@ -25,7 +24,6 @@ use App\Models\Rol;
 use App\Models\Sede;
 use App\Models\SedeCarrera;
 use App\Models\TipoDocumento;
-use App\Models\TipoExpediente;
 use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
@@ -300,12 +298,6 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'estado_rpa' => 'HABILITADO',
     ]);
 
-    $tipoExpediente = TipoExpediente::query()->create([
-        'codigo_tex' => 'REP-DNI',
-        'nombre_tex' => 'DNI',
-        'estado_tex' => 'HABILITADO',
-    ]);
-
     $contextoAnterior['proceso']->update([
         'fecha_inicio_pro' => '2026-01-01',
         'fecha_fin_pro' => '2026-02-28',
@@ -321,14 +313,6 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'estado_iop' => 'PARCIAL',
         'creado_en' => now(),
         'actualizado_en' => now(),
-    ]);
-
-    InscripcionExpediente::query()->create([
-        'id_inscripcion' => $contextoActual['inscripcion']->id_ins,
-        'id_tipo_expediente' => $tipoExpediente->id_tex,
-        'nombre_archivo_iex' => 'doc.pdf',
-        'archivo_url_iex' => 'expedientes/doc.pdf',
-        'estado_revision_iex' => 'OBSERVADO',
     ]);
 
     $this->actingAs($usuario);

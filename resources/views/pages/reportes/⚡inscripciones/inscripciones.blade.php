@@ -137,12 +137,12 @@
         />
 
         <x-resumen.item
-            label="Expedientes observados"
-            :value="$this->resumenGeneral['docs_observados']"
-            icon="file-search"
-            :tono="$this->resumenGeneral['docs_rechazados'] > 0 ? 'danger' : ($this->resumenGeneral['docs_observados'] > 0 ? 'warning' : 'success')"
-            detalle-icon="x-circle"
-            :detalle="$this->resumenGeneral['docs_rechazados'].' rechazados'"
+            label="Activas"
+            :value="$this->resumenGeneral['activas']"
+            icon="check-circle"
+            tono="success"
+            detalle-icon="wallet"
+            detalle="Con pago validado"
         />
 
         <x-resumen.item
@@ -248,7 +248,7 @@
                             <x-table.heading>MODALIDAD</x-table.heading>
                             <x-table.heading class="w-20">TOTAL</x-table.heading>
                             <x-table.heading class="w-28">PAGO PTE.</x-table.heading>
-                            <x-table.heading class="w-28">DOCS OBS.</x-table.heading>
+                            <x-table.heading class="w-28">ACTIVAS</x-table.heading>
                         </x-table.row>
                     </x-table.head>
                     <x-table.body>
@@ -257,7 +257,7 @@
                                 <x-table.cell>{{ $fila['modalidad'] }}</x-table.cell>
                                 <x-table.cell>{{ $fila['total'] }}</x-table.cell>
                                 <x-table.cell>{{ $fila['pago_pendiente'] }}</x-table.cell>
-                                <x-table.cell>{{ $fila['docs_observados'] }}</x-table.cell>
+                                <x-table.cell>{{ $fila['activas'] }}</x-table.cell>
                             </x-table.row>
                         @empty
                             <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
@@ -298,17 +298,17 @@
                     </div>
                 </flux:callout>
 
-                <flux:callout color="sky" icon="document-magnifying-glass">
+                <flux:callout color="sky" icon="currency-dollar">
                     <div class="space-y-1">
-                        <p class="text-sm font-medium">Docs observados</p>
-                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['docs_observados'] }}</p>
+                        <p class="text-sm font-medium">Pago parcial</p>
+                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['pago_parcial'] }}</p>
                     </div>
                 </flux:callout>
 
                 <flux:callout color="red" icon="x-circle">
                     <div class="space-y-1">
-                        <p class="text-sm font-medium">Docs rechazados</p>
-                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['docs_rechazados'] }}</p>
+                        <p class="text-sm font-medium">Anuladas</p>
+                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['anuladas'] }}</p>
                     </div>
                 </flux:callout>
             </div>

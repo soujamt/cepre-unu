@@ -4,7 +4,6 @@ use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
-use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoValidacionPago;
 use App\Models\ConvenioProceso;
 use App\Models\Inscripcion;
@@ -72,12 +71,6 @@ class extends Component
                     EstadoObligacionPago::Parcial->value,
                 ]))
                 ->count(),
-            'docs_observados' => (clone $base)
-                ->whereHas('expedientes', fn (Builder $q) => $q->whereIn('estado_revision_iex', [
-                    EstadoRevisionExpediente::Observado->value,
-                    EstadoRevisionExpediente::Rechazado->value,
-                ]))
-                ->count(),
         ];
     }
 
@@ -90,7 +83,6 @@ class extends Component
             return [
                 'nuevas_inscripciones' => 0,
                 'pagos_validados' => 0,
-                'expedientes_revisados' => 0,
             ];
         }
 
@@ -105,10 +97,6 @@ class extends Component
                 ->where('estado_validacion_ipa', EstadoValidacionPago::Verificado->value)
                 ->whereDate('validado_en', $fechaReferencia)
                 ->whereHas('obligacionPago.inscripcion.procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
-                ->count(),
-            'expedientes_revisados' => Inscripcion::query()
-                ->whereHas('procesoOferta', fn (Builder $query) => $query->where('id_proceso', $proceso->id_pro))
-                ->whereHas('expedientes', fn (Builder $query) => $query->whereDate('revisado_en', $fechaReferencia))
                 ->count(),
         ];
     }
@@ -159,17 +147,6 @@ class extends Component
                     ? '1 inscripción con saldo pendiente o pago parcial.'
                     : $this->estadisticas['pago_pendiente'].' inscripciones con saldo pendiente o pago parcial.',
                 'tono' => 'warning',
-            ]);
-        }
-
-        if ($this->estadisticas['docs_observados'] > 0) {
-            $alertas->push([
-                'tipo' => 'expediente',
-                'titulo' => 'Expedientes observados',
-                'detalle' => $this->estadisticas['docs_observados'] === 1
-                    ? '1 inscripción requiere revisión documental.'
-                    : $this->estadisticas['docs_observados'].' inscripciones requieren revisión documental.',
-                'tono' => 'info',
             ]);
         }
 

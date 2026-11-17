@@ -170,7 +170,7 @@
                         @foreach ([
                             ['icon' => 'group', 'label' => 'Inscritos', 'valor' => '1 248', 'color' => 'text-index-500 bg-index-50 dark:bg-index-500/10'],
                             ['icon' => 'wallet', 'label' => 'Pagos validados', 'valor' => '1 102', 'color' => 'text-green-600 bg-green-50 dark:bg-green-500/10'],
-                            ['icon' => 'folder-open', 'label' => 'Expedientes', 'valor' => '986', 'color' => 'text-purple-600 bg-purple-50 dark:bg-purple-500/10'],
+                            ['icon' => 'school', 'label' => 'Aulas asignadas', 'valor' => '986', 'color' => 'text-purple-600 bg-purple-50 dark:bg-purple-500/10'],
                         ] as $indicador)
                             <div class="rounded-xl border border-zinc-100 p-2.5 dark:border-white/[0.06]">
                                 <div class="flex items-center justify-between">

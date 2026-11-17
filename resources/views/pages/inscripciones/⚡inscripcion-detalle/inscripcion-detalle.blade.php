@@ -19,7 +19,6 @@
 <div class="space-y-5">
     @php
         $resumenPagoGeneral = $this->resumenPagoGeneral();
-        $resumenExpedientesGeneral = $this->resumenExpedientesGeneral();
         $tonoPorColor = fn (string $color): string => match ($color) {
             'green', 'emerald', 'lime' => 'success',
             'amber', 'yellow', 'orange' => 'warning',
@@ -99,13 +98,12 @@
         />
 
         <x-resumen.item
-            label="Expedientes"
-            :value="$inscripcionActual->expedientes->count()"
-            icon="folder-open"
-            :tono="$tonoPorColor($resumenExpedientesGeneral['color'])"
-            detalle-icon="file-detail"
-            :detalle="$resumenExpedientesGeneral['label']"
-            :title="$resumenExpedientesGeneral['detalle']"
+            label="Estado"
+            :value="$inscripcionActual->estado_ins->getNombre()"
+            :icon="$inscripcionActual->estado_ins->getIcon()"
+            :tono="$tonoPorColor($inscripcionActual->estado_ins->getColor())"
+            detalle-icon="wallet"
+            :detalle="$inscripcionActual->estado_ins === \App\Enums\EstadoInscripcion::Activo ? 'Pago validado' : 'Falta validar el pago'"
         />
 
         <x-resumen.item
@@ -275,142 +273,6 @@
                     @endforelse
                 </div>
             </div>
-
-            <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Expedientes</p>
-                        <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Revisión documental</h3>
-                    </div>
-                    <flux:badge color="zinc" size="lg">{{ $inscripcionActual->expedientes->count() }}</flux:badge>
-                </div>
-
-                <div class="mt-5 space-y-3">
-                    @forelse ($inscripcionActual->expedientes as $expediente)
-                        <div
-                            class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
-                        >
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
-                                    {{ $expediente->tipoExpediente?->nombre_tex ?? 'SIN TIPO' }}
-                                </p>
-                                <flux:badge color="{{ $expediente->estado_revision_iex->getColor() }}" size="lg">
-                                    {{ $expediente->estado_revision_iex->getNombre() }}
-                                </flux:badge>
-                            </div>
-
-                            <div class="mt-3 space-y-1 text-sm text-zinc-600 dark:text-zinc-300">
-                                @php ($urlArchivo = $this->urlArchivoExpediente($expediente))
-                                <div class="flex items-center justify-between gap-2">
-                                    <p>Archivo: {{ $expediente->nombre_archivo_iex ?: 'No registrado' }}</p>
-                                    @if ($urlArchivo)
-                                        <a
-                                            href="{{ $urlArchivo }}"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            class="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-                                        >
-                                            <x-ui.icon name="arrow-out-up-right-square" size="3.5" />
-                                            Abrir
-                                        </a>
-                                    @endif
-                                </div>
-                                <p>Observación: {{ $expediente->observacion_iex ?: 'Sin observación' }}</p>
-                                <p>
-                                    Revision: {{ $expediente->revisado_en?->format('d/m/Y h:i a') ?? 'No registrada' }}
-                                    @if ($expediente->usuarioRevisor)
-                                        | {{ $expediente->usuarioRevisor->nombres_usu ?? $expediente->usuarioRevisor->correo_usu }}
-                                    @endif
-                                </p>
-                            </div>
-
-                            @permiso ('inscripcion_editar')
-                                <div
-                                    class="mt-3 flex items-center gap-2 border-t border-zinc-200 pt-3 dark:border-white/10"
-                                >
-                                    <flux:button
-                                        size="xs"
-                                        variant="filled"
-                                        wire:click="aprobarExpediente({{ $expediente->id_iex }})"
-                                        :disabled="$expediente->estado_revision_iex === \App\Enums\EstadoRevisionExpediente::Aprobado"
-                                    >
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="check-circle" size="3.5" />
-                                        </x-slot>
-                                        Aprobar
-                                    </flux:button>
-                                    <flux:button
-                                        size="xs"
-                                        variant="filled"
-                                        wire:click="abrirModalRevision({{ $expediente->id_iex }}, 'OBSERVADO')"
-                                    >
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="info-circle" size="3.5" />
-                                        </x-slot>
-                                        Observar
-                                    </flux:button>
-                                    <flux:button
-                                        size="xs"
-                                        variant="danger"
-                                        wire:click="abrirModalRevision({{ $expediente->id_iex }}, 'RECHAZADO')"
-                                    >
-                                        <x-slot name="icon">
-                                            <x-ui.icon name="x-circle" size="3.5" />
-                                        </x-slot>
-                                        Rechazar
-                                    </flux:button>
-                                </div>
-                            @endpermiso
-                        </div>
-                    @empty
-                        <div
-                            class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
-                        >
-                            Esta inscripción no tiene expedientes registrados.
-                        </div>
-                    @endforelse
-                </div>
-            </div>
         </div>
     </div>
-
-    <flux:modal name="modal-revisar-expediente" class="md:w-md!">
-        <div class="space-y-5">
-            <div>
-                <flux:heading size="lg">
-                    {{ $estadoRevision === 'OBSERVADO' ? 'Observar expediente' : 'Rechazar expediente' }}
-                </flux:heading>
-                <flux:text class="mt-1">
-                    {{ $estadoRevision === 'OBSERVADO'
-                        ? 'Indique la observacion para que el postulante corrija el documento.'
-                        : 'Indique el motivo del rechazo del documento.' }}
-                </flux:text>
-            </div>
-
-            <flux:field>
-                <flux:label>{{ $estadoRevision === 'OBSERVADO' ? 'Observacion' : 'Motivo de rechazo' }}</flux:label>
-                <flux:textarea
-                    wire:model="observacionRevision"
-                    placeholder="Describa el motivo (mínimo 5 caracteres)"
-                    rows="3"
-                />
-                <flux:error name="observacionRevision" />
-            </flux:field>
-
-            <div class="flex justify-end gap-3">
-                <flux:button variant="ghost" x-on:click="$flux.modal('modal-revisar-expediente').close()">
-                    Cancelar
-                </flux:button>
-                <flux:button
-                    variant="{{ $estadoRevision === 'RECHAZADO' ? 'danger' : 'primary' }}"
-                    wire:click="confirmarRevision"
-                >
-                    <x-slot name="icon">
-                        <x-ui.icon name="checkbox-checked" size="4" />
-                    </x-slot>
-                    Confirmar
-                </flux:button>
-            </div>
-        </div>
-    </flux:modal>
 </div>

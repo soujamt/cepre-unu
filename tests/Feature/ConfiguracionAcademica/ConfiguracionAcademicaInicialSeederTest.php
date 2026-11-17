@@ -9,7 +9,6 @@ use Database\Seeders\ModalidadLugarInscripcionSeeder;
 use Database\Seeders\OfertaBaseSeeder;
 use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +20,6 @@ uses(RefreshDatabase::class);
 test('academic initial seeder creates a usable base configuration', function () {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         UbigeoSeeder::class,
         SedeSeeder::class,
@@ -88,8 +86,4 @@ test('academic initial seeder creates a usable base configuration', function () 
         ->where('monto_minimo_primera_cuota_rpa', 275)
         ->where('numero_maximo_cuotas_rpa', 3)
         ->exists())->toBeTrue();
-
-    expect(DB::table('tbl_requisito_expediente')
-        ->where('id_proceso', $procesoId)
-        ->count())->toBe(3);
 });

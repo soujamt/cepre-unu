@@ -106,7 +106,7 @@
                             <span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $proceso->fecha_fin_pro->format('h:i a') }}</span>
                         </x-table.cell>
                         <x-table.cell>
-                            {{ $proceso->procesos_oferta_count + $proceso->convenios_proceso_count + $proceso->reglas_pago_count + $proceso->requisitos_expediente_count }}
+                            {{ $proceso->procesos_oferta_count + $proceso->convenios_proceso_count + $proceso->reglas_pago_count }}
                         </x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $proceso->estado_pro->getColor() }}">

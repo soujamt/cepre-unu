@@ -9,7 +9,6 @@ use App\Models\IdentidadEtnica;
 use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Models\LenguaNativa;
@@ -21,7 +20,6 @@ use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
-use App\Models\RequisitoExpediente;
 use App\Models\Rol;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
@@ -30,7 +28,6 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 
 class InscripcionManualSeeder extends Seeder
 {
@@ -44,7 +41,7 @@ class InscripcionManualSeeder extends Seeder
             ConfiguracionAcademicaInicialSeeder::class,
         ]);
 
-        [$superAdministrador, $gestorInscripciones] = $this->crearUsuariosManual();
+        [, $gestorInscripciones] = $this->crearUsuariosManual();
         $this->activarProcesoDemo();
 
         $proceso = Proceso::query()
@@ -72,13 +69,6 @@ class InscripcionManualSeeder extends Seeder
                 $query->where('codigo_cpg', 'INS_CUO');
             })
             ->firstOrFail();
-
-        $requisitosExpediente = RequisitoExpediente::query()
-            ->with('tipoExpediente')
-            ->where('id_proceso', $proceso->id_pro)
-            ->where('estado_rex', 'HABILITADO')
-            ->orderBy('id_rex')
-            ->get();
 
         $ubigeos = Ubigeo::query()
             ->where('codigo_departamento_ubi', '25')
@@ -234,37 +224,6 @@ class InscripcionManualSeeder extends Seeder
                 ],
             );
 
-            foreach ($requisitosExpediente as $requisito) {
-                $rutaArchivo = sprintf(
-                    'demo/manual-expedientes/%s-%s.txt',
-                    strtolower($codigoInscripcion),
-                    $requisito->id_tipo_expediente,
-                );
-
-                Storage::disk('public')->put(
-                    $rutaArchivo,
-                    "Archivo demo para {$codigoInscripcion} - {$requisito->tipoExpediente?->nombre_tex}",
-                );
-
-                InscripcionExpediente::query()->updateOrCreate(
-                    [
-                        'id_inscripcion' => $inscripcion->id_ins,
-                        'id_tipo_expediente' => $requisito->id_tipo_expediente,
-                    ],
-                    [
-                        'archivo_url_iex' => $rutaArchivo,
-                        'nombre_archivo_iex' => sprintf(
-                            '%s %s.txt',
-                            $codigoInscripcion,
-                            str($requisito->tipoExpediente?->nombre_tex ?? 'EXPEDIENTE')->slug('_'),
-                        ),
-                        'estado_revision_iex' => 'APROBADO',
-                        'observacion_iex' => 'EXPEDIENTE APROBADO EN DATOS DEMO',
-                        'revisado_en' => now(),
-                        'id_usuario_revisor' => $superAdministrador->id_usu,
-                    ],
-                );
-            }
         }
     }
 

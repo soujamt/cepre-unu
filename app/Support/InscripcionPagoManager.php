@@ -3,9 +3,11 @@
 namespace App\Support;
 
 use App\Enums\EstadoImportacionBancoDetalle;
+use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\ImportacionBancoDetalle;
+use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use Carbon\Carbon;
@@ -100,6 +102,8 @@ class InscripcionPagoManager
             $obligacion->saldo_iop = $saldoNuevo;
             $obligacion->estado_iop = $this->resolverEstadoObligacion($montoPagadoNuevo, $saldoNuevo);
             $obligacion->save();
+
+            $this->activarInscripcionPendiente($obligacion->inscripcion);
 
             return $pago->fresh([
                 'importacionBancoDetalle',
@@ -310,6 +314,18 @@ class InscripcionPagoManager
             ->sum('monto_ipa');
 
         return round(max((float) $obligacion->monto_total_iop - $montoPagadoActual, 0), 2);
+    }
+
+    /**
+     * Un pago verificado activa la inscripción que seguía pendiente.
+     */
+    private function activarInscripcionPendiente(?Inscripcion $inscripcion): void
+    {
+        if ($inscripcion === null || $inscripcion->estado_ins !== EstadoInscripcion::Pendiente) {
+            return;
+        }
+
+        $inscripcion->update(['estado_ins' => EstadoInscripcion::Activo->value]);
     }
 
     private function resolverEstadoObligacion(float $montoPagado, float $saldoPendiente): EstadoObligacionPago

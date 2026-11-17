@@ -18,7 +18,7 @@
     <x-resumen
         class="transition-opacity duration-200"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
+        wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
     >
         <x-resumen.item
             label="Total inscritas"
@@ -40,12 +40,12 @@
         />
 
         <x-resumen.item
-            label="Docs observados"
-            :value="$this->resumen['docs_observados']"
-            icon="file-search"
-            :tono="$this->resumen['docs_observados'] > 0 ? 'warning' : 'success'"
-            :detalle-icon="$this->resumen['docs_observados'] > 0 ? 'alert-triangle' : 'check'"
-            :detalle="$this->resumen['docs_observados'] > 0 ? 'Requieren revisión' : 'Sin observaciones'"
+            label="Activas"
+            :value="$this->resumen['activas']"
+            icon="check-circle"
+            tono="success"
+            detalle-icon="wallet"
+            detalle="Con pago validado"
         />
 
         <x-resumen.item
@@ -187,16 +187,6 @@
                 @endforeach
             </x-ui.select>
 
-            <x-ui.select wire:model.live="filtroExpediente" label="Expedientes" placeholder="Todos los expedientes">
-                <option value="">Todos los expedientes</option>
-                <option value="sin_carga">Sin carga</option>
-                @foreach (App\Enums\EstadoRevisionExpediente::cases() as $estadoExpediente)
-                    <option wire:key="expediente-{{ $estadoExpediente->value }}" value="{{ $estadoExpediente->value }}">
-                        {{ ucfirst(strtolower($estadoExpediente->getNombre())) }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-
             <x-ui.select wire:model.live="idTurno" label="Turno" placeholder="Todos los turnos">
                 <option value="">Todos los turnos</option>
                 @foreach ($this->turnosDisponibles as $turno)
@@ -233,7 +223,6 @@
                 @forelse ($this->inscripciones as $inscripcion)
                     @php
                         $resumenPago = $this->resumenPago($inscripcion);
-                        $resumenExpedientes = $this->resumenExpedientes($inscripcion);
                         $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
                         $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
                         $aula = $inscripcion->procesoAula?->aula?->nombre_aul;
@@ -299,17 +288,6 @@
                                         <x-ui.icon name="dollar-circle" size="3" class="me-0.5" />
                                     </x-slot>
                                     {{ $resumenPago['label'] }}
-                                </flux:badge>
-                                <flux:badge
-                                    color="{{ $resumenExpedientes['color'] }}"
-                                    size="sm"
-                                    variant="pill"
-                                    title="Documentos: {{ $resumenExpedientes['detalle'] }}"
-                                >
-                                    <x-slot name="icon">
-                                        <x-ui.icon name="copy" size="3" class="me-0.5" />
-                                    </x-slot>
-                                    {{ $resumenExpedientes['detalle'] }}
                                 </flux:badge>
                             </div>
                         </x-table.cell>
@@ -420,12 +398,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
