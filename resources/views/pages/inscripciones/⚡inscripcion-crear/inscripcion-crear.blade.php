@@ -133,10 +133,10 @@
                 $indice => match (true) {
                     $pasoActual === $indice => 'activo',
                     $indice < $pasoActual && match ($indice) {
-                        1 => $personaId !== null,
-                        2 => filled($generalForm['anio_graduacion']),
-                        3 => $inscripcionId !== null,
-                        4 => $this->tienePagoValidadoWizard,
+                        1 => $pagoValidado,
+                        2 => $personaId !== null,
+                        3 => filled($generalForm['anio_graduacion']),
+                        4 => $inscripcionId !== null,
                         default => false,
                     } => 'completado',
                     default => 'pendiente',
@@ -246,13 +246,13 @@
 
             <div class="space-y-5">
                 @if ($pasoActual === 1)
-                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.personal')
-                @elseif ($pasoActual === 2)
-                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.general')
-                @elseif ($pasoActual === 3)
-                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.postulacion')
-                @elseif ($pasoActual === 4)
                     @include('pages::inscripciones.⚡inscripcion-crear.pasos.pago')
+                @elseif ($pasoActual === 2)
+                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.personal')
+                @elseif ($pasoActual === 3)
+                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.general')
+                @elseif ($pasoActual === 4)
+                    @include('pages::inscripciones.⚡inscripcion-crear.pasos.postulacion')
                 @else
                 <div
                     class="rounded-xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-card dark:border-white/[0.06] dark:bg-zinc-900"

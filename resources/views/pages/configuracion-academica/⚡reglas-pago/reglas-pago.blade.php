@@ -147,6 +147,9 @@
                                 @if ($reglaPago->requiere_pago_completo_rpa)
                                     <div class="text-xs text-zinc-500 dark:text-zinc-400">Exige pago completo</div>
                                 @endif
+                                @if ($reglaPago->documento_requerido_rpa)
+                                    <div class="text-xs text-zinc-500 dark:text-zinc-400">Pide {{ $reglaPago->documento_requerido_rpa }}</div>
+                                @endif
                             </div>
                         </x-table.cell>
                         <x-table.cell class="py-1 whitespace-normal">
@@ -414,6 +417,20 @@
                                     required
                                     floating
                                 />
+
+                                <x-ui.select
+                                    label="Documento requerido"
+                                    wire:model="reglaPagoForm.documento_requerido"
+                                    :invalid="$errors->has('reglaPagoForm.documento_requerido')"
+                                    :error="$errors->first('reglaPagoForm.documento_requerido')"
+                                    hint="Para becas y parentesco: el asistente pedirá este número."
+                                    floating
+                                >
+                                    <option value="">Ninguno</option>
+                                    @foreach ($this::DOCUMENTOS_REQUERIDOS as $documento)
+                                        <option value="{{ $documento }}">{{ $documento }}</option>
+                                    @endforeach
+                                </x-ui.select>
 
                                 <x-ui.input
                                     label="Número máximo de cuotas"

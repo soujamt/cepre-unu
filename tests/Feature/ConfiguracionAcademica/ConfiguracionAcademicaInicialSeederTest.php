@@ -59,6 +59,14 @@ test('academic initial seeder creates a usable base configuration', function () 
         ->where('monto_total_rpa', 550)
         ->where('permite_cuotas_rpa', true)
         ->where('monto_minimo_primera_cuota_rpa', 275)
-        ->where('numero_maximo_cuotas_rpa', 3)
+        ->where('numero_maximo_cuotas_rpa', 2)
+        ->exists())->toBeTrue();
+
+    expect(DB::table('tbl_regla_pago')->where('id_proceso', $procesoId)->count())->toBe(5);
+
+    expect(DB::table('tbl_regla_pago')
+        ->where('id_proceso', $procesoId)
+        ->where('monto_total_rpa', 0)
+        ->where('documento_requerido_rpa', 'N° DE CONSTANCIA')
         ->exists())->toBeTrue();
 });

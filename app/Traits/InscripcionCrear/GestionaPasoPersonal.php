@@ -230,6 +230,13 @@ trait GestionaPasoPersonal
         $this->normalizarEstadoPersonaForm();
         $data = $this->validate();
 
+        if ($this->pagoValidado && $this->inscripcionId === null
+            && trim($data['personaForm']['numero_documento']) !== trim($this->pagoForm['numero_documento'])) {
+            $this->addError('personaForm.numero_documento', 'El documento debe ser el mismo del pago validado ('.$this->pagoForm['numero_documento'].').');
+
+            return;
+        }
+
         try {
             DB::transaction(function () use ($data): void {
                 $payload = [
@@ -288,7 +295,7 @@ trait GestionaPasoPersonal
             return;
         }
 
-        $this->pasoActual = 2;
+        $this->pasoActual = 3;
         $this->dispatch('toast', message: 'Informacion personal guardada correctamente.', type: 'success');
     }
 

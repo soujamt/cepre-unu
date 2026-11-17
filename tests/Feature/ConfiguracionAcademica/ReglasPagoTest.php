@@ -332,3 +332,28 @@ test('regla de pago validates duplicate context and cuotas availability', functi
             'reglaPagoForm.id_proceso',
         ]);
 });
+
+test('a regla de pago can be free and require a document number', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReglaPago($usuario, ['regla_pago_indice', 'regla_pago_crear']);
+
+    $contexto = crearContextoReglaPago(12, false);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.reglas-pago')
+        ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
+        ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
+        ->set('reglaPagoForm.monto_total', '0')
+        ->set('reglaPagoForm.documento_requerido', 'N° DE CONSTANCIA')
+        ->set('reglaPagoForm.vigente_desde', '2026-01-10')
+        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
+        ->call('guardar')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('tbl_regla_pago', [
+        'id_proceso' => $contexto['proceso']->id_pro,
+        'monto_total_rpa' => 0,
+        'documento_requerido_rpa' => 'N° DE CONSTANCIA',
+    ]);
+});

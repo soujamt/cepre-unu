@@ -13,9 +13,17 @@ enum EstadoImportacionBancoDetalle: string implements PresentableEnum
     case Asociado = 'ASOCIADO';
     case Observado = 'OBSERVADO';
 
+    /**
+     * Como en el sistema anterior: LIBRE si aún no se usa en una inscripción
+     * y REGISTRADO cuando ya se asoció.
+     */
     public function getNombre(): string
     {
-        return $this->value;
+        return match ($this) {
+            self::Pendiente => 'LIBRE',
+            self::Asociado => 'REGISTRADO',
+            self::Observado => 'OBSERVADO',
+        };
     }
 
     public function getColor(): string

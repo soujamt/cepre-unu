@@ -296,7 +296,7 @@ trait GestionaPasoPostulacion
             'postulacionForm.id_carrera',
             'postulacionForm.id_turno',
         ]);
-        $this->pasoActual = 3;
+        $this->pasoActual = 4;
 
         $this->dispatch(
             'toast',
@@ -391,6 +391,8 @@ trait GestionaPasoPostulacion
                     app(AsignadorAulaInscripcion::class)->asignarDisponible($inscripcion, $procesoActivo->id_pro, $turnoPostulacion);
                 }
 
+                $this->registrarPagosDeInscripcion($inscripcion);
+
                 $this->inscripcionId = $inscripcion->id_ins;
             });
         } catch (Throwable $throwable) {
@@ -400,9 +402,17 @@ trait GestionaPasoPostulacion
             return;
         }
 
-        $this->pasoActual = 4;
-        $this->prepararPasoPago();
-        $this->dispatch('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+        $inscripcion = Inscripcion::query()->find($this->inscripcionId);
+        $activa = $inscripcion?->estado_ins === EstadoInscripcion::Activo;
+
+        $this->dispatch(
+            'toast',
+            message: $activa
+                ? "Inscripcion {$inscripcion->codigo_ins} registrada. Quedo activa y los pagos quedaron registrados."
+                : 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.',
+            type: 'success',
+        );
+        $this->redirect(route('inscripciones.index'), navigate: true);
     }
 
     /**

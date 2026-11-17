@@ -2,7 +2,6 @@
 
 use App\Models\Inscripcion;
 use App\Models\Proceso;
-use App\Support\ValidadorVigenciaInscripcion;
 use App\Traits\AuthorizesPermisos;
 use App\Traits\InscripcionCrear\GestionaCatalogosInscripcion;
 use App\Traits\InscripcionCrear\GestionaPasoGeneral;
@@ -147,24 +146,36 @@ class extends Component
      *   id_regla_pago:string,
      *   numero_documento:string,
      *   numero_operacion:string,
-     *   fecha_pago:string,
-     *   id_detalle_banco:string
+     *   numero_documento_beneficio:string
      * }
      */
     public array $pagoForm = [
         'id_regla_pago' => '',
         'numero_documento' => '',
         'numero_operacion' => '',
-        'fecha_pago' => '',
-        'id_detalle_banco' => '',
+        'numero_documento_beneficio' => '',
     ];
 
     /**
+     * Pagos LIBRES del DNI que se encontraron en el paso 1.
+     *
      * @var array<int, int>
      */
     public array $resultadoPagoDetalleIds = [];
 
+    /**
+     * Pagos marcados para esta inscripción: [id_ibd => bool].
+     *
+     * @var array<int|string, bool>
+     */
+    public array $pagosSeleccionados = [];
+
     public bool $busquedaPagoRealizada = false;
+
+    /**
+     * El paso 1 quedó conforme: los pagos marcados alcanzan el mínimo.
+     */
+    public bool $pagoValidado = false;
 
     public ?int $personaId = null;
 
@@ -191,7 +202,6 @@ class extends Component
     {
         $this->autorizarPermiso('inscripcion', 'crear');
         $this->hidratarCatalogos();
-        $this->pagoForm['fecha_pago'] = now()->subDay()->toDateString();
 
         if ($inscripcion !== null) {
             $idInscripcion = decode($inscripcion);
@@ -232,7 +242,7 @@ class extends Component
         $this->cargarInformacionGeneralExistente($inscripcion);
         $this->cargarPostulacionExistente($inscripcion);
         $this->cargarPagoExistente($inscripcion);
-        $this->pasoActual = 4;
+        $this->pasoActual = $this->pagoValidado ? 4 : 1;
     }
 
     #[Computed]
@@ -258,10 +268,10 @@ class extends Component
     public function pasos(): array
     {
         return [
-            1 => ['titulo' => 'Información personal', 'descripcion' => 'Datos base del postulante', 'icono' => 'user'],
-            2 => ['titulo' => 'Información general', 'descripcion' => 'Datos complementarios', 'icono' => 'note-book'],
-            3 => ['titulo' => 'Postulación', 'descripcion' => 'Sede, carrera y turno', 'icono' => 'school'],
-            4 => ['titulo' => 'Pago', 'descripcion' => 'Validación del pago bancario', 'icono' => 'credit-card'],
+            1 => ['titulo' => 'Validación de pago', 'descripcion' => 'DNI, operación y modalidad de pago', 'icono' => 'credit-card'],
+            2 => ['titulo' => 'Información personal', 'descripcion' => 'Datos base del postulante', 'icono' => 'user'],
+            3 => ['titulo' => 'Información general', 'descripcion' => 'Colegio y año de egreso', 'icono' => 'note-book'],
+            4 => ['titulo' => 'Postulación', 'descripcion' => 'Sede, carrera y turno', 'icono' => 'school'],
         ];
     }
 
@@ -297,7 +307,9 @@ class extends Component
         $this->resetPostulacionForm();
         $this->pagoForm = $this->formularioPagoBase();
         $this->resultadoPagoDetalleIds = [];
+        $this->pagosSeleccionados = [];
         $this->busquedaPagoRealizada = false;
+        $this->pagoValidado = false;
         $this->resetErrorBag();
         $this->pasoActual = 1;
 
@@ -320,13 +332,19 @@ class extends Component
             return;
         }
 
-        if ($paso > 1 && $this->personaId === null) {
+        if ($paso > 1 && ! $this->pagoValidado) {
+            $this->dispatch('toast', message: 'Primero debe validar el pago del postulante.', type: 'warning');
+
+            return;
+        }
+
+        if ($paso > 2 && $this->personaId === null) {
             $this->dispatch('toast', message: 'Primero debe guardar la informacion personal.', type: 'warning');
 
             return;
         }
 
-        if ($paso > 2) {
+        if ($paso > 3) {
             $this->normalizarEstadoGeneralForm();
 
             try {
@@ -342,26 +360,6 @@ class extends Component
             }
         }
 
-        if ($paso > 3) {
-            $contextoProceso = $this->refrescarContextoProcesoPostulacion();
-
-            if (! $contextoProceso['disponible']) {
-                $this->dispatch('toast', message: $contextoProceso['mensaje'], type: 'warning');
-
-                return;
-            }
-        }
-
-        if ($paso > 3 && $this->inscripcionId === null) {
-            $this->dispatch('toast', message: 'Primero debe guardar la postulacion antes de continuar.', type: 'warning');
-
-            return;
-        }
-
-        if ($paso > 3) {
-            $this->prepararPasoPago();
-        }
-
         $this->pasoActual = $paso;
     }
 
@@ -373,22 +371,6 @@ class extends Component
     private function mayusculas(string $valor): string
     {
         return mb_strtoupper(trim($valor), 'UTF-8');
-    }
-
-    private function validarInscripcionBorradorVigente(Inscripcion $inscripcion): void
-    {
-        $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
-
-        if ($inscripcion->id_proceso !== $procesoActivo->id_pro) {
-            throw new RuntimeException('La inscripción no pertenece al proceso activo.');
-        }
-
-        app(ValidadorVigenciaInscripcion::class)->postulacionVigente(
-            (int) $inscripcion->id_sede,
-            (int) $inscripcion->id_carrera,
-            (int) $inscripcion->id_modalidad_admision,
-            $procesoActivo,
-        );
     }
 
     private function nullableUpper(?string $valor): ?string

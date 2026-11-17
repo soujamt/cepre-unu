@@ -49,43 +49,32 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
             );
         }
 
-        $conceptoUnaCuota = ConceptoPago::query()->where('codigo_cpg', 'INS_UNA')->firstOrFail();
-        $conceptoMasCuotas = ConceptoPago::query()->where('codigo_cpg', 'INS_CUO')->firstOrFail();
-
-        ReglaPago::query()->updateOrCreate(
-            [
-                'id_concepto_pago' => $conceptoUnaCuota->id_cpg,
-                'id_proceso' => $proceso->id_pro,
-                'id_modalidad_admision' => null,
-            ],
-            [
-                'monto_total_rpa' => 500.00,
-                'permite_cuotas_rpa' => false,
-                'monto_minimo_primera_cuota_rpa' => 500.00,
-                'numero_maximo_cuotas_rpa' => 1,
-                'requiere_pago_completo_rpa' => true,
-                'vigente_desde_rpa' => '2026-04-01',
-                'vigente_hasta_rpa' => '2026-04-30',
-                'estado_rpa' => EstadoCatalogo::Habilitado->value,
-            ],
-        );
-
-        ReglaPago::query()->updateOrCreate(
-            [
-                'id_concepto_pago' => $conceptoMasCuotas->id_cpg,
-                'id_proceso' => $proceso->id_pro,
-                'id_modalidad_admision' => null,
-            ],
-            [
-                'monto_total_rpa' => 550.00,
-                'permite_cuotas_rpa' => true,
-                'monto_minimo_primera_cuota_rpa' => 275.00,
-                'numero_maximo_cuotas_rpa' => 3,
-                'requiere_pago_completo_rpa' => false,
-                'vigente_desde_rpa' => '2026-04-01',
-                'vigente_hasta_rpa' => '2026-04-30',
-                'estado_rpa' => EstadoCatalogo::Habilitado->value,
-            ],
-        );
+        // Modalidades de pago del sistema anterior: [concepto, total, permite cuotas, mínimo, cuotas, documento].
+        foreach ([
+            ['INS_UNA', 500.00, false, 500.00, 1, null],
+            ['INS_CUO', 550.00, true, 275.00, 2, null],
+            ['PAR_UNU', 0.00, false, 0.00, 1, 'N° DE CONSTANCIA'],
+            ['BECA_ACA', 50.00, false, 50.00, 1, 'N° DE RESOLUCIÓN'],
+            ['MEDIA_BECA', 250.00, false, 250.00, 1, 'N° DE RESOLUCIÓN'],
+        ] as [$codigo, $total, $permiteCuotas, $minimo, $cuotas, $documento]) {
+            ReglaPago::query()->updateOrCreate(
+                [
+                    'id_concepto_pago' => ConceptoPago::query()->where('codigo_cpg', $codigo)->value('id_cpg'),
+                    'id_proceso' => $proceso->id_pro,
+                    'id_modalidad_admision' => null,
+                ],
+                [
+                    'monto_total_rpa' => $total,
+                    'permite_cuotas_rpa' => $permiteCuotas,
+                    'monto_minimo_primera_cuota_rpa' => $minimo,
+                    'numero_maximo_cuotas_rpa' => $cuotas,
+                    'requiere_pago_completo_rpa' => false,
+                    'documento_requerido_rpa' => $documento,
+                    'vigente_desde_rpa' => '2026-04-01',
+                    'vigente_hasta_rpa' => '2026-04-30',
+                    'estado_rpa' => EstadoCatalogo::Habilitado->value,
+                ],
+            );
+        }
     }
 }

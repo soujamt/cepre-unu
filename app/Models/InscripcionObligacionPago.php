@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_inscripcion', 'id_regla_pago', 'monto_total_iop', 'numero_cuotas_iop', 'estado_iop'])]
+#[Fillable(['id_inscripcion', 'id_regla_pago', 'monto_total_iop', 'numero_cuotas_iop', 'numero_documento_beneficio_iop', 'estado_iop'])]
 #[Table('tbl_inscripcion_obligacion_pago', key: 'id_iop')]
 class InscripcionObligacionPago extends LegacyModel
 {

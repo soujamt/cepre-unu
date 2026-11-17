@@ -1,7 +1,7 @@
 <x-inscripcion.encabezado-paso
-    :paso="1"
+    :paso="2"
     :total="count($this->pasos)"
-    :icono="$this->pasos[1]['icono']"
+    :icono="$this->pasos[2]['icono']"
     titulo="Información personal"
     descripcion="Registre la identidad, nacimiento, domicilio y datos base del postulante."
 />

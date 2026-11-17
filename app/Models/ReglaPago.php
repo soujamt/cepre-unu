@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_concepto_pago', 'id_proceso', 'id_modalidad_admision', 'monto_total_rpa', 'permite_cuotas_rpa', 'monto_minimo_primera_cuota_rpa', 'numero_maximo_cuotas_rpa', 'requiere_pago_completo_rpa', 'vigente_desde_rpa', 'vigente_hasta_rpa', 'estado_rpa'])]
+#[Fillable(['id_concepto_pago', 'id_proceso', 'id_modalidad_admision', 'monto_total_rpa', 'permite_cuotas_rpa', 'monto_minimo_primera_cuota_rpa', 'numero_maximo_cuotas_rpa', 'requiere_pago_completo_rpa', 'documento_requerido_rpa', 'vigente_desde_rpa', 'vigente_hasta_rpa', 'estado_rpa'])]
 #[Table('tbl_regla_pago', key: 'id_rpa')]
 class ReglaPago extends LegacyModel
 {

@@ -135,7 +135,7 @@ trait GestionaPasoGeneral
         );
 
         $this->generalForm = array_merge($this->generalForm, $data['generalForm']);
-        $this->pasoActual = 3;
+        $this->pasoActual = 4;
 
         $contextoProceso = $this->refrescarContextoProcesoPostulacion();
 

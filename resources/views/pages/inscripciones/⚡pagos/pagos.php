@@ -23,7 +23,7 @@ use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
-#[Title('Pagos')]
+#[Title('Importaciones TXT')]
 class extends Component
 {
     use AuthorizesPermisos;

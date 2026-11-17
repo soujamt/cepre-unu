@@ -11,10 +11,14 @@
         <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
         <x-breadcrumbs.item href="{{ route('pagos.index') }}" wire:navigate>Pagos</x-breadcrumbs.item>
+        <x-breadcrumbs.separator />
+        <x-breadcrumbs.item href="{{ route('pagos.importaciones') }}" wire:navigate>Importaciones TXT</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
 <div class="space-y-5">
+    <x-pagos.pestanas activa="importaciones" />
+
     @permiso ('pago_crear')
         <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <div class="space-y-5">

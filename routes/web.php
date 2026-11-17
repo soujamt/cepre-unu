@@ -104,9 +104,13 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.detalle');
 
-    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos')
+    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos-lista')
         ->middleware('permiso:pago_indice')
         ->name('pagos.index');
+
+    Route::livewire('/inscripciones/pagos/importaciones', 'pages::inscripciones.pagos')
+        ->middleware('permiso:pago_indice')
+        ->name('pagos.importaciones');
 
     Route::livewire('/inscripciones/pagos/validar', 'pages::inscripciones.pagos-validar')
         ->middleware('permiso:pago_crear')

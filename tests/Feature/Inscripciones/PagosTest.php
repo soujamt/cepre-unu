@@ -93,7 +93,7 @@ test('authorized users can access pagos page', function () {
     otorgarPermisosPago($usuario, ['pago_indice']);
 
     $this->actingAs($usuario)
-        ->get(route('pagos.index'))
+        ->get(route('pagos.importaciones'))
         ->assertOk()
         ->assertSee('Pagos');
 });
@@ -102,7 +102,7 @@ test('authenticated users without permiso cannot access pagos page', function ()
     $usuario = Usuario::factory()->create();
 
     $this->actingAs($usuario)
-        ->get(route('pagos.index'))
+        ->get(route('pagos.importaciones'))
         ->assertForbidden();
 });
 

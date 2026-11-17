@@ -1,9 +1,9 @@
 @php ($contextoProceso = $this->contextoProcesoPostulacion)
 @php ($procesoActivo = $this->procesoPostulacionActivo)
 <x-inscripcion.encabezado-paso
-    :paso="3"
+    :paso="4"
     :total="count($this->pasos)"
-    :icono="$this->pasos[3]['icono']"
+    :icono="$this->pasos[4]['icono']"
     titulo="Postulación"
     descripcion="Elija sede, carrera y turno del proceso vigente; la modalidad sale del año de egreso."
 />
@@ -188,7 +188,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
         </section>
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar este paso se creará o actualizará el borrador de inscripción y se asignará un aula.</p>
+            <p class="text-sm text-zinc-500 dark:text-zinc-400">Al guardar se registra la inscripción, se asigna un aula y los pagos validados quedan REGISTRADOS.</p>
 
             <div class="flex gap-3">
                 <flux:button
@@ -205,7 +205,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                         <x-ui.icon name="chevron-right-circle" size="5" class="text-white" />
                     </x-slot>
                     <span wire:loading.remove wire:target="guardarPasoPostulacion"
-                        >Guardar y continuar</span
+                        >Registrar inscripción</span
                     >
                     <span wire:loading wire:target="guardarPasoPostulacion">Guardando...</span>
                 </flux:button>

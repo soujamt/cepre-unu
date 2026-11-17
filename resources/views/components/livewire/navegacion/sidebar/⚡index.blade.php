@@ -92,7 +92,7 @@ new class extends Component
                 'active' => $this->routeIs('inscripciones.*', 'pagos.*'),
                 'items' => [
                     ['label' => 'INSCRIPCIONES', 'href' => route('inscripciones.index'), 'active' => $this->routeIs('inscripciones.*'), 'permiso' => 'inscripcion_indice'],
-                    ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.index'), 'permiso' => 'pago_indice'],
+                    ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.index', 'pagos.importaciones'), 'permiso' => 'pago_indice'],
                     ['label' => 'VALIDAR PAGOS', 'href' => route('pagos.validar'), 'active' => $this->routeIs('pagos.validar'), 'permiso' => 'pago_crear'],
                 ],
             ],

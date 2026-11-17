@@ -27,6 +27,11 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    /**
+     * Documentos que puede pedir una modalidad de pago (beca o parentesco).
+     */
+    public const DOCUMENTOS_REQUERIDOS = ['N° DE CONSTANCIA', 'N° DE RESOLUCIÓN'];
+
     #[Url(as: 'q')]
     public string $buscar = '';
 
@@ -49,6 +54,7 @@ class extends Component
      *     monto_minimo_primera_cuota:string,
      *     numero_maximo_cuotas:string,
      *     requiere_pago_completo:bool,
+     *     documento_requerido:string,
      *     vigente_desde:string,
      *     vigente_hasta:string
      * }
@@ -62,6 +68,7 @@ class extends Component
         'monto_minimo_primera_cuota' => '',
         'numero_maximo_cuotas' => '1',
         'requiere_pago_completo' => false,
+        'documento_requerido' => '',
         'vigente_desde' => '',
         'vigente_hasta' => '',
     ];
@@ -154,7 +161,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.id_modalidad_admision' => ['nullable', 'integer', 'exists:tbl_modalidad_admision,id_mad'],
-            'reglaPagoForm.monto_total' => ['required', 'numeric', 'gt:0'],
+            'reglaPagoForm.monto_total' => ['required', 'numeric', 'gte:0'],
             'reglaPagoForm.permite_cuotas' => [
                 'boolean',
                 function (string $attribute, mixed $value, Closure $fail): void {
@@ -210,6 +217,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.requiere_pago_completo' => ['boolean'],
+            'reglaPagoForm.documento_requerido' => ['nullable', Rule::in(self::DOCUMENTOS_REQUERIDOS)],
             'reglaPagoForm.vigente_desde' => [
                 'required',
                 'date',
@@ -272,7 +280,7 @@ class extends Component
             'reglaPagoForm.id_proceso.required' => 'El proceso es obligatorio.',
             'reglaPagoForm.id_modalidad_admision.exists' => 'La modalidad seleccionada no es valida.',
             'reglaPagoForm.monto_total.required' => 'El monto total es obligatorio.',
-            'reglaPagoForm.monto_total.gt' => 'El monto total debe ser mayor a cero.',
+            'reglaPagoForm.monto_total.gte' => 'El monto total no puede ser negativo.',
             'reglaPagoForm.numero_maximo_cuotas.required' => 'El numero maximo de cuotas es obligatorio.',
             'reglaPagoForm.vigente_desde.required' => 'La vigencia desde es obligatoria.',
             'reglaPagoForm.vigente_hasta.after_or_equal' => 'La vigencia final no puede ser menor que la inicial.',
@@ -382,6 +390,7 @@ class extends Component
                 : '',
             'numero_maximo_cuotas' => (string) $reglaPago->numero_maximo_cuotas_rpa,
             'requiere_pago_completo' => $reglaPago->requiere_pago_completo_rpa,
+            'documento_requerido' => (string) ($reglaPago->documento_requerido_rpa ?? ''),
             'vigente_desde' => $reglaPago->vigente_desde_rpa?->format('Y-m-d') ?? '',
             'vigente_hasta' => $reglaPago->vigente_hasta_rpa?->format('Y-m-d') ?? '',
         ];
@@ -415,6 +424,9 @@ class extends Component
                         ? (int) $data['reglaPagoForm']['numero_maximo_cuotas']
                         : 1,
                     'requiere_pago_completo_rpa' => (bool) $data['reglaPagoForm']['requiere_pago_completo'],
+                    'documento_requerido_rpa' => filled($data['reglaPagoForm']['documento_requerido'] ?? null)
+                        ? $data['reglaPagoForm']['documento_requerido']
+                        : null,
                     'vigente_desde_rpa' => $data['reglaPagoForm']['vigente_desde'],
                     'vigente_hasta_rpa' => filled($data['reglaPagoForm']['vigente_hasta'])
                         ? $data['reglaPagoForm']['vigente_hasta']
@@ -538,6 +550,7 @@ class extends Component
             'monto_minimo_primera_cuota' => '',
             'numero_maximo_cuotas' => '1',
             'requiere_pago_completo' => false,
+            'documento_requerido' => '',
             'vigente_desde' => '',
             'vigente_hasta' => '',
         ];

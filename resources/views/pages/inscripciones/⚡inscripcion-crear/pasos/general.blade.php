@@ -1,7 +1,7 @@
 <x-inscripcion.encabezado-paso
-    :paso="2"
+    :paso="3"
     :total="count($this->pasos)"
-    :icono="$this->pasos[2]['icono']"
+    :icono="$this->pasos[3]['icono']"
     titulo="Información general"
     descripcion="Registre la procedencia educativa y el historial de postulación del postulante."
 />
