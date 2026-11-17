@@ -2,6 +2,7 @@
 @php ($reglaPagoSeleccionada = $this->reglaPagoSeleccionada)
 @php ($montoMinimo = $this->montoMinimoRegla($reglaPagoSeleccionada))
 @php ($montoMarcado = $this->montoPagosSeleccionados)
+@php ($modoPublico = $this->esModoPublico())
 <x-inscripcion.encabezado-paso
     :paso="1"
     :total="count($this->pasos)"
@@ -26,14 +27,14 @@
             <flux:callout variant="warning" icon="exclamation-circle" heading="{{ $contextoProceso['mensaje'] }}">
                 <p class="text-sm">No se puede inscribir hasta que exista un proceso habilitado con carreras y modalidades activas.</p>
             </flux:callout>
-            <flux:button variant="filled" wire:click="volverListado" class="font-normal">Volver al listado</flux:button>
+            <flux:button variant="filled" wire:click="volverListado" class="font-normal">{{ $modoPublico ? 'Salir' : 'Volver al listado' }}</flux:button>
         </div>
     @elseif ($this->reglasPagoDisponibles->isEmpty())
         <div class="space-y-5">
             <flux:callout variant="warning" icon="exclamation-circle" heading="No hay modalidades de pago vigentes en el proceso activo.">
-                <p class="text-sm">Registre las reglas de pago del proceso en Configuración académica › Reglas de pago.</p>
+                <p class="text-sm">{{ $modoPublico ? 'La inscripción en línea aún no está disponible. Consulte en el CEPRE-UNU.' : 'Registre las reglas de pago del proceso en Configuración académica › Reglas de pago.' }}</p>
             </flux:callout>
-            <flux:button variant="filled" wire:click="volverListado" class="font-normal">Volver al listado</flux:button>
+            <flux:button variant="filled" wire:click="volverListado" class="font-normal">{{ $modoPublico ? 'Salir' : 'Volver al listado' }}</flux:button>
         </div>
     @elseif ($inscripcionId !== null && $this->tienePagoValidadoWizard)
         <div class="space-y-5">
@@ -49,7 +50,7 @@
             <form wire:submit="buscarPagosPasoPago" class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40">
                 <div class="space-y-1">
                     <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Buscar pago</p>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Proceso {{ $contextoProceso['proceso']?->nombre_pro }}. El pago debe estar cargado desde el TXT del banco o registrado en Pagos.</p>
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">Proceso {{ $contextoProceso['proceso']?->nombre_pro }}. {{ $modoPublico ? 'Use el DNI del postulante y el número de operación del voucher. Si pagó hoy, el pago puede tardar en aparecer.' : 'El pago debe estar cargado desde el TXT del banco o registrado en Pagos.' }}</p>
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-12">
@@ -165,7 +166,7 @@
                             heading="Marcado S/ {{ number_format($montoMarcado, 2) }} de un mínimo de S/ {{ number_format($montoMinimo, 2) }}"
                         >
                             <p class="text-sm">
-                                {{ $alcanza ? 'El pago alcanza para inscribir.' : 'Falta S/ '.number_format($montoMinimo - $montoMarcado, 2).'. Marque otro pago del postulante o registre el pago en Pagos.' }}
+                                {{ $alcanza ? 'El pago alcanza para inscribir.' : 'Falta S/ '.number_format($montoMinimo - $montoMarcado, 2).($modoPublico ? '. Marque otro pago suyo o acérquese al CEPRE-UNU.' : '. Marque otro pago del postulante o registre el pago en Pagos.') }}
                             </p>
                         </flux:callout>
                     @endif

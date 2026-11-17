@@ -3,6 +3,7 @@
 namespace App\Traits\InscripcionCrear;
 
 use App\Enums\EstadoCatalogo;
+use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\ImportacionBancoDetalle;
@@ -242,7 +243,9 @@ trait GestionaPasoPago
      */
     private function idsPagosSeleccionados(): array
     {
-        return array_values(array_map('intval', array_keys(array_filter($this->pagosSeleccionados))));
+        $marcados = array_map('intval', array_keys(array_filter($this->pagosSeleccionados)));
+
+        return array_values(array_intersect($marcados, array_map('intval', $this->resultadoPagoDetalleIds)));
     }
 
     /**
@@ -279,12 +282,21 @@ trait GestionaPasoPago
 
         $detalles = ImportacionBancoDetalle::query()
             ->whereIn('id_ibd', $ids)
+            ->where('estado_ibd', EstadoImportacionBancoDetalle::Pendiente->value)
             ->whereDoesntHave('inscripcionPago')
             ->orderBy('fecha_pago_ibd')
             ->get();
 
         if ($detalles->count() !== count($ids)) {
             throw new RuntimeException('Uno de los pagos marcados ya fue usado en otra inscripción. Vuelva a validar el pago.');
+        }
+
+        if ($reglaPago->documento_requerido_rpa !== null && blank($this->pagoForm['numero_documento_beneficio'])) {
+            throw new RuntimeException("Falta el {$reglaPago->documento_requerido_rpa}. Vuelva a validar el pago.");
+        }
+
+        if (round((float) $detalles->sum('monto_ibd'), 2) < $this->montoMinimoRegla($reglaPago)) {
+            throw new RuntimeException('Los pagos marcados no alcanzan el mínimo de la modalidad de pago. Vuelva a validar el pago.');
         }
 
         app(InscripcionPagoManager::class)->asociarDetalles($obligacion, $detalles);

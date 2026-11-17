@@ -127,6 +127,11 @@
                         <span class="h-px flex-1 bg-zinc-200 dark:bg-white/10"></span>
                     </div>
                 </form>
+
+                <p class="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                    ¿Eres postulante?
+                    <a href="{{ route('publico.portal') }}" class="font-medium text-zinc-900 underline underline-offset-4 dark:text-white">Inscríbete o consulta tu aula</a>
+                </p>
             </div>
         </div>
 

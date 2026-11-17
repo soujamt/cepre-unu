@@ -17,14 +17,29 @@ Route::get('/verificar/{token}', VerificacionCarnetController::class)
     ->where('token', '[A-Za-z0-9]{40}')
     ->name('carnet.verificar');
 
-Route::redirect('/', '/inicio');
-Route::middleware('auth')->group(function (): void {
+// Portal del postulante: sin iniciar sesión.
+Route::middleware('throttle:60,1')->group(function (): void {
     Route::get('/api/ubigeos/search', UbigeoSearchController::class)
         ->name('api.ubigeo.search');
 
     Route::get('/api/colegios/search', ColegioSearchController::class)
         ->name('api.colegio.search');
+});
 
+Route::livewire('/postulante', 'pages::publico.portal')->name('publico.portal');
+Route::livewire('/postulante/inscripcion', 'pages::publico.inscripcion')->name('publico.inscripcion');
+Route::livewire('/postulante/consulta', 'pages::publico.consulta')->name('publico.consulta');
+
+Route::middleware(['signed', 'throttle:30,1'])->group(function (): void {
+    Route::get('/postulante/{inscripcion}/ficha', [DocumentoInscripcionController::class, 'fichaPublica'])
+        ->name('publico.ficha');
+
+    Route::get('/postulante/{inscripcion}/carnet', [DocumentoInscripcionController::class, 'carnetPublico'])
+        ->name('publico.carnet');
+});
+
+Route::redirect('/', '/inicio');
+Route::middleware('auth')->group(function (): void {
     // Dashboard
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 

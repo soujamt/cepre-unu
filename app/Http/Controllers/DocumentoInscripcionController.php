@@ -6,6 +6,7 @@ use App\Enums\EstadoInscripcion;
 use App\Models\Inscripcion;
 use App\Support\DocumentosInscripcion;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\URL;
 
 class DocumentoInscripcionController extends Controller
 {
@@ -31,6 +32,40 @@ class DocumentoInscripcionController extends Controller
         abort_unless($registro->estado_ins === EstadoInscripcion::Activo, 409, 'El carnet solo se genera para inscripciones ACTIVAS.');
 
         return $this->documentos->carnets(collect([$registro]))->stream("carnet-{$registro->codigo_ins}.pdf");
+    }
+
+    /**
+     * Ficha descargada por el postulante desde un enlace firmado del portal.
+     */
+    public function fichaPublica(string $inscripcion): Response
+    {
+        return $this->ficha($inscripcion);
+    }
+
+    /**
+     * Carnet descargado por el postulante desde un enlace firmado del portal.
+     */
+    public function carnetPublico(string $inscripcion): Response
+    {
+        return $this->carnet($inscripcion);
+    }
+
+    /**
+     * Enlaces firmados para que el postulante descargue sus documentos.
+     *
+     * @return array{ficha:string,carnet:?string}
+     */
+    public static function enlacesPublicos(Inscripcion $inscripcion): array
+    {
+        $vence = now()->addMinutes(60);
+        $id = encode($inscripcion->id_ins);
+
+        return [
+            'ficha' => URL::temporarySignedRoute('publico.ficha', $vence, ['inscripcion' => $id]),
+            'carnet' => $inscripcion->estado_ins === EstadoInscripcion::Activo
+                ? URL::temporarySignedRoute('publico.carnet', $vence, ['inscripcion' => $id])
+                : null,
+        ];
     }
 
     /**

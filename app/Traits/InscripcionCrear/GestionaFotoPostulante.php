@@ -20,6 +20,19 @@ trait GestionaFotoPostulante
         return FotoPostulante::deDocumento($this->documentoParaFoto());
     }
 
+    /**
+     * Dirección de la imagen para mostrarla en la revisión.
+     */
+    public function fuenteFotoPostulante(FotoPostulante $foto): string
+    {
+        return route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp;
+    }
+
+    public function puedeCambiarFoto(): bool
+    {
+        return true;
+    }
+
     public function updatedFotoPostulante(): void
     {
         $this->subirFotoPostulante(app(ProcesadorFotoPostulante::class));
@@ -27,7 +40,7 @@ trait GestionaFotoPostulante
 
     public function subirFotoPostulante(ProcesadorFotoPostulante $procesador): void
     {
-        $this->autorizarPermiso('inscripcion', 'crear');
+        $this->autorizarSubidaFoto();
 
         $this->validate(
             ['fotoPostulante' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:2048']],
@@ -53,6 +66,11 @@ trait GestionaFotoPostulante
         unset($this->fotoPostulanteActual);
         $this->dispatch('toast', message: 'Foto del postulante actualizada.', type: 'success');
     }
+
+    /**
+     * Quién puede subir o cambiar la foto desde el asistente.
+     */
+    abstract protected function autorizarSubidaFoto(): void;
 
     private function documentoParaFoto(): ?string
     {
