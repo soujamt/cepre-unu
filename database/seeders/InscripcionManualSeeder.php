@@ -143,6 +143,8 @@ class InscripcionManualSeeder extends Seeder
                     'celular_per' => '900'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'telefono_per' => '061'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'correo_electronico_per' => sprintf('manual.demo.%02d@cepre.test', $indice),
+                    'nombre_apoderado_per' => sprintf('APODERADO DEMO %02d', $indice),
+                    'celular_apoderado_per' => '901'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'discapacidad_per' => false,
                     'id_tipo_discapacidad' => null,
                     'tipo_lengua_materna_per' => 'NATIVA',

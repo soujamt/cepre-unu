@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['id_tipo_documento', 'numero_documento_per', 'solo_un_apellido_per', 'apellido_paterno_per', 'apellido_materno_per', 'apellido_casada_per', 'nombres_per', 'fecha_nacimiento_per', 'sexo_per', 'id_estado_civil', 'id_pais_nacimiento', 'id_nacionalidad', 'id_ubigeo_nacimiento', 'id_ubigeo_domicilio', 'direccion_per', 'celular_per', 'telefono_per', 'correo_electronico_per', 'discapacidad_per', 'id_tipo_discapacidad', 'tipo_lengua_materna_per', 'id_identidad_etnica', 'id_lengua_nativa', 'id_lengua_extranjera', 'observacion_per', 'estado_per'])]
+#[Fillable(['id_tipo_documento', 'numero_documento_per', 'solo_un_apellido_per', 'apellido_paterno_per', 'apellido_materno_per', 'apellido_casada_per', 'nombres_per', 'fecha_nacimiento_per', 'sexo_per', 'id_estado_civil', 'id_pais_nacimiento', 'id_nacionalidad', 'id_ubigeo_nacimiento', 'id_ubigeo_domicilio', 'direccion_per', 'celular_per', 'telefono_per', 'correo_electronico_per', 'nombre_apoderado_per', 'celular_apoderado_per', 'discapacidad_per', 'id_tipo_discapacidad', 'tipo_lengua_materna_per', 'id_identidad_etnica', 'id_lengua_nativa', 'id_lengua_extranjera', 'observacion_per', 'estado_per'])]
 #[Table('tbl_persona', key: 'id_per')]
 class Persona extends LegacyModel
 {

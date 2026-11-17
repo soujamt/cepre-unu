@@ -363,6 +363,8 @@ test('users can register personal information for a new inscripcion draft', func
         ->set('personaForm.celular', '987654321')
         ->set('personaForm.telefono', '061123456')
         ->set('personaForm.correo_electronico', 'lucy@test.com')
+        ->set('personaForm.nombre_apoderado', 'maria rojas')
+        ->set('personaForm.celular_apoderado', '944477117')
         ->set('personaForm.discapacidad', true)
         ->set('personaForm.id_tipo_discapacidad', (string) $catalogos['tipoDiscapacidad']->id_tdi)
         ->set('personaForm.tipo_lengua_materna', 'NATIVA')
@@ -383,6 +385,31 @@ test('users can register personal information for a new inscripcion draft', func
     expect($persona?->nombres_per)->toBe('LUCY BETTY');
     expect($persona?->correo_electronico_per)->toBe('lucy@test.com');
     expect($persona?->discapacidad_per)->toBeTrue();
+    expect($persona?->nombre_apoderado_per)->toBe('MARIA ROJAS');
+    expect($persona?->celular_apoderado_per)->toBe('944477117');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('personal information requires valid cellphones and the guardian contact', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pasoActual', 2)
+        ->set('personaForm.celular', '812345678')
+        ->set('personaForm.celular_apoderado', '9123')
+        ->call('guardarPasoPersonal')
+        ->assertHasErrors([
+            'personaForm.celular' => 'regex',
+            'personaForm.celular_apoderado' => 'regex',
+            'personaForm.nombre_apoderado' => 'required',
+            'personaForm.correo_electronico' => 'required',
+        ]);
 
     Carbon\Carbon::setTestNow();
 });
@@ -877,6 +904,7 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
         ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success')
@@ -929,6 +957,7 @@ test('postulacion is blocked when the proceso has no modalidad for the graduatio
         ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
         ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
         ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertSet('pasoActual', 4)
         ->assertDispatched('toast', message: 'El proceso activo no tiene habilitada una modalidad para el año de egreso ingresado. Revise la oferta del proceso.', type: 'warning');
@@ -969,6 +998,7 @@ test('postulacion assigns the first aula with capacity by configured order', fun
         ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
         ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
@@ -1025,6 +1055,7 @@ test('postulacion skips full aulas and assigns the next available aula', functio
         ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
         ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
@@ -1087,6 +1118,7 @@ test('postulacion only assigns aulas from the selected turno', function () {
         ->set('postulacionForm.id_sede', (string) $procesoOfertaTarde->id_sede)
         ->set('postulacionForm.id_carrera', (string) $procesoOfertaTarde->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOfertaTarde->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
@@ -1294,6 +1326,7 @@ function completarInscripcionDePrueba(Testable $componente, Persona $persona): T
         ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
         ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
         ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion');
 }
 
@@ -1469,6 +1502,36 @@ test('confirmarPasoPago is blocked when proceso is no longer active', function (
         ->call('confirmarPasoPago')
         ->assertDispatched('toast', type: 'warning')
         ->assertSet('pasoActual', 1);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('the inscripcion is not registered until the data is confirmed', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $persona = crearPersonaParaPostulacion('46027802');
+    $postulacion = postulacionDePrueba(conAula: true);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 4)
+        ->set('generalForm.anio_graduacion', '2025')
+        ->set('generalForm.id_pais_colegio', (string) Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->value('id_pai'))
+        ->set('generalForm.id_tipo_colegio', (string) TipoColegio::query()->value('id_tco'))
+        ->set('generalForm.id_colegio', Colegio::query()->value('id_col'))
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->call('guardarPasoPostulacion')
+        ->assertHasErrors('confirmacionDatos')
+        ->assertSee('Confirmo que los datos son correctos');
+
+    expect(Inscripcion::query()->count())->toBe(0);
 
     Carbon\Carbon::setTestNow();
 });

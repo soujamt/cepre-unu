@@ -408,9 +408,11 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 <x-ui.input
                     label="Correo electrónico"
                     type="email"
+                    autocomplete="email"
                     wire:model="personaForm.correo_electronico"
                     :invalid="$errors->has('personaForm.correo_electronico')"
                     :error="$errors->first('personaForm.correo_electronico')"
+                    required
                     floating
                 />
             </div>
@@ -420,10 +422,16 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             <div class="lg:col-span-6">
                 <x-ui.input
                     label="Celular"
-                    type="text"
+                    type="tel"
+                    name="celular"
+                    inputmode="numeric"
+                    maxlength="9"
+                    autocomplete="tel-national"
                     wire:model="personaForm.celular"
                     :invalid="$errors->has('personaForm.celular')"
                     :error="$errors->first('personaForm.celular')"
+                    hint="9 dígitos, empieza con 9."
+                    required
                     floating
                 />
             </div>
@@ -439,6 +447,38 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 />
             </div>
         </div>
+
+        <fieldset class="grid gap-4 lg:grid-cols-12">
+            <legend class="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-200">Apoderado o contacto de emergencia</legend>
+            <div class="lg:col-span-8">
+                <x-ui.input
+                    label="Nombre completo del apoderado"
+                    type="text"
+                    name="nombre_apoderado"
+                    autocomplete="off"
+                    wire:model="personaForm.nombre_apoderado"
+                    :invalid="$errors->has('personaForm.nombre_apoderado')"
+                    :error="$errors->first('personaForm.nombre_apoderado')"
+                    required
+                    floating
+                />
+            </div>
+            <div class="lg:col-span-4">
+                <x-ui.input
+                    label="Celular del apoderado"
+                    type="tel"
+                    name="celular_apoderado"
+                    inputmode="numeric"
+                    maxlength="9"
+                    autocomplete="off"
+                    wire:model="personaForm.celular_apoderado"
+                    :invalid="$errors->has('personaForm.celular_apoderado')"
+                    :error="$errors->first('personaForm.celular_apoderado')"
+                    required
+                    floating
+                />
+            </div>
+        </fieldset>
     </section>
 
     <section

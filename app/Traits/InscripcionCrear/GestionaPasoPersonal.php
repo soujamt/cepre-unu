@@ -157,9 +157,11 @@ trait GestionaPasoPersonal
             'personaForm.id_ubigeo_nacimiento' => ['required', 'string', 'exists:tbl_ubigeo,id_ubi'],
             'personaForm.id_ubigeo_domicilio' => ['required', 'string', 'exists:tbl_ubigeo,id_ubi'],
             'personaForm.direccion' => ['required', 'string', 'max:255'],
-            'personaForm.celular' => ['nullable', 'string', 'max:20'],
+            'personaForm.celular' => ['required', 'regex:/^9\d{8}$/'],
             'personaForm.telefono' => ['nullable', 'string', 'max:20'],
-            'personaForm.correo_electronico' => ['nullable', 'email', 'max:255'],
+            'personaForm.correo_electronico' => ['required', 'email', 'max:255'],
+            'personaForm.nombre_apoderado' => ['required', 'string', 'max:255'],
+            'personaForm.celular_apoderado' => ['required', 'regex:/^9\d{8}$/'],
             'personaForm.discapacidad' => ['boolean'],
             'personaForm.id_tipo_discapacidad' => [
                 'nullable',
@@ -218,6 +220,12 @@ trait GestionaPasoPersonal
             'personaForm.tipo_lengua_materna.required' => 'El tipo de lengua materna es obligatorio.',
             'personaForm.id_identidad_etnica.required' => 'La identidad etnica es obligatoria.',
             'personaForm.correo_electronico.email' => 'El correo electronico debe ser valido.',
+            'personaForm.correo_electronico.required' => 'El correo electronico es obligatorio.',
+            'personaForm.celular.required' => 'El celular es obligatorio.',
+            'personaForm.celular.regex' => 'El celular debe tener 9 dígitos y empezar con 9.',
+            'personaForm.nombre_apoderado.required' => 'El nombre del apoderado o contacto de emergencia es obligatorio.',
+            'personaForm.celular_apoderado.required' => 'El celular del apoderado es obligatorio.',
+            'personaForm.celular_apoderado.regex' => 'El celular del apoderado debe tener 9 dígitos y empezar con 9.',
         ];
     }
 
@@ -262,6 +270,8 @@ trait GestionaPasoPersonal
                     'celular_per' => $this->nullableTrim($data['personaForm']['celular']),
                     'telefono_per' => $this->nullableTrim($data['personaForm']['telefono']),
                     'correo_electronico_per' => $this->nullableLower($data['personaForm']['correo_electronico']),
+                    'nombre_apoderado_per' => $this->nullableUpper($data['personaForm']['nombre_apoderado']),
+                    'celular_apoderado_per' => $this->nullableTrim($data['personaForm']['celular_apoderado']),
                     'discapacidad_per' => $data['personaForm']['discapacidad'],
                     'id_tipo_discapacidad' => $data['personaForm']['discapacidad']
                         ? (int) $data['personaForm']['id_tipo_discapacidad']
@@ -428,6 +438,8 @@ trait GestionaPasoPersonal
         $this->personaForm['celular'] = (string) ($persona->celular_per ?? '');
         $this->personaForm['telefono'] = (string) ($persona->telefono_per ?? '');
         $this->personaForm['correo_electronico'] = (string) ($persona->correo_electronico_per ?? '');
+        $this->personaForm['nombre_apoderado'] = (string) ($persona->nombre_apoderado_per ?? '');
+        $this->personaForm['celular_apoderado'] = (string) ($persona->celular_apoderado_per ?? '');
         $this->personaForm['discapacidad'] = (bool) $persona->discapacidad_per;
         $this->personaForm['id_tipo_discapacidad'] = (string) ($persona->id_tipo_discapacidad ?? '');
         $this->personaForm['tipo_lengua_materna'] = $persona->tipo_lengua_materna_per?->value ?? (string) ($persona->tipo_lengua_materna_per ?? '');
@@ -529,6 +541,8 @@ trait GestionaPasoPersonal
             'celular' => '',
             'telefono' => '',
             'correo_electronico' => '',
+            'nombre_apoderado' => '',
+            'celular_apoderado' => '',
             'discapacidad' => false,
             'id_tipo_discapacidad' => '',
             'tipo_lengua_materna' => '',

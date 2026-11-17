@@ -1,5 +1,7 @@
-@php ($contextoProceso = $this->contextoProcesoPostulacion)
-@php ($procesoActivo = $this->procesoPostulacionActivo)
+@php
+    $contextoProceso = $this->contextoProcesoPostulacion;
+    $procesoActivo = $this->procesoPostulacionActivo;
+@endphp
 <x-inscripcion.encabezado-paso
     :paso="4"
     :total="count($this->pasos)"
@@ -90,7 +92,9 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
             </flux:callout>
         </section>
 
-        @php ($modalidadPostulacion = $this->modalidadPostulacion)
+        @php
+            $modalidadPostulacion = $this->modalidadPostulacion;
+        @endphp
 
         <section
             class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40"
@@ -184,6 +188,56 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                         <p id="error-turno" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
                 </fieldset>
+            </div>
+        </section>
+
+        @php
+            $sedeElegida = $this->sedesPostulacionDisponibles->firstWhere('id', $postulacionForm['id_sede']);
+            $carreraElegida = $this->carrerasPostulacionDisponibles->firstWhere('id', $postulacionForm['id_carrera']);
+            $turnoElegido = $this->turnosPostulacionDisponibles->firstWhere('id', $postulacionForm['id_turno']);
+            $reglaElegida = $this->reglaPagoSeleccionada;
+            $resumen = [
+                'Postulante' => trim(($personaForm['apellido_paterno'] ?? '').' '.($personaForm['apellido_materno'] ?? '').', '.($personaForm['nombres'] ?? ''), ' ,') ?: '—',
+                'Documento' => $personaForm['numero_documento'] ?: '—',
+                'Apoderado' => trim(($personaForm['nombre_apoderado'] ?? '').' '.($personaForm['celular_apoderado'] ?? '')) ?: '—',
+                'Modalidad de pago' => $reglaElegida?->conceptoPago?->nombre_cpg ?? '—',
+                'Pagos marcados' => 'S/ '.number_format($this->montoPagosSeleccionados, 2),
+                'Modalidad' => $modalidadPostulacion?->nombre_mad ?? '—',
+                'Sede' => $sedeElegida['nombre'] ?? '—',
+                'Carrera' => $carreraElegida['nombre'] ?? '—',
+                'Turno' => $turnoElegido['nombre'] ?? '—',
+            ];
+        @endphp
+
+        <section class="space-y-4 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40" aria-labelledby="titulo-resumen-inscripcion">
+            <div class="space-y-1">
+                <p id="titulo-resumen-inscripcion" class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Revisión</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Revise los datos con el postulante antes de registrar. Para corregir algo, vuelva al paso correspondiente.</p>
+            </div>
+
+            <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($resumen as $etiqueta => $valor)
+                    <div class="min-w-0">
+                        <dt class="text-xs text-zinc-500 dark:text-zinc-400">{{ $etiqueta }}</dt>
+                        <dd class="text-sm font-medium break-words text-zinc-800 dark:text-zinc-100">{{ $valor }}</dd>
+                    </div>
+                @endforeach
+            </dl>
+
+            <div>
+                <label class="flex cursor-pointer items-start gap-2 text-sm text-zinc-700 dark:text-zinc-200">
+                    <input
+                        type="checkbox"
+                        name="confirmacion_datos"
+                        wire:model="confirmacionDatos"
+                        @if ($errors->has('confirmacionDatos')) aria-invalid="true" aria-describedby="error-confirmacion" @endif
+                        class="mt-0.5 size-4 rounded border-zinc-300 text-zinc-900 focus:ring-zinc-500 dark:border-zinc-700 dark:bg-zinc-800"
+                    />
+                    <span>Confirmo que los datos son correctos y fueron revisados con el postulante.</span>
+                </label>
+                @error ('confirmacionDatos')
+                    <p id="error-confirmacion" class="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">{{ $message }}</p>
+                @enderror
             </div>
         </section>
 

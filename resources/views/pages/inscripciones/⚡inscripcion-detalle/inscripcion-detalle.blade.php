@@ -141,6 +141,15 @@
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->celular_per ?? 'No registrado' }}</p>
                     </div>
                     <div class="space-y-1">
+                        <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Apoderado</p>
+                        <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+                            {{ $inscripcionActual->persona?->nombre_apoderado_per ?? 'No registrado' }}
+                            @if ($inscripcionActual->persona?->celular_apoderado_per)
+                                <span class="block text-xs font-normal text-zinc-500 tabular-nums dark:text-zinc-400">{{ $inscripcionActual->persona->celular_apoderado_per }}</span>
+                            @endif
+                        </p>
+                    </div>
+                    <div class="space-y-1">
                         <p class="text-xs font-medium text-zinc-500 dark:text-zinc-400">Teléfono</p>
                         <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $inscripcionActual->persona?->telefono_per ?? 'No registrado' }}</p>
                     </div>

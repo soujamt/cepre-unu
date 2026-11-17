@@ -103,6 +103,28 @@ test('authorized users can register a turno', function () {
     ]);
 });
 
+test('a turno keeps its schedule and shows it with the name', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosTurno($usuario, ['turno_indice', 'turno_crear']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::mantenedores.turnos')
+        ->set('turnoForm.codigo', 'VIR')
+        ->set('turnoForm.nombre', 'noche virtual')
+        ->set('turnoForm.hora_inicio', '17:00')
+        ->set('turnoForm.hora_fin', '16:00')
+        ->call('guardar')
+        ->assertHasErrors('turnoForm.hora_fin')
+        ->set('turnoForm.hora_fin', '22:00')
+        ->call('guardar')
+        ->assertHasNoErrors();
+
+    $turno = Turno::query()->where('codigo_tur', 'VIR')->sole();
+
+    expect($turno->descripcionConHorario())->toBe('NOCHE VIRTUAL (05:00 pm - 10:00 pm)');
+});
+
 test('turno code and name must be unique', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_crear']);

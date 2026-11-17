@@ -161,7 +161,7 @@ trait GestionaPasoPostulacion
             ->get()
             ->map(fn (ProcesoAula $procesoAula): array => [
                 'id' => (string) $procesoAula->id_turno,
-                'nombre' => $procesoAula->turno?->nombre_tur ?? 'SIN TURNO',
+                'nombre' => $procesoAula->turno?->descripcionConHorario() ?? 'SIN TURNO',
             ])
             ->unique('id')
             ->sortBy('nombre')
@@ -224,6 +224,12 @@ trait GestionaPasoPostulacion
         }
 
         if (! $this->validarModalidadPostulacion()) {
+            return;
+        }
+
+        if (! $this->confirmacionDatos) {
+            $this->addError('confirmacionDatos', 'Revise el resumen y confirme que los datos son correctos.');
+
             return;
         }
 

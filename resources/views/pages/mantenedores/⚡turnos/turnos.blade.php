@@ -94,7 +94,7 @@
                         <x-table.cell>
                             <span class="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-300">{{ $turno->codigo_tur }}</span>
                         </x-table.cell>
-                        <x-table.cell class="font-medium whitespace-normal text-zinc-800 dark:text-zinc-100">{{ $turno->nombre_tur }}</x-table.cell>
+                        <x-table.cell class="font-medium whitespace-normal text-zinc-800 dark:text-zinc-100">{{ $turno->descripcionConHorario() }}</x-table.cell>
                         <x-table.cell>{{ $turno->proceso_aulas_count }}</x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $turno->estado_tur->getColor() }}">
@@ -217,6 +217,27 @@
                             required
                             floating
                         />
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <x-ui.input
+                                label="Hora de inicio"
+                                type="time"
+                                name="hora_inicio"
+                                wire:model="turnoForm.hora_inicio"
+                                :invalid="$errors->has('turnoForm.hora_inicio')"
+                                :error="$errors->first('turnoForm.hora_inicio')"
+                                floating
+                            />
+                            <x-ui.input
+                                label="Hora de fin"
+                                type="time"
+                                name="hora_fin"
+                                wire:model="turnoForm.hora_fin"
+                                :invalid="$errors->has('turnoForm.hora_fin')"
+                                :error="$errors->first('turnoForm.hora_fin')"
+                                floating
+                            />
+                        </div>
                     </div>
 
                     <flux:separator variant="subtle" />

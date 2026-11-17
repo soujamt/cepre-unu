@@ -67,6 +67,8 @@ class extends Component
      *   celular:string,
      *   telefono:string,
      *   correo_electronico:string,
+     *   nombre_apoderado:string,
+     *   celular_apoderado:string,
      *   discapacidad:bool,
      *   id_tipo_discapacidad:string,
      *   tipo_lengua_materna:string,
@@ -96,6 +98,8 @@ class extends Component
         'celular' => '',
         'telefono' => '',
         'correo_electronico' => '',
+        'nombre_apoderado' => '',
+        'celular_apoderado' => '',
         'discapacidad' => false,
         'id_tipo_discapacidad' => '',
         'tipo_lengua_materna' => '',
@@ -176,6 +180,11 @@ class extends Component
      * El paso 1 quedó conforme: los pagos marcados alcanzan el mínimo.
      */
     public bool $pagoValidado = false;
+
+    /**
+     * El operador revisó el resumen y confirma que los datos son correctos.
+     */
+    public bool $confirmacionDatos = false;
 
     public ?int $personaId = null;
 
@@ -310,6 +319,7 @@ class extends Component
         $this->pagosSeleccionados = [];
         $this->busquedaPagoRealizada = false;
         $this->pagoValidado = false;
+        $this->confirmacionDatos = false;
         $this->resetErrorBag();
         $this->pasoActual = 1;
 
