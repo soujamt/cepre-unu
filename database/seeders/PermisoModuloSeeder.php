@@ -142,6 +142,11 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'editar'],
             ],
             [
+                'clave_permiso' => 'codigo_admision',
+                'nombre_permiso' => 'CÓDIGOS DE ADMISIÓN',
+                'acciones' => ['indice', 'editar'],
+            ],
+            [
                 'clave_permiso' => 'pago',
                 'nombre_permiso' => 'PAGOS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar', 'exportar_excel'],

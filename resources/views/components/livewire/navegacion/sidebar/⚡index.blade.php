@@ -78,6 +78,7 @@ new class extends Component
                     'ofertas.*',
                     'reglas-pago.*',
                     'carnet.*',
+                    'codigos-admision.*',
                     'aulas.*'
                 ),
                 'items' => [
@@ -85,6 +86,7 @@ new class extends Component
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
                     ['label' => 'OFERTA DEL PROCESO', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
+                    ['label' => 'CÓDIGOS DE ADMISIÓN', 'href' => route('codigos-admision.index'), 'active' => $this->routeIs('codigos-admision.*'), 'permiso' => 'codigo_admision_indice'],
                     ['label' => 'CARNET', 'href' => route('carnet.configuracion'), 'active' => $this->routeIs('carnet.*'), 'permiso' => 'parametro_indice'],
                 ],
             ],

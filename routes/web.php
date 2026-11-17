@@ -106,6 +106,10 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:aula_proceso_crear')
         ->name('aulas.asignar');
 
+    Route::livewire('/configuracion-academica/codigos-admision', 'pages::configuracion-academica.codigos-admision')
+        ->middleware('permiso:codigo_admision_indice')
+        ->name('codigos-admision.index');
+
     Route::livewire('/configuracion-academica/carnet', 'pages::configuracion-academica.carnet')
         ->middleware('permiso:parametro_indice')
         ->name('carnet.configuracion');
