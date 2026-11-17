@@ -10,6 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "bacon/bacon-qr-code": "^3.1",
+        "barryvdh/laravel-dompdf": "^3.1",
         "hashids/hashids": "^5.0.2",
         "laravel/framework": "^13.40",
         "laravel/tinker": "^3.0.2",

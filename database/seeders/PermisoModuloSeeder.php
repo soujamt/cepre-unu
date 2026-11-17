@@ -132,6 +132,16 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
+                'clave_permiso' => 'foto',
+                'nombre_permiso' => 'FOTOS',
+                'acciones' => ['indice', 'crear', 'eliminar', 'exportar_excel'],
+            ],
+            [
+                'clave_permiso' => 'parametro',
+                'nombre_permiso' => 'CONFIGURACIÓN DEL CARNET',
+                'acciones' => ['indice', 'editar'],
+            ],
+            [
                 'clave_permiso' => 'pago',
                 'nombre_permiso' => 'PAGOS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar', 'exportar_excel'],

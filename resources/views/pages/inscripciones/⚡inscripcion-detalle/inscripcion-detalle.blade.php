@@ -66,12 +66,30 @@
                 </dl>
             </div>
 
-            <flux:button wire:click="volverListado" class="shrink-0">
-                <x-slot name="icon">
-                    <x-ui.icon name="arrow-left" size="5" />
-                </x-slot>
-                Volver al listado
-            </flux:button>
+            <div class="flex shrink-0 flex-wrap gap-2">
+                @if ($inscripcionActual->estado_ins !== App\Enums\EstadoInscripcion::Anulado)
+                    <flux:button href="{{ route('inscripciones.ficha', encode($inscripcionActual->id_ins)) }}" target="_blank">
+                        <x-slot name="icon">
+                            <x-ui.icon name="file" size="5" />
+                        </x-slot>
+                        Ver ficha
+                    </flux:button>
+                @endif
+                @if ($inscripcionActual->estado_ins === App\Enums\EstadoInscripcion::Activo)
+                    <flux:button href="{{ route('inscripciones.carnet', encode($inscripcionActual->id_ins)) }}" target="_blank">
+                        <x-slot name="icon">
+                            <x-ui.icon name="id-card" size="5" />
+                        </x-slot>
+                        Ver carnet
+                    </flux:button>
+                @endif
+                <flux:button wire:click="volverListado">
+                    <x-slot name="icon">
+                        <x-ui.icon name="arrow-left" size="5" />
+                    </x-slot>
+                    Volver al listado
+                </flux:button>
+            </div>
         </div>
     </div>
 

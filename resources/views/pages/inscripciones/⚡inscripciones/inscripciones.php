@@ -11,6 +11,7 @@ use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Turno;
 use App\Support\AsignadorAulaInscripcion;
+use App\Support\DocumentosInscripcion;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new
 #[Layout('layouts.app')]
@@ -239,6 +241,32 @@ class extends Component
             new InscripcionesFormatoCepreExport($inscripciones),
             $this->nombreArchivoExportacion(),
         );
+    }
+
+    /**
+     * Carnets de las inscripciones ACTIVAS del listado filtrado, uno por hoja.
+     */
+    public function generarCarnets(DocumentosInscripcion $documentos): ?StreamedResponse
+    {
+        $this->autorizarPermiso('inscripcion', 'indice');
+
+        $inscripciones = $this->baseInscripcionesQuery()
+            ->where('estado_ins', EstadoInscripcion::Activo->value)
+            ->with(DocumentosInscripcion::RELACIONES)
+            ->orderBy('id_ins')
+            ->get();
+
+        if ($inscripciones->isEmpty()) {
+            $this->dispatch('toast', message: 'No hay inscripciones ACTIVAS con los filtros actuales.', type: 'warning');
+
+            return null;
+        }
+
+        $contenido = $documentos->carnets($inscripciones->toBase())->output();
+
+        return response()->streamDownload(function () use ($contenido): void {
+            echo $contenido;
+        }, 'carnets-'.now()->format('Ymd-His').'.pdf', ['Content-Type' => 'application/pdf']);
     }
 
     public function limpiarFiltroEstado(): void

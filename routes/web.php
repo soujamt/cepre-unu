@@ -2,12 +2,20 @@
 
 use App\Http\Controllers\Api\ColegioSearchController;
 use App\Http\Controllers\Api\UbigeoSearchController;
+use App\Http\Controllers\DocumentoInscripcionController;
+use App\Http\Controllers\FotoPostulanteController;
+use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/auth', '/auth/login');
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/auth/login', 'pages::auth.login')->name('login');
 });
+
+Route::get('/verificar/{token}', VerificacionCarnetController::class)
+    ->middleware('throttle:30,1')
+    ->where('token', '[A-Za-z0-9]{40}')
+    ->name('carnet.verificar');
 
 Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
@@ -83,6 +91,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:aula_proceso_crear')
         ->name('aulas.asignar');
 
+    Route::livewire('/configuracion-academica/carnet', 'pages::configuracion-academica.carnet')
+        ->middleware('permiso:parametro_indice')
+        ->name('carnet.configuracion');
+
+    Route::get('/configuracion-academica/carnet/muestra', [DocumentoInscripcionController::class, 'muestra'])
+        ->middleware('permiso:parametro_indice')
+        ->name('carnet.muestra');
+
     Route::livewire('/configuracion-academica/reglas-pago', 'pages::configuracion-academica.reglas-pago')
         ->middleware('permiso:regla_pago_indice')
         ->name('reglas-pago.index');
@@ -103,6 +119,22 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/inscripciones/{inscripcion}/detalle', 'pages::inscripciones.inscripcion-detalle')
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.detalle');
+
+    Route::get('/inscripciones/{inscripcion}/ficha', [DocumentoInscripcionController::class, 'ficha'])
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.ficha');
+
+    Route::get('/inscripciones/{inscripcion}/carnet', [DocumentoInscripcionController::class, 'carnet'])
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.carnet');
+
+    Route::livewire('/inscripciones/fotos', 'pages::inscripciones.fotos')
+        ->middleware('permiso:foto_indice')
+        ->name('fotos.index');
+
+    Route::get('/fotos/{documento}', FotoPostulanteController::class)
+        ->where('documento', '\d{8,12}')
+        ->name('fotos.ver');
 
     Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos-lista')
         ->middleware('permiso:pago_indice')

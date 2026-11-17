@@ -84,6 +84,18 @@
                 </flux:button>
             @endpermiso
 
+            <flux:button
+                variant="filled"
+                wire:click="generarCarnets"
+                wire:loading.attr="disabled"
+                wire:target="generarCarnets"
+            >
+                <x-slot name="icon">
+                    <x-ui.icon name="id-card" size="5" />
+                </x-slot>
+                Generar carnets
+            </flux:button>
+
             @permiso ('inscripcion_crear')
                 <flux:button variant="primary" href="{{ route('inscripciones.crear') }}" wire:navigate>
                     <x-slot name="icon">
@@ -320,6 +332,24 @@
                                                 <x-ui.icon name="eye" size="4" class="me-2" />
                                             </x-slot>
                                             Ver detalle
+                                        </flux:menu.item>
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins !== App\Enums\EstadoInscripcion::Anulado)
+                                        <flux:menu.item href="{{ route('inscripciones.ficha', encode($inscripcion->id_ins)) }}" target="_blank">
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="file" size="4" class="me-2" />
+                                            </x-slot>
+                                            Ver ficha
+                                        </flux:menu.item>
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
+                                        <flux:menu.item href="{{ route('inscripciones.carnet', encode($inscripcion->id_ins)) }}" target="_blank">
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="id-card" size="4" class="me-2" />
+                                            </x-slot>
+                                            Ver carnet
                                         </flux:menu.item>
                                     @endif
 

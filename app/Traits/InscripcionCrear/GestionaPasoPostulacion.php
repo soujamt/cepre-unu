@@ -418,7 +418,12 @@ trait GestionaPasoPostulacion
                 : 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.',
             type: 'success',
         );
-        $this->redirect(route('inscripciones.index'), navigate: true);
+        $this->redirect(
+            auth()->user()?->hasPermisoAccion('inscripcion_indice') && $inscripcion !== null
+                ? route('inscripciones.detalle', encode($inscripcion->id_ins))
+                : route('inscripciones.index'),
+            navigate: true,
+        );
     }
 
     /**

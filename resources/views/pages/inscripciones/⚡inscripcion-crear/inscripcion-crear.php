@@ -4,6 +4,7 @@ use App\Models\Inscripcion;
 use App\Models\Proceso;
 use App\Traits\AuthorizesPermisos;
 use App\Traits\InscripcionCrear\GestionaCatalogosInscripcion;
+use App\Traits\InscripcionCrear\GestionaFotoPostulante;
 use App\Traits\InscripcionCrear\GestionaPasoGeneral;
 use App\Traits\InscripcionCrear\GestionaPasoPago;
 use App\Traits\InscripcionCrear\GestionaPasoPersonal;
@@ -13,6 +14,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 new
 #[Layout('layouts.app')]
@@ -21,10 +23,12 @@ class extends Component
 {
     use AuthorizesPermisos;
     use GestionaCatalogosInscripcion;
+    use GestionaFotoPostulante;
     use GestionaPasoGeneral;
     use GestionaPasoPago;
     use GestionaPasoPersonal;
     use GestionaPasoPostulacion;
+    use WithFileUploads;
 
     public int $pasoActual = 1;
 

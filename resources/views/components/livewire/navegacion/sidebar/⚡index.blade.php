@@ -77,6 +77,7 @@ new class extends Component
                     'procesos.*',
                     'ofertas.*',
                     'reglas-pago.*',
+                    'carnet.*',
                     'aulas.*'
                 ),
                 'items' => [
@@ -84,14 +85,16 @@ new class extends Component
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
                     ['label' => 'OFERTA DEL PROCESO', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
+                    ['label' => 'CARNET', 'href' => route('carnet.configuracion'), 'active' => $this->routeIs('carnet.*'), 'permiso' => 'parametro_indice'],
                 ],
             ],
             [
                 'label' => 'INSCRIPCIONES',
                 'icon' => 'clipboard-detail',
-                'active' => $this->routeIs('inscripciones.*', 'pagos.*'),
+                'active' => $this->routeIs('inscripciones.*', 'pagos.*', 'fotos.*'),
                 'items' => [
                     ['label' => 'INSCRIPCIONES', 'href' => route('inscripciones.index'), 'active' => $this->routeIs('inscripciones.*'), 'permiso' => 'inscripcion_indice'],
+                    ['label' => 'FOTOS', 'href' => route('fotos.index'), 'active' => $this->routeIs('fotos.*'), 'permiso' => 'foto_indice'],
                     ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.index', 'pagos.importaciones'), 'permiso' => 'pago_indice'],
                     ['label' => 'VALIDAR PAGOS', 'href' => route('pagos.validar'), 'active' => $this->routeIs('pagos.validar'), 'permiso' => 'pago_crear'],
                 ],

@@ -215,14 +215,43 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 <p class="text-sm text-zinc-500 dark:text-zinc-400">Revise los datos con el postulante antes de registrar. Para corregir algo, vuelva al paso correspondiente.</p>
             </div>
 
-            <dl class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
-                @foreach ($resumen as $etiqueta => $valor)
-                    <div class="min-w-0">
-                        <dt class="text-xs text-zinc-500 dark:text-zinc-400">{{ $etiqueta }}</dt>
-                        <dd class="text-sm font-medium break-words text-zinc-800 dark:text-zinc-100">{{ $valor }}</dd>
-                    </div>
-                @endforeach
-            </dl>
+            <div class="flex flex-col gap-5 sm:flex-row">
+                <div class="flex shrink-0 flex-col items-center gap-2">
+                    @if ($fotoActual = $this->fotoPostulanteActual)
+                        <img
+                            src="{{ route('fotos.ver', $fotoActual->numero_documento_fot) }}?v={{ $fotoActual->actualizado_en?->timestamp }}"
+                            alt="Foto del postulante"
+                            width="96"
+                            height="128"
+                            class="h-32 w-24 rounded-md object-cover ring-1 ring-black/10 dark:ring-white/10"
+                        />
+                    @else
+                        <div class="flex h-32 w-24 flex-col items-center justify-center gap-1 rounded-md border border-dashed border-zinc-300 text-center text-xs text-zinc-500 dark:border-white/15 dark:text-zinc-400">
+                            <x-ui.icon name="user" size="6" class="text-zinc-400" />
+                            Sin foto
+                        </div>
+                    @endif
+
+                    <label class="relative inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus-within:ring-2 focus-within:ring-zinc-400 dark:text-zinc-200 dark:hover:bg-white/5">
+                        <x-ui.icon name="upload" size="4" />
+                        <span wire:loading.remove wire:target="fotoPostulante">{{ $fotoActual ? 'Cambiar foto' : 'Subir foto' }}</span>
+                        <span wire:loading wire:target="fotoPostulante">Subiendo…</span>
+                        <input type="file" accept="image/jpeg,image/png" wire:model="fotoPostulante" class="sr-only" />
+                    </label>
+                    @error ('fotoPostulante')
+                        <p class="max-w-36 text-center text-xs text-red-600 dark:text-red-400" role="alert">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <dl class="grid flex-1 content-start gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($resumen as $etiqueta => $valor)
+                        <div class="min-w-0">
+                            <dt class="text-xs text-zinc-500 dark:text-zinc-400">{{ $etiqueta }}</dt>
+                            <dd class="text-sm font-medium break-words text-zinc-800 dark:text-zinc-100">{{ $valor }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </div>
 
             <div>
                 <label class="flex cursor-pointer items-start gap-2 text-sm text-zinc-700 dark:text-zinc-200">
