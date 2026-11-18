@@ -35,7 +35,8 @@
     Puerto HTTP. Por defecto 8000.
 
 .PARAMETER Compilar
-    Fuerza "npm run build" aunque los assets ya existan (usar tras actualizar el codigo).
+    Reinstala las dependencias JS (npm ci) y fuerza "npm run build" aunque los
+    assets ya existan. actualizar-sistema.ps1 ya lo hace al actualizar.
 
 .EXAMPLE
     .\iniciar-red-local.ps1 -Ip 192.168.1.50
@@ -103,6 +104,10 @@ if (-not (Test-Path '.env')) {
 if (-not (Test-Path 'vendor')) {
     throw 'No existe la carpeta vendor. Ejecute primero instalar-entorno.ps1.'
 }
+& php -r "exit(version_compare(PHP_VERSION, '8.4.0', '>=') ? 0 : 1);"
+if ($LASTEXITCODE -ne 0) {
+    throw 'Se requiere PHP 8.4 o superior. En Herd, elija PHP 8.4 y vuelva a abrir la consola.'
+}
 
 # 2. IP -----------------------------------------------------------------------
 Write-Paso "Verificando la IP $Ip"
@@ -143,9 +148,9 @@ if (Test-Path 'public\hot') {
     Write-Host 'Eliminado public\hot (servidor de desarrollo de Vite).'
 }
 if ($Compilar -or -not (Test-Path 'public\build\manifest.json')) {
-    if (-not (Test-Path 'node_modules')) {
-        Invoke-Comando 'npm' @('ci')
-    }
+    # npm ci instala las versiones exactas de package-lock.json, que pueden
+    # haber cambiado al actualizar el codigo.
+    Invoke-Comando 'npm' @('ci')
     Invoke-Comando 'npm' @('run', 'build')
 }
 else {

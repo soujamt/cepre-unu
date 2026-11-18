@@ -414,12 +414,13 @@ El repositorio incluye scripts para Windows que automatizan los pasos 6.9 a 6.14
 |---|---|
 | `instalar-entorno.bat` | Instala todo y crea la base de datos limpia. **Se ejecuta una sola vez.** |
 | `iniciar-red-local.bat` | Levanta el sistema en `http://IP:PUERTO`. **Se ejecuta cada vez que se quiera usar.** |
+| `actualizar-sistema.bat` | Actualiza a una nueva versión **sin borrar datos** (ver 6.16.7). |
 | `.env.red-local.example` | Plantilla del `.env` para el equipo servidor. |
-| `instalar-entorno.ps1` / `iniciar-red-local.ps1` | Lógica de los scripts; los `.bat` los llaman. Ver la ayuda con `Get-Help .\iniciar-red-local.ps1 -Full`. |
+| `instalar-entorno.ps1` / `iniciar-red-local.ps1` / `actualizar-sistema.ps1` | Lógica de los scripts; los `.bat` los llaman. Ver la ayuda con `Get-Help .\iniciar-red-local.ps1 -Full`. |
 
 ### 6.16.1. Requisitos previos
 
-1. Laravel Herd instalado (provee PHP, Composer y Node.js).
+1. Laravel Herd instalado (provee PHP, Composer y Node.js), con **PHP 8.4 o superior** seleccionado y las extensiones `gd`, `zip`, `mbstring`, `dom`, `fileinfo` y `pdo_mysql` activas. Los scripts lo verifican.
 2. MySQL en funcionamiento: Herd Pro, una instalación aparte o el contenedor Docker del proyecto (ver 6.16.9).
 3. Git instalado.
 
@@ -450,10 +451,10 @@ El script:
 La base queda con:
 
 - seguridad: permisos, rol `ADMINISTRADOR` y usuario `superadmin`;
-- mantenedores: carreras, sedes con sus carreras, modalidades, lugares de inscripción con sus modalidades, ofertas base, turnos, conceptos de pago y tipos de expediente;
+- mantenedores: carreras, sedes con sus carreras, modalidades, lugares de inscripción con sus modalidades, ofertas base, turnos y conceptos de pago;
 - catálogos generales: ubigeo, países, nacionalidades, colegios, tipos de documento, estados civiles, lenguas, identidades étnicas y discapacidades.
 
-La base queda **sin** procesos, ofertas por proceso, aulas por proceso, convenios, reglas de pago, requisitos, inscripciones ni importaciones del banco. Esa configuración se realiza desde el sistema, siguiendo el orden de `FLUJO_PROCESOS_CEPRE.md`.
+La base queda **sin** procesos, ofertas por proceso, aulas por proceso, reglas de pago, inscripciones ni importaciones del banco. Esa configuración se realiza desde el sistema, siguiendo el orden de `FLUJO_PROCESOS_CEPRE.md`.
 
 Las aulas tampoco se cargan, porque deben registrarse las aulas reales en `Mantenedores > Aulas`. Para pruebas, se pueden agregar 20 aulas genéricas ejecutando desde una consola:
 
@@ -487,7 +488,7 @@ También se debe verificar que la red esté marcada como **Privada** (`Configura
 El script:
 
 - verifica que la IP pertenezca al equipo y avisa si es asignada por DHCP o si la red es Pública;
-- escribe `APP_URL=http://IP:PUERTO` en el `.env` (necesario para que funcionen los enlaces a los expedientes cargados);
+- escribe `APP_URL=http://IP:PUERTO` en el `.env` (necesario para que funcionen el QR del carnet y los enlaces de la ficha y el carnet del portal del postulante);
 - compila los assets si faltan y elimina `public/hot`;
 - regenera las cachés de Laravel;
 - crea la regla de firewall `CEPRE UNU (TCP PUERTO)` para redes Privadas y de Dominio;
@@ -503,16 +504,24 @@ Desde cualquier equipo de la red se ingresa a `http://IP:PUERTO`, por ejemplo `h
 
 ### 6.16.7. Actualizar a una nueva versión
 
-Para actualizar **sin perder datos**, no usar `instalar-entorno`. En una consola, dentro de la carpeta del proyecto:
+Para actualizar **sin perder datos** no se usa `instalar-entorno`, que borra la base.
 
-```powershell
-git pull origin main
-composer install --no-dev --optimize-autoloader
-php artisan migrate --force
-.\iniciar-red-local.bat -Compilar
-```
+1. Cerrar la ventana de `iniciar-red-local` para detener el sistema.
+2. Bajar los cambios. En una consola, dentro de la carpeta del proyecto:
 
-La opción `-Compilar` vuelve a generar los assets del frontend con la nueva versión.
+   ```powershell
+   git pull origin main
+   ```
+
+3. Hacer doble clic en `actualizar-sistema.bat`. El script:
+   - verifica PHP 8.4 o superior y sus extensiones;
+   - respalda la base en `storage\app\respaldos` si `mysqldump` está en el PATH; si no, pide confirmar que ya se respaldó;
+   - instala las dependencias PHP;
+   - aplica solo las migraciones nuevas (`migrate --force`);
+   - reinstala las dependencias JS y compila los assets.
+4. Iniciar el sistema con `iniciar-red-local.bat`.
+
+Si `git pull` avisa de cambios locales en `iniciar-red-local.bat` (por la IP y el puerto), guardarlos con `git stash`, hacer `git pull origin main` y recuperarlos con `git stash pop`.
 
 ### 6.16.8. Limitaciones y problemas frecuentes
 
@@ -524,7 +533,7 @@ La opción `-Compilar` vuelve a generar los assets del frontend con la nueva ver
 | El script avisa que la IP no pertenece al equipo | La IP del `.bat` no coincide con la del adaptador | Corregir `IP` en el `.bat` o fijar la IP del equipo (6.16.4). |
 | La página carga sin estilos | Assets no compilados o existe `public/hot` | Ejecutar `.\iniciar-red-local.bat -Compilar`. |
 | Error 500 al ingresar | MySQL detenido o datos `DB_*` incorrectos | Iniciar MySQL y revisar el `.env`. Ver `storage/logs`. |
-| Los enlaces a expedientes no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
+| El QR del carnet o los enlaces de la ficha no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
 | Los scripts no se ejecutan | Política de ejecución de PowerShell | Usar siempre los `.bat`, que ya la omiten para estos scripts. |
 
 ### 6.16.9. MySQL con Docker (opcional)
