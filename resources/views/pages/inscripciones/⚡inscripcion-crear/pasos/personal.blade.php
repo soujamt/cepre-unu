@@ -103,7 +103,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
         </div>
 
         <div class="grid gap-4 lg:grid-cols-12 lg:items-start">
-            <div class="lg:col-span-4">
+            <div class="lg:col-span-5">
                 <x-ui.select
                     label="Tipo documento"
                     :invalid="$errors->has('personaForm.id_tipo_documento')"
@@ -121,7 +121,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                 </x-ui.select>
             </div>
 
-            <div class="lg:col-span-5">
+            <div class="lg:col-span-4">
                 <x-ui.input
                     label="Número documento"
                     type="text"

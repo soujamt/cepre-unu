@@ -58,6 +58,7 @@ $textareaValue = (! is_null($value) && ! $attributes->has('wire:model') && ! $at
     :error="$error"
     :required="$required"
     :floating="$floating"
+    multiline
     :invalid="$invalid"
     :disabled="$disabled"
     :icon-leading="$iconLeading"

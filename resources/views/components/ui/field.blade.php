@@ -6,6 +6,7 @@
     'error' => null,
     'required' => false,
     'floating' => false,
+    'multiline' => false,
     'invalid' => null,
     'disabled' => false,
     'iconLeading' => null,
@@ -21,7 +22,9 @@
 
     $labelOffsetClasses = $iconLeading ? 'start-11' : 'start-3.5';
 
-    $floatingLabelBaseClasses = 'top-1/2 -translate-y-1/2 text-[13px] peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]';
+    $floatingLabelBaseClasses = $multiline
+        ? 'top-3.5 text-[13px] peer-focus:top-1.5 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:text-[10px]'
+        : 'top-1/2 -translate-y-1/2 text-[13px] peer-focus:top-1.5 peer-focus:translate-y-0 peer-focus:text-[10px] peer-[:not(:placeholder-shown)]:top-1.5 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-[10px]';
 
     $floatingLabelColorClasses = $invalid
         ? 'text-red-500 peer-focus:text-red-500'

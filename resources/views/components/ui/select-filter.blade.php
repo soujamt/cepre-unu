@@ -82,7 +82,7 @@
                 const select = this.$refs.realSelect;
 
                 this.allItems = Array.from(select.options)
-                    .filter(option => ! option.hasAttribute('data-placeholder') && option.text.trim() !== '')
+                    .filter(option => ! option.hasAttribute('data-placeholder') && option.value !== '' && option.text.trim() !== '')
                     .map(option => ({
                         value: option.value,
                         label: option.text,
