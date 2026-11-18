@@ -545,7 +545,7 @@ class extends Component
             'id_concepto_pago' => '',
             'id_proceso' => '',
             'id_modalidad_admision' => '',
-                'monto_total' => '',
+            'monto_total' => '',
             'permite_cuotas' => false,
             'monto_minimo_primera_cuota' => '',
             'numero_maximo_cuotas' => '1',
@@ -590,6 +590,7 @@ class extends Component
     {
         $proceso = $reglaPago->proceso?->nombre_pro ?? 'SIN PROCESO';
         $modalidad = $reglaPago->modalidadAdmision?->nombre_mad ?? 'TODAS LAS MODALIDADES';
+
         return "{$proceso} | {$modalidad}";
     }
 
@@ -612,5 +613,4 @@ class extends Component
 
         return Proceso::query()->find((int) $this->reglaPagoForm['id_proceso']);
     }
-
 };

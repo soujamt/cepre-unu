@@ -104,10 +104,10 @@ class extends Component
     /**
      * Turnos que tienen aulas habilitadas en el proceso, con su capacidad total.
      *
-     * @return \Illuminate\Support\Collection<int, array{nombre:string,aulas:int,capacidad:int}>
+     * @return Illuminate\Support\Collection<int, array{nombre:string,aulas:int,capacidad:int}>
      */
     #[Computed]
-    public function turnosConAulas(): \Illuminate\Support\Collection
+    public function turnosConAulas(): Illuminate\Support\Collection
     {
         if ($this->procesoSeleccionado === null) {
             return collect();
