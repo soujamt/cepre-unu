@@ -102,7 +102,7 @@
                 wire:target="generarCarnets"
             >
                 <x-slot name="icon">
-                    <x-ui.icon name="id-card" size="5" />
+                    <x-ui.icon name="user-id-card" size="5" />
                 </x-slot>
                 Generar carnets
             </flux:button>
@@ -361,7 +361,7 @@
                                     @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
                                         <flux:menu.item href="{{ route('inscripciones.carnet', encode($inscripcion->id_ins)) }}" target="_blank">
                                             <x-slot name="icon">
-                                                <x-ui.icon name="id-card" size="4" class="me-2" />
+                                                <x-ui.icon name="user-id-card" size="4" class="me-2" />
                                             </x-slot>
                                             Ver carnet
                                         </flux:menu.item>

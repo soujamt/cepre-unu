@@ -234,7 +234,7 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
 
                     @if ($this->puedeCambiarFoto())
                     <label class="relative inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus-within:ring-2 focus-within:ring-zinc-400 dark:text-zinc-200 dark:hover:bg-white/5">
-                        <x-ui.icon name="upload" size="4" />
+                        <x-ui.icon name="arrow-out-up-square-half" size="4" />
                         <span wire:loading.remove wire:target="fotoPostulante">{{ $fotoActual ? 'Cambiar foto' : 'Subir foto' }}</span>
                         <span wire:loading wire:target="fotoPostulante">Subiendo…</span>
                         <input type="file" accept="image/jpeg,image/png" wire:model="fotoPostulante" class="sr-only" />

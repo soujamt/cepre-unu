@@ -49,7 +49,7 @@
             @permiso ('pago_exportar_excel')
                 <flux:button class="font-normal" wire:click="exportarExcel">
                     <x-slot name="icon">
-                        <x-ui.icon name="download" size="5" />
+                        <x-ui.icon name="arrow-in-down-square-half" size="5" />
                     </x-slot>
                     Exportar
                 </flux:button>

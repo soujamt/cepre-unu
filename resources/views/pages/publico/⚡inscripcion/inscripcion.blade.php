@@ -52,7 +52,7 @@
                     @if ($enlaces['carnet'])
                         <flux:button href="{{ $enlaces['carnet'] }}" target="_blank">
                             <x-slot name="icon">
-                                <x-ui.icon name="id-card" size="5" />
+                                <x-ui.icon name="user-id-card" size="5" />
                             </x-slot>
                             Descargar carnet
                         </flux:button>

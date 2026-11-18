@@ -1,5 +1,5 @@
 @section ('icon')
-    <x-header.icon icon="id-card" />
+    <x-header.icon icon="user-id-card" />
 @endsection
 
 @section ('header')

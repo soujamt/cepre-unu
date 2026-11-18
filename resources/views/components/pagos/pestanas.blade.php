@@ -3,7 +3,7 @@
 <nav aria-label="Secciones de pagos" class="flex gap-1 rounded-xl border border-zinc-200/80 bg-zinc-100/70 p-1 dark:border-white/[0.06] dark:bg-zinc-950/60">
     @foreach ([
         ['clave' => 'pagos', 'label' => 'Pagos', 'href' => route('pagos.index'), 'icon' => 'wallet'],
-        ['clave' => 'importaciones', 'label' => 'Importaciones TXT', 'href' => route('pagos.importaciones'), 'icon' => 'upload'],
+        ['clave' => 'importaciones', 'label' => 'Importaciones TXT', 'href' => route('pagos.importaciones'), 'icon' => 'arrow-out-up-square-half'],
     ] as $pestana)
         <a
             href="{{ $pestana['href'] }}"

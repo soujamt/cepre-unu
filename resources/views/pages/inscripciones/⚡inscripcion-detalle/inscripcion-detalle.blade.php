@@ -91,7 +91,7 @@
                 @if ($inscripcionActual->estado_ins === App\Enums\EstadoInscripcion::Activo)
                     <flux:button href="{{ route('inscripciones.carnet', encode($inscripcionActual->id_ins)) }}" target="_blank">
                         <x-slot name="icon">
-                            <x-ui.icon name="id-card" size="5" />
+                            <x-ui.icon name="user-id-card" size="5" />
                         </x-slot>
                         Ver carnet
                     </flux:button>
