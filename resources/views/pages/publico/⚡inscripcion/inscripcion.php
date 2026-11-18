@@ -182,9 +182,12 @@ class extends Component
         $this->reiniciarAsistente();
     }
 
+    /**
+     * Las fotos las sube solo el personal.
+     */
     public function puedeCambiarFoto(): bool
     {
-        return $this->pagoValidado && $this->fotoPostulanteActual === null;
+        return false;
     }
 
     public function fuenteFotoPostulante(FotoPostulante $foto): string
@@ -214,6 +217,14 @@ class extends Component
     protected function autorizarSubidaFoto(): void
     {
         abort_unless($this->puedeCambiarFoto(), 403);
+    }
+
+    /**
+     * @return array{origen_ins:string,requiere_revision_ins:bool}
+     */
+    protected function atributosInscripcionNueva(): array
+    {
+        return ['origen_ins' => 'PORTAL', 'requiere_revision_ins' => true];
     }
 
     protected function despuesDeRegistrar(?Inscripcion $inscripcion): void

@@ -7,6 +7,7 @@ use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\ImportacionBancoDetalle;
+use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use Carbon\Carbon;
@@ -337,13 +338,34 @@ class InscripcionPagoManager
     }
 
     /**
-     * La inscripción pendiente se activa cuando lo pagado alcanza el mínimo.
+     * Aprueba una inscripción hecha en el portal: deja de estar en revisión y
+     * se activa si lo pagado ya alcanza el mínimo.
+     */
+    public function aprobarRevision(Inscripcion $inscripcion, ?int $idUsuario): void
+    {
+        DB::transaction(function () use ($inscripcion, $idUsuario): void {
+            $inscripcion->update([
+                'requiere_revision_ins' => false,
+                'revisado_en' => now(),
+                'id_usuario_revisor' => $idUsuario,
+            ]);
+
+            $inscripcion->obligacionesPago()->get()->each(function (InscripcionObligacionPago $obligacion) use ($inscripcion): void {
+                $obligacion->setRelation('inscripcion', $inscripcion);
+                $this->activarInscripcionPendiente($obligacion);
+            });
+        });
+    }
+
+    /**
+     * La inscripción pendiente se activa cuando lo pagado alcanza el mínimo,
+     * salvo que esté en revisión.
      */
     private function activarInscripcionPendiente(InscripcionObligacionPago $obligacion): void
     {
         $inscripcion = $obligacion->inscripcion;
 
-        if ($inscripcion === null || $inscripcion->estado_ins !== EstadoInscripcion::Pendiente) {
+        if ($inscripcion === null || $inscripcion->estado_ins !== EstadoInscripcion::Pendiente || $inscripcion->requiere_revision_ins) {
             return;
         }
 

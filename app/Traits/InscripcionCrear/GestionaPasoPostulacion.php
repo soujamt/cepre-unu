@@ -371,6 +371,7 @@ trait GestionaPasoPostulacion
                     $inscripcion->fill($payload);
 
                     if (! $inscripcion->exists) {
+                        $inscripcion->fill($this->atributosInscripcionNueva());
                         $inscripcion->codigo_ins = 'TMP-'.Str::upper(Str::random(10));
                     }
 
@@ -419,6 +420,16 @@ trait GestionaPasoPostulacion
             type: 'success',
         );
         $this->despuesDeRegistrar($inscripcion);
+    }
+
+    /**
+     * Datos extra de una inscripción nueva según quién la registra.
+     *
+     * @return array<string, mixed>
+     */
+    protected function atributosInscripcionNueva(): array
+    {
+        return [];
     }
 
     /**

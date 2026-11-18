@@ -2,23 +2,29 @@
 
 use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
+use App\Models\Accion;
 use App\Models\Aula;
 use App\Models\Colegio;
 use App\Models\EstadoCivil;
+use App\Models\FotoPostulante;
 use App\Models\IdentidadEtnica;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
+use App\Models\Permiso;
+use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\ProcesoAula;
 use App\Models\ProcesoCarrera;
 use App\Models\ReglaPago;
+use App\Models\Rol;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
+use App\Models\Usuario;
 use Carbon\Carbon;
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ColegioSeeder;
@@ -38,8 +44,10 @@ use Database\Seeders\TipoDocumentoSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -161,26 +169,41 @@ test('the portal pages are public', function () {
     $this->get(route('publico.consulta'))->assertOk()->assertSee('N° de operación');
 });
 
-test('a postulante enrolls online with their payment and gets their documents', function () {
+test('a postulante enrolls online and the inscripcion waits for review', function () {
     $persona = personaDelPortal('46027897');
     pagoLibreDelPortal('46027897', 300, '41676');
 
     $componente = validarPagoEnPortal('46027897', '41676')
         ->assertHasNoErrors()
         ->assertSet('pasoActual', 2)
-        ->assertSet('personaForm.numero_documento', '46027897');
+        ->assertSet('personaForm.numero_documento', '46027897')
+        ->assertSet('personaId', $persona->id_per);
 
     completarPortalHastaRegistrar($componente, $persona)
         ->assertHasNoErrors()
         ->assertSee('Inscripción registrada')
+        ->assertSee('EN REVISIÓN')
         ->assertSee('Descargar ficha')
-        ->assertSee('Descargar carnet')
+        ->assertDontSee('Descargar carnet')
         ->assertSee('AULA 101');
 
     $inscripcion = Inscripcion::query()->sole();
 
-    expect($inscripcion->estado_ins)->toBe(EstadoInscripcion::Activo)
+    expect($inscripcion->estado_ins)->toBe(EstadoInscripcion::Pendiente)
+        ->and($inscripcion->origen_ins)->toBe('PORTAL')
+        ->and($inscripcion->enRevision())->toBeTrue()
         ->and($inscripcion->id_persona)->toBe($persona->id_per);
+});
+
+test('the portal does not let the postulante upload a photo', function () {
+    personaDelPortal('46027897');
+    pagoLibreDelPortal('46027897', 300, '41676');
+
+    validarPagoEnPortal('46027897', '41676')
+        ->set('fotoPostulante', UploadedFile::fake()->image('foto.jpg'))
+        ->assertForbidden();
+
+    expect(FotoPostulante::query()->count())->toBe(0);
 });
 
 test('the wizard state cannot be changed from the browser', function (string $propiedad, mixed $valor) {
@@ -276,4 +299,63 @@ test('public documents only open with a valid signed link', function () {
 
     $this->get(route('publico.ficha', $codigo))->assertForbidden();
     $this->get(route('publico.carnet', $codigo))->assertForbidden();
+});
+
+function personalQueRevisa(array $claves): Usuario
+{
+    $usuario = Usuario::factory()->create();
+    $rol = Rol::query()->create(['nombre_rol' => 'ROL '.Str::upper(Str::random(8)), 'descripcion_rol' => 'Pruebas', 'estado_rol' => 'HABILITADO']);
+    $usuario->roles()->attach($rol->id_rol);
+
+    foreach ($claves as $clave) {
+        $accion = Accion::query()->where('clave_accion', Str::afterLast($clave, '_'))->firstOrFail();
+        $permiso = Permiso::query()->firstOrCreate(
+            ['clave_permiso' => Str::beforeLast($clave, '_')],
+            ['nombre_permiso' => $clave, 'estado_permiso' => 'HABILITADO'],
+        );
+        $permisoAccion = PermisoAccion::query()->updateOrCreate(
+            ['id_permiso' => $permiso->id_permiso, 'id_accion' => $accion->id_acc],
+            ['clave_peracc' => $clave, 'estado_peracc' => 'HABILITADO', 'eliminado_en' => null],
+        );
+        $rol->permisoAcciones()->syncWithoutDetaching([$permisoAccion->id_peracc]);
+    }
+
+    return $usuario;
+}
+
+test('staff approves an online inscripcion and it becomes active when the payment reaches the minimum', function () {
+    $persona = personaDelPortal('46027897');
+    pagoLibreDelPortal('46027897', 300, '41676');
+    completarPortalHastaRegistrar(validarPagoEnPortal('46027897', '41676'), $persona);
+    $inscripcion = Inscripcion::query()->sole();
+    $usuario = personalQueRevisa(['inscripcion_indice', 'inscripcion_estado']);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->set('idProceso', '')
+        ->assertSee('En revisión (1)')
+        ->call('aprobarRevision', $inscripcion->id_ins)
+        ->assertDispatched('toast', message: "Inscripción {$inscripcion->codigo_ins} aprobada.", type: 'success');
+
+    $inscripcion->refresh();
+
+    expect($inscripcion->estado_ins)->toBe(EstadoInscripcion::Activo)
+        ->and($inscripcion->enRevision())->toBeFalse()
+        ->and($inscripcion->id_usuario_revisor)->toBe($usuario->id_usu);
+});
+
+test('users without estado permiso cannot approve online inscripciones', function () {
+    $persona = personaDelPortal('46027897');
+    pagoLibreDelPortal('46027897', 300, '41676');
+    completarPortalHastaRegistrar(validarPagoEnPortal('46027897', '41676'), $persona);
+    $inscripcion = Inscripcion::query()->sole();
+
+    $this->actingAs(personalQueRevisa(['inscripcion_indice']));
+
+    Livewire::test('pages::inscripciones.inscripciones')
+        ->call('aprobarRevision', $inscripcion->id_ins)
+        ->assertForbidden();
+
+    expect($inscripcion->refresh()->enRevision())->toBeTrue();
 });

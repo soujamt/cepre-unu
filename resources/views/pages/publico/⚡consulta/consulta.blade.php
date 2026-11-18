@@ -59,7 +59,11 @@
                             {{ trim($inscripcion->persona?->nombres_per.' '.$inscripcion->persona?->apellido_paterno_per.' '.$inscripcion->persona?->apellido_materno_per) }}
                         </h2>
                     </div>
-                    <flux:badge color="{{ $inscripcion->estado_ins->getColor() }}">{{ $inscripcion->estado_ins->getNombre() }}</flux:badge>
+                    @if ($inscripcion->enRevision())
+                        <flux:badge color="amber">EN REVISIÓN</flux:badge>
+                    @else
+                        <flux:badge color="{{ $inscripcion->estado_ins->getColor() }}">{{ $inscripcion->estado_ins->getNombre() }}</flux:badge>
+                    @endif
                 </div>
 
                 <div class="mt-5 rounded-lg border border-zinc-200/80 bg-zinc-50/60 p-4 dark:border-white/10 dark:bg-zinc-950/40">

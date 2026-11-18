@@ -30,6 +30,8 @@ class DocumentosInscripcion
         'persona.estadoCivil',
         'persona.ubigeoNacimiento',
         'persona.ubigeoDomicilio',
+        'persona.lenguaNativa',
+        'persona.lenguaExtranjera',
         'proceso',
         'sede',
         'modalidadAdmision',
@@ -58,7 +60,7 @@ class DocumentosInscripcion
             'pagos' => $pagos,
             'foto' => FotoPostulante::deDocumento($inscripcion->persona?->numero_documento_per)?->comoDataUri(),
             'logo' => $this->logo(),
-        ])->setPaper('a4')->setOption('isFontSubsettingEnabled', true);
+        ])->setPaper('a4');
     }
 
     /**
@@ -73,7 +75,7 @@ class DocumentosInscripcion
         return Pdf::loadView('pdf.carnet', [
             'carnets' => $inscripciones->map(fn (Inscripcion $inscripcion): array => $this->datosCarnet($inscripcion))->all(),
             ...$this->datosFirma(),
-        ])->setPaper('a4')->setOption('isFontSubsettingEnabled', true);
+        ])->setPaper('a4');
     }
 
     /**
@@ -95,7 +97,7 @@ class DocumentosInscripcion
                 'qr' => $this->qr(url('/')),
             ]],
             ...$this->datosFirma(),
-        ])->setPaper('a4')->setOption('isFontSubsettingEnabled', true);
+        ])->setPaper('a4');
     }
 
     /**

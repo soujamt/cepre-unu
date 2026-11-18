@@ -38,6 +38,9 @@
                         </x-slot>
                         {{ $inscripcionActual->estado_ins->getNombre() }}
                     </flux:badge>
+                    @if ($inscripcionActual->enRevision())
+                        <flux:badge color="amber">EN REVISIÓN · PORTAL</flux:badge>
+                    @endif
                     <span
                         class="rounded-md border border-zinc-200/80 bg-zinc-50 px-2 py-0.5 text-xs font-medium text-zinc-600 tabular-nums dark:border-white/10 dark:bg-white/5 dark:text-zinc-300"
                     >
@@ -67,6 +70,16 @@
             </div>
 
             <div class="flex shrink-0 flex-wrap gap-2">
+                @if ($inscripcionActual->enRevision())
+                    @permiso ('inscripcion_estado')
+                        <flux:button variant="primary" wire:click="aprobarRevision">
+                            <x-slot name="icon">
+                                <x-ui.icon name="check-circle" size="5" class="text-white" />
+                            </x-slot>
+                            Aprobar inscripción
+                        </flux:button>
+                    @endpermiso
+                @endif
                 @if ($inscripcionActual->estado_ins !== App\Enums\EstadoInscripcion::Anulado)
                     <flux:button href="{{ route('inscripciones.ficha', encode($inscripcionActual->id_ins)) }}" target="_blank">
                         <x-slot name="icon">

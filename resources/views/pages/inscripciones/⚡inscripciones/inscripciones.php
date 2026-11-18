@@ -12,6 +12,7 @@ use App\Models\ProcesoAula;
 use App\Models\Turno;
 use App\Support\AsignadorAulaInscripcion;
 use App\Support\DocumentosInscripcion;
+use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -59,6 +60,9 @@ class extends Component
 
     #[Url(as: 'pago')]
     public string $filtroPago = '';
+
+    #[Url(as: 'revision')]
+    public bool $soloEnRevision = false;
 
     #[Url(as: 'turno')]
     public string $idTurno = '';
@@ -269,6 +273,42 @@ class extends Component
         }, 'carnets-'.now()->format('Ymd-His').'.pdf', ['Content-Type' => 'application/pdf']);
     }
 
+    public function updatedSoloEnRevision(): void
+    {
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function totalEnRevision(): int
+    {
+        return Inscripcion::query()
+            ->where('requiere_revision_ins', true)
+            ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value)
+            ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
+            ->count();
+    }
+
+    /**
+     * Aprueba una inscripción hecha en el portal; se activa si ya alcanza el pago mínimo.
+     */
+    public function aprobarRevision(int $idInscripcion, InscripcionPagoManager $manager): void
+    {
+        $this->autorizarPermiso('inscripcion', 'estado');
+
+        $inscripcion = Inscripcion::query()->findOrFail($idInscripcion);
+
+        if (! $inscripcion->enRevision()) {
+            $this->dispatch('toast', message: 'La inscripción no está en revisión.', type: 'warning');
+
+            return;
+        }
+
+        $manager->aprobarRevision($inscripcion, auth()->id());
+
+        unset($this->inscripciones, $this->resumen, $this->totalEnRevision);
+        $this->dispatch('toast', message: "Inscripción {$inscripcion->codigo_ins} aprobada.", type: 'success');
+    }
+
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
@@ -468,8 +508,8 @@ class extends Component
         try {
             $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAnular);
 
-            if ($inscripcion->estado_ins !== EstadoInscripcion::Activo) {
-                throw new RuntimeException('Solo se pueden anular inscripciones activas.');
+            if ($inscripcion->estado_ins !== EstadoInscripcion::Activo && ! $inscripcion->enRevision()) {
+                throw new RuntimeException('Solo se pueden anular inscripciones activas o en revisión.');
             }
 
             $inscripcion->update([
@@ -610,6 +650,10 @@ class extends Component
             })
             ->when(filled($this->filtroPago), function (Builder $query): void {
                 $query->whereHas('obligacionesPago', fn (Builder $q) => $q->where('estado_iop', $this->filtroPago));
+            })
+            ->when($this->soloEnRevision, function (Builder $query): void {
+                $query->where('requiere_revision_ins', true)
+                    ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value);
             })
             ->when(filled($this->idTurno), function (Builder $query): void {
                 $query->where('id_turno', (int) $this->idTurno);

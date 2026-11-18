@@ -309,6 +309,28 @@ trait GestionaPasoPersonal
         $this->dispatch('toast', message: 'Informacion personal guardada correctamente.', type: 'success');
     }
 
+    /**
+     * Si el DNI ya está registrado, carga sus datos para revisarlos en el paso 2.
+     */
+    private function autocompletarPersonaRegistrada(): void
+    {
+        $numeroDocumento = trim((string) $this->personaForm['numero_documento']);
+
+        if ($numeroDocumento === '') {
+            return;
+        }
+
+        $personas = Persona::query()->where('numero_documento_per', $numeroDocumento)->limit(2)->get();
+
+        if ($personas->count() !== 1) {
+            return;
+        }
+
+        $this->cargarPersonaDesdeSistema($personas->first());
+        $this->reniecTipoMensaje = 'success';
+        $this->reniecMensaje = 'Se cargaron los datos registrados con este documento. Revíselos y actualícelos si hace falta.';
+    }
+
     public function buscarDatosPersona(): void
     {
         $tipoDocumento = $this->tipoDocumentoSeleccionado();

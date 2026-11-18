@@ -240,6 +240,9 @@ class="relative rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card da
                         <input type="file" accept="image/jpeg,image/png" wire:model="fotoPostulante" class="sr-only" />
                     </label>
                     @endif
+                    @if ($this->esModoPublico())
+                        <p class="max-w-36 text-center text-xs text-zinc-500 dark:text-zinc-400">La foto se toma en el CEPRE-UNU.</p>
+                    @endif
                     @error ('fotoPostulante')
                         <p class="max-w-36 text-center text-xs text-red-600 dark:text-red-400" role="alert">{{ $message }}</p>
                     @enderror

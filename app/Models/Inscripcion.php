@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['codigo_ins', 'token_verificacion_ins', 'id_persona', 'id_proceso', 'id_sede', 'id_modalidad_admision', 'id_carrera', 'id_turno', 'id_proceso_oferta', 'id_proceso_aula', 'fecha_inscripcion_ins', 'estado_ins', 'motivo_anulacion_ins', 'anio_graduacion_ins', 'id_pais_colegio', 'id_colegio', 'nombre_colegio_extranjero_ins', 'id_tipo_colegio', 'veces_postula_unu_ins', 'veces_postula_otras_ins', 'observacion_ins'])]
+#[Fillable(['codigo_ins', 'token_verificacion_ins', 'id_persona', 'id_proceso', 'id_sede', 'id_modalidad_admision', 'id_carrera', 'id_turno', 'id_proceso_oferta', 'id_proceso_aula', 'fecha_inscripcion_ins', 'estado_ins', 'origen_ins', 'requiere_revision_ins', 'revisado_en', 'id_usuario_revisor', 'motivo_anulacion_ins', 'anio_graduacion_ins', 'id_pais_colegio', 'id_colegio', 'nombre_colegio_extranjero_ins', 'id_tipo_colegio', 'veces_postula_unu_ins', 'veces_postula_otras_ins', 'observacion_ins'])]
 #[Table('tbl_inscripcion', key: 'id_ins')]
 class Inscripcion extends LegacyModel
 {
@@ -29,7 +29,17 @@ class Inscripcion extends LegacyModel
             ...parent::casts(),
             'fecha_inscripcion_ins' => 'datetime',
             'estado_ins' => EstadoInscripcion::class,
+            'requiere_revision_ins' => 'boolean',
+            'revisado_en' => 'datetime',
         ];
+    }
+
+    /**
+     * Hecha en el portal y aún no aprobada por el personal.
+     */
+    public function enRevision(): bool
+    {
+        return (bool) $this->requiere_revision_ins && $this->estado_ins !== EstadoInscripcion::Anulado;
     }
 
     public function persona(): BelongsTo

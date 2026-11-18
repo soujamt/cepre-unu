@@ -4,6 +4,7 @@ use App\Enums\EstadoObligacionPago;
 use App\Models\Inscripcion;
 use App\Models\InscripcionPago;
 use App\Models\Ubigeo;
+use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -186,6 +187,19 @@ class extends Component
         }
 
         return $numeroDocumento;
+    }
+
+    public function aprobarRevision(InscripcionPagoManager $manager): void
+    {
+        $this->autorizarPermiso('inscripcion', 'estado');
+
+        if (! $this->inscripcionActual->enRevision()) {
+            return;
+        }
+
+        $manager->aprobarRevision($this->inscripcionActual, auth()->id());
+        $this->inscripcionActual->refresh();
+        $this->dispatch('toast', message: "Inscripción {$this->inscripcionActual->codigo_ins} aprobada.", type: 'success');
     }
 
     public function volverListado(): void

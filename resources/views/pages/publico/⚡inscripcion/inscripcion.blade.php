@@ -19,7 +19,11 @@
                         <h2 class="text-lg font-semibold text-zinc-900 dark:text-white">Inscripción registrada</h2>
                         <p class="text-sm text-zinc-600 dark:text-zinc-300">
                             Código <span class="font-semibold tabular-nums">{{ $registrada->codigo_ins }}</span>.
-                            {{ $activa ? 'Su inscripción está ACTIVA.' : 'Su inscripción queda PENDIENTE hasta completar el pago.' }}
+                            @if ($registrada->enRevision())
+                                Su inscripción queda EN REVISIÓN. El CEPRE-UNU la revisará y, al aprobarla, podrá descargar su carnet desde “Consultar mi inscripción”.
+                            @else
+                                {{ $activa ? 'Su inscripción está ACTIVA.' : 'Su inscripción queda PENDIENTE hasta completar el pago.' }}
+                            @endif
                         </p>
                     </div>
                 </div>

@@ -84,6 +84,17 @@
                 </flux:button>
             @endpermiso
 
+            @if ($this->totalEnRevision > 0 || $soloEnRevision)
+                <flux:button
+                    :variant="$soloEnRevision ? 'primary' : 'filled'"
+                    color="amber"
+                    wire:click="$toggle('soloEnRevision')"
+                    aria-pressed="{{ $soloEnRevision ? 'true' : 'false' }}"
+                >
+                    En revisión ({{ $this->totalEnRevision }})
+                </flux:button>
+            @endif
+
             <flux:button
                 variant="filled"
                 wire:click="generarCarnets"
@@ -291,6 +302,9 @@
                                 </x-slot>
                                 {{ $inscripcion->estado_ins->getNombre() }}
                             </flux:badge>
+                            @if ($inscripcion->enRevision())
+                                <flux:badge color="amber" size="sm" class="ms-1">EN REVISIÓN</flux:badge>
+                            @endif
                             <div class="mt-1.5 flex flex-wrap items-center gap-1">
                                 <flux:badge color="{{ $resumenPago['color'] }}" size="sm" variant="pill" title="Pago">
                                     <x-slot name="icon">
@@ -368,7 +382,19 @@
                                         @endpermiso
                                     @endif
 
-                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
+                                    @if ($inscripcion->enRevision())
+                                        @permiso ('inscripcion_estado')
+                                            <flux:menu.separator />
+                                            <flux:menu.item wire:click="aprobarRevision({{ $inscripcion->id_ins }})">
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="check-circle" size="4" class="me-2" />
+                                                </x-slot>
+                                                Aprobar inscripción
+                                            </flux:menu.item>
+                                        @endpermiso
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo || $inscripcion->enRevision())
                                         @permiso ('inscripcion_estado')
                                             <flux:menu.separator />
                                             <flux:menu.item
