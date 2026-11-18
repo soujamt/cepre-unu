@@ -442,6 +442,19 @@ select:focus[data-flux-control] {
 }
 
 /** Iconos Boxicons (filled) **/
+/**
+ * Reemplaza la @font-face del paquete, que lista primero el .ttf (296 KB) y hace que
+ * el navegador lo descargue en vez del .woff2 (96 KB). Al declararse después del
+ * @import, esta regla tiene prioridad.
+ **/
+@font-face {
+    font-family: 'boxicons-filled';
+    src: url('../../node_modules/@boxicons/core/fonts/filled/boxicons-filled.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: block;
+}
+
 .ui-icon-glyph {
     display: block;
     line-height: 1;
