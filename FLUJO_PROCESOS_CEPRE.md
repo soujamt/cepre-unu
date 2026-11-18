@@ -2,11 +2,11 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### FLUJO DE PROCESOS DEL SISTEMA DE INSCRIPCIONES
 
-Este documento resume, con diagramas, **qué se tiene que hacer y en qué orden** para que el sistema funcione de punta a punta: desde la puesta en marcha hasta que una inscripción queda activa y aparece en los reportes.
+Este documento resume con diagramas **qué se hace y en qué orden** para que el sistema funcione de punta a punta. Empieza en la puesta en marcha y termina cuando el postulante tiene su ficha y su carnet y aparece en los reportes.
 
 Complementa a:
 
-- `MANUAL_INSTALACION_CEPRE.md`: detalle técnico de instalación.
+- `MANUAL_INSTALACION_CEPRE.md`: detalle técnico de instalación y actualización.
 - `MANUAL_USUARIO_CEPRE.md`: detalle pantalla por pantalla.
 
 > Los diagramas usan Mermaid. Se ven renderizados en GitHub, GitLab, VS Code (con vista previa Markdown) y la mayoría de editores modernos.
@@ -19,12 +19,13 @@ Complementa a:
 2. Puesta en marcha técnica
 3. Configuración: orden obligatorio
 4. Checklist antes de abrir inscripciones
-5. Flujo de una inscripción (asistente de 5 pasos)
-6. Flujo de pagos con el TXT del banco
-7. Expedientes y activación de la inscripción
-8. Estados del sistema
-9. Reglas automáticas que conviene conocer
-10. Observaciones y mejoras detectadas
+5. Pagos: primero el pago
+6. Flujo de una inscripción (asistente de 4 pasos)
+7. Inscripción en línea desde el portal del postulante
+8. Fotos, ficha de matrícula y carnet
+9. Estados del sistema
+10. Reglas automáticas que conviene conocer
+11. Observaciones pendientes
 
 ---
 
@@ -35,11 +36,14 @@ flowchart LR
     A["1. Puesta en marcha<br/>técnica"] --> B["2. Seguridad<br/>usuarios, roles, permisos"]
     B --> C["3. Mantenedores<br/>catálogos base"]
     C --> D["4. Configuración académica<br/>del proceso"]
-    D --> E["5. Inscripciones<br/>asistente de 5 pasos"]
-    F["Importar TXT<br/>del banco"] --> E
-    E --> G["6. Revisión de<br/>expedientes"]
-    G --> H["7. Inscripción ACTIVA"]
-    H --> I["8. Reportes<br/>y exportación Excel"]
+    D --> E["5. Inscripción<br/>asistente de 4 pasos"]
+    F["Pagos<br/>TXT del banco o manual"] --> E
+    P["Portal del postulante<br/>inscripción en línea"] --> R["Revisión<br/>del personal"]
+    F --> P
+    R --> H
+    E --> H["Inscripción ACTIVA"]
+    H --> K["Fotos, ficha<br/>y carnet con QR"]
+    H --> I["Reportes<br/>y exportación Excel"]
 ```
 
 | Etapa | Responsable | Frecuencia |
@@ -47,10 +51,11 @@ flowchart LR
 | Puesta en marcha técnica | Soporte TI | Una vez por servidor |
 | Seguridad | SuperAdministrador | Al inicio y cuando ingresa personal |
 | Mantenedores | SuperAdministrador | Al inicio; se actualiza ocasionalmente |
-| Configuración académica | SuperAdministrador | **Cada nuevo proceso de inscripción** |
-| Importar TXT del banco | Gestor de Inscripciones | Diario durante el proceso |
-| Inscripciones y expedientes | Gestor de Inscripciones | Diario durante el proceso |
-| Reportes | Ambos perfiles | A demanda |
+| Configuración académica | SuperAdministrador | **Cada nuevo proceso** |
+| Pagos (TXT del banco y pagos manuales) | Gestor de Inscripciones | Diario durante el proceso |
+| Inscripciones y revisión de las del portal | Gestor de Inscripciones | Diario durante el proceso |
+| Fotos, ficha y carnet | Gestor de Inscripciones | Durante el proceso |
+| Reportes y códigos de Admisión | Ambos perfiles | A demanda y al final del proceso |
 
 ---
 
@@ -58,26 +63,25 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    A[Clonar repositorio] --> B["composer install<br/>npm install"]
-    B --> C["Copiar .env.example a .env<br/>configurar APP_URL y DB_*"]
-    C --> D[php artisan key:generate]
-    D --> E["Crear base de datos MySQL<br/>utf8mb4"]
-    E --> F[php artisan migrate]
-    F --> G[php artisan db:seed]
-    G --> H{"¿Entorno de<br/>desarrollo?"}
-    H -- Sí --> I["php artisan db:seed<br/>--class=DevelopmentDataSeeder"]
-    H -- No --> J
-    I --> J[php artisan storage:link]
-    J --> K["npm run build<br/>o npm run dev"]
-    K --> L["Ingresar con superadmin"]
+    A[Clonar repositorio] --> B{"¿Windows en<br/>red local?"}
+    B -- Sí --> W1["instalar-entorno.bat<br/>(base limpia con catálogos)"]
+    W1 --> W2["iniciar-red-local.bat"]
+    B -- No --> C["composer install<br/>npm ci"]
+    C --> D["Copiar .env.example a .env<br/>APP_URL y DB_*"]
+    D --> E[php artisan key:generate]
+    E --> F["php artisan migrate --seed"]
+    F --> G[php artisan storage:link]
+    G --> H[npm run build]
+    W2 --> L["Ingresar con superadmin"]
+    H --> L
 ```
 
 Puntos clave:
 
-- `db:seed` carga los catálogos base (ubigeo, países, colegios, tipos de documento, carreras, sedes, modalidades, etc.), los permisos y el usuario inicial `superadmin`.
-- `DevelopmentDataSeeder` agrega datos de demostración (proceso, ofertas, inscripciones, usuario `gestor.cepre`). **No usar en producción.**
-- Las sesiones y la caché deben usar `file` o `redis` (ver sección 10.1).
-- En producción la cola usa `QUEUE_CONNECTION=database` y requiere `queue:work` (ver manual de instalación, sección 14).
+- Requiere **PHP 8.4 o superior** con las extensiones `gd`, `zip`, `mbstring`, `dom`, `fileinfo` y `pdo_mysql`.
+- `db:seed` carga los catálogos base (ubigeo, países, colegios, tipos de documento, carreras, sedes, modalidades, turnos, conceptos de pago), los permisos, el rol `ADMINISTRADOR` y el usuario `superadmin`.
+- El rol `ADMINISTRADOR` tiene acceso total; los demás roles necesitan que se les asignen los permisos.
+- Para **actualizar** una instalación con datos no se usa `instalar-entorno` (borra la base): en Windows se usa `actualizar-sistema.bat` y en un servidor `git pull`, `composer install`, `php artisan migrate --force` y `npm run build` (ver el manual de instalación).
 
 ---
 
@@ -92,188 +96,220 @@ flowchart TD
     end
 
     subgraph MAN["Mantenedores: catálogos base"]
-        M1[Sedes] --> M3["Sede ↔ Carrera"]
-        M2[Carreras] --> M3
-        M4[Modalidades] --> M6["Lugar ↔ Modalidad"]
-        M5[Lugares de inscripción] --> M6
-        M3 --> M7[Ofertas base]
-        M6 --> M7
-        M8[Turnos]
-        M9[Aulas]
-        M10[Conceptos de pago]
-        M11[Tipos de expediente]
-        M12[Colegios]
+        M1[Sedes]
+        M2[Carreras]
+        M3["Modalidades CEPRE<br/>condición: egresado o en colegio"]
+        M4["Turnos<br/>con horario"]
+        M5[Aulas]
+        M6[Conceptos de pago]
+        M7[Colegios]
     end
 
     subgraph CFG["Configuración académica: por cada proceso"]
-        C1["Proceso<br/>fechas de inicio y fin"] --> C2["Ofertas del proceso<br/>proceso + turno + ofertas base"]
-        C1 --> C3["Aulas por proceso<br/>proceso + turno + aula + capacidad"]
-        C1 --> C4["Convenios<br/>asociados al proceso con vigencia"]
-        C1 --> C5["Reglas de pago<br/>proceso + concepto + monto + cuotas"]
-        C4 -.opcional.-> C5
-        C1 --> C6["Requisitos<br/>tipos de expediente obligatorios"]
+        C1["Proceso<br/>fechas y año de egreso<br/>máximo de ORDINARIO"] --> C2["Oferta del proceso<br/>modalidades y carreras por sede"]
+        C1 --> C3["Aulas del proceso<br/>turno + aula + capacidad"]
+        C1 --> C4["Reglas de pago<br/>monto, cuotas y documento requerido"]
+        C1 --> C5["Carnet<br/>director, cargo, firma y nota"]
+        C1 -.al final.-> C6["Códigos de Admisión<br/>opcional"]
     end
 
     SEG --> MAN
-    M7 --> C2
-    M8 --> C2
-    M8 --> C3
-    M9 --> C3
-    M10 --> C5
-    M4 -.opcional.-> C5
-    M11 --> C6
+    M1 --> C2
+    M2 --> C2
+    M3 --> C2
+    M4 --> C3
+    M5 --> C3
+    M6 --> C4
+    M3 -.opcional.-> C4
 ```
 
 ### 3.1. Paso a paso de configuración de un nuevo proceso
 
 | # | Menú | Qué registrar | Depende de |
 |---|---|---|---|
-| 1 | Configuración Académica › Procesos | Nombre, fecha/hora de inicio y fin | — |
-| 2 | Configuración Académica › Ofertas › Asignar | Proceso, turno y las ofertas base que se abren | Proceso, Turnos, Ofertas base |
-| 3 | Configuración Académica › Aulas › Asignar | Proceso, turno, aula y capacidad | Proceso, Turnos, Aulas |
-| 4 | Configuración Académica › Convenios *(opcional)* | Convenio, beneficio y vigencia dentro del proceso | Proceso |
-| 5 | Configuración Académica › Reglas de Pago | Concepto, monto, cuotas, vigencia; opcionalmente modalidad o convenio | Proceso, Conceptos de pago |
-| 6 | Configuración Académica › Requisitos | Tipos de expediente y cuáles son obligatorios | Proceso, Tipos de expediente |
+| 1 | Conf. Académica › Procesos | Nombre (por ejemplo `2027-1`), fecha y hora de inicio y fin, y el **año de egreso máximo para ORDINARIO** | — |
+| 2 | Conf. Académica › Oferta del proceso | Modalidades CEPRE habilitadas y carreras habilitadas en cada sede | Proceso, Sedes, Carreras, Modalidades |
+| 3 | Conf. Académica › Aulas › Asignar | Turno, aula y capacidad | Proceso, Turnos, Aulas |
+| 4 | Conf. Académica › Reglas de pago | Concepto, monto total, cuotas y monto mínimo de la primera, documento requerido (por ejemplo, N° de resolución de beca), vigencia y, si aplica, modalidad | Proceso, Conceptos de pago |
+| 5 | Conf. Académica › Carnet | Nombre y cargo del director, imagen de firma y sello, nota del carnet | — |
+| 6 | Conf. Académica › Códigos de Admisión *(al final, opcional)* | Códigos que entrega Admisión por sede, modalidad y carrera; se registran a mano o con la plantilla Excel | Proceso con oferta |
 
-> **Importante:** cada combinación **proceso + turno** ofertada en el paso 2 necesita al menos un aula con capacidad en el paso 3. Si no, el asistente no podrá guardar la postulación.
+Ejemplos de reglas de pago, como en el sistema anterior:
+
+| Modalidad de pago | Monto mínimo para inscribir | Documento requerido |
+|---|---|---|
+| Cuota única | S/ 500 | — |
+| Fraccionado en 2 cuotas | S/ 275 (suma de pagos del DNI) | — |
+| Parentesco UNU | S/ 0 | N° de constancia de RRHH |
+| Beca académica | S/ 50 (libros) | N° de resolución |
+| Media beca | S/ 250 | N° de resolución |
+
+> **Importante:** cada turno en el que se inscribe necesita al menos un aula habilitada con capacidad (paso 3). El asistente solo ofrece los turnos que tienen aulas.
 
 ---
 
 ## 4. Checklist antes de abrir inscripciones
 
 - [ ] Hay un **proceso HABILITADO** cuya fecha de inicio ya pasó y cuya fecha de fin no ha llegado.
-- [ ] El proceso tiene al menos **una oferta HABILITADA**.
-- [ ] Cada turno ofertado tiene **aulas habilitadas con capacidad** suficiente.
-- [ ] Existe al menos una **regla de pago habilitada y vigente hoy** para el proceso (general, o por modalidad/convenio).
-- [ ] Existen **requisitos de expediente** y al menos uno está marcado como **obligatorio**.
-- [ ] Los **convenios**, si aplican, están vigentes en las fechas del proceso.
-- [ ] El personal operativo tiene el rol **Gestor de Inscripciones CEPRE**.
-- [ ] Se cuenta con el **TXT del banco** para conciliar los pagos.
+- [ ] El proceso tiene el **año de egreso máximo para ORDINARIO** correcto (por ejemplo, en el proceso 2027-I: hasta 2025 es ORDINARIO y desde 2026 es EXTRAORDINARIO O RESERVA).
+- [ ] La **oferta del proceso** tiene habilitadas una modalidad para egresados y otra para quienes están en el colegio, y las carreras de cada sede.
+- [ ] Cada turno tiene **aulas habilitadas con capacidad** suficiente.
+- [ ] Hay **reglas de pago habilitadas y vigentes hoy** para el proceso.
+- [ ] El **carnet** tiene configurados el director, el cargo y la firma.
+- [ ] El personal operativo tiene un rol con los permisos de inscripciones, pagos y fotos.
+- [ ] Se cuenta con el **TXT del banco** del día para cargar los pagos.
 
 ---
 
-## 5. Flujo de una inscripción (asistente de 5 pasos)
+## 5. Pagos: primero el pago
 
-Ruta: **Inscripciones › Nueva inscripción**. Un borrador puede retomarse con **Continuar** desde el listado.
+Nadie se inscribe sin un pago previo. Cada pago queda **LIBRE** hasta que se usa en una inscripción; entonces pasa a **REGISTRADO** y ya no se puede volver a usar.
+
+```mermaid
+flowchart LR
+    A["TXT del banco<br/>Inscripciones › Pagos"] --> L["Pago LIBRE"]
+    B["Pago manual<br/>Admisión, Posgrado,<br/>Parentesco UNU, otra cuenta UNU"] --> L
+    L --> I["Paso 1 del asistente<br/>o portal del postulante"]
+    I --> R["Pago REGISTRADO<br/>en la inscripción"]
+    L --> V["Validar pagos<br/>cuotas siguientes"]
+    V --> R
+```
+
+- **TXT del banco:** en `Inscripciones › Pagos`, pestaña **Importaciones TXT**, se sube el archivo (recaudación BBVA). El sistema valida cabecera, detalle y cierre, y crea un pago LIBRE por cada depósito.
+- **Pago manual:** en `Inscripciones › Pagos`, pestaña **Pagos**, botón **Nuevo pago**, con la ubicación (ADMISIÓN, POSGRADO, PARENTESCO UNU u OTRA CUENTA UNU), el DNI, el N° de operación y el monto.
+- **Cuotas siguientes:** después de importar un TXT, el botón **Validar pagos pendientes** asocia automáticamente los pagos de quienes ya tienen saldo. También se puede hacer uno por uno en `Inscripciones › Validar pagos`.
+
+Validaciones:
+
+- El DNI del pago debe ser el del postulante.
+- Se aceptan varios pagos del mismo DNI; se suman para llegar al mínimo de la regla.
+- Se acepta pagar de más (por ejemplo, S/ 501 sobre S/ 500), pero no seguir pagando una obligación ya cubierta.
+- Si la regla pide un documento (resolución o constancia), es obligatorio ingresarlo.
+
+---
+
+## 6. Flujo de una inscripción (asistente de 4 pasos)
+
+Ruta: **Inscripciones › Nueva inscripción**.
 
 ```mermaid
 flowchart TD
-    START([Nueva inscripción]) --> P0{"¿Hay proceso activo<br/>con ofertas habilitadas?"}
-    P0 -- No --> X0["Bloqueado: el sistema indica<br/>cuándo cerró o cuándo inicia"]
+    START([Nueva inscripción]) --> P0{"¿Hay proceso activo<br/>con oferta y reglas de pago?"}
+    P0 -- No --> X0["Bloqueado con el motivo"]
     P0 -- Sí --> P1
 
-    P1["Paso 1 · Información personal<br/>DNI con consulta RENIEC, contacto,<br/>ubigeo, lengua, discapacidad"] --> P2
-    P2["Paso 2 · Información general<br/>colegio, año de graduación,<br/>postulaciones previas"] --> P3
-    P3["Paso 3 · Postulación<br/>modalidad, lugar, turno,<br/>oferta, convenio"] --> V3{"¿Hay aula con cupo<br/>para proceso + turno?"}
-    V3 -- No --> X3[Error: sin aulas disponibles]
-    V3 -- Sí --> S3["Se crea la inscripción PENDIENTE<br/>+ código correlativo<br/>+ aula asignada automáticamente"]
-    S3 --> P4
+    P1["Paso 1 · Validación de pago<br/>DNI + N° de operación<br/>marcar pagos LIBRES y elegir la regla"] --> V1{"¿La suma alcanza<br/>el mínimo de la regla?"}
+    V1 -- No --> X1["No continúa: falta monto<br/>o registrar otro pago"]
+    V1 -- Sí --> P2
 
-    P4["Paso 4 · Pago<br/>elegir regla de pago y buscar<br/>el depósito por DNI / operación"] --> V4{"¿Depósito encontrado<br/>en un TXT importado?"}
-    V4 -- No --> W4["Queda PENDIENTE de pago<br/>se retoma luego con Continuar"]
-    V4 -- Sí --> S4[Pago VERIFICADO y asociado]
-    S4 --> P5
+    P2["Paso 2 · Información personal<br/>se autocompleta si el DNI ya existe<br/>o con RENIEC; contacto y apoderado"] --> P3
+    P3["Paso 3 · Información general<br/>colegio y año de egreso"] --> M3["Modalidad automática<br/>según el año de egreso"]
+    M3 --> P4
 
-    P5["Paso 5 · Expedientes<br/>cargar documentos y marcar revisión"] --> V5{"¿Todos los obligatorios<br/>APROBADOS?"}
-    V5 -- No --> W5["Sigue PENDIENTE<br/>se completa desde Detalle"]
-    V5 -- Sí --> OK([Inscripción ACTIVA])
+    P4["Paso 4 · Postulación<br/>sede, carrera y turno<br/>revisión del resumen y foto"] --> V4{"¿Aula con cupo<br/>en ese turno?"}
+    V4 -- No --> X4[Error: sin aulas disponibles]
+    V4 -- Sí --> S4["Se registra la inscripción<br/>código correlativo + aula automática<br/>pagos pasan a REGISTRADO"]
+    S4 --> OK([Inscripción ACTIVA])
 ```
 
 Notas:
 
-- El aula se asigna sola, recorriendo las aulas del proceso y turno por lugar, piso y nombre, y tomando la primera con cupo. Luego puede cambiarse manualmente desde el listado (**Asignar aula**).
-- Un postulante no puede pasar al paso 5 sin un pago verificado.
+- **Modalidad automática:** si el año de egreso es menor o igual al máximo del proceso, el postulante es egresado (ORDINARIO); si es mayor, está en el colegio (EXTRAORDINARIO O RESERVA). Se toma la modalidad CEPRE habilitada en el proceso para esa condición.
+- **Activación:** la inscripción queda ACTIVA en cuanto lo pagado alcanza el mínimo de la regla. Como el paso 1 ya lo exige, normalmente queda activa al terminar.
+- **Duplicados:** si el postulante ya tiene una inscripción en el mismo proceso, el sistema avisa y el personal decide si continuar.
+- **Aula:** se asigna sola, recorriendo las aulas del turno por lugar, piso y nombre, y tomando la primera con cupo. Puede cambiarse desde el listado (**Asignar aula**).
 
 ---
 
-## 6. Flujo de pagos con el TXT del banco
+## 7. Inscripción en línea desde el portal del postulante
 
-El sistema **no registra pagos manualmente**: todo pago proviene de un archivo TXT del banco importado previamente.
-
-La obligación de pago se crea en el **paso 4 del asistente**, así que el primer pago siempre se asocia ahí. "Validar pagos pendientes" y la pantalla "Validar pagos" solo encuentran obligaciones que ya existen, es decir, sirven para las cuotas siguientes.
+El postulante entra sin usuario a `/postulante`. Desde ahí puede inscribirse o consultar su inscripción.
 
 ```mermaid
 sequenceDiagram
     autonumber
+    actor P as Postulante
+    participant W as Portal /postulante
+    participant S as Sistema
     actor G as Gestor
-    participant P as Inscripciones › Pagos
-    participant B as Detalles del banco
-    participant O as Obligación de pago
-    participant I as Inscripción
 
-    G->>P: Sube el TXT del banco
-    P->>P: Valida cabecera 01, detalle y cierre 03<br/>cuadre de registros y montos
-    G->>P: Confirma la importación
-    P->>B: Crea detalles en estado PENDIENTE
-
-    alt Primer pago
-        G->>P: Paso 4 del asistente
-        P->>O: Crea la obligación según la regla elegida
-        P->>B: Busca por DNI, N° de operación y fecha
-    else Cuotas siguientes, automático
-        G->>P: "Validar pagos pendientes"
-        P->>B: Agrupa por DNI y busca obligaciones con saldo
-    else Cuotas siguientes, manual
-        G->>P: Validar pagos
-        P->>B: Busca por DNI, N° de operación y fecha
-    end
-
-    B->>O: Asocia el depósito: pago VERIFICADO
-    B->>B: Detalle pasa a ASOCIADO
-    O->>O: Recalcula pagado y saldo<br/>PENDIENTE → PARCIAL → PAGADO
-    O-->>I: Habilita el paso 5 · Expedientes
+    P->>W: DNI + N° de operación del voucher
+    W->>S: Busca pagos LIBRES de ese DNI
+    S-->>W: Pagos encontrados
+    P->>W: Completa los pasos 2 a 4 (sin subir foto)
+    W->>S: Registra la inscripción EN REVISIÓN
+    S-->>P: Código de inscripción
+    G->>S: Inscripciones › En revisión › Aprobar
+    S->>S: Si el pago alcanza el mínimo: ACTIVA
+    P->>W: Consulta con DNI + N° de operación
+    W-->>P: Estado, aula y ficha; carnet si está ACTIVA
 ```
 
-Validaciones del monto:
+Diferencias con el asistente del personal:
 
-- El DNI del depósito debe coincidir con el del postulante.
-- El monto no puede superar el saldo pendiente.
-- Si la regla **no permite cuotas**, el primer pago debe cubrir el total.
-- Si permite cuotas, la primera debe alcanzar el **monto mínimo de primera cuota**.
+- El DNI queda fijo: solo se usan pagos y datos de ese DNI.
+- No se permite una segunda inscripción en el mismo proceso.
+- No se sube foto; se toma en el CEPRE-UNU.
+- La inscripción queda **EN REVISIÓN** hasta que un gestor con el permiso de cambiar el estado la apruebe o la anule.
+- Las descargas de la ficha y el carnet usan enlaces firmados que vencen en 60 minutos.
+- Hay un límite de intentos por minuto para evitar abusos.
 
 ---
 
-## 7. Expedientes y activación de la inscripción
-
-Ruta: **Inscripciones › Detalle** (o paso 5 del asistente).
+## 8. Fotos, ficha de matrícula y carnet
 
 ```mermaid
-flowchart TD
-    A[Expediente cargado] --> B{Revisión}
-    B -- Aprobar --> C[APROBADO]
-    B -- Observar con motivo --> D["OBSERVADO<br/>se corrige y se vuelve a revisar"]
-    B -- Rechazar con motivo --> E[RECHAZADO]
-    D --> B
-    C --> F{"¿Todos los obligatorios<br/>aprobados y<br/>pago verificado?"}
-    F -- Sí --> G([Inscripción ACTIVA])
-    F -- No --> H[Sigue PENDIENTE]
+flowchart LR
+    F["Inscripciones › Fotos<br/>subida en lote, nombre = DNI"] --> A["Foto del postulante"]
+    U["Paso 4 del asistente<br/>Subir foto"] --> A
+    A --> FI["Ficha de matrícula PDF"]
+    A --> CA["Carnet PDF con QR"]
+    CA --> Q["/verificar/código<br/>VÁLIDO o NO VÁLIDO"]
 ```
+
+- **Fotos:** se guardan por DNI (sirven para todos los procesos), recortadas a 300 × 400 px. Se pueden exportar en ZIP por proceso para la imprenta.
+- **Ficha de matrícula:** datos del postulante, del colegio, de la postulación y la tabla de pagos, con espacio para firmas. Se abre desde el listado o el detalle (**Ver ficha**).
+- **Carnet:** solo para inscripciones ACTIVAS. Se genera uno por uno (**Ver carnet**) o en lote con los filtros del listado (**Generar carnets**).
+- **Verificación:** el QR del carnet lleva a una página pública que muestra el nombre, el DNI enmascarado y si la inscripción es **VÁLIDA** (ACTIVA) o **NO VÁLIDA** (anulada o pendiente).
 
 ---
 
-## 8. Estados del sistema
+## 9. Estados del sistema
 
-### 8.1. Inscripción
+### 9.1. Inscripción
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDIENTE: Paso 3 guardado
-    PENDIENTE --> ACTIVO: Pago verificado y expedientes obligatorios aprobados
-    ACTIVO --> ANULADO: Anular con motivo (mín. 10 caracteres), libera el aula
+    [*] --> PENDIENTE: Postulación guardada
+    PENDIENTE --> ACTIVO: Lo pagado alcanza el mínimo
+    PENDIENTE --> EN_REVISION: Registrada desde el portal
+    EN_REVISION --> ACTIVO: Aprobada por un gestor
+    EN_REVISION --> ANULADO: Anulada con motivo
+    ACTIVO --> ANULADO: Anulada con motivo (mín. 10 caracteres), libera el aula
     ANULADO --> [*]
 ```
 
-### 8.2. Obligación de pago
+> "EN REVISIÓN" no es un estado aparte: es una inscripción PENDIENTE marcada para revisión. En el listado aparece con su propia etiqueta y el filtro **En revisión**.
+
+### 9.2. Pago (detalle del banco o manual)
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDIENTE: Se elige la regla de pago
-    PENDIENTE --> PARCIAL: Cuota verificada
-    PENDIENTE --> PAGADO: Pago total verificado
+    [*] --> LIBRE: Importado del TXT o registrado a mano
+    LIBRE --> REGISTRADO: Usado en una inscripción o cuota
+```
+
+### 9.3. Obligación de pago
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDIENTE: Se registra la inscripción
+    PENDIENTE --> PARCIAL: Pago menor al total
+    PENDIENTE --> PAGADO: Pago total
     PARCIAL --> PAGADO: Saldo cubierto
 ```
 
-### 8.3. Proceso
+### 9.4. Proceso
 
 ```mermaid
 stateDiagram-v2
@@ -284,56 +320,34 @@ stateDiagram-v2
     DESHABILITADO --> CERRADO: Automático al pasar la fecha de fin
 ```
 
-### 8.4. Resumen de estados
+### 9.5. Resumen de estados
 
 | Entidad | Estados |
 |---|---|
-| Inscripción | PENDIENTE · ACTIVO · ANULADO |
+| Inscripción | PENDIENTE (o EN REVISIÓN) · ACTIVO · ANULADO |
+| Pago | LIBRE · REGISTRADO (internamente PENDIENTE · ASOCIADO · OBSERVADO) |
 | Obligación de pago | PENDIENTE · PARCIAL · PAGADO · EXONERADO · ANULADO |
 | Validación de pago | PENDIENTE · VERIFICADO · RECHAZADO |
-| Detalle del banco | PENDIENTE · ASOCIADO · OBSERVADO |
-| Expediente | PENDIENTE · APROBADO · OBSERVADO · RECHAZADO |
 | Proceso | HABILITADO · DESHABILITADO · CERRADO |
 
 ---
 
-## 9. Reglas automáticas que conviene conocer
+## 10. Reglas automáticas que conviene conocer
 
-1. **Cierre de procesos:** cada vez que se resuelve el proceso activo, los procesos cuya fecha de fin ya pasó se marcan como `CERRADO`.
-2. **Un solo proceso activo:** si hay varios habilitados en rango de fechas, se usa el de fecha de inicio más antigua.
-3. **Código de inscripción:** `AA` + `N° de periodo` + correlativo de 4 dígitos por proceso. Las inscripciones eliminadas cuentan, para no reutilizar códigos.
+1. **Cierre de procesos:** los procesos cuya fecha de fin ya pasó se marcan como `CERRADO` automáticamente.
+2. **Modalidad por año de egreso:** si el proceso no define el año máximo para ORDINARIO, se usa el año anterior al de inicio del proceso.
+3. **Código de inscripción:** dos últimos dígitos del año + número de periodo (tomados del nombre del proceso) + correlativo de 4 dígitos. Por ejemplo, la primera del proceso `2026-2` es `2620001`. Las inscripciones eliminadas cuentan, para no reutilizar códigos.
 4. **Capacidad de aulas:** se cuentan todas las inscripciones no anuladas del aula; al anular, el cupo se libera.
-5. **Vigencias:** reglas de pago y convenios se validan contra la fecha del día; si vencen mientras un borrador está a medio camino, el asistente lo bloquea con un mensaje.
+5. **Vigencias:** las reglas de pago se validan contra la fecha del día.
+6. **Exportación para Admisión:** el Excel con el formato CEPRE usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
 
 ---
 
-## 10. Observaciones y mejoras detectadas
-
-Encontradas al contrastar el código con los manuales existentes.
-
-### 10.1. Técnicas
+## 11. Observaciones pendientes
 
 | # | Observación | Impacto | Sugerencia |
 |---|---|---|---|
-| 1 | `.env.example` usa `SESSION_DRIVER=database` y `CACHE_STORE=database`, pero **no existen migraciones** para las tablas `sessions` ni `cache`. | Instalación nueva da error 500. | Crear las migraciones (`php artisan make:session-table`, `make:cache-table`) o cambiar el ejemplo a `file`. |
-| 2 | El manual de instalación asume Windows + Herd Pro. | Equipos macOS o Herd gratuito no tienen guía. | Añadir nota para macOS / MySQL externo (DBngin, Homebrew). |
-
-### 10.2. Funcionales
-
-| # | Observación | Impacto | Sugerencia |
-|---|---|---|---|
-| 3 | Si un proceso **no tiene requisitos obligatorios**, ninguna inscripción llega a `ACTIVO`. | Inscripciones quedan pendientes para siempre. | Validarlo en el checklist del proceso o activar solo con el pago cuando no hay requisitos. |
-| 4 | El estado `EXONERADO` se consulta pero **ningún flujo lo asigna**. | Un convenio de exoneración total no tiene cómo pasar el paso 4. | Definir el flujo de exoneración (por ejemplo, regla de pago con monto 0 que marque la obligación como exonerada). |
-| 5 | El descuento de un convenio **no se calcula automáticamente**; se aplica creando una regla de pago asociada a ese convenio. | Riesgo de olvidar crear la regla. | Documentarlo en el manual o calcular el monto desde el convenio. |
-| 6 | Solo se pueden anular inscripciones `ACTIVO`. | Los borradores `PENDIENTE` abandonados ocupan aula indefinidamente. | Permitir anular pendientes o liberar su aula al cerrar el proceso. |
-
-### 10.3. Documentación
-
-| # | Observación | Sugerencia |
-|---|---|---|
-| 7 | `MANUAL_USUARIO_CEPRE.md` menciona el submódulo **Semestres**, que ya no existe; el proceso se crea directamente con sus fechas. | Retirar la sección 13.1 y ajustar las secciones 7, 8 y 19. |
-| 8 | El manual de usuario no documenta los nuevos mantenedores: **Carreras, Sedes, Modalidades, Lugares de inscripción, Ofertas base, Turnos y Conceptos de pago**. | Agregar una sección por cada uno, siguiendo el orden de la sección 3 de este documento. |
-| 9 | El manual de usuario no explica la **importación del TXT del banco**, que es la base de la validación de pagos. | Agregar el flujo de la sección 6. |
-| 10 | En el asistente, el paso 3 se describe como "Proceso, oferta y colegio", pero el colegio se registra en el paso 2. | Cambiar la descripción del paso 3 en `inscripcion-crear.php` a "Proceso, oferta y convenio". |
-
-> Las observaciones 7, 8 y 9 ya se corrigieron en la versión 1.1 de `MANUAL_USUARIO_CEPRE.md`.
+| 1 | `.env.example` usa `SESSION_DRIVER=database` y `CACHE_STORE=database`, pero no existen migraciones para las tablas `sessions` ni `cache`. | Una instalación hecha desde `.env.example` da error 500. `.env.red-local.example` usa `file` y no tiene el problema. | Crear las migraciones o cambiar el ejemplo a `file`. |
+| 2 | Solo se pueden anular inscripciones ACTIVAS o en revisión. | Una inscripción PENDIENTE hecha por el personal, que no llegó al mínimo, ocupa aula hasta completarse. | Permitir anularlas o liberar su aula al cerrar el proceso. |
+| 3 | El estado `EXONERADO` de la obligación de pago existe pero ningún flujo lo asigna; las modalidades gratuitas (Parentesco UNU) usan una regla de S/ 0. | Ninguno por ahora. | Retirarlo o usarlo para las reglas de S/ 0. |
+| 4 | `MANUAL_USUARIO_CEPRE.md` todavía describe expedientes, convenios y requisitos, y no explica el portal del postulante, las fotos, la ficha, el carnet ni los pagos manuales. | El personal puede buscar pantallas que ya no existen. | Actualizar el manual de usuario siguiendo este documento. |

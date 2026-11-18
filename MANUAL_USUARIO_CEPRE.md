@@ -2,12 +2,12 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE USUARIO DEL SISTEMA DE INSCRIPCIONES
 
-**Versión:** 1.1  
+**Versión:** 1.2  
 **Documento:** Manual de usuario funcional  
 **Dirigido a:** SuperAdministrador y Gestor de Inscripciones CEPRE  
 **Fecha:** Noviembre 2026
 
-> **Cambios en la versión 1.1:** se retiró el submódulo Semestres (el proceso se crea directamente con sus fechas), se documentaron los mantenedores Carreras, Sedes, Modalidades, Lugares de inscripción, Ofertas base, Turnos y Conceptos de pago, y se describió la importación del archivo TXT del banco. Los diagramas del flujo completo están en `FLUJO_PROCESOS_CEPRE.md`.
+> **Cambios en la versión 1.2:** el pago se valida primero y el asistente pasa a tener 4 pasos; la modalidad se asigna sola según el año de egreso; cada proceso define su propia oferta (modalidades y carreras por sede); se agregaron los pagos manuales, el portal del postulante con revisión de las inscripciones en línea, las fotos, la ficha de matrícula, el carnet con QR y los códigos de Admisión. Se retiraron los expedientes, los convenios, los requisitos, los lugares de inscripción y las ofertas base. Los diagramas del flujo completo están en `FLUJO_PROCESOS_CEPRE.md`.
 
 ---
 
@@ -27,32 +27,35 @@
 12. Módulo Mantenedores
 13. Módulo Configuración Académica
 14. Manual del perfil Gestor de Inscripciones CEPRE
-15. Módulo Inscripciones
-16. Módulo Pagos
-17. Módulo Validar pagos
-18. Módulo Reportes
-19. Caso de uso integral del sistema
-20. Buenas prácticas operativas
-21. Errores operativos frecuentes
-22. Datos demo cargados para el manual
-23. Procedimiento para recargar datos de demostración
-24. Conclusiones
-25. Anexos sugeridos
+15. Módulo Pagos
+16. Módulo Inscripciones
+17. Módulo Fotos
+18. Ficha de matrícula y carnet
+19. Módulo Validar pagos
+20. Módulo Reportes
+21. Portal del postulante
+22. Caso de uso integral del sistema
+23. Buenas prácticas operativas
+24. Errores operativos frecuentes
+25. Datos demo cargados para el manual
+26. Procedimiento para recargar datos de demostración
+27. Conclusiones
+28. Anexos sugeridos
 
 ---
 
 ## 1. Introducción
 
-El presente manual de usuario ha sido elaborado con la finalidad de describir, de manera ordenada, detallada y funcional, el uso del sistema CEPRE UNU orientado al proceso de inscripciones. El documento está diseñado para servir como material de capacitación, consulta operativa y apoyo institucional para el personal responsable de la administración y ejecución del proceso de inscripción.
+El presente manual de usuario describe de manera ordenada y funcional el uso del sistema CEPRE UNU para el proceso de inscripciones. Está pensado como material de capacitación, consulta operativa y apoyo institucional para el personal que administra y ejecuta las inscripciones.
 
-El sistema permite gestionar usuarios, permisos, configuraciones académicas, ofertas, aulas, pagos, expedientes e inscripciones, integrando en una sola plataforma los componentes necesarios para la operación del proceso de admisión del Centro Preuniversitario de la Universidad Nacional de Ucayali.
+El sistema permite gestionar usuarios, permisos, la oferta de cada proceso, aulas, pagos, inscripciones, fotos, fichas de matrícula y carnets, e incluye un portal público donde el postulante puede inscribirse en línea y consultar su inscripción.
 
-El manual se ha organizado considerando dos perfiles funcionales claramente diferenciados:
+El manual se organiza en dos perfiles funcionales:
 
 - `SuperAdministrador`
 - `Gestor de Inscripciones CEPRE`
 
-Cada uno de estos perfiles dispone de accesos y responsabilidades distintas dentro del sistema.
+Cada perfil tiene accesos y responsabilidades distintas dentro del sistema.
 
 ## 2. Finalidad del documento
 
@@ -72,41 +75,42 @@ Este manual comprende la descripción funcional de los siguientes módulos:
 - seguridad;
 - mantenedores;
 - configuración académica;
-- inscripciones;
 - pagos;
+- inscripciones;
+- fotos, ficha de matrícula y carnet;
 - validación de pagos;
-- reportes.
+- reportes;
+- portal del postulante.
 
-No forma parte de este documento la documentación técnica del sistema, la estructura interna de base de datos, la instalación del entorno ni la administración de infraestructura.
+No forma parte de este documento la documentación técnica, la estructura de la base de datos, la instalación ni la administración de infraestructura. Esos temas están en `MANUAL_INSTALACION_CEPRE.md`.
 
 ## 4. Perfiles de usuario
 
 ### 4.1. SuperAdministrador
 
-El perfil `SuperAdministrador` tiene acceso integral a todos los módulos del sistema. Su función principal es garantizar la correcta configuración, control y administración general de la plataforma.
+El perfil `SuperAdministrador` tiene acceso a todos los módulos. Su función es configurar, controlar y administrar la plataforma.
 
 Entre sus responsabilidades se encuentran:
 
-- administrar usuarios;
-- administrar roles;
-- administrar permisos;
-- mantener catálogos operativos;
-- mantener los catálogos base: carreras, sedes, modalidades, lugares de inscripción, ofertas base, turnos, aulas, conceptos de pago y tipos de expediente;
-- configurar procesos;
-- gestionar ofertas, aulas por proceso, convenios, reglas de pago y requisitos;
-- supervisar inscripciones, pagos, expedientes y reportes.
+- administrar usuarios, roles y permisos;
+- mantener los catálogos base: carreras, sedes, modalidades, turnos, aulas, conceptos de pago y colegios;
+- crear cada proceso y configurar su oferta, sus aulas y sus reglas de pago;
+- configurar los datos del carnet;
+- registrar los códigos de Admisión al final del proceso;
+- supervisar inscripciones, pagos y reportes.
 
 ### 4.2. Gestor de Inscripciones CEPRE
 
-El perfil `Gestor de Inscripciones CEPRE` corresponde al usuario operativo encargado de ejecutar el proceso diario de inscripción.
+El perfil `Gestor de Inscripciones CEPRE` es el usuario operativo que ejecuta el proceso diario de inscripción.
 
 Entre sus responsabilidades se encuentran:
 
+- cargar el TXT del banco y registrar los pagos manuales;
 - registrar nuevas inscripciones;
-- continuar inscripciones pendientes;
-- revisar el detalle de inscripciones;
-- consultar pagos;
-- validar pagos;
+- revisar y aprobar las inscripciones hechas en el portal;
+- subir las fotos de los postulantes;
+- entregar la ficha de matrícula y el carnet;
+- validar las cuotas siguientes;
 - emitir reportes de inscripciones.
 
 Este perfil no administra seguridad ni configuración académica.
@@ -117,6 +121,8 @@ Para las actividades de demostración y captura, se consideran las siguientes cr
 
 - `superadmin` / `password`
 - `gestor.cepre` / `password`
+
+En producción, la contraseña inicial de `superadmin` debe cambiarse al primer ingreso.
 
 ## 6. Recomendaciones para la elaboración del documento final
 
@@ -136,28 +142,31 @@ Se recomienda utilizar la siguiente codificación:
 
 - `Figura SA-01`, `Figura SA-02`, `Figura SA-03` para capturas asociadas al perfil `SuperAdministrador`.
 - `Figura GI-01`, `Figura GI-02`, `Figura GI-03` para capturas asociadas al perfil `Gestor de Inscripciones CEPRE`.
+- `Figura PP-01`, `Figura PP-02` para capturas del portal del postulante.
 
 Ejemplos:
 
 - `Figura SA-01: Pantalla de inicio de sesión`
 - `Figura SA-08: Asignación de permisos al rol`
-- `Figura GI-06: Paso 4 - Registro y validación del pago`
+- `Figura GI-04: Paso 1 - Validación de pago`
 
 ## 7. Flujo general del sistema
 
-El flujo funcional del sistema puede resumirse de la siguiente manera:
+El flujo funcional del sistema puede resumirse así:
 
-1. el usuario accede al sistema con sus credenciales;
-2. revisa el panel principal;
-3. el `SuperAdministrador` mantiene los catálogos base (carreras, sedes, modalidades, lugares de inscripción, ofertas base, turnos, aulas, conceptos de pago y tipos de expediente);
-4. el `SuperAdministrador` configura el proceso de inscripción: proceso, ofertas, aulas, convenios, reglas de pago y requisitos;
-5. el `Gestor de Inscripciones CEPRE` importa el archivo TXT del banco con los depósitos recibidos;
-6. el `Gestor de Inscripciones CEPRE` registra la inscripción del postulante y asocia su depósito en el paso de pago;
-7. se revisan los expedientes;
-8. la inscripción queda activa cuando el pago está verificado y todos los expedientes obligatorios están aprobados;
-9. finalmente, se generan reportes para control y seguimiento.
+1. el `SuperAdministrador` mantiene los catálogos base (carreras, sedes, modalidades, turnos, aulas, conceptos de pago y colegios);
+2. el `SuperAdministrador` crea el proceso y configura su oferta, sus aulas, sus reglas de pago y el carnet;
+3. el postulante paga en el banco o en una caja de la UNU; **sin pago no hay inscripción**;
+4. el `Gestor de Inscripciones CEPRE` carga el TXT del banco del día o registra el pago manual; cada pago queda `LIBRE`;
+5. la inscripción se registra de dos formas:
+   - el gestor la registra en el asistente de 4 pasos, empezando por el pago; queda `ACTIVA`;
+   - el postulante se inscribe en el portal; queda `EN REVISIÓN` hasta que un gestor la aprueba;
+6. el pago usado pasa a `REGISTRADO` y el sistema asigna un aula automáticamente;
+7. el gestor sube la foto y entrega la ficha de matrícula y el carnet con QR;
+8. las cuotas siguientes, si las hay, se validan desde `Pagos` o `Validar pagos`;
+9. se generan reportes y, al final, la exportación con los códigos de Admisión.
 
-Los diagramas de este flujo, con el detalle de cada estado, se encuentran en el documento `FLUJO_PROCESOS_CEPRE.md`.
+Los diagramas de este flujo, con el detalle de cada estado, se encuentran en `FLUJO_PROCESOS_CEPRE.md`.
 
 Referencias de imagen:
 `[Figura SA-01: Pantalla de inicio de sesión]`
@@ -165,55 +174,52 @@ Referencias de imagen:
 
 ## 8. Consideraciones previas al uso del sistema
 
-Antes de operar el sistema, se debe verificar:
+Antes de abrir las inscripciones, se debe verificar:
 
 1. que exista un proceso `HABILITADO` cuya fecha y hora de apertura ya pasó y cuya fecha y hora de cierre aún no llega;
-2. que el proceso tenga al menos una oferta habilitada;
-3. que cada turno ofertado tenga aulas habilitadas con capacidad suficiente;
-4. que exista al menos una regla de pago habilitada y vigente en la fecha actual;
-5. que los requisitos de expediente estén definidos y al menos uno sea obligatorio;
-6. que los convenios, si se usarán, estén vigentes;
-7. que el archivo TXT del banco con los depósitos esté importado;
+2. que el proceso tenga el año de egreso máximo para Ordinario correcto;
+3. que la oferta del proceso tenga habilitada una modalidad para egresados, otra para estudiantes en colegio, y las carreras de cada sede;
+4. que cada turno tenga aulas habilitadas con capacidad suficiente;
+5. que existan reglas de pago habilitadas y vigentes en la fecha actual;
+6. que el carnet tenga configurados el director, el cargo y la firma;
+7. que el TXT del banco del día esté cargado;
 8. que los usuarios tengan el rol adecuado.
 
-Estas validaciones son importantes porque, de no cumplirse, el sistema impide el avance normal del proceso de inscripción:
+Si no se cumplen, el sistema impide avanzar:
 
-- sin proceso vigente con ofertas, el asistente no permite pasar del paso 1;
-- sin aula con cupo para el turno elegido, no se puede guardar la postulación;
-- sin el TXT importado, no se encuentra el depósito en el paso de pago;
-- si el proceso no tiene requisitos obligatorios, la inscripción no llega al estado `ACTIVO`.
+- sin proceso vigente con oferta y reglas de pago, el asistente no permite empezar;
+- sin el pago cargado, no se encuentra en el paso 1;
+- si el proceso no tiene habilitada la modalidad que corresponde al año de egreso, no se puede guardar la postulación;
+- sin aula con cupo en el turno elegido, no se puede guardar la postulación.
 
 ## 9. Panel principal o inicio
 
-El panel principal es la pantalla que se muestra después de un inicio de sesión exitoso. Su función es ofrecer una visión general del estado operativo del sistema y facilitar el acceso rápido a los módulos más utilizados.
+El panel principal se muestra después de iniciar sesión. Ofrece una visión general de las inscripciones y acceso a los módulos autorizados desde el menú lateral.
 
-### 9.1. Información que puede mostrar
+### 9.1. Información que muestra
 
-En esta pantalla, el usuario puede visualizar:
-
-- actividad reciente;
-- cantidad de nuevas inscripciones;
-- estado de pagos;
-- estado de expedientes;
-- accesos rápidos a módulos autorizados.
+- `Total inscritas`;
+- `Activas`;
+- `Pago pendiente`;
+- `Anuladas`.
 
 ### 9.2. Procedimiento de revisión
 
 1. ingresar al sistema;
-2. revisar los indicadores visibles en la pantalla principal;
-3. identificar alertas o actividades pendientes;
-4. ingresar al módulo requerido desde los accesos rápidos.
+2. revisar los indicadores;
+3. identificar pendientes, por ejemplo inscripciones con pago pendiente;
+4. ingresar al módulo requerido desde el menú lateral.
 
 ### 9.3. Resultado esperado
 
-El usuario debe comprender rápidamente el estado actual de operación y acceder al módulo necesario sin dificultad.
+El usuario debe comprender rápidamente el estado actual de las inscripciones y acceder al módulo necesario.
 
 Referencia de imagen:
-`[Figura SA-03: Dashboard principal con indicadores]`
+`[Figura SA-03: Panel principal con indicadores]`
 
 ## 10. Manual del perfil SuperAdministrador
 
-El perfil `SuperAdministrador` administra la estructura funcional del sistema. Su intervención se concentra en la configuración, habilitación y control general de todos los procesos.
+El perfil `SuperAdministrador` administra la estructura funcional del sistema. Su intervención se concentra en la configuración y el control general.
 
 Este perfil utiliza principalmente los siguientes grupos de módulos:
 
@@ -224,32 +230,32 @@ Este perfil utiliza principalmente los siguientes grupos de módulos:
 
 ## 11. Módulo Seguridad
 
-El módulo Seguridad tiene como finalidad controlar el acceso al sistema y la distribución de permisos.
+El módulo Seguridad controla el acceso al sistema y la distribución de permisos.
 
 ### 11.1. Submódulo Usuarios
 
 #### 11.1.1. Objetivo
 
-Permitir el registro, edición, activación y desactivación de usuarios del sistema.
+Registrar, editar, activar y desactivar usuarios del sistema.
 
 #### 11.1.2. Procedimiento
 
 1. ingresar a `Seguridad > Usuarios`;
 2. revisar el listado de usuarios registrados;
 3. utilizar el buscador para localizar usuarios específicos;
-4. seleccionar `Nuevo usuario` cuando se requiera crear un registro;
-5. completar los datos del formulario:
-   - nombre de usuario;
-   - correo electrónico;
-   - nombres completos;
-   - estado;
+4. seleccionar `Nuevo`;
+5. completar:
+   - nombre;
+   - correo;
+   - contraseña;
+   - roles;
 6. guardar la información;
 7. verificar que el usuario aparezca en el listado;
 8. editar o cambiar el estado del usuario cuando sea necesario.
 
 #### 11.1.3. Resultado esperado
 
-El sistema debe mostrar el usuario correctamente registrado y disponible para su uso o administración.
+El usuario queda registrado y puede ingresar con los permisos de sus roles.
 
 Referencias de imagen:
 `[Figura SA-04: Listado de usuarios]`
@@ -259,25 +265,30 @@ Referencias de imagen:
 
 #### 11.2.1. Objetivo
 
-Permitir la creación de perfiles funcionales agrupando permisos según las responsabilidades de cada tipo de usuario.
+Crear perfiles funcionales agrupando permisos según las responsabilidades de cada tipo de usuario.
 
 #### 11.2.2. Procedimiento
 
 1. ingresar a `Seguridad > Roles`;
-2. revisar el listado de roles existentes;
-3. crear un nuevo rol o editar uno existente;
-4. registrar:
-   - nombre del rol;
-   - descripción;
-   - estado;
-5. guardar la información;
-6. seleccionar la opción `Asignar permisos`;
-7. marcar los permisos que correspondan al rol;
-8. guardar la asignación.
+2. crear un rol con `Nuevo` o editar uno existente;
+3. registrar nombre y descripción;
+4. guardar la información;
+5. abrir la asignación de permisos del rol;
+6. marcar los permisos que correspondan;
+7. guardar la asignación.
+
+El rol `ADMINISTRADOR` tiene acceso total y no necesita permisos asignados. Para un gestor operativo se recomiendan los permisos de:
+
+- inscripciones (ver, crear, editar, cambiar estado y exportar);
+- pagos (ver, crear, editar y cambiar estado);
+- fotos (ver, subir, eliminar y exportar);
+- reportes de inscripciones (ver y exportar).
+
+El permiso de **cambiar el estado de la inscripción** es el que permite aprobar las inscripciones del portal y anular inscripciones.
 
 #### 11.2.3. Resultado esperado
 
-El rol debe quedar disponible para asociarse a usuarios y controlar sus funciones dentro del sistema.
+El rol queda disponible para asociarse a usuarios y controlar sus funciones.
 
 Referencias de imagen:
 `[Figura SA-06: Listado de roles]`
@@ -288,42 +299,39 @@ Referencias de imagen:
 
 #### 11.3.1. Objetivo
 
-Permitir el control detallado de accesos por módulo y tipo de acción.
+Consultar y controlar los accesos por módulo y tipo de acción.
 
 #### 11.3.2. Procedimiento
 
 1. ingresar a `Seguridad > Permisos`;
-2. revisar el listado de permisos existentes;
+2. revisar el listado de permisos;
 3. utilizar el buscador para ubicar permisos específicos;
-4. crear o editar permisos cuando la operación funcional lo requiera;
-5. verificar las acciones relacionadas con cada permiso;
-6. asegurar que el permiso se encuentre habilitado.
+4. verificar las acciones de cada permiso y que esté habilitado.
+
+Los permisos de cada módulo se crean junto con el sistema; normalmente no hace falta crear permisos nuevos.
 
 #### 11.3.3. Resultado esperado
 
-Los permisos deben quedar disponibles para su uso en la configuración de roles.
+Los permisos quedan disponibles para asignarse a los roles.
 
 Referencia de imagen:
 `[Figura SA-09: Listado de permisos]`
 
 ## 12. Módulo Mantenedores
 
-Este módulo contiene los catálogos de apoyo para la operación del sistema. Se configuran una vez y se actualizan solo cuando cambia la oferta institucional.
+Este módulo contiene los catálogos base. Se configuran una vez y se actualizan solo cuando cambia la oferta institucional. Las carreras que se ofrecen en cada sede ya no se definen aquí, sino en cada proceso (ver 13.2).
 
-Varios catálogos dependen de otros, por lo que se recomienda registrarlos en el siguiente orden:
+Orden recomendado:
 
 1. Carreras.
-2. Sedes, y en cada sede, las carreras que ofrece.
+2. Sedes.
 3. Modalidades.
-4. Lugares de inscripción, y en cada lugar, las modalidades que atiende.
-5. Ofertas base, que combinan sede, carrera, lugar y modalidad.
-6. Turnos.
-7. Aulas.
-8. Conceptos de pago.
-9. Tipos de expediente.
-10. Colegios, solo para corregir o completar el catálogo precargado.
+4. Turnos.
+5. Aulas.
+6. Conceptos de pago.
+7. Colegios, solo para corregir o completar el catálogo precargado.
 
-En todos los submódulos, el estado del registro (habilitado o deshabilitado) se cambia desde la columna `Acciones` del listado. Un registro deshabilitado deja de mostrarse como opción en las pantallas que dependen de él.
+En todos los submódulos, el estado del registro (habilitado o deshabilitado) se cambia desde la columna `Acciones`. Un registro deshabilitado deja de mostrarse como opción en las pantallas que dependen de él.
 
 ### 12.1. Submódulo Carreras
 
@@ -335,15 +343,13 @@ Registrar las carreras profesionales a las que se puede postular.
 
 1. ingresar a `Mantenedores > Carreras`;
 2. buscar por código o nombre para verificar que la carrera no exista;
-3. crear una nueva carrera;
-4. registrar:
-   - código;
-   - nombre;
-5. guardar el registro.
+3. seleccionar `Nueva`;
+4. registrar código y nombre;
+5. guardar.
 
 #### 12.1.3. Resultado esperado
 
-La carrera debe quedar disponible para asignarse a una o más sedes.
+La carrera queda disponible para habilitarse en las sedes de cada proceso.
 
 Referencia de imagen:
 `[Figura SA-21: Módulo de carreras]`
@@ -352,765 +358,807 @@ Referencia de imagen:
 
 #### 12.2.1. Objetivo
 
-Registrar las sedes de la universidad y definir qué carreras se ofrecen en cada una.
+Registrar las sedes donde funciona el CEPRE-UNU, por ejemplo `PUCALLPA - CALLERÍA`.
 
 #### 12.2.2. Procedimiento
 
 1. ingresar a `Mantenedores > Sedes`;
-2. crear una nueva sede o editar una existente;
-3. registrar:
-   - código;
-   - nombre;
-   - ubigeo;
-   - dirección;
-4. guardar el registro;
-5. en la fila de la sede, seleccionar `Carreras` (o el contador de carreras);
-6. marcar las carreras que ofrece la sede, usando el filtro si es necesario;
-7. guardar la asignación.
+2. seleccionar `Nueva` o editar una existente;
+3. registrar código, nombre, ubigeo y dirección;
+4. guardar.
 
 #### 12.2.3. Resultado esperado
 
-La sede debe mostrar la cantidad de carreras habilitadas. Cada par sede–carrera queda disponible para conformar ofertas base.
+La sede queda disponible para configurar sus carreras en la oferta de cada proceso.
 
-Referencias de imagen:
+Referencia de imagen:
 `[Figura SA-22: Módulo de sedes]`
-`[Figura SA-23: Asignación de carreras a la sede]`
 
 ### 12.3. Submódulo Modalidades
 
 #### 12.3.1. Objetivo
 
-Registrar las modalidades de admisión, por ejemplo ordinario o exoneración.
+Registrar las modalidades propias del CEPRE-UNU, por ejemplo `ORDINARIO` y `EXTRAORDINARIO O RESERVA`.
 
 #### 12.3.2. Procedimiento
 
 1. ingresar a `Mantenedores > Modalidades`;
-2. crear una nueva modalidad o editar una existente;
+2. seleccionar `Nueva` o editar una existente;
 3. registrar:
    - código;
    - nombre;
    - descripción;
-4. guardar el registro.
+   - `Aplica a`: `EGRESADOS` (ya terminaron el colegio) o `ESTUDIANTES EN COLEGIO` (están en 4.º o 5.º de secundaria);
+4. guardar.
 
 #### 12.3.3. Resultado esperado
 
-La modalidad debe quedar disponible para asignarse a los lugares de inscripción y, de ser necesario, a reglas de pago específicas.
+La modalidad queda disponible para habilitarse en los procesos. El campo `Aplica a` es el que permite al sistema elegir la modalidad automáticamente según el año de egreso del postulante. Una modalidad sin `Aplica a` no se puede usar en la oferta del proceso.
 
 Referencia de imagen:
 `[Figura SA-24: Módulo de modalidades]`
 
-### 12.4. Submódulo Lugares de Inscripción
+### 12.4. Submódulo Turnos
 
 #### 12.4.1. Objetivo
 
-Registrar los lugares donde se realizan las inscripciones y definir qué modalidades atiende cada uno.
+Registrar los turnos de estudio con su horario, por ejemplo mañana (7:00 a 12:00), tarde (13:00 a 17:00) o noche virtual (17:00 a 22:00).
 
 #### 12.4.2. Procedimiento
 
-1. ingresar a `Mantenedores > Lugares de Inscripción`;
-2. crear un nuevo lugar o editar uno existente;
-3. registrar:
-   - código;
-   - nombre;
-   - sede a la que pertenece;
-4. guardar el registro;
-5. en la fila del lugar, seleccionar `Asignar modalidades`;
-6. marcar las modalidades que se atienden en ese lugar;
-7. guardar la asignación.
+1. ingresar a `Mantenedores > Turnos`;
+2. seleccionar `Nuevo` o editar uno existente;
+3. registrar código, nombre, hora de inicio y hora de fin;
+4. guardar.
 
 #### 12.4.3. Resultado esperado
 
-El listado debe mostrar las modalidades asignadas a cada lugar. Si aparece `Sin modalidades`, el lugar no podrá usarse en ofertas base.
-
-Referencias de imagen:
-`[Figura SA-25: Módulo de lugares de inscripción]`
-`[Figura SA-26: Asignación de modalidades al lugar]`
-
-### 12.5. Submódulo Ofertas Base
-
-#### 12.5.1. Objetivo
-
-Definir las combinaciones de sede, carrera, lugar de inscripción y modalidad que podrán abrirse en un proceso.
-
-#### 12.5.2. Procedimiento
-
-1. ingresar a `Mantenedores > Ofertas Base`;
-2. filtrar por sede o modalidad para revisar las ofertas existentes;
-3. crear una nueva oferta base;
-4. seleccionar, en este orden:
-   - sede;
-   - lugar de inscripción;
-   - modalidad;
-   - carrera (solo aparecen las carreras asignadas a la sede);
-5. registrar el código;
-6. guardar el registro.
-
-#### 12.5.3. Resultado esperado
-
-La oferta base debe quedar disponible para ser asignada a un proceso desde `Configuración Académica > Ofertas`.
-
-Referencia de imagen:
-`[Figura SA-27: Módulo de ofertas base]`
-
-### 12.6. Submódulo Turnos
-
-#### 12.6.1. Objetivo
-
-Registrar los turnos de estudio, por ejemplo mañana o tarde.
-
-#### 12.6.2. Procedimiento
-
-1. ingresar a `Mantenedores > Turnos`;
-2. crear un nuevo turno o editar uno existente;
-3. registrar:
-   - código;
-   - nombre;
-4. guardar el registro.
-
-#### 12.6.3. Resultado esperado
-
-El turno debe quedar disponible para asignar ofertas y aulas a un proceso.
+El turno queda disponible para asignar aulas a un proceso. En el asistente solo aparecen los turnos con aulas en el proceso.
 
 Referencia de imagen:
 `[Figura SA-28: Módulo de turnos]`
 
-### 12.7. Submódulo Aulas
+### 12.5. Submódulo Aulas
 
-#### 12.7.1. Objetivo
+#### 12.5.1. Objetivo
 
-Registrar y administrar las aulas que luego serán utilizadas en la distribución de postulantes por proceso y turno.
+Registrar las aulas físicas que luego se asignan a cada proceso y turno.
 
-#### 12.7.2. Procedimiento
+#### 12.5.2. Procedimiento
 
 1. ingresar a `Mantenedores > Aulas`;
-2. revisar el listado de aulas;
-3. crear una nueva aula cuando corresponda;
-4. completar:
-   - nombre;
-   - lugar;
-   - piso;
-   - orden;
-5. guardar el registro.
+2. seleccionar `Nueva`;
+3. completar nombre, lugar, piso y orden;
+4. guardar.
 
-#### 12.7.3. Resultado esperado
+#### 12.5.3. Resultado esperado
 
-El aula debe quedar disponible para asociarse posteriormente a un proceso. El lugar, el piso y el nombre definen el orden en que el sistema llena las aulas al asignarlas automáticamente.
+El aula queda disponible para asignarse a un proceso. El lugar, el piso y el nombre definen el orden en que el sistema llena las aulas.
 
 Referencia de imagen:
 `[Figura SA-10: Módulo de aulas]`
 
-### 12.8. Submódulo Conceptos de Pago
+### 12.6. Submódulo Conceptos de Pago
 
-#### 12.8.1. Objetivo
+#### 12.6.1. Objetivo
 
-Registrar los conceptos por los que se cobra al postulante, por ejemplo el derecho de inscripción.
+Registrar los conceptos por los que se cobra al postulante, por ejemplo la inscripción en cuota única o en cuotas.
 
-#### 12.8.2. Procedimiento
+#### 12.6.2. Procedimiento
 
 1. ingresar a `Mantenedores > Conceptos de Pago`;
-2. crear un nuevo concepto o editar uno existente;
-3. registrar:
-   - código;
-   - nombre;
-   - descripción;
-   - si permite cuotas;
-4. guardar el registro.
+2. seleccionar `Nuevo` o editar uno existente;
+3. registrar código, nombre y descripción;
+4. guardar.
 
-#### 12.8.3. Resultado esperado
+#### 12.6.3. Resultado esperado
 
-El concepto debe quedar disponible para crear reglas de pago en cada proceso.
+El concepto queda disponible para crear reglas de pago en cada proceso.
 
 Referencia de imagen:
 `[Figura SA-29: Módulo de conceptos de pago]`
 
-### 12.9. Submódulo Tipos de Expediente
+### 12.7. Submódulo Colegios
 
-#### 12.9.1. Objetivo
+#### 12.7.1. Objetivo
 
-Definir los tipos documentales que podrán ser requeridos a los postulantes.
+Gestionar el catálogo de colegios que se usa en el paso de información general.
 
-#### 12.9.2. Procedimiento
-
-1. ingresar a `Mantenedores > Tipos de Expediente`;
-2. crear o editar un tipo de expediente;
-3. registrar:
-   - código;
-   - nombre;
-   - descripción;
-   - si es obligatorio por defecto;
-4. guardar la información.
-
-#### 12.9.3. Resultado esperado
-
-Los tipos de expediente deben quedar disponibles para ser incorporados a los requisitos del proceso.
-
-Referencia de imagen:
-`[Figura SA-12: Tipos de expediente]`
-
-### 12.10. Submódulo Colegios
-
-#### 12.10.1. Objetivo
-
-Gestionar la información de colegios utilizada durante el registro de la postulación.
-
-#### 12.10.2. Procedimiento
+#### 12.7.2. Procedimiento
 
 1. ingresar a `Mantenedores > Colegios`;
 2. buscar por nombre, código modular o ubicación;
-3. registrar o editar información del colegio si es necesario;
-4. validar:
+3. registrar o corregir el colegio si es necesario:
+   - código y código modular;
    - nombre;
    - tipo de colegio;
-   - ubigeo;
-   - estado.
+   - ubigeo y dirección;
+4. guardar.
 
-#### 12.10.3. Resultado esperado
+#### 12.7.3. Resultado esperado
 
-El colegio debe poder ser encontrado y utilizado durante la inscripción.
+El colegio puede encontrarse y seleccionarse durante la inscripción.
 
 Referencia de imagen:
 `[Figura SA-11: Módulo de colegios]`
 
 ## 13. Módulo Configuración Académica
 
-Este módulo permite preparar cada proceso de inscripción antes de su uso operativo. Se repite por cada nuevo proceso, en el siguiente orden: procesos, ofertas, aulas, convenios, reglas de pago y requisitos.
+Este módulo prepara cada proceso antes de abrir las inscripciones. Se repite en cada nuevo proceso, en este orden: procesos, oferta del proceso, aulas, reglas de pago y carnet. Los códigos de Admisión se registran al final.
 
 ### 13.1. Submódulo Procesos
 
 #### 13.1.1. Objetivo
 
-Definir el proceso de inscripción y el periodo en que estará abierto.
+Definir el proceso, el periodo en que estará abierto y el corte de año de egreso para las modalidades.
 
 #### 13.1.2. Procedimiento
 
 1. ingresar a `Configuración Académica > Procesos`;
-2. crear un nuevo proceso;
+2. seleccionar `Nuevo`;
 3. registrar:
-   - nombre;
+   - nombre, con el formato `AAAA-N` (por ejemplo `2027-1`); de él salen los primeros dígitos del código de inscripción;
    - apertura (fecha y hora);
    - cierre (fecha y hora);
+   - año de egreso máximo para Ordinario;
 4. guardar.
 
-El código del proceso se genera automáticamente a partir del nombre, y el proceso se crea en estado `HABILITADO`.
+El proceso se crea en estado `HABILITADO`.
+
+**Año de egreso máximo para Ordinario.** Quien egresó hasta ese año inclusive es egresado y postula en la modalidad para `EGRESADOS` (ORDINARIO). Quien egresa después está en el colegio y postula en la modalidad para `ESTUDIANTES EN COLEGIO` (EXTRAORDINARIO O RESERVA). Por ejemplo, en un proceso que inscribe en 2026: hasta 2025 es ORDINARIO y desde 2026 es RESERVA. El corte sube un año en el proceso siguiente. Si se deja vacío, se usa el año anterior al de apertura.
 
 #### 13.1.3. Resultado esperado
 
-El proceso debe quedar habilitado. Las inscripciones solo pueden registrarse entre la fecha y hora de apertura y la de cierre. Cuando pasa la fecha de cierre, el sistema cambia el proceso a `CERRADO` automáticamente.
+Las inscripciones solo pueden registrarse entre la apertura y el cierre. Cuando pasa la fecha de cierre, el sistema cambia el proceso a `CERRADO` automáticamente.
 
 Si hay más de un proceso habilitado dentro de su periodo, el sistema usa el de apertura más antigua. Se recomienda no superponer fechas entre procesos.
 
 Referencia de imagen:
 `[Figura SA-14: Configuración del proceso]`
 
-### 13.2. Submódulo Ofertas
+### 13.2. Submódulo Oferta del proceso
 
 #### 13.2.1. Objetivo
 
-Abrir en el proceso las ofertas base que estarán disponibles, indicando el turno.
+Definir qué modalidades y qué carreras de cada sede se abren en el proceso.
 
 #### 13.2.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Ofertas`;
-2. revisar el listado de ofertas asignadas;
-3. seleccionar `Asignar oferta`;
-4. elegir el proceso y el turno;
-5. filtrar por modalidad o lugar de inscripción si es necesario;
-6. marcar las ofertas base que se abrirán;
-7. guardar la asignación.
+1. ingresar a `Configuración Académica > Oferta del proceso`;
+2. seleccionar el proceso;
+3. marcar las modalidades habilitadas: al menos una para egresados y una para estudiantes en colegio;
+4. en cada sede, marcar las carreras que se ofrecen; `Marcar todas` y `Quitar todas` ayudan a hacerlo por sede;
+5. seleccionar `Guardar oferta`.
 
-Si una misma oferta base se dicta en dos turnos, debe asignarse una vez por cada turno.
+Si el proceso no tiene aulas asignadas, la pantalla lo advierte; desde `Ver aulas por proceso` se puede ir a asignarlas.
 
 #### 13.2.3. Resultado esperado
 
-Las ofertas deben quedar habilitadas para su selección en el paso de postulación del asistente de inscripción.
+En el paso de postulación solo aparecen las sedes y carreras marcadas, y la modalidad se elige sola entre las habilitadas.
 
-Referencias de imagen:
-`[Figura SA-15: Listado de ofertas]`
-`[Figura SA-16: Asignación de oferta]`
+Referencia de imagen:
+`[Figura SA-15: Oferta del proceso]`
 
-### 13.3. Submódulo Aulas por Proceso
+### 13.3. Submódulo Aulas por proceso
 
 #### 13.3.1. Objetivo
 
-Definir las aulas disponibles para un proceso y turno determinado, así como su capacidad.
+Definir las aulas disponibles en cada turno del proceso y su capacidad.
 
 #### 13.3.2. Procedimiento
 
 1. ingresar a `Configuración Académica > Aulas`;
-2. revisar las asignaciones existentes;
-3. seleccionar `Asignar aula`;
-4. elegir el proceso y el turno;
-5. marcar las aulas que se usarán;
-6. registrar la capacidad de cada aula marcada;
-7. guardar la asignación.
+2. seleccionar `Asignar aulas`;
+3. elegir el proceso y el turno;
+4. marcar las aulas que se usarán y registrar la capacidad de cada una;
+5. seleccionar `Registrar seleccionadas`.
+
+La capacidad de un aula ya asignada se cambia desde el listado (`Editar aula asignada`).
 
 #### 13.3.3. Resultado esperado
 
-Cada turno ofertado en el proceso debe tener aulas con capacidad suficiente. Al guardar la postulación, el sistema asigna automáticamente la primera aula con cupo; si no hay ninguna, la postulación no se puede guardar.
+Al guardar una postulación, el sistema asigna la primera aula con cupo del turno elegido. Si no hay ninguna, la postulación no se puede guardar.
 
 Referencia de imagen:
 `[Figura SA-17: Aulas por proceso]`
 
-### 13.4. Submódulo Convenios
+### 13.4. Submódulo Reglas de pago
 
 #### 13.4.1. Objetivo
 
-Registrar beneficios especiales como descuentos o exoneraciones, asociados a un proceso.
+Definir las modalidades de pago del proceso: cuánto se paga, en cuántas cuotas y si se necesita un documento que respalde el beneficio.
 
 #### 13.4.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Convenios`;
-2. crear el convenio;
+1. ingresar a `Configuración Académica > Reglas de pago`;
+2. seleccionar `Nuevo` o editar una regla;
 3. registrar:
-   - nombre;
-   - descripción;
-   - tipo de beneficio: descuento, exoneración parcial o exoneración total;
-   - monto o porcentaje de descuento, según el tipo;
    - proceso;
-   - fecha de inicio y fecha de fin de vigencia;
-   - cupo máximo, si corresponde;
+   - concepto de pago;
+   - modalidad (opcional: solo si la regla aplica a una modalidad específica);
+   - monto total;
+   - número máximo de cuotas y monto mínimo de la primera cuota, si se paga en cuotas;
+   - documento requerido (opcional), por ejemplo `N° de resolución` o `N° de constancia de RRHH`;
+   - vigente desde y vigente hasta;
 4. guardar.
 
-El código del convenio se genera automáticamente.
+Ejemplos, como en el sistema anterior:
+
+| Modalidad de pago | Monto mínimo para inscribir | Documento requerido |
+|---|---|---|
+| Cuota única | S/ 500 | — |
+| Fraccionado en 2 cuotas | S/ 275 | — |
+| Parentesco UNU | S/ 0 | N° de constancia de RRHH |
+| Beca académica | S/ 50 (libros) | N° de resolución |
+| Media beca | S/ 250 | N° de resolución |
 
 #### 13.4.3. Resultado esperado
 
-El convenio debe quedar disponible para seleccionarse en el paso de postulación mientras esté vigente.
+En el paso 1 del asistente aparecen las reglas habilitadas y vigentes en la fecha del día. Al inscribir, el sistema verifica que:
 
-**Importante:** el sistema no descuenta automáticamente el monto del convenio. Para que el postulante pague el monto con beneficio, se debe crear una regla de pago asociada a ese convenio (ver 13.5).
+- la suma de los pagos marcados alcance el mínimo de la regla (el total, o la primera cuota si se paga en cuotas);
+- si la regla pide un documento, se haya ingresado.
 
-Referencia de imagen:
-`[Figura SA-19: Convenios]`
-
-### 13.5. Submódulo Reglas de Pago
-
-#### 13.5.1. Objetivo
-
-Definir cuánto y cómo debe pagar el postulante.
-
-#### 13.5.2. Procedimiento
-
-1. ingresar a `Configuración Académica > Reglas de Pago`;
-2. crear una nueva regla o editar una existente;
-3. registrar:
-   - concepto de pago;
-   - proceso;
-   - modalidad (opcional: solo si la regla aplica a una modalidad específica);
-   - convenio (opcional: solo si la regla aplica a postulantes con ese convenio);
-   - monto total;
-   - si permite cuotas;
-   - monto mínimo de la primera cuota;
-   - número máximo de cuotas;
-   - si requiere pago completo;
-   - vigente desde y vigente hasta;
-4. guardar la regla.
-
-#### 13.5.3. Resultado esperado
-
-En el paso de pago, el asistente muestra las reglas habilitadas y vigentes en la fecha del día que correspondan al proceso. Una regla sin modalidad ni convenio se aplica a todos los postulantes.
-
-Al asociar un depósito, el sistema verifica que:
-
-- el monto no supere el saldo pendiente;
-- si la regla no permite cuotas o requiere pago completo, el depósito cubra el total;
-- si permite cuotas, la primera alcance el monto mínimo definido.
+Se acepta pagar de más (por ejemplo, S/ 501 sobre S/ 500).
 
 Referencia de imagen:
 `[Figura SA-18: Reglas de pago]`
 
-### 13.6. Submódulo Requisitos
+### 13.5. Submódulo Carnet
+
+#### 13.5.1. Objetivo
+
+Registrar los datos fijos que aparecen en todos los carnets.
+
+#### 13.5.2. Procedimiento
+
+1. ingresar a `Configuración Académica > Carnet`;
+2. registrar el nombre del director y su cargo;
+3. registrar la nota al pie del carnet (opcional), por ejemplo "Este carnet es válido exclusivamente para el ingreso al campus universitario.";
+4. subir la imagen de la firma y el sello: PNG de hasta 1 MB, de preferencia con fondo transparente;
+5. revisar la vista previa de la firma;
+6. seleccionar `Guardar configuración`;
+7. seleccionar `Ver carnet de muestra (PDF)` para revisar el resultado.
+
+#### 13.5.3. Resultado esperado
+
+Los carnets se generan con la firma, el director, el cargo y la nota configurados.
+
+Referencia de imagen:
+`[Figura SA-19: Configuración del carnet]`
+
+### 13.6. Submódulo Códigos de Admisión
 
 #### 13.6.1. Objetivo
 
-Definir los expedientes que serán exigidos a los postulantes en un proceso determinado.
+Registrar los códigos que entrega la Oficina de Admisión para cada sede, modalidad y carrera del proceso. Admisión los entrega al final del proceso y cambian cada vez, por eso no se usan para inscribir; solo se usan en la exportación de inscritos. Este paso es opcional.
 
 #### 13.6.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Requisitos`;
-2. seleccionar el proceso;
-3. agregar los tipos de expediente requeridos;
-4. marcar cuáles son obligatorios;
-5. guardar la configuración.
+1. ingresar a `Configuración Académica > Códigos de Admisión`;
+2. seleccionar el proceso; aparecen las combinaciones de su oferta;
+3. registrar los códigos de una de estas dos formas:
+   - escribirlos en la tabla y seleccionar `Guardar códigos`;
+   - seleccionar `Descargar plantilla`, enviarla a Admisión para que llene solo la columna `CODIGO_ADMISION` sin tocar la columna `CLAVE`, y cargarla con `Subir plantilla llena`;
+4. si la plantilla tiene filas con errores, el sistema las lista en `Filas de la plantilla que no se cargaron`.
+
+Un código vacío borra el código de esa combinación.
 
 #### 13.6.3. Resultado esperado
 
-Los requisitos deben aparecer en el paso de expedientes durante la inscripción.
-
-**Importante:** el proceso debe tener al menos un requisito obligatorio. La inscripción pasa a `ACTIVO` cuando todos los requisitos obligatorios están aprobados; si no hay ninguno, la inscripción queda en `PENDIENTE`.
+La exportación de inscritos con el formato CEPRE lleva los códigos de Admisión. Sin código, lleva el nombre de la sede o de la carrera.
 
 Referencia de imagen:
-`[Figura SA-20: Requisitos del proceso]`
+`[Figura SA-20: Códigos de Admisión]`
 
 ## 14. Manual del perfil Gestor de Inscripciones CEPRE
 
-El perfil `Gestor de Inscripciones CEPRE` está orientado a la operación diaria del proceso de inscripción. Su función principal es registrar, verificar y completar el expediente del postulante.
+El perfil `Gestor de Inscripciones CEPRE` está orientado a la operación diaria: registrar los pagos, inscribir, revisar las inscripciones del portal y entregar la ficha y el carnet.
 
-Los módulos principales que utiliza son:
+Los módulos que utiliza son:
 
-1. Inscripciones.
-2. Pagos.
-3. Validar pagos.
-4. Reportes.
+1. Pagos.
+2. Inscripciones.
+3. Fotos.
+4. Validar pagos.
+5. Reportes.
 
-## 15. Módulo Inscripciones
+## 15. Módulo Pagos
 
-Este módulo permite registrar nuevas inscripciones, consultar registros existentes y revisar el detalle de cada postulante.
+### 15.1. Objetivo
 
-### 15.1. Listado de inscripciones
+Registrar en el sistema los pagos de los postulantes antes de inscribirlos. Cada pago queda:
 
-#### 15.1.1. Objetivo
+- `LIBRE`: todavía no se usó en ninguna inscripción;
+- `REGISTRADO`: ya se usó en una inscripción o en una cuota y no puede volver a usarse.
 
-Permitir la consulta y gestión general de las inscripciones registradas.
+Esta tarea debe hacerse antes de inscribir: si el pago no está en el sistema, no aparecerá en el paso 1 del asistente ni en el portal.
 
-#### 15.1.2. Procedimiento
+### 15.2. Importar el TXT del banco
 
-1. ingresar a `Inscripciones`;
-2. revisar el resumen de registros;
-3. aplicar filtros o utilizar el buscador;
-4. identificar el registro requerido;
-5. seleccionar `Detalle` para revisión completa;
-6. seleccionar `Continuar` en caso de inscripciones pendientes.
-
-#### 15.1.3. Resultado esperado
-
-El usuario debe localizar fácilmente cualquier inscripción y conocer su estado.
-
-Referencia de imagen:
-`[Figura GI-01: Listado general de inscripciones]`
-
-### 15.2. Nueva inscripción
-
-La nueva inscripción se realiza mediante un asistente estructurado en pasos.
-
-Referencia de imagen:
-`[Figura GI-02: Inicio del asistente de inscripción]`
-
-### 15.3. Paso 1 - Datos personales
-
-#### 15.3.1. Objetivo
-
-Registrar o recuperar la información básica del postulante.
-
-#### 15.3.2. Procedimiento
-
-1. seleccionar tipo de documento;
-2. registrar número de documento;
-3. buscar los datos del postulante;
-4. completar o verificar:
-   - apellidos;
-   - nombres;
-   - fecha de nacimiento;
-   - sexo;
-   - estado civil;
-   - país de nacimiento;
-   - nacionalidad;
-   - ubigeo de nacimiento;
-   - ubigeo de domicilio;
-   - dirección;
-   - celular;
-   - teléfono;
-   - correo electrónico;
-   - información complementaria;
-5. guardar el paso.
-
-#### 15.3.3. Resultado esperado
-
-La persona debe quedar registrada y asociada a la inscripción en construcción.
-
-Referencia de imagen:
-`[Figura GI-03: Paso 1 - Datos personales]`
-
-### 15.4. Paso 2 - Datos generales
-
-#### 15.4.1. Objetivo
-
-Registrar la información académica general del postulante.
-
-#### 15.4.2. Procedimiento
-
-1. registrar año de graduación;
-2. seleccionar país del colegio;
-3. seleccionar tipo de colegio;
-4. elegir el colegio de procedencia;
-5. registrar número de postulaciones previas;
-6. añadir observaciones si corresponde;
-7. guardar el paso.
-
-#### 15.4.3. Resultado esperado
-
-La información general debe quedar almacenada para continuar con la postulación.
-
-Referencia de imagen:
-`[Figura GI-04: Paso 2 - Datos generales]`
-
-### 15.5. Paso 3 - Postulación
-
-#### 15.5.1. Objetivo
-
-Seleccionar la modalidad y condiciones de postulación.
-
-#### 15.5.2. Procedimiento
-
-1. seleccionar modalidad de admisión;
-2. seleccionar lugar de inscripción;
-3. seleccionar turno;
-4. elegir la oferta disponible;
-5. seleccionar convenio si aplica;
-6. guardar el paso.
-
-#### 15.5.3. Resultado esperado
-
-La inscripción debe quedar creada dentro del proceso vigente.
-
-Referencia de imagen:
-`[Figura GI-05: Paso 3 - Postulación]`
-
-### 15.6. Paso 4 - Pago
-
-#### 15.6.1. Objetivo
-
-Asociar el depósito bancario del postulante a la inscripción.
-
-El sistema no registra pagos manualmente: el depósito debe existir en un archivo TXT del banco previamente importado (ver sección 16). El primer pago de una inscripción siempre se asocia en este paso, porque aquí se crea la obligación de pago según la regla elegida.
-
-#### 15.6.2. Procedimiento
-
-1. seleccionar la regla de pago;
-2. verificar el número de documento del postulante;
-3. ingresar el número de operación;
-4. ingresar la fecha de pago;
-5. buscar el detalle bancario;
-6. seleccionar el pago correcto;
-7. confirmar el paso.
-
-#### 15.6.3. Resultado esperado
-
-El pago debe quedar asociado a la obligación de la inscripción en estado `VERIFICADO`, y el asistente habilita el paso 5.
-
-Si el depósito no aparece, se debe verificar que el TXT del día esté importado y que el DNI del depósito coincida con el del postulante. La inscripción queda guardada y puede retomarse luego con `Continuar` desde el listado.
-
-Referencia de imagen:
-`[Figura GI-06: Paso 4 - Pago]`
-
-### 15.7. Paso 5 - Expedientes
-
-#### 15.7.1. Objetivo
-
-Registrar el estado de cada requisito documental del postulante.
-
-#### 15.7.2. Procedimiento
-
-1. revisar la lista de expedientes requeridos;
-2. verificar cuáles son obligatorios;
-3. registrar el archivo o evidencia correspondiente;
-4. seleccionar el estado de revisión;
-5. agregar observación si corresponde;
-6. guardar el paso final.
-
-#### 15.7.3. Resultado esperado
-
-Si todos los expedientes obligatorios están aprobados y el pago está validado, la inscripción debe quedar activa.
-
-Referencia de imagen:
-`[Figura GI-07: Paso 5 - Expedientes]`
-
-### 15.8. Detalle de inscripción
-
-#### 15.8.1. Objetivo
-
-Permitir la revisión consolidada de toda la información del postulante.
-
-#### 15.8.2. Procedimiento
-
-1. ingresar al listado de inscripciones;
-2. seleccionar `Detalle`;
-3. revisar:
-   - datos personales;
-   - datos generales;
-   - postulación;
-   - aula asignada;
-   - pagos;
-   - expedientes;
-   - estado final.
-
-#### 15.8.3. Resultado esperado
-
-El usuario debe poder verificar integralmente el expediente de la inscripción.
-
-Referencia de imagen:
-`[Figura GI-08: Detalle de inscripción]`
-
-## 16. Módulo Pagos
-
-### 16.1. Objetivo
-
-Importar al sistema el archivo TXT que entrega el banco con los depósitos recibidos, para que luego puedan asociarse a las inscripciones.
-
-Esta tarea debe realizarse antes de registrar las inscripciones del día: si el depósito del postulante no está importado, no aparecerá en el paso de pago.
-
-### 16.2. Procedimiento de importación
-
-1. ingresar a `Inscripciones > Pagos`;
-2. seleccionar el archivo TXT del banco (máximo 5 MB);
-3. revisar la previsualización que muestra el sistema:
+1. ingresar a `Inscripciones > Pagos` y abrir la pestaña `Importaciones TXT`;
+2. seleccionar el archivo TXT del banco (máximo 5 MB) e `Importar archivo`;
+3. revisar la previsualización (`Revisión del TXT bancario`):
    - datos de la cabecera;
-   - cantidad de depósitos y monto total;
+   - cantidad de pagos y monto total;
    - si cuadran los registros y los montos con el cierre del archivo;
    - observaciones por línea, si las hay;
-4. si todo es correcto, confirmar la importación; si no, cancelar la previsualización o usar `Quitar archivo`.
+4. si todo es correcto, `Confirmar importación`; si no, `Quitar archivo`.
 
 El sistema valida que:
 
 - el archivo tenga cabecera (línea `01`), detalle y cierre (línea `03`);
 - la cantidad de registros y el monto total coincidan con el cierre;
-- el archivo no haya sido importado anteriormente;
+- el archivo no se haya importado antes;
 - el archivo no tenga observaciones.
 
-### 16.3. Consulta de importaciones
+Las importaciones se consultan en la misma pestaña; `Ver detalle` muestra los pagos de cada una.
 
-1. buscar las importaciones en el listado o filtrarlas por estado;
-2. seleccionar `Ver detalle` para revisar los depósitos de una importación;
-3. verificar el estado de cada depósito:
-   - `PENDIENTE`: aún no asociado a ninguna inscripción;
-   - `ASOCIADO`: ya vinculado a una obligación de pago;
-   - `OBSERVADO`: presenta inconsistencias.
+### 15.3. Registrar un pago manual
 
-### 16.4. Validar pagos pendientes
+Se usa para pagos que no llegan en el TXT: los hechos en la caja de Admisión, en Posgrado, en otra cuenta de la UNU o los casos de parentesco UNU.
 
-El botón `Validar pagos pendientes` intenta asociar automáticamente los depósitos `PENDIENTE` de una importación. Para cada depósito busca, por número de documento, una obligación de pago con saldo y aplica las mismas validaciones de monto que la asociación manual.
+1. ingresar a `Inscripciones > Pagos`, pestaña `Pagos`;
+2. seleccionar `Nuevo pago`;
+3. registrar:
+   - DNI del postulante;
+   - N° de operación o de recibo;
+   - fecha;
+   - importe (S/);
+   - ubicación: `ADMISIÓN`, `POSGRADO`, `PARENTESCO UNU` u `OTRA CUENTA UNU`;
+   - referencia y observación, si corresponde;
+4. seleccionar `Guardar pago`.
 
-Esta opción sirve para **cuotas siguientes**: solo encuentra inscripciones cuya obligación de pago ya existe, es decir, que ya pasaron por el paso 4 del asistente. Al terminar, el sistema informa cuántos depósitos se asociaron y cuántos se omitieron.
+En la lista se pueden filtrar los pagos `Libres` y `Registrados`, buscar por DNI u operación y exportarlos con `Exportar`.
 
-### 16.5. Resultado esperado
+### 15.4. Validar pagos pendientes
 
-Los depósitos del banco deben quedar importados y disponibles para asociarse en el paso 4 del asistente o desde `Validar pagos`.
+Después de importar un TXT, la opción `Validar pagos pendientes` de la importación (pestaña `Importaciones TXT`) asocia automáticamente los pagos libres a las inscripciones que ya tienen saldo por pagar (cuotas siguientes). Para cada pago busca, por DNI, una obligación con saldo. Al terminar, el sistema informa cuántos pagos se asociaron y cuántos se omitieron.
+
+### 15.5. Resultado esperado
+
+Los pagos quedan en el sistema como `LIBRES`, listos para usarse en el paso 1 del asistente, en el portal o en `Validar pagos`.
 
 Referencias de imagen:
-`[Figura GI-09: Importación del TXT del banco]`
-`[Figura GI-12: Detalle de una importación]`
+`[Figura GI-01: Importación del TXT del banco]`
+`[Figura GI-02: Registro de pago manual]`
+`[Figura GI-03: Lista de pagos libres y registrados]`
 
-## 17. Módulo Validar pagos
+## 16. Módulo Inscripciones
+
+Este módulo permite registrar inscripciones, revisar las del portal, consultar el detalle y entregar la ficha y el carnet.
+
+### 16.1. Listado de inscripciones
+
+#### 16.1.1. Objetivo
+
+Consultar y gestionar las inscripciones registradas.
+
+#### 16.1.2. Procedimiento
+
+1. ingresar a `Inscripciones > Inscripciones`;
+2. revisar los indicadores: total inscritas, pago pendiente, activas y anuladas;
+3. buscar por código, DNI o nombre, o filtrar por proceso, modalidad, sede, pago y turno;
+4. usar el botón `En revisión (N)` para ver solo las inscripciones del portal pendientes de aprobar;
+5. en el menú de cada fila, elegir la acción:
+   - `Ver detalle`;
+   - `Ver ficha` (no aparece en las anuladas);
+   - `Ver carnet` (solo en las activas);
+   - `Continuar registro`, en las que quedaron a medio registrar;
+   - `Validar pago`, cuando tiene un pago por validar;
+   - `Aprobar inscripción`, en las que están en revisión;
+   - `Anular inscripción`, en las activas o en revisión;
+   - `Asignar aula`.
+
+Desde el listado también se puede:
+
+- `Nueva inscripción`;
+- `Exportar Excel`, con los filtros aplicados;
+- `Generar carnets`: un PDF con el carnet de todas las inscripciones activas que cumplen los filtros, uno por página.
+
+#### 16.1.3. Resultado esperado
+
+El usuario localiza cualquier inscripción, conoce su estado y accede a sus acciones.
+
+Referencia de imagen:
+`[Figura GI-04: Listado general de inscripciones]`
+
+### 16.2. Nueva inscripción
+
+La nueva inscripción se registra en un asistente de 4 pasos. **Primero se valida el pago**: sin un pago libre que alcance el mínimo no se puede continuar.
+
+Referencia de imagen:
+`[Figura GI-05: Inicio del asistente de inscripción]`
+
+### 16.3. Paso 1 - Validación de pago
+
+#### 16.3.1. Objetivo
+
+Encontrar los pagos libres del postulante y elegir la modalidad de pago.
+
+#### 16.3.2. Procedimiento
+
+1. registrar el DNI o CE del postulante y el N° de operación;
+2. seleccionar `Verificar pago`; el sistema lista los pagos libres de ese DNI;
+3. marcar los pagos que se usan para esta inscripción (se suman);
+4. seleccionar la modalidad de pago;
+5. si la modalidad pide un documento (por ejemplo, N° de resolución), registrarlo;
+6. revisar el aviso `Marcado S/ … de un mínimo de S/ …`;
+7. seleccionar `Validar y continuar`.
+
+#### 16.3.3. Resultado esperado
+
+Si lo marcado alcanza el mínimo, el asistente pasa al paso 2. Los pagos quedan `REGISTRADOS` recién al terminar la inscripción.
+
+Si el pago no aparece:
+
+- verificar que el TXT del día esté importado o que el pago manual esté registrado;
+- verificar que el DNI del pago sea el del postulante;
+- verificar que el pago no esté ya `REGISTRADO` en otra inscripción.
+
+Referencia de imagen:
+`[Figura GI-06: Paso 1 - Validación de pago]`
+
+### 16.4. Paso 2 - Información personal
+
+#### 16.4.1. Objetivo
+
+Registrar o recuperar los datos del postulante.
+
+#### 16.4.2. Procedimiento
+
+1. si el DNI ya está registrado, el sistema carga sus datos automáticamente; si no, se pueden buscar en RENIEC (cuando el servicio está configurado) o escribirlos;
+2. completar o verificar:
+   - tipo y número de documento;
+   - apellidos y nombres (con las opciones `Solo un apellido` y `Tiene apellido de casado(a)`);
+   - fecha de nacimiento, sexo y estado civil;
+   - país de nacimiento, nacionalidad, ubigeo de nacimiento y de domicilio, y dirección;
+   - celular, teléfono y correo electrónico;
+   - nombre completo y celular del apoderado (ambos celulares con 9 dígitos y empezando en 9);
+   - lengua materna, lengua extranjera, identidad étnica y discapacidad;
+3. guardar el paso.
+
+#### 16.4.3. Resultado esperado
+
+Los datos de la persona quedan registrados o actualizados.
+
+Referencia de imagen:
+`[Figura GI-07: Paso 2 - Información personal]`
+
+### 16.5. Paso 3 - Información general
+
+#### 16.5.1. Objetivo
+
+Registrar el colegio y el año de egreso, del que depende la modalidad.
+
+#### 16.5.2. Procedimiento
+
+1. registrar el año de egreso de secundaria;
+2. seleccionar el país y el tipo de colegio;
+3. buscar y seleccionar el colegio (si es del extranjero, escribir su nombre);
+4. registrar las veces que postuló a la UNU y a otras universidades;
+5. añadir una observación si corresponde;
+6. guardar el paso.
+
+#### 16.5.3. Resultado esperado
+
+El sistema determina la modalidad según el año de egreso y el corte del proceso (ver 13.1).
+
+Referencia de imagen:
+`[Figura GI-08: Paso 3 - Información general]`
+
+### 16.6. Paso 4 - Postulación
+
+#### 16.6.1. Objetivo
+
+Elegir sede, carrera y turno, revisar el resumen y registrar la inscripción.
+
+#### 16.6.2. Procedimiento
+
+1. revisar la modalidad asignada automáticamente;
+2. seleccionar la sede, la carrera profesional y el turno;
+3. revisar la foto del postulante; si no tiene, se puede subir en este paso;
+4. revisar el resumen de todos los datos y marcar la confirmación;
+5. registrar la inscripción.
+
+Si el postulante ya tiene una inscripción en el mismo proceso, el sistema avisa y permite decidir si continuar.
+
+#### 16.6.3. Resultado esperado
+
+La inscripción queda registrada con:
+
+- un código correlativo del proceso (por ejemplo `2620001`);
+- un aula asignada automáticamente;
+- los pagos marcados en estado `REGISTRADO`;
+- estado `ACTIVA`, si lo pagado alcanza el mínimo de la regla.
+
+Al terminar, el sistema muestra el detalle de la inscripción, desde donde se pueden abrir la ficha y el carnet.
+
+Referencia de imagen:
+`[Figura GI-09: Paso 4 - Postulación]`
+
+### 16.7. Detalle de inscripción
+
+#### 16.7.1. Objetivo
+
+Revisar en una sola pantalla toda la información del postulante.
+
+#### 16.7.2. Procedimiento
+
+1. en el listado, seleccionar `Ver detalle`;
+2. revisar:
+   - registro, proceso y estado;
+   - datos personales y generales;
+   - postulación y aula asignada;
+   - pagos;
+3. usar `Ver ficha` y `Ver carnet` para abrir los documentos;
+4. si la inscripción está en revisión, usar `Aprobar inscripción`.
+
+#### 16.7.3. Resultado esperado
+
+El usuario verifica integralmente la inscripción.
+
+Referencia de imagen:
+`[Figura GI-10: Detalle de inscripción]`
+
+### 16.8. Revisión de las inscripciones del portal
+
+#### 16.8.1. Objetivo
+
+Aprobar las inscripciones que los postulantes registraron en el portal (ver sección 21).
+
+#### 16.8.2. Procedimiento
+
+1. en el listado, seleccionar `En revisión (N)`;
+2. abrir cada inscripción con `Ver detalle` y verificar los datos y el pago;
+3. si todo está bien, seleccionar `Aprobar inscripción`;
+4. si no corresponde, seleccionar `Anular inscripción` y registrar el motivo.
+
+#### 16.8.3. Resultado esperado
+
+Al aprobarla, la inscripción deja de estar en revisión y queda `ACTIVA` si el pago alcanza el mínimo. El postulante podrá descargar su carnet desde el portal.
+
+Referencia de imagen:
+`[Figura GI-11: Inscripciones en revisión]`
+
+### 16.9. Anular una inscripción
+
+1. en el menú de la fila, seleccionar `Anular inscripción`;
+2. registrar el motivo (mínimo 10 caracteres);
+3. seleccionar `Confirmar anulación`.
+
+Solo se anulan inscripciones activas o en revisión. Al anular, el cupo del aula se libera y el carnet pasa a figurar como `NO VÁLIDO` en la verificación del QR.
+
+### 16.10. Asignar o cambiar el aula
+
+1. en el menú de la fila, seleccionar `Asignar aula`;
+2. elegir un aula habilitada del mismo proceso y turno; el sistema muestra cuántos inscritos tiene cada una;
+3. guardar.
+
+## 17. Módulo Fotos
 
 ### 17.1. Objetivo
 
-Asociar manualmente un depósito importado a una obligación de pago existente. Se usa principalmente para registrar cuotas siguientes, o cuando la validación automática omitió un depósito.
+Registrar las fotos de los postulantes para la ficha y el carnet. La foto se guarda por DNI y sirve para todos los procesos.
 
-### 17.2. Procedimiento
+### 17.2. Subir fotos en lote
 
-1. ingresar a `Inscripciones > Validar pagos`;
-2. buscar la obligación por datos del postulante y seleccionarla;
-3. revisar el resumen de la obligación: monto total, pagado y saldo;
-4. buscar el depósito por número de documento y, si se conoce, número de operación y fecha;
-5. seleccionar el depósito correcto;
-6. confirmar el pago.
+1. ingresar a `Inscripciones > Fotos`;
+2. seleccionar `Subir fotos`;
+3. elegir los archivos: JPG o PNG, hasta 2 MB cada uno y hasta 50 por vez, nombrados con el DNI (por ejemplo `47940211.jpg`);
+4. revisar el DNI que el sistema leyó de cada nombre y corregirlo si hace falta;
+5. seleccionar `Guardar fotos`.
 
-### 17.3. Resultado esperado
+Si una foto ya existe, se reemplaza. El sistema recorta y ajusta cada foto al tamaño del carnet (300 × 400 px).
 
-El pago debe quedar en estado `VERIFICADO`, el depósito pasa a `ASOCIADO` y la obligación recalcula su saldo, pasando a `PARCIAL` o `PAGADO` según corresponda.
+También se puede subir la foto de un postulante en el paso 4 del asistente.
+
+### 17.3. Consultar, eliminar y exportar
+
+- `Filtrar por proceso` muestra las fotos de los inscritos en ese proceso;
+- `Buscar foto por DNI` ubica una foto;
+- cada foto puede eliminarse;
+- `Exportar fotos` descarga un ZIP con las fotos del proceso, nombradas `DNI.jpg`, para la imprenta.
+
+### 17.4. Resultado esperado
+
+La ficha y el carnet salen con la foto del postulante. Sin foto, salen con el recuadro vacío.
 
 Referencia de imagen:
-`[Figura GI-10: Validación de pagos]`
+`[Figura GI-12: Módulo de fotos]`
 
-## 18. Módulo Reportes
+## 18. Ficha de matrícula y carnet
 
-### 18.1. Objetivo
+### 18.1. Ficha de matrícula
 
-Permitir la consulta y exportación del listado de inscripciones.
+Es un PDF A4 con:
 
-### 18.2. Procedimiento
+- el logo, el proceso, la foto y el N° de registro (código de inscripción);
+- la sede y la información CEPRE-UNU, académica, personal y de contacto;
+- la información de pago y la tabla de pagos con el total;
+- el parentesco, la observación y la declaración jurada;
+- las líneas de firma del postulante y del apoderado.
 
-1. ingresar a `Reportes > Inscripciones`;
-2. aplicar filtros si corresponde;
-3. revisar la información en pantalla;
-4. ejecutar la exportación;
+Se abre con `Ver ficha` desde el listado o el detalle. No se genera para inscripciones anuladas.
+
+### 18.2. Carnet
+
+Es un PDF con:
+
+- en la mitad izquierda, los datos del postulante (turno, modalidad, carrera, documento, apellidos y nombres), la foto, la sede y el proceso;
+- en la mitad derecha, la firma y el sello, el nombre y cargo del director, el código QR y la nota.
+
+Se genera solo para inscripciones `ACTIVAS`, una por una (`Ver carnet`) o en lote (`Generar carnets` en el listado).
+
+### 18.3. Verificación del carnet
+
+El QR del carnet abre una página pública que muestra el nombre, el DNI parcialmente oculto, el proceso, la sede, la carrera y el turno, y si el carnet es:
+
+- `VÁLIDO`: la inscripción está activa;
+- `NO VÁLIDO`: la inscripción está anulada o pendiente.
+
+Referencias de imagen:
+`[Figura GI-13: Ficha de matrícula]`
+`[Figura GI-14: Carnet]`
+`[Figura GI-15: Verificación del carnet por QR]`
+
+## 19. Módulo Validar pagos
+
+### 19.1. Objetivo
+
+Asociar un pago libre a una inscripción que ya tiene saldo por pagar. Se usa para las cuotas siguientes o cuando `Validar pagos pendientes` omitió un pago.
+
+### 19.2. Procedimiento
+
+1. ingresar a `Inscripciones > Validar pagos` (o usar `Validar pago` en el menú de la inscripción);
+2. buscar la inscripción por código o postulante y seleccionarla;
+3. revisar el resumen de la obligación: monto total, pagado y saldo;
+4. buscar el pago por DNI y, si se conocen, operación y fecha de pago, con `Buscar pago`;
+5. seleccionar el pago correcto;
+6. seleccionar `Confirmar pago`.
+
+`Cambiar obligación` permite elegir otra inscripción sin salir de la pantalla.
+
+### 19.3. Resultado esperado
+
+El pago pasa a `REGISTRADO` y la obligación recalcula su saldo, pasando a `PARCIAL` o `PAGADO` según corresponda. Si la inscripción estaba pendiente y ahora alcanza el mínimo, queda `ACTIVA`.
+
+Referencia de imagen:
+`[Figura GI-16: Validación de pagos]`
+
+## 20. Módulo Reportes
+
+### 20.1. Objetivo
+
+Consultar y exportar las inscripciones del proceso.
+
+### 20.2. Procedimiento
+
+1. ingresar a `Reportes > Rep. Inscripciones`;
+2. aplicar filtros por modalidad, sede y turno si corresponde;
+3. revisar los indicadores (total inscritos, activas, pagos pendientes y anuladas) y el detalle por turno y aula;
+4. seleccionar `Exportar Excel`;
 5. verificar el archivo generado.
 
-### 18.3. Resultado esperado
+La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6).
 
-El sistema debe producir un reporte ordenado para control administrativo.
+### 20.3. Resultado esperado
+
+El sistema produce un reporte ordenado para control administrativo y para entregar a Admisión.
 
 Referencia de imagen:
-`[Figura GI-11: Reporte de inscripciones]`
+`[Figura GI-17: Reporte de inscripciones]`
 
-## 19. Caso de uso integral del sistema
+## 21. Portal del postulante
+
+El portal es la parte pública del sistema; el postulante no necesita usuario. Se ingresa en la dirección del sistema seguida de `/postulante`. El personal debe conocerlo para orientar a los postulantes.
+
+### 21.1. Inscripción en línea
+
+1. el postulante entra a `/postulante` y elige inscribirse;
+2. ingresa su DNI y el N° de operación de su pago;
+3. el sistema muestra sus pagos libres; marca los que usa y elige la modalidad de pago;
+4. completa los mismos datos de los pasos 2 a 4 del asistente;
+5. al terminar recibe su código de inscripción y puede descargar su ficha.
+
+Diferencias con el asistente del personal:
+
+- solo se usan pagos y datos del DNI ingresado;
+- no se permite una segunda inscripción en el mismo proceso;
+- no se sube foto: se toma en el CEPRE-UNU;
+- la inscripción queda **EN REVISIÓN** hasta que un gestor la aprueba (ver 16.8);
+- hay un límite de intentos por minuto para evitar abusos.
+
+### 21.2. Consultar la inscripción
+
+1. el postulante entra a `/postulante` y elige consultar;
+2. ingresa su DNI y el N° de operación de cualquiera de sus pagos;
+3. el sistema muestra el estado de la inscripción y su aula;
+4. puede descargar la ficha y, si la inscripción está activa, el carnet.
+
+Los enlaces de descarga vencen a los 60 minutos; si vencen, basta con volver a consultar.
+
+Referencias de imagen:
+`[Figura PP-01: Portal del postulante]`
+`[Figura PP-02: Inscripción en línea]`
+`[Figura PP-03: Consulta de la inscripción]`
+
+## 22. Caso de uso integral del sistema
 
 Para una operación ordenada, se recomienda seguir este flujo:
 
 1. el `SuperAdministrador` crea o verifica usuarios y roles;
-2. el `SuperAdministrador` verifica que los catálogos base estén completos (sección 12);
-3. el `SuperAdministrador` crea el proceso con sus fechas de apertura y cierre;
-4. el `SuperAdministrador` configura ofertas, aulas, convenios, reglas de pago y requisitos del proceso;
-5. el `Gestor de Inscripciones CEPRE` importa el TXT del banco con los depósitos del día;
-6. el `Gestor de Inscripciones CEPRE` registra la inscripción del postulante y asocia su depósito en el paso 4;
-7. el `Gestor de Inscripciones CEPRE` revisa los expedientes;
-8. la inscripción queda activa;
-9. las cuotas siguientes, si las hay, se concilian desde `Pagos` o `Validar pagos`;
-10. se generan reportes para seguimiento.
+2. el `SuperAdministrador` verifica los catálogos base (sección 12);
+3. el `SuperAdministrador` crea el proceso con sus fechas y el año de egreso máximo para Ordinario;
+4. el `SuperAdministrador` configura la oferta del proceso, las aulas, las reglas de pago y el carnet;
+5. el `Gestor de Inscripciones CEPRE` carga el TXT del banco del día y registra los pagos manuales;
+6. el `Gestor de Inscripciones CEPRE` inscribe a los postulantes que acuden al CEPRE-UNU y aprueba las inscripciones del portal;
+7. el `Gestor de Inscripciones CEPRE` sube las fotos y entrega la ficha y el carnet;
+8. las cuotas siguientes se validan desde `Pagos` o `Validar pagos`;
+9. se generan reportes para seguimiento;
+10. al final, el `SuperAdministrador` registra los códigos de Admisión y se exporta el listado para Admisión.
 
-## 20. Buenas prácticas operativas
+## 23. Buenas prácticas operativas
 
-1. validar siempre el documento del postulante antes de guardar;
-2. revisar cuidadosamente correo y celular;
-3. confirmar que la oferta corresponda al proceso vigente;
-4. validar el pago antes de aprobar expedientes finales;
-5. usar el rol operativo para trabajo diario y reservar el rol administrador para configuración;
-6. registrar observaciones cuando exista alguna inconsistencia;
-7. generar reportes periódicamente para control interno.
+1. cargar el TXT del banco antes de empezar a inscribir cada día;
+2. validar siempre el documento del postulante antes de guardar;
+3. revisar cuidadosamente correo, celular y datos del apoderado;
+4. verificar que el año de egreso sea correcto, porque de él depende la modalidad;
+5. revisar diariamente las inscripciones `En revisión` del portal;
+6. usar el rol operativo para el trabajo diario y reservar el rol administrador para la configuración;
+7. registrar observaciones cuando exista alguna inconsistencia;
+8. generar reportes periódicamente para control interno.
 
-## 21. Errores operativos frecuentes
+## 24. Errores operativos frecuentes
 
-1. seleccionar una modalidad incorrecta;
-2. elegir una oferta que no corresponde al proceso deseado;
-3. asociar un pago a un postulante equivocado;
-4. aprobar expedientes sin revisar la evidencia;
-5. trabajar fuera del proceso vigente;
-6. asignar permisos excesivos a usuarios operativos;
-7. registrar inscripciones antes de importar el TXT del banco del día;
-8. asignar ofertas a un turno que no tiene aulas con capacidad en el proceso;
-9. crear un proceso sin requisitos obligatorios, lo que impide que las inscripciones queden activas;
-10. registrar un convenio de descuento sin crear la regla de pago asociada a ese convenio.
+1. inscribir antes de cargar el TXT del banco del día;
+2. registrar un pago manual con un DNI equivocado;
+3. registrar mal el año de egreso, lo que asigna otra modalidad;
+4. dejar el proceso sin el año de egreso máximo correcto al pasar de un proceso a otro;
+5. no habilitar en la oferta del proceso una modalidad para egresados o para estudiantes en colegio;
+6. dejar un turno sin aulas con capacidad en el proceso;
+7. olvidar aprobar las inscripciones del portal;
+8. entregar carnets sin haber configurado la firma y el director;
+9. asignar permisos excesivos a usuarios operativos.
 
-## 22. Datos demo cargados para el manual
+## 25. Datos demo cargados para el manual
 
-Para facilitar la elaboración de capturas y demostraciones, se han cargado datos de prueba consistentes en:
+Para elaborar capturas y demostraciones, los datos de prueba incluyen:
 
-- `50` inscripciones completas;
-- modalidad `EXONERACIÓN - CEPREUNU`;
-- lugar `PUCALLPA`;
-- turno `MAÑANA`;
+- el proceso `2026-1`;
+- `50` inscripciones activas en la modalidad `ORDINARIO` y el turno `MAÑANA`;
 - personas con ubigeo de `UCAYALI / CORONEL PORTILLO`;
-- pagos validados;
-- expedientes aprobados;
-- aulas asignadas;
-- usuarios operativos de referencia.
+- pagos registrados y aulas asignadas;
+- el usuario `gestor.cepre` con el rol `GESTOR DE INSCRIPCIONES CEPRE` (inscripciones, pagos y reportes; los permisos de fotos se asignan aparte).
 
-## 23. Procedimiento para recargar datos de demostración
+## 26. Procedimiento para recargar datos de demostración
 
-Si se requiere volver a cargar la información demo, puede utilizarse el siguiente comando:
+Si se requiere volver a cargar la información demo, puede utilizarse el siguiente comando. **No usar en producción.**
 
 ```bash
 php artisan db:seed --class=DevelopmentDataSeeder --no-interaction
 ```
 
-## 24. Conclusiones
+## 27. Conclusiones
 
-El sistema CEPRE UNU permite administrar de manera integral el proceso de inscripción, articulando los componentes de seguridad, configuración académica, registro de postulantes, control de pagos, validación documental y emisión de reportes.
+El sistema CEPRE UNU administra de manera integral el proceso de inscripción: seguridad, configuración de cada proceso, pagos, inscripción presencial y en línea, fotos, ficha de matrícula, carnet con verificación y reportes.
 
 La correcta utilización del sistema depende de dos factores principales:
 
-1. una configuración adecuada por parte del `SuperAdministrador`;
+1. una configuración adecuada de cada proceso por parte del `SuperAdministrador`;
 2. una operación ordenada y precisa por parte del `Gestor de Inscripciones CEPRE`.
 
 La presente guía puede ser utilizada como base para capacitación interna, control operativo y documentación institucional definitiva.
 
-## 25. Anexos sugeridos
+## 28. Anexos sugeridos
 
 Para una versión formal de entrega, se recomienda añadir los siguientes anexos:
 
 1. capturas del inicio de sesión;
-2. capturas del dashboard principal;
+2. capturas del panel principal;
 3. capturas de cada módulo;
 4. capturas del asistente de inscripción completo;
-5. ejemplo de validación de pago;
-6. ejemplo de reporte exportado;
-7. glosario breve de términos del sistema.
+5. ejemplo de ficha de matrícula y de carnet;
+6. capturas del portal del postulante;
+7. ejemplo de reporte exportado;
+8. glosario breve de términos del sistema.
