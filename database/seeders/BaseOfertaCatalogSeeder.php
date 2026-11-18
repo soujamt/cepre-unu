@@ -11,11 +11,7 @@ class BaseOfertaCatalogSeeder extends Seeder
         $this->call([
             SedeSeeder::class,
             CarreraSeeder::class,
-            LugarInscripcionSeeder::class,
             ModalidadAdmisionSeeder::class,
-            ModalidadLugarInscripcionSeeder::class,
-            SedeCarreraSeeder::class,
-            OfertaBaseSeeder::class,
         ]);
     }
 }

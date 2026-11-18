@@ -3,15 +3,16 @@
 use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
-use App\Enums\EstadoRevisionExpediente;
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Inscripcion;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
+use App\Models\Sede;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
 use App\Models\Turno;
 use App\Support\AsignadorAulaInscripcion;
+use App\Support\DocumentosInscripcion;
+use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,6 +27,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 new
 #[Layout('layouts.app')]
@@ -44,8 +46,8 @@ class extends Component
     #[Url(as: 'modalidad')]
     public string $idModalidad = '';
 
-    #[Url(as: 'lugar')]
-    public string $idLugarInscripcion = '';
+    #[Url(as: 'sede')]
+    public string $idSede = '';
 
     #[Url(as: 'pagina')]
     public int $porPagina = 10;
@@ -59,8 +61,8 @@ class extends Component
     #[Url(as: 'pago')]
     public string $filtroPago = '';
 
-    #[Url(as: 'docs')]
-    public string $filtroExpediente = '';
+    #[Url(as: 'revision')]
+    public bool $soloEnRevision = false;
 
     #[Url(as: 'turno')]
     public string $idTurno = '';
@@ -92,7 +94,7 @@ class extends Component
         $this->resetPage();
     }
 
-    public function updatedIdLugarInscripcion(): void
+    public function updatedIdSede(): void
     {
         $this->resetPage();
     }
@@ -108,11 +110,6 @@ class extends Component
     }
 
     public function updatedFiltroPago(): void
-    {
-        $this->resetPage();
-    }
-
-    public function updatedFiltroExpediente(): void
     {
         $this->resetPage();
     }
@@ -146,7 +143,7 @@ class extends Component
     public function procesosDisponibles(): Collection
     {
         return Proceso::query()
-            ->whereHas('procesosOferta.inscripciones')
+            ->whereHas('inscripciones')
             ->orderByDesc('id_pro')
             ->get();
     }
@@ -155,7 +152,7 @@ class extends Component
     public function modalidadesDisponibles(): Collection
     {
         return ModalidadAdmision::query()
-            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
             ->orderBy('nombre_mad')
@@ -163,13 +160,13 @@ class extends Component
     }
 
     #[Computed]
-    public function lugaresInscripcionDisponibles(): Collection
+    public function sedesDisponibles(): Collection
     {
-        return LugarInscripcion::query()
-            ->whereHas('modalidadesLugarInscripcion.ofertasBase.procesosOferta.inscripciones', function (Builder $query): void {
+        return Sede::query()
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
-            ->orderBy('nombre_lin')
+            ->orderBy('nombre_sed')
             ->get();
     }
 
@@ -177,7 +174,7 @@ class extends Component
     public function turnosDisponibles(): Collection
     {
         return Turno::query()
-            ->whereHas('procesosOferta.inscripciones', function (Builder $query): void {
+            ->whereHas('inscripciones', function (Builder $query): void {
                 $this->aplicarFiltrosRelacionados($query);
             })
             ->orderBy('nombre_tur')
@@ -222,12 +219,6 @@ class extends Component
                     EstadoObligacionPago::Parcial->value,
                 ]))
                 ->count(),
-            'docs_observados' => (clone $query)
-                ->whereHas('expedientes', fn (Builder $q) => $q->whereIn('estado_revision_iex', [
-                    EstadoRevisionExpediente::Observado->value,
-                    EstadoRevisionExpediente::Rechazado->value,
-                ]))
-                ->count(),
             'anuladas' => (int) $counts->anuladas,
         ];
     }
@@ -256,6 +247,68 @@ class extends Component
         );
     }
 
+    /**
+     * Carnets de las inscripciones ACTIVAS del listado filtrado, uno por hoja.
+     */
+    public function generarCarnets(DocumentosInscripcion $documentos): ?StreamedResponse
+    {
+        $this->autorizarPermiso('inscripcion', 'indice');
+
+        $inscripciones = $this->baseInscripcionesQuery()
+            ->where('estado_ins', EstadoInscripcion::Activo->value)
+            ->with(DocumentosInscripcion::RELACIONES)
+            ->orderBy('id_ins')
+            ->get();
+
+        if ($inscripciones->isEmpty()) {
+            $this->dispatch('toast', message: 'No hay inscripciones ACTIVAS con los filtros actuales.', type: 'warning');
+
+            return null;
+        }
+
+        $contenido = $documentos->carnets($inscripciones->toBase())->output();
+
+        return response()->streamDownload(function () use ($contenido): void {
+            echo $contenido;
+        }, 'carnets-'.now()->format('Ymd-His').'.pdf', ['Content-Type' => 'application/pdf']);
+    }
+
+    public function updatedSoloEnRevision(): void
+    {
+        $this->resetPage();
+    }
+
+    #[Computed]
+    public function totalEnRevision(): int
+    {
+        return Inscripcion::query()
+            ->where('requiere_revision_ins', true)
+            ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value)
+            ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
+            ->count();
+    }
+
+    /**
+     * Aprueba una inscripción hecha en el portal; se activa si ya alcanza el pago mínimo.
+     */
+    public function aprobarRevision(int $idInscripcion, InscripcionPagoManager $manager): void
+    {
+        $this->autorizarPermiso('inscripcion', 'estado');
+
+        $inscripcion = Inscripcion::query()->findOrFail($idInscripcion);
+
+        if (! $inscripcion->enRevision()) {
+            $this->dispatch('toast', message: 'La inscripción no está en revisión.', type: 'warning');
+
+            return;
+        }
+
+        $manager->aprobarRevision($inscripcion, auth()->id());
+
+        unset($this->inscripciones, $this->resumen, $this->totalEnRevision);
+        $this->dispatch('toast', message: "Inscripción {$inscripcion->codigo_ins} aprobada.", type: 'success');
+    }
+
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
@@ -264,11 +317,6 @@ class extends Component
     public function limpiarFiltroPago(): void
     {
         $this->filtroPago = '';
-    }
-
-    public function limpiarFiltroExpediente(): void
-    {
-        $this->filtroExpediente = '';
     }
 
     public function limpiarFiltroProceso(): void
@@ -280,7 +328,7 @@ class extends Component
     {
         $this->idProceso = $this->resolverProcesoActualPorDefecto();
         $this->idModalidad = '';
-        $this->idLugarInscripcion = '';
+        $this->idSede = '';
         $this->idTurno = '';
         $this->idProcesoAulaFiltro = '';
         $this->resetPage();
@@ -289,9 +337,8 @@ class extends Component
     public function limpiarFiltrosSecundarios(): void
     {
         $this->idModalidad = '';
-        $this->idLugarInscripcion = '';
+        $this->idSede = '';
         $this->filtroPago = '';
-        $this->filtroExpediente = '';
         $this->idTurno = '';
         $this->idProcesoAulaFiltro = '';
         $this->resetPage();
@@ -301,9 +348,8 @@ class extends Component
     {
         return collect([
             $this->idModalidad,
-            $this->idLugarInscripcion,
+            $this->idSede,
             $this->filtroPago,
-            $this->filtroExpediente,
             $this->idTurno,
             $this->idProcesoAulaFiltro,
         ])->filter(fn (mixed $valor): bool => filled($valor))->count();
@@ -322,7 +368,7 @@ class extends Component
         $this->autorizarPermiso('inscripcion', 'editar');
 
         $inscripcion = Inscripcion::query()
-            ->with(['procesoOferta.proceso', 'procesoOferta.turno', 'procesoAula.aula'])
+            ->with(['proceso', 'turno', 'procesoAula.aula'])
             ->findOrFail($idInscripcion);
 
         if (! $this->puedeAsignarAula($inscripcion)) {
@@ -349,7 +395,7 @@ class extends Component
         $this->modal('modal-asignar-aula')->show();
 
         $json = json_encode([
-            'turno' => $inscripcion->procesoOferta?->turno?->nombre_tur ?? '',
+            'turno' => $inscripcion->turno?->nombre_tur ?? '',
             'aulas' => $aulasData,
         ], JSON_THROW_ON_ERROR);
         $this->js("window.dispatchEvent(new CustomEvent('cargar-aulas-modal', { detail: {$json} }))");
@@ -362,12 +408,10 @@ class extends Component
             return new Collection;
         }
 
-        $inscripcion = Inscripcion::query()
-            ->with('procesoOferta')
-            ->findOrFail($this->idInscripcionAula);
+        $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAula);
 
-        $idProceso = $inscripcion->procesoOferta?->id_proceso;
-        $idTurno = $inscripcion->procesoOferta?->id_turno;
+        $idProceso = $inscripcion->id_proceso;
+        $idTurno = $inscripcion->id_turno;
 
         if ($idProceso === null || $idTurno === null) {
             return new Collection;
@@ -412,7 +456,6 @@ class extends Component
 
                 $inscripcion = Inscripcion::query()
                     ->lockForUpdate()
-                    ->with('procesoOferta')
                     ->findOrFail($this->idInscripcionAula);
 
                 if (! $this->puedeAsignarAula($inscripcion)) {
@@ -465,8 +508,8 @@ class extends Component
         try {
             $inscripcion = Inscripcion::query()->findOrFail($this->idInscripcionAnular);
 
-            if ($inscripcion->estado_ins !== EstadoInscripcion::Activo) {
-                throw new RuntimeException('Solo se pueden anular inscripciones activas.');
+            if ($inscripcion->estado_ins !== EstadoInscripcion::Activo && ! $inscripcion->enRevision()) {
+                throw new RuntimeException('Solo se pueden anular inscripciones activas o en revisión.');
             }
 
             $inscripcion->update([
@@ -573,40 +616,6 @@ class extends Component
         return ['label' => 'REVISION', 'color' => 'zinc'];
     }
 
-    /**
-     * @return array{label:string,color:string,detalle:string}
-     */
-    public function resumenExpedientes(Inscripcion $inscripcion): array
-    {
-        $requisitos = $inscripcion->procesoOferta?->proceso?->requisitosExpediente?->count() ?? 0;
-        $expedientes = $inscripcion->expedientes;
-
-        if ($requisitos === 0) {
-            return ['label' => 'SIN REQUISITOS', 'color' => 'zinc', 'detalle' => '0 / 0'];
-        }
-
-        if ($expedientes->isEmpty()) {
-            return ['label' => 'SIN CARGA', 'color' => 'amber', 'detalle' => "0 / {$requisitos}"];
-        }
-
-        if ($expedientes->contains(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Rechazado)) {
-            return ['label' => 'RECHAZADO', 'color' => 'red', 'detalle' => "{$expedientes->count()} / {$requisitos}"];
-        }
-
-        if ($expedientes->contains(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Observado)) {
-            return ['label' => 'OBSERVADO', 'color' => 'sky', 'detalle' => "{$expedientes->count()} / {$requisitos}"];
-        }
-
-        if (
-            $expedientes->count() >= $requisitos
-            && $expedientes->every(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Aprobado)
-        ) {
-            return ['label' => 'COMPLETO', 'color' => 'green', 'detalle' => "{$expedientes->count()} / {$requisitos}"];
-        }
-
-        return ['label' => 'PENDIENTE', 'color' => 'amber', 'detalle' => "{$expedientes->count()} / {$requisitos}"];
-    }
-
     private function baseInscripcionesQuery(): Builder
     {
         return Inscripcion::query()
@@ -621,26 +630,20 @@ class extends Component
                                 ->orWhere('apellido_materno_per', 'like', "%{$texto}%")
                                 ->orWhere('nombres_per', 'like', "%{$texto}%");
                         })
-                        ->orWhereHas('procesoOferta.proceso', fn (Builder $procesoQuery) => $procesoQuery
+                        ->orWhereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
                             ->where('nombre_pro', 'like', "%{$texto}%"))
-                        ->orWhereHas('procesoOferta.ofertaBase.sedeCarrera.carrera', fn (Builder $carreraQuery) => $carreraQuery
+                        ->orWhereHas('carrera', fn (Builder $carreraQuery) => $carreraQuery
                             ->where('nombre_car', 'like', "%{$texto}%"));
                 });
             })
             ->when(filled($this->idProceso), function (Builder $query): void {
-                $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+                $query->where('id_proceso', (int) $this->idProceso);
             })
             ->when(filled($this->idModalidad), function (Builder $query): void {
-                $query->whereHas(
-                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                    fn (Builder $builder) => $builder->where('id_modalidad_admision', (int) $this->idModalidad)
-                );
+                $query->where('id_modalidad_admision', (int) $this->idModalidad);
             })
-            ->when(filled($this->idLugarInscripcion), function (Builder $query): void {
-                $query->whereHas(
-                    'procesoOferta.ofertaBase.modalidadLugarInscripcion',
-                    fn (Builder $builder) => $builder->where('id_lugar_inscripcion', (int) $this->idLugarInscripcion)
-                );
+            ->when(filled($this->idSede), function (Builder $query): void {
+                $query->where('id_sede', (int) $this->idSede);
             })
             ->when($this->estadosSeleccionados !== [], function (Builder $query): void {
                 $query->whereIn('estado_ins', $this->estadosSeleccionados);
@@ -648,15 +651,12 @@ class extends Component
             ->when(filled($this->filtroPago), function (Builder $query): void {
                 $query->whereHas('obligacionesPago', fn (Builder $q) => $q->where('estado_iop', $this->filtroPago));
             })
-            ->when(filled($this->filtroExpediente), function (Builder $query): void {
-                if ($this->filtroExpediente === 'sin_carga') {
-                    $query->whereDoesntHave('expedientes');
-                } else {
-                    $query->whereHas('expedientes', fn (Builder $q) => $q->where('estado_revision_iex', $this->filtroExpediente));
-                }
+            ->when($this->soloEnRevision, function (Builder $query): void {
+                $query->where('requiere_revision_ins', true)
+                    ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value);
             })
             ->when(filled($this->idTurno), function (Builder $query): void {
-                $query->whereHas('procesoOferta', fn (Builder $q) => $q->where('id_turno', (int) $this->idTurno));
+                $query->where('id_turno', (int) $this->idTurno);
             })
             ->when(filled($this->idProcesoAulaFiltro), function (Builder $query): void {
                 $query->where('id_proceso_aula', (int) $this->idProcesoAulaFiltro);
@@ -670,16 +670,14 @@ class extends Component
     {
         return [
             'persona',
-            'procesoOferta.proceso',
-            'procesoOferta.proceso.requisitosExpediente',
-            'procesoOferta.ofertaBase.sedeCarrera.carrera',
-            'procesoOferta.ofertaBase.sedeCarrera.sede',
-            'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'procesoOferta.turno',
+            'proceso',
+            'carrera',
+            'sede',
+            'modalidadAdmision',
+            'turno',
             'procesoAula.aula',
             'procesoAula.turno',
             'obligacionesPago',
-            'expedientes',
         ];
     }
 
@@ -702,7 +700,9 @@ class extends Component
             'paisColegio',
             'colegio',
             'tipoColegio',
-            'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
+            'sede',
+            'modalidadAdmision',
+            'carrera',
         ];
     }
 
@@ -728,7 +728,7 @@ class extends Component
         }
 
         return (string) (Proceso::query()
-            ->whereHas('procesosOferta.inscripciones')
+            ->whereHas('inscripciones')
             ->orderByDesc('fecha_inicio_pro')
             ->orderByDesc('id_pro')
             ->value('id_pro') ?? '');
@@ -737,7 +737,7 @@ class extends Component
     private function aplicarFiltrosRelacionados(Builder $query): void
     {
         if (filled($this->idProceso)) {
-            $query->whereHas('procesoOferta', fn (Builder $builder) => $builder->where('id_proceso', (int) $this->idProceso));
+            $query->where('id_proceso', (int) $this->idProceso);
         }
     }
 

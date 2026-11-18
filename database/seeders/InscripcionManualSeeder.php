@@ -9,19 +9,18 @@ use App\Models\IdentidadEtnica;
 use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Models\LenguaNativa;
+use App\Models\ModalidadAdmision;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
 use App\Models\ReglaPago;
-use App\Models\RequisitoExpediente;
 use App\Models\Rol;
 use App\Models\TipoColegio;
 use App\Models\TipoDocumento;
@@ -30,7 +29,6 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Storage;
 
 class InscripcionManualSeeder extends Seeder
 {
@@ -44,7 +42,7 @@ class InscripcionManualSeeder extends Seeder
             ConfiguracionAcademicaInicialSeeder::class,
         ]);
 
-        [$superAdministrador, $gestorInscripciones] = $this->crearUsuariosManual();
+        [, $gestorInscripciones] = $this->crearUsuariosManual();
         $this->activarProcesoDemo();
 
         $proceso = Proceso::query()
@@ -55,16 +53,13 @@ class InscripcionManualSeeder extends Seeder
             ->where('codigo_tur', 'MAN')
             ->firstOrFail();
 
-        $procesoOfertas = ProcesoOferta::query()
+        $procesoCarreras = ProcesoCarrera::query()
             ->where('id_proceso', $proceso->id_pro)
-            ->where('id_turno', $turno->id_tur)
-            ->whereHas('ofertaBase.modalidadLugarInscripcion', function ($query): void {
-                $query
-                    ->where('id_modalidad_admision', 2)
-                    ->where('id_lugar_inscripcion', 603);
-            })
-            ->orderBy('id_pof')
+            ->where('estado_pca', 'HABILITADO')
+            ->orderBy('id_pca')
             ->get();
+
+        $modalidadOrdinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
 
         $reglaPago = ReglaPago::query()
             ->where('id_proceso', $proceso->id_pro)
@@ -72,13 +67,6 @@ class InscripcionManualSeeder extends Seeder
                 $query->where('codigo_cpg', 'INS_CUO');
             })
             ->firstOrFail();
-
-        $requisitosExpediente = RequisitoExpediente::query()
-            ->with('tipoExpediente')
-            ->where('id_proceso', $proceso->id_pro)
-            ->where('estado_rex', 'HABILITADO')
-            ->orderBy('id_rex')
-            ->get();
 
         $ubigeos = Ubigeo::query()
             ->where('codigo_departamento_ubi', '25')
@@ -127,11 +115,11 @@ class InscripcionManualSeeder extends Seeder
         foreach (range(1, 50) as $indice) {
             $ubigeo = $ubigeos->values()->get(($indice - 1) % $ubigeos->count());
             $colegio = $this->resolverColegio($colegios, $ubigeo?->id_ubi);
-            $procesoOferta = $procesoOfertas->values()->get(($indice - 1) % $procesoOfertas->count());
+            $procesoCarrera = $procesoCarreras->values()->get(($indice - 1) % $procesoCarreras->count());
             $numeroDocumento = (string) (76000000 + $indice);
             $codigoInscripcion = sprintf('MANUAL-INS-%03d', $indice);
 
-            if ($ubigeo === null || $colegio === null || $procesoOferta === null) {
+            if ($ubigeo === null || $colegio === null || $procesoCarrera === null) {
                 continue;
             }
 
@@ -155,6 +143,8 @@ class InscripcionManualSeeder extends Seeder
                     'celular_per' => '900'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'telefono_per' => '061'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'correo_electronico_per' => sprintf('manual.demo.%02d@cepre.test', $indice),
+                    'nombre_apoderado_per' => sprintf('APODERADO DEMO %02d', $indice),
+                    'celular_apoderado_per' => '901'.str_pad((string) $indice, 6, '0', STR_PAD_LEFT),
                     'discapacidad_per' => false,
                     'id_tipo_discapacidad' => null,
                     'tipo_lengua_materna_per' => 'NATIVA',
@@ -170,8 +160,11 @@ class InscripcionManualSeeder extends Seeder
                 ['codigo_ins' => $codigoInscripcion],
                 [
                     'id_persona' => $persona->id_per,
-                    'id_proceso_oferta' => $procesoOferta->id_pof,
-                    'id_convenio_proceso' => null,
+                    'id_proceso' => $proceso->id_pro,
+                    'id_sede' => $procesoCarrera->id_sede,
+                    'id_modalidad_admision' => $modalidadOrdinario->id_mad,
+                    'id_carrera' => $procesoCarrera->id_carrera,
+                    'id_turno' => $turno->id_tur,
                     'fecha_inscripcion_ins' => now()->subDays(50 - $indice),
                     'estado_ins' => 'ACTIVO',
                     'anio_graduacion_ins' => (int) now()->subYears(1 + ($indice % 3))->format('Y'),
@@ -234,37 +227,6 @@ class InscripcionManualSeeder extends Seeder
                 ],
             );
 
-            foreach ($requisitosExpediente as $requisito) {
-                $rutaArchivo = sprintf(
-                    'demo/manual-expedientes/%s-%s.txt',
-                    strtolower($codigoInscripcion),
-                    $requisito->id_tipo_expediente,
-                );
-
-                Storage::disk('public')->put(
-                    $rutaArchivo,
-                    "Archivo demo para {$codigoInscripcion} - {$requisito->tipoExpediente?->nombre_tex}",
-                );
-
-                InscripcionExpediente::query()->updateOrCreate(
-                    [
-                        'id_inscripcion' => $inscripcion->id_ins,
-                        'id_tipo_expediente' => $requisito->id_tipo_expediente,
-                    ],
-                    [
-                        'archivo_url_iex' => $rutaArchivo,
-                        'nombre_archivo_iex' => sprintf(
-                            '%s %s.txt',
-                            $codigoInscripcion,
-                            str($requisito->tipoExpediente?->nombre_tex ?? 'EXPEDIENTE')->slug('_'),
-                        ),
-                        'estado_revision_iex' => 'APROBADO',
-                        'observacion_iex' => 'EXPEDIENTE APROBADO EN DATOS DEMO',
-                        'revisado_en' => now(),
-                        'id_usuario_revisor' => $superAdministrador->id_usu,
-                    ],
-                );
-            }
         }
     }
 

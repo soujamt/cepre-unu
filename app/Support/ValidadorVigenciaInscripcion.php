@@ -3,80 +3,52 @@
 namespace App\Support;
 
 use App\Enums\EstadoCatalogo;
-use App\Enums\EstadoProceso;
-use App\Models\ConvenioProceso;
 use App\Models\Inscripcion;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
+use App\Models\ProcesoModalidad;
 use App\Models\ReglaPago;
 use RuntimeException;
 
 /**
- * Comprueba que la oferta, el convenio y la regla de pago elegidos en una
+ * Comprueba que la postulación y la regla de pago elegidas en una
  * inscripcion sigan vigentes para el proceso activo. Cada metodo lanza una
  * RuntimeException con un mensaje listo para mostrar al usuario.
  */
 class ValidadorVigenciaInscripcion
 {
-    public function ofertaVigente(int $idProcesoOferta, Proceso $procesoActivo): ProcesoOferta
+    /**
+     * Comprueba que la sede, carrera y modalidad de la postulación sigan
+     * habilitadas en el proceso activo.
+     */
+    public function postulacionVigente(int $idSede, int $idCarrera, int $idModalidad, Proceso $procesoActivo): void
     {
-        $procesoOferta = ProcesoOferta::query()
-            ->with(['ofertaBase.modalidadLugarInscripcion'])
-            ->where('id_pof', $idProcesoOferta)
+        $carreraHabilitada = ProcesoCarrera::query()
             ->where('id_proceso', $procesoActivo->id_pro)
-            ->where('estado_pof', EstadoProceso::Habilitado->value)
-            ->first();
+            ->where('id_sede', $idSede)
+            ->where('id_carrera', $idCarrera)
+            ->where('estado_pca', EstadoCatalogo::Habilitado->value)
+            ->exists();
 
-        if ($procesoOferta === null) {
-            throw new RuntimeException('La oferta seleccionada ya no se encuentra disponible para el proceso activo.');
+        if (! $carreraHabilitada) {
+            throw new RuntimeException('La carrera seleccionada ya no se encuentra habilitada en esa sede para el proceso activo.');
         }
 
-        return $procesoOferta;
-    }
-
-    public function convenioVigente(?int $idConvenioProceso, Proceso $procesoActivo, bool $lock = false): ?ConvenioProceso
-    {
-        if ($idConvenioProceso === null) {
-            return null;
-        }
-
-        $query = ConvenioProceso::query()
-            ->with('convenio')
-            ->where('id_cpr', $idConvenioProceso)
+        $modalidadHabilitada = ProcesoModalidad::query()
             ->where('id_proceso', $procesoActivo->id_pro)
-            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
-            ->whereDate('fecha_inicio_cpr', '<=', now()->toDateString())
-            ->whereDate('fecha_fin_cpr', '>=', now()->toDateString());
+            ->where('id_modalidad_admision', $idModalidad)
+            ->where('estado_pmo', EstadoCatalogo::Habilitado->value)
+            ->exists();
 
-        if ($lock) {
-            $query->lockForUpdate();
+        if (! $modalidadHabilitada) {
+            throw new RuntimeException('La modalidad de la postulación ya no se encuentra habilitada para el proceso activo.');
         }
-
-        $convenioProceso = $query->first();
-
-        if ($convenioProceso === null) {
-            $convenioVencido = ConvenioProceso::query()
-                ->with('convenio')
-                ->where('id_cpr', $idConvenioProceso)
-                ->first();
-
-            if ($convenioVencido?->fecha_fin_cpr !== null) {
-                throw new RuntimeException(
-                    'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el '.$convenioVencido->fecha_fin_cpr->format('d/m/Y').'.'
-                );
-            }
-
-            throw new RuntimeException('El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo.');
-        }
-
-        return $convenioProceso;
     }
 
     public function reglaPagoVigente(int $idReglaPago, Inscripcion $inscripcion): ReglaPago
     {
-        $modalidadId = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->id_modalidad_admision;
-        $convenioProcesoId = $inscripcion->id_convenio_proceso;
-        $procesoId = $inscripcion->procesoOferta?->id_proceso;
+        $modalidadId = $inscripcion->id_modalidad_admision;
+        $procesoId = $inscripcion->id_proceso;
 
         if ($procesoId === null) {
             throw new RuntimeException('La inscripción ya no tiene un proceso válido para continuar con el pago.');
@@ -86,7 +58,6 @@ class ValidadorVigenciaInscripcion
             ->with([
                 'conceptoPago',
                 'modalidadAdmision',
-                'convenioProceso.convenio',
             ])
             ->where('id_rpa', $idReglaPago)
             ->where('id_proceso', $procesoId)
@@ -98,13 +69,6 @@ class ValidadorVigenciaInscripcion
 
                 if ($modalidadId !== null) {
                     $query->orWhere('id_modalidad_admision', $modalidadId);
-                }
-            })
-            ->where(function ($query) use ($convenioProcesoId): void {
-                $query->whereNull('id_convenio_proceso');
-
-                if ($convenioProcesoId !== null) {
-                    $query->orWhere('id_convenio_proceso', $convenioProcesoId);
                 }
             })
             ->first();

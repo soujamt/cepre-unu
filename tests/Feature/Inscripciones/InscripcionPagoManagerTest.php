@@ -2,6 +2,7 @@
 
 use App\Enums\EstadoImportacionBanco;
 use App\Enums\EstadoImportacionBancoDetalle;
+use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\Carrera;
@@ -11,7 +12,6 @@ use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
-use App\Models\InscripcionPago;
 use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\ModalidadLugarInscripcion;
@@ -258,7 +258,7 @@ test('can search available imported payments by documento operacion y fecha', fu
     expect($resultados->sole()->id_ibd)->toBe($contexto['detalle']->id_ibd);
 });
 
-test('can associate an imported payment detail to an obligation and update balances', function () {
+test('associating an imported payment updates balances and activates the inscripcion', function () {
     $usuario = Usuario::factory()->create();
     $this->actingAs($usuario);
 
@@ -287,6 +287,7 @@ test('can associate an imported payment detail to an obligation and update balan
     expect((float) $contexto['obligacion']->monto_pagado_iop)->toBe(300.00);
     expect((float) $contexto['obligacion']->saldo_iop)->toBe(250.00);
     expect($contexto['obligacion']->estado_iop)->toBe(EstadoObligacionPago::Parcial);
+    expect($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Activo);
 
     $this->assertDatabaseHas('tbl_inscripcion_pago', [
         'id_ipa' => $pago->id_ipa,
@@ -311,38 +312,107 @@ test('cannot associate an imported detail that is already used', function () {
         ->toThrow(DomainException::class, 'El pago bancario seleccionado ya no se encuentra disponible.');
 });
 
-test('requires the minimum amount for the first installment', function () {
-    $usuario = Usuario::factory()->create();
-    $this->actingAs($usuario);
+function crearDetalleAdicionalPago(array $contexto, float $monto, string $operacion): ImportacionBancoDetalle
+{
+    return ImportacionBancoDetalle::query()->create([
+        'id_importacion_banco' => $contexto['detalle']->id_importacion_banco,
+        'numero_documento_ibd' => $contexto['persona']->numero_documento_per,
+        'numero_operacion_raw_ibd' => "8170{$operacion}",
+        'numero_operacion_visible_ibd' => $operacion,
+        'numero_operacion_ibd' => "8170{$operacion}",
+        'fecha_pago_ibd' => '2026-03-19',
+        'monto_ibd' => $monto,
+        'texto_linea_ibd' => str_repeat('2', 152),
+        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
+    ]);
+}
+
+test('a payment below the minimum is registered but the inscripcion stays pending', function () {
+    $this->actingAs(Usuario::factory()->create());
 
     $contexto = crearContextoInscripcionPago([
         'monto_total_regla' => 550.00,
-        'monto_detalle' => 200.00,
+        'monto_detalle' => 150.00,
         'monto_minimo_primera_cuota' => 275.00,
         'permite_cuotas' => true,
     ]);
 
-    expect(fn () => app(InscripcionPagoManager::class)->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']))
-        ->toThrow(DomainException::class, 'El pago no alcanza el monto minimo requerido para la primera cuota.');
+    app(InscripcionPagoManager::class)->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
 
-    expect(InscripcionPago::query()->count())->toBe(0);
-    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Pendiente);
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
+        ->and($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Pendiente);
 });
 
-test('requires full payment when the rule does not allow installments', function () {
-    $usuario = Usuario::factory()->create();
-    $this->actingAs($usuario);
+test('several payments of the same dni add up to the minimum and activate the inscripcion', function () {
+    $this->actingAs(Usuario::factory()->create());
+
+    $contexto = crearContextoInscripcionPago([
+        'monto_total_regla' => 550.00,
+        'monto_detalle' => 150.00,
+        'monto_minimo_primera_cuota' => 275.00,
+        'permite_cuotas' => true,
+    ]);
+    $segundoPago = crearDetalleAdicionalPago($contexto, 125.00, '41700');
+
+    app(InscripcionPagoManager::class)->asociarDetalles($contexto['obligacion'], [$contexto['detalle'], $segundoPago]);
+
+    $obligacion = $contexto['obligacion']->fresh();
+
+    expect((float) $obligacion->monto_pagado_iop)->toBe(275.0)
+        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Parcial)
+        ->and($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Activo);
+});
+
+test('paying more than the total is accepted for a single payment rule', function () {
+    $this->actingAs(Usuario::factory()->create());
 
     $contexto = crearContextoInscripcionPago([
         'monto_total_regla' => 500.00,
-        'monto_detalle' => 300.00,
+        'monto_detalle' => 501.00,
         'monto_minimo_primera_cuota' => 0,
         'permite_cuotas' => false,
         'numero_maximo_cuotas' => 1,
     ]);
 
-    expect(fn () => app(InscripcionPagoManager::class)->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']))
-        ->toThrow(DomainException::class, 'La regla de pago requiere cubrir el saldo completo en este registro.');
+    app(InscripcionPagoManager::class)->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
 
-    expect(InscripcionPago::query()->count())->toBe(0);
+    $obligacion = $contexto['obligacion']->fresh();
+
+    expect((float) $obligacion->monto_pagado_iop)->toBe(501.0)
+        ->and((float) $obligacion->saldo_iop)->toBe(0.0)
+        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Pagado)
+        ->and($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Activo);
+});
+
+test('a covered obligation does not accept more payments', function () {
+    $this->actingAs(Usuario::factory()->create());
+
+    $contexto = crearContextoInscripcionPago([
+        'monto_total_regla' => 500.00,
+        'monto_detalle' => 500.00,
+        'permite_cuotas' => false,
+        'numero_maximo_cuotas' => 1,
+    ]);
+    $manager = app(InscripcionPagoManager::class);
+    $manager->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
+
+    expect(fn () => $manager->asociarDetalleAObligacion($contexto['obligacion']->fresh(), crearDetalleAdicionalPago($contexto, 50.00, '41701')))
+        ->toThrow(DomainException::class, 'La obligacion de pago ya se encuentra cubierta.');
+});
+
+test('a free rule with a zero payment activates the inscripcion', function () {
+    $this->actingAs(Usuario::factory()->create());
+
+    $contexto = crearContextoInscripcionPago([
+        'monto_total_regla' => 0.00,
+        'monto_detalle' => 0.00,
+        'monto_minimo_primera_cuota' => 0,
+        'permite_cuotas' => false,
+        'numero_maximo_cuotas' => 1,
+    ]);
+
+    app(InscripcionPagoManager::class)->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
+
+    expect($contexto['obligacion']->fresh()->estado_iop)->toBe(EstadoObligacionPago::Pagado)
+        ->and($contexto['inscripcion']->fresh()->estado_ins)->toBe(EstadoInscripcion::Activo);
 });

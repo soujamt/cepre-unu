@@ -21,7 +21,7 @@
         <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div class="space-y-1">
                 <h3 class="text-base font-semibold text-zinc-900 dark:text-white">Resumen operativo del proceso</h3>
-                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por proceso, modalidad, turno, lugar y convenio.</p>
+                <p class="text-sm text-zinc-500 dark:text-zinc-400">Analice el avance de inscripciones por proceso, modalidad, carrera y turno.</p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -89,14 +89,11 @@
                     @endforeach
                 </x-ui.select>
 
-                <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos">
-                    <option value="">Todos los lugares</option>
-                    @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                        <option
-                            wire:key="reporte-lugar-{{ $lugarInscripcion->id_lin }}"
-                            value="{{ $lugarInscripcion->id_lin }}"
-                        >
-                            {{ $lugarInscripcion->nombre_lin }}
+                <x-ui.select wire:model.live="idSede" label="Sede" placeholder="Todas">
+                    <option value="">Todas las sedes</option>
+                    @foreach ($this->sedesDisponibles as $sede)
+                        <option wire:key="reporte-sede-{{ $sede->id_sed }}" value="{{ $sede->id_sed }}">
+                            {{ $sede->nombre_sed }}
                         </option>
                     @endforeach
                 </x-ui.select>
@@ -115,7 +112,7 @@
 
     <x-resumen
         wire:loading.class="opacity-60"
-        wire:target="idProceso,idModalidad,idLugarInscripcion,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
+        wire:target="idProceso,idModalidad,idSede,idTurno,estadoInscripcion,limpiarFiltros,limpiarFiltrosSecundarios"
     >
         <x-resumen.item
             label="Total inscritos"
@@ -137,12 +134,12 @@
         />
 
         <x-resumen.item
-            label="Expedientes observados"
-            :value="$this->resumenGeneral['docs_observados']"
-            icon="file-search"
-            :tono="$this->resumenGeneral['docs_rechazados'] > 0 ? 'danger' : ($this->resumenGeneral['docs_observados'] > 0 ? 'warning' : 'success')"
-            detalle-icon="x-circle"
-            :detalle="$this->resumenGeneral['docs_rechazados'].' rechazados'"
+            label="Activas"
+            :value="$this->resumenGeneral['activas']"
+            icon="check-circle"
+            tono="success"
+            detalle-icon="wallet"
+            detalle="Con pago validado"
         />
 
         <x-resumen.item
@@ -204,27 +201,27 @@
 
         <div class="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
             <p class="text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Cobertura</p>
-            <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Por convenio</h3>
+            <h3 class="mt-1 text-base font-semibold text-zinc-900 dark:text-white">Por turno</h3>
 
             <div class="mt-5 space-y-3">
-                @forelse ($this->reportePorConvenio as $fila)
+                @forelse ($this->reportePorTurno as $fila)
                     <div
                         class="rounded-xl border border-zinc-200/80 bg-zinc-50/80 p-4 dark:border-white/[0.06] dark:bg-zinc-950/40"
                     >
                         <div class="flex items-center justify-between gap-3">
-                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $fila['convenio'] }}</p>
+                            <p class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{{ $fila['turno'] }}</p>
                             <flux:badge color="zinc" size="lg">{{ $fila['total'] }}</flux:badge>
                         </div>
                         <div class="mt-3 grid gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                            <p>Cupo máximo: {{ $fila['cupo_maximo'] ?? 'No definido' }}</p>
-                            <p>Cupo disponible: {{ $fila['cupo_disponible'] ?? 'No aplica' }}</p>
+                            <p>Activas: {{ $fila['activas'] }}</p>
+                            <p>Pendientes: {{ $fila['pendientes'] }}</p>
                         </div>
                     </div>
                 @empty
                     <div
                         class="rounded-xl border border-dashed border-zinc-300 bg-zinc-50/80 p-5 text-sm text-zinc-500 dark:border-white/[0.06] dark:bg-zinc-950/40 dark:text-zinc-400"
                     >
-                        No hay convenios asociados en el filtro actual.
+                        No hay inscripciones en el filtro actual.
                     </div>
                 @endforelse
             </div>
@@ -248,7 +245,7 @@
                             <x-table.heading>MODALIDAD</x-table.heading>
                             <x-table.heading class="w-20">TOTAL</x-table.heading>
                             <x-table.heading class="w-28">PAGO PTE.</x-table.heading>
-                            <x-table.heading class="w-28">DOCS OBS.</x-table.heading>
+                            <x-table.heading class="w-28">ACTIVAS</x-table.heading>
                         </x-table.row>
                     </x-table.head>
                     <x-table.body>
@@ -257,7 +254,7 @@
                                 <x-table.cell>{{ $fila['modalidad'] }}</x-table.cell>
                                 <x-table.cell>{{ $fila['total'] }}</x-table.cell>
                                 <x-table.cell>{{ $fila['pago_pendiente'] }}</x-table.cell>
-                                <x-table.cell>{{ $fila['docs_observados'] }}</x-table.cell>
+                                <x-table.cell>{{ $fila['activas'] }}</x-table.cell>
                             </x-table.row>
                         @empty
                             <x-table.row class="hover:bg-transparent dark:hover:bg-transparent">
@@ -298,17 +295,17 @@
                     </div>
                 </flux:callout>
 
-                <flux:callout color="sky" icon="document-magnifying-glass">
+                <flux:callout color="sky" icon="currency-dollar">
                     <div class="space-y-1">
-                        <p class="text-sm font-medium">Docs observados</p>
-                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['docs_observados'] }}</p>
+                        <p class="text-sm font-medium">Pago parcial</p>
+                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['pago_parcial'] }}</p>
                     </div>
                 </flux:callout>
 
                 <flux:callout color="red" icon="x-circle">
                     <div class="space-y-1">
-                        <p class="text-sm font-medium">Docs rechazados</p>
-                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['docs_rechazados'] }}</p>
+                        <p class="text-sm font-medium">Anuladas</p>
+                        <p class="text-2xl font-semibold">{{ $this->resumenGeneral['anuladas'] }}</p>
                     </div>
                 </flux:callout>
             </div>

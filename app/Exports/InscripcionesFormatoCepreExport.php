@@ -5,6 +5,8 @@ namespace App\Exports;
 use App\Enums\SexoPersona;
 use App\Enums\TipoLenguaMaternaPersona;
 use App\Models\Inscripcion;
+use App\Models\ProcesoCodigoAdmision;
+use App\Support\CodigosAdmisionProceso;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -17,6 +19,13 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 
 class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithStrictNullComparison
 {
+    /**
+     * Códigos de Admisión por "id_proceso|clave"; se cargan al exportar.
+     *
+     * @var array<string, string>|null
+     */
+    private ?array $codigosAdmision = null;
+
     public function __construct(
         public Collection $inscripciones,
     ) {}
@@ -139,10 +148,51 @@ class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize,
             $this->stringOrNull($persona?->identidadEtnica?->nombre_iet),
             $this->stringOrNull($persona?->lenguaNativa?->codigo_lna),
             $this->stringOrNull($persona?->lenguaExtranjera?->codigo_lex),
-            $this->stringOrNull($inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->codigo_lin),
-            $this->stringOrNull($inscripcion->procesoOferta?->ofertaBase?->codigo_externo_ofb),
+            $this->lugarInscripcion($inscripcion),
+            $this->codigoCarrera($inscripcion),
             $this->stringOrNull($inscripcion->observacion_ins ?: $persona?->observacion_per),
         ];
+    }
+
+    /**
+     * Código de lugar que Admisión dio para la sede y modalidad en el proceso.
+     * Si aún no lo entregó, va el nombre para reemplazarlo a mano: "SEDE / MODALIDAD".
+     */
+    private function lugarInscripcion(Inscripcion $inscripcion): ?string
+    {
+        $codigo = $this->codigoAdmision($inscripcion, null);
+
+        if ($codigo !== null) {
+            return $codigo;
+        }
+
+        $partes = array_filter([
+            $inscripcion->sede?->nombre_sed,
+            $inscripcion->modalidadAdmision?->nombre_mad,
+        ]);
+
+        return $partes === [] ? null : implode(' / ', $partes);
+    }
+
+    /**
+     * Código de la oferta (carrera) en el proceso, o el nombre de la carrera.
+     */
+    private function codigoCarrera(Inscripcion $inscripcion): ?string
+    {
+        return $this->codigoAdmision($inscripcion, $inscripcion->id_carrera)
+            ?? $this->stringOrNull($inscripcion->carrera?->nombre_car);
+    }
+
+    private function codigoAdmision(Inscripcion $inscripcion, ?int $idCarrera): ?string
+    {
+        if ($inscripcion->id_sede === null || $inscripcion->id_modalidad_admision === null) {
+            return null;
+        }
+
+        $this->codigosAdmision ??= app(CodigosAdmisionProceso::class)->mapaParaInscripciones($this->inscripciones);
+        $clave = ProcesoCodigoAdmision::clave((int) $inscripcion->id_sede, (int) $inscripcion->id_modalidad_admision, $idCarrera === null ? null : (int) $idCarrera);
+
+        return $this->codigosAdmision[$inscripcion->id_proceso.'|'.$clave] ?? null;
     }
 
     private function codigoSexo(null|SexoPersona|string $sexo): ?string

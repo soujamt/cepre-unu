@@ -1,25 +1,20 @@
 <?php
 
-use App\Enums\EstadoImportacionBanco;
 use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
-use App\Enums\EstadoRevisionExpediente;
-use App\Enums\EstadoValidacionPago;
 use App\Models\Accion;
 use App\Models\Aula;
 use App\Models\Colegio;
-use App\Models\ConvenioProceso;
+use App\Models\ConceptoPago;
 use App\Models\EstadoCivil;
 use App\Models\IdentidadEtnica;
-use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
 use App\Models\InscripcionObligacionPago;
-use App\Models\InscripcionPago;
 use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
+use App\Models\ModalidadAdmision;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
 use App\Models\Permiso;
@@ -27,7 +22,8 @@ use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
+use App\Models\ProcesoModalidad;
 use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\TipoColegio;
@@ -44,27 +40,21 @@ use Database\Seeders\EstadoCivilSeeder;
 use Database\Seeders\IdentidadEtnicaSeeder;
 use Database\Seeders\LenguaExtranjeraSeeder;
 use Database\Seeders\LenguaNativaSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
 use Database\Seeders\NacionalidadSeeder;
-use Database\Seeders\OfertaBaseSeeder;
 use Database\Seeders\PaisSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
 use Database\Seeders\TipoColegioSeeder;
 use Database\Seeders\TipoDiscapacidadSeeder;
 use Database\Seeders\TipoDocumentoSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -206,7 +196,6 @@ function sembrarConfiguracionAcademicaParaInscripcion(): void
 {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         TipoDocumentoSeeder::class,
         TipoDiscapacidadSeeder::class,
@@ -221,15 +210,38 @@ function sembrarConfiguracionAcademicaParaInscripcion(): void
         ColegioSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
+}
+
+/**
+ * Primera carrera habilitada del proceso semilla 2026-1 con el turno MAÑANA y
+ * la modalidad ORDINARIO, para armar postulaciones de prueba. Con $conAula
+ * le asigna un aula al turno para que se pueda elegir.
+ */
+function postulacionDePrueba(bool $conAula = false): object
+{
+    $procesoCarrera = ProcesoCarrera::query()
+        ->whereHas('proceso', fn ($query) => $query->where('codigo_pro', '2026_1'))
+        ->orderBy('id_pca')
+        ->firstOrFail();
+    $turno = Turno::query()->where('codigo_tur', 'MAN')->firstOrFail();
+
+    if ($conAula) {
+        crearAulaParaProcesoInscripcion($procesoCarrera->proceso, $turno, 'AULA PRUEBA', 'UAP', 'PISO 1', 40);
+    }
+
+    return (object) [
+        'id_proceso' => $procesoCarrera->id_proceso,
+        'id_sede' => $procesoCarrera->id_sede,
+        'id_carrera' => $procesoCarrera->id_carrera,
+        'id_modalidad_admision' => ModalidadAdmision::query()->where('codigo_mad', 'ORD')->value('id_mad'),
+        'id_turno' => $turno->id_tur,
+        'turno' => $turno,
+    ];
 }
 
 function crearPersonaParaPostulacion(string $numeroDocumento): Persona
@@ -351,6 +363,8 @@ test('users can register personal information for a new inscripcion draft', func
         ->set('personaForm.celular', '987654321')
         ->set('personaForm.telefono', '061123456')
         ->set('personaForm.correo_electronico', 'lucy@test.com')
+        ->set('personaForm.nombre_apoderado', 'maria rojas')
+        ->set('personaForm.celular_apoderado', '944477117')
         ->set('personaForm.discapacidad', true)
         ->set('personaForm.id_tipo_discapacidad', (string) $catalogos['tipoDiscapacidad']->id_tdi)
         ->set('personaForm.tipo_lengua_materna', 'NATIVA')
@@ -360,7 +374,7 @@ test('users can register personal information for a new inscripcion draft', func
         ->set('personaForm.observacion', 'Observacion base')
         ->call('guardarPasoPersonal')
         ->assertHasNoErrors()
-        ->assertSet('pasoActual', 2);
+        ->assertSet('pasoActual', 3);
 
     $persona = Persona::query()->first();
 
@@ -371,6 +385,31 @@ test('users can register personal information for a new inscripcion draft', func
     expect($persona?->nombres_per)->toBe('LUCY BETTY');
     expect($persona?->correo_electronico_per)->toBe('lucy@test.com');
     expect($persona?->discapacidad_per)->toBeTrue();
+    expect($persona?->nombre_apoderado_per)->toBe('MARIA ROJAS');
+    expect($persona?->celular_apoderado_per)->toBe('944477117');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('personal information requires valid cellphones and the guardian contact', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pasoActual', 2)
+        ->set('personaForm.celular', '812345678')
+        ->set('personaForm.celular_apoderado', '9123')
+        ->call('guardarPasoPersonal')
+        ->assertHasErrors([
+            'personaForm.celular' => 'regex',
+            'personaForm.celular_apoderado' => 'regex',
+            'personaForm.nombre_apoderado' => 'required',
+            'personaForm.correo_electronico' => 'required',
+        ]);
 
     Carbon\Carbon::setTestNow();
 });
@@ -673,7 +712,7 @@ test('users can register general information and receive a warning when there is
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 2)
+        ->set('pasoActual', 3)
         ->set('generalForm.anio_graduacion', '2026')
         ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
@@ -684,7 +723,7 @@ test('users can register general information and receive a warning when there is
         ->set('generalForm.observacion', 'OBSERVACION GENERAL')
         ->call('guardarPasoGeneral')
         ->assertHasNoErrors()
-        ->assertSet('pasoActual', 2)
+        ->assertSet('pasoActual', 3)
         ->assertSet('generalForm.nombre_colegio_extranjero', '')
         ->assertDispatched('toast', message: 'No hay un proceso de inscripcion activo en este momento. No se puede iniciar una nueva inscripcion.', type: 'warning');
 });
@@ -729,8 +768,8 @@ test('general information validates future graduation year and required postulat
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
         ->set('inscripcionId', 1)
-        ->set('pasoActual', 2)
-        ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 1))
+        ->set('pasoActual', 3)
+        ->set('generalForm.anio_graduacion', (string) (((int) now()->format('Y')) + 3))
         ->set('generalForm.id_pais_colegio', (string) $catalogos['pais']->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
         ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
@@ -742,7 +781,7 @@ test('general information validates future graduation year and required postulat
             'generalForm.veces_postula_unu',
             'generalForm.veces_postula_otras',
         ])
-        ->assertSet('pasoActual', 2);
+        ->assertSet('pasoActual', 3);
 });
 
 test('cannot jump to postulacion step when general information is invalid', function () {
@@ -785,10 +824,11 @@ test('cannot jump to postulacion step when general information is invalid', func
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
         ->set('inscripcionId', 1)
-        ->set('pasoActual', 2)
+        ->set('pasoActual', 3)
+        ->set('pagoValidado', true)
         ->set('generalForm.anio_graduacion', '')
-        ->call('irPaso', 3)
-        ->assertSet('pasoActual', 2)
+        ->call('irPaso', 4)
+        ->assertSet('pasoActual', 3)
         ->assertHasErrors(['generalForm.anio_graduacion'])
         ->assertDispatched('toast', message: 'Revise la informacion general antes de continuar.', type: 'warning');
 });
@@ -846,18 +886,7 @@ test('users can register postulacion and create an inscripcion draft', function 
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba(conAula: true);
 
     $this->actingAs($usuario);
 
@@ -865,34 +894,75 @@ test('users can register postulacion and create an inscripcion draft', function 
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
+        ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
         ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
-        ->assertSet('pasoActual', 4)
-        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+        ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success')
+        ->assertRedirect(route('inscripciones.index'));
 
     $inscripcion = Inscripcion::query()->first();
 
     expect($inscripcion)->not->toBeNull()
         ->and($inscripcion?->id_persona)->toBe($persona->id_per)
-        ->and($inscripcion?->id_proceso_oferta)->toBe($procesoOferta->id_pof)
-        ->and($inscripcion?->id_convenio_proceso)->toBe($convenioProceso->id_cpr)
+        ->and($inscripcion?->id_carrera)->toBe($procesoOferta->id_carrera)
+        ->and($inscripcion?->modalidadAdmision?->codigo_mad)->toBe('EXT')
+        ->and($inscripcion?->id_turno)->toBe($procesoOferta->id_turno)
         ->and($inscripcion?->estado_ins?->value)->toBe('PENDIENTE')
         ->and($inscripcion?->veces_postula_unu_ins)->toBe(0)
         ->and($inscripcion?->veces_postula_otras_ins)->toBe(0)
         ->and($inscripcion?->codigo_ins)->not->toStartWith('TMP-')
         ->and($inscripcion?->codigo_ins)->toBe('2610001');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('postulacion is blocked when the proceso has no modalidad for the graduation year', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $persona = crearPersonaParaPostulacion('46027811');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $postulacion = postulacionDePrueba(conAula: true);
+
+    ProcesoModalidad::query()
+        ->where('id_proceso', $postulacion->id_proceso)
+        ->whereHas('modalidadAdmision', fn ($query) => $query->where('codigo_mad', 'EXT'))
+        ->update(['estado_pmo' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 4)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->set('confirmacionDatos', true)
+        ->call('guardarPasoPostulacion')
+        ->assertSet('pasoActual', 4)
+        ->assertDispatched('toast', message: 'El proceso activo no tiene habilitada una modalidad para el año de egreso ingresado. Revise la oferta del proceso.', type: 'warning');
+
+    expect(Inscripcion::query()->count())->toBe(0);
 
     Carbon\Carbon::setTestNow();
 });
@@ -908,10 +978,7 @@ test('postulacion assigns the first aula with capacity by configured order', fun
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $procesoOferta = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 2);
     crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
@@ -921,20 +988,20 @@ test('postulacion assigns the first aula with capacity by configured order', fun
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
+        ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
         ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+        ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
 
     $inscripcion = Inscripcion::query()->firstOrFail();
 
@@ -955,10 +1022,7 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     $tipoColegio = TipoColegio::query()->firstOrFail();
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $procesoOferta = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $primerAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA A', 'UAP', 'PISO 1', 1);
     $segundaAula = crearAulaParaProcesoInscripcion($proceso, $procesoOferta->turno, 'AULA B', 'UAP', 'PISO 1', 2);
@@ -966,7 +1030,11 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     Inscripcion::query()->create([
         'codigo_ins' => 'OCUPADO-001',
         'id_persona' => $personaOcupante->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'id_proceso_aula' => $primerAula['procesoAula']->id_pau,
         'fecha_inscripcion_ins' => now(),
         'estado_ins' => EstadoInscripcion::Pendiente->value,
@@ -977,20 +1045,20 @@ test('postulacion skips full aulas and assigns the next available aula', functio
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
+        ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
         ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+        ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
 
     $inscripcion = Inscripcion::query()
         ->where('id_persona', $persona->id_per)
@@ -1013,10 +1081,7 @@ test('postulacion only assigns aulas from the selected turno', function () {
     $colegio = Colegio::query()->firstOrFail();
     $proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
 
-    $procesoOfertaManana = ProcesoOferta::query()
-        ->with('ofertaBase.modalidadLugarInscripcion', 'turno')
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOfertaManana = postulacionDePrueba();
 
     $turnoTarde = Turno::query()
         ->where('id_tur', '!=', $procesoOfertaManana->id_turno)
@@ -1031,13 +1096,9 @@ test('postulacion only assigns aulas from the selected turno', function () {
         ]);
     }
 
-    $procesoOfertaTarde = ProcesoOferta::query()->create([
-        'id_proceso' => $proceso->id_pro,
-        'id_oferta_base' => $procesoOfertaManana->id_oferta_base,
-        'id_turno' => $turnoTarde->id_tur,
-        'estado_pof' => 'HABILITADO',
-    ]);
-    $procesoOfertaTarde->load('ofertaBase.modalidadLugarInscripcion', 'turno');
+    $procesoOfertaTarde = clone $procesoOfertaManana;
+    $procesoOfertaTarde->id_turno = $turnoTarde->id_tur;
+    $procesoOfertaTarde->turno = $turnoTarde;
 
     crearAulaParaProcesoInscripcion($proceso, $procesoOfertaManana->turno, 'AULA MANANA', 'UAP', 'PISO 1', 40);
     $aulaTarde = crearAulaParaProcesoInscripcion($proceso, $procesoOfertaTarde->turno, 'AULA TARDE', 'UAP', 'PISO 2', 50);
@@ -1047,20 +1108,20 @@ test('postulacion only assigns aulas from the selected turno', function () {
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
+        ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
         ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
         ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
         ->set('generalForm.id_colegio', $colegio->id_col)
         ->set('generalForm.veces_postula_unu', 0)
         ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOfertaTarde->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('postulacionForm.id_sede', (string) $procesoOfertaTarde->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $procesoOfertaTarde->id_carrera)
         ->set('postulacionForm.id_turno', (string) $procesoOfertaTarde->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOfertaTarde->id_pof)
+        ->set('confirmacionDatos', true)
         ->call('guardarPasoPostulacion')
         ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Postulacion guardada correctamente.', type: 'success');
+        ->assertDispatched('toast', message: 'Postulacion guardada. La inscripcion sigue pendiente hasta completar el pago.', type: 'success');
 
     $inscripcion = Inscripcion::query()->firstOrFail();
 
@@ -1146,24 +1207,16 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
+    $procesoOferta = postulacionDePrueba();
 
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => '26IPRO0001',
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'id_proceso' => $procesoOferta->id_proceso,
+        'id_sede' => $procesoOferta->id_sede,
+        'id_modalidad_admision' => $procesoOferta->id_modalidad_admision,
+        'id_carrera' => $procesoOferta->id_carrera,
+        'id_turno' => $procesoOferta->id_turno,
         'fecha_inscripcion_ins' => '2026-04-15 10:00:00',
         'estado_ins' => EstadoInscripcion::Pendiente->value,
         'anio_graduacion_ins' => 2025,
@@ -1187,7 +1240,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
         ->assertSet('inscripcionId', $inscripcion->id_ins)
         ->assertSet('personaId', $persona->id_per)
-        ->assertSet('pasoActual', 4)
+        ->assertSet('pasoActual', 1)
         ->assertSet('personaForm.id_tipo_documento', (string) $tipoDocumento->id_tdo)
         ->assertSet('personaForm.numero_documento', '46027897')
         ->assertSet('personaForm.nombres', 'ROXANA KARINA')
@@ -1198,11 +1251,9 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->assertSet('generalForm.id_colegio', $colegio->id_col)
         ->assertSet('generalForm.veces_postula_unu', 1)
         ->assertSet('generalForm.veces_postula_otras', 2)
-        ->assertSet('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->assertSet('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->assertSet('postulacionForm.id_sede', (string) $procesoOferta->id_sede)
+        ->assertSet('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->assertSet('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->assertSet('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->assertSet('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
         ->assertSet('pagoForm.numero_documento', '46027897')
         ->assertSet('colegioLabel', $colegioLabel)
         ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: $colegio->id_col, label: $colegioLabel);
@@ -1219,671 +1270,221 @@ test('new inscripcion page shows blocked state when there is no active process',
         ->assertSee('No hay un proceso de inscripcion activo en este momento.');
 });
 
-test('users can validate a bank payment from the payment step and continue to expedientes', function () {
-    $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
-    sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()
-        ->where('longitud_minima_tdo', 8)
-        ->where('longitud_maxima_tdo', 8)
-        ->firstOrFail();
-
-    $estadoCivil = EstadoCivil::query()->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-    $nacionalidad = Nacionalidad::query()->firstOrFail();
-    $ubigeo = Ubigeo::query()->firstOrFail();
-    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
-    $lenguaNativa = LenguaNativa::query()->firstOrFail();
-    $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '46027897',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'DELGADO',
-        'apellido_materno_per' => 'HUAMANI',
-        'apellido_casada_per' => null,
-        'nombres_per' => 'ROXANA KARINA',
-        'fecha_nacimiento_per' => '2001-02-03',
-        'sexo_per' => 'FEMENINO',
-        'id_estado_civil' => $estadoCivil->id_eci,
-        'id_pais_nacimiento' => $pais->id_pai,
-        'id_nacionalidad' => $nacionalidad->id_nac,
-        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
-        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
-        'direccion_per' => 'JR LOCAL 123',
-        'celular_per' => '999111222',
-        'telefono_per' => '061999999',
-        'correo_electronico_per' => 'roxana@test.com',
-        'discapacidad_per' => false,
-        'id_tipo_discapacidad' => null,
-        'tipo_lengua_materna_per' => 'NATIVA',
-        'id_identidad_etnica' => $identidadEtnica->id_iet,
-        'id_lengua_nativa' => $lenguaNativa->id_lna,
-        'id_lengua_extranjera' => null,
-        'observacion_per' => null,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $proceso = Proceso::query()
-        ->where('codigo_pro', '2026_1')
-        ->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
-
-    $reglaPago = ReglaPago::query()
-        ->where('id_proceso', $proceso->id_pro)
-        ->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))
-        ->firstOrFail();
-
-    $importacion = ImportacionBanco::query()->create([
-        'nombre_archivo_iba' => 'REC10768.TXT',
-        'hash_archivo_iba' => 'hash-paso-4',
-        'moneda_iba' => 'PEN',
-        'fecha_importacion_iba' => '2026-04-15 08:00:00',
-        'fecha_lote_iba' => '2026-04-14',
-        'total_registros_iba' => 1,
-        'total_registros_reportado_iba' => 1,
-        'total_monto_iba' => 300.00,
-        'total_monto_reportado_iba' => 300.00,
-        'estado_iba' => EstadoImportacionBanco::Procesado,
-    ]);
-
-    $detalle = ImportacionBancoDetalle::query()->create([
-        'id_importacion_banco' => $importacion->id_iba,
-        'numero_documento_ibd' => $persona->numero_documento_per,
-        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
-        'numero_operacion_raw_ibd' => '817041676',
-        'numero_operacion_visible_ibd' => '41676',
-        'numero_operacion_ibd' => '817041676',
-        'codigo_canal_ibd' => 'Y%G',
-        'codigo_oficina_ibd' => '01068',
+function crearPagoLibrePrueba(string $dni, float $monto, string $operacion, string $ubicacion = 'RECAUDACIÓN BBVA N° 13248'): ImportacionBancoDetalle
+{
+    return ImportacionBancoDetalle::query()->create([
+        'origen_ibd' => 'MANUAL',
+        'numero_documento_ibd' => $dni,
+        'numero_operacion_raw_ibd' => $operacion,
+        'numero_operacion_visible_ibd' => $operacion,
+        'numero_operacion_ibd' => $operacion,
         'fecha_pago_ibd' => '2026-04-14',
-        'monto_ibd' => 300.00,
-        'texto_linea_ibd' => str_repeat('0', 152),
+        'monto_ibd' => $monto,
+        'ubicacion_ibd' => $ubicacion,
         'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
     ]);
+}
 
-    $this->actingAs($usuario);
+function crearReglaPagoPrueba(string $codigo, float $total, bool $permiteCuotas = false, float $minimo = 0, ?string $documento = null): ReglaPago
+{
+    $concepto = ConceptoPago::query()->create([
+        'codigo_cpg' => $codigo,
+        'nombre_cpg' => "CONCEPTO {$codigo}",
+        'permite_cuotas_cpg' => $permiteCuotas,
+        'estado_cpg' => 'HABILITADO',
+    ]);
 
-    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+    return ReglaPago::query()->create([
+        'id_concepto_pago' => $concepto->id_cpg,
+        'id_proceso' => Proceso::query()->where('codigo_pro', '2026_1')->value('id_pro'),
+        'monto_total_rpa' => $total,
+        'permite_cuotas_rpa' => $permiteCuotas,
+        'monto_minimo_primera_cuota_rpa' => $minimo,
+        'numero_maximo_cuotas_rpa' => $permiteCuotas ? 2 : 1,
+        'requiere_pago_completo_rpa' => false,
+        'documento_requerido_rpa' => $documento,
+        'vigente_desde_rpa' => '2026-04-01',
+        'vigente_hasta_rpa' => '2026-04-30',
+        'estado_rpa' => 'HABILITADO',
+    ]);
+}
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+/**
+ * Completa los pasos 2 a 4 con una persona ya registrada y guarda la postulación.
+ */
+function completarInscripcionDePrueba(Testable $componente, Persona $persona): Testable
+{
+    $postulacion = postulacionDePrueba(conAula: true);
+
+    return $componente
         ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
-        ->set('generalForm.anio_graduacion', '2026')
-        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
-        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('generalForm.id_colegio', $colegio->id_col)
-        ->set('generalForm.veces_postula_unu', 0)
-        ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
-        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->call('guardarPasoPostulacion')
-        ->assertSet('pasoActual', 4)
-        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
-        ->set('pagoForm.numero_operacion', '41676')
-        ->set('pagoForm.fecha_pago', '2026-04-14')
-        ->call('buscarPagosPasoPago')
-        ->assertSet('resultadoPagoDetalleIds', [$detalle->id_ibd])
-        ->call('seleccionarDetallePago', $detalle->id_ibd)
-        ->call('confirmarPasoPago')
-        ->assertHasNoErrors()
-        ->assertSet('pasoActual', 5)
-        ->assertDispatched('toast', message: 'Pago validado correctamente. Puede continuar con los expedientes.', type: 'success');
-
-    $inscripcion = Inscripcion::query()->firstOrFail();
-    $obligacion = InscripcionObligacionPago::query()->where('id_inscripcion', $inscripcion->id_ins)->firstOrFail();
-    $pago = InscripcionPago::query()->where('id_inscripcion_obligacion_pago', $obligacion->id_iop)->firstOrFail();
-
-    expect($obligacion->id_regla_pago)->toBe($reglaPago->id_rpa)
-        ->and((float) $obligacion->monto_total_iop)->toBe(550.0)
-        ->and((float) $obligacion->monto_pagado_iop)->toBe(300.0)
-        ->and((float) $obligacion->saldo_iop)->toBe(250.0)
-        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Parcial)
-        ->and($pago->estado_validacion_ipa)->toBe(EstadoValidacionPago::Verificado);
-
-    expect($detalle->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado);
-
-    Carbon\Carbon::setTestNow();
-});
-
-test('users can complete a payment obligation with multiple cuotas from the wizard', function () {
-    $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
-    sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()
-        ->where('longitud_minima_tdo', 8)
-        ->where('longitud_maxima_tdo', 8)
-        ->firstOrFail();
-
-    $estadoCivil = EstadoCivil::query()->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-    $nacionalidad = Nacionalidad::query()->firstOrFail();
-    $ubigeo = Ubigeo::query()->firstOrFail();
-    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
-    $lenguaNativa = LenguaNativa::query()->firstOrFail();
-    $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '46027897',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'DELGADO',
-        'apellido_materno_per' => 'HUAMANI',
-        'apellido_casada_per' => null,
-        'nombres_per' => 'ROXANA KARINA',
-        'fecha_nacimiento_per' => '2001-02-03',
-        'sexo_per' => 'FEMENINO',
-        'id_estado_civil' => $estadoCivil->id_eci,
-        'id_pais_nacimiento' => $pais->id_pai,
-        'id_nacionalidad' => $nacionalidad->id_nac,
-        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
-        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
-        'direccion_per' => 'JR LOCAL 123',
-        'celular_per' => '999111222',
-        'telefono_per' => '061999999',
-        'correo_electronico_per' => 'roxana@test.com',
-        'discapacidad_per' => false,
-        'id_tipo_discapacidad' => null,
-        'tipo_lengua_materna_per' => 'NATIVA',
-        'id_identidad_etnica' => $identidadEtnica->id_iet,
-        'id_lengua_nativa' => $lenguaNativa->id_lna,
-        'id_lengua_extranjera' => null,
-        'observacion_per' => null,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $proceso = Proceso::query()
-        ->where('codigo_pro', '2026_1')
-        ->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
-
-    $reglaPago = ReglaPago::query()
-        ->where('id_proceso', $proceso->id_pro)
-        ->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))
-        ->firstOrFail();
-
-    $importacionPrimeraCuota = ImportacionBanco::query()->create([
-        'nombre_archivo_iba' => 'REC10768.TXT',
-        'hash_archivo_iba' => 'hash-cuota-1',
-        'moneda_iba' => 'PEN',
-        'fecha_importacion_iba' => '2026-04-15 08:00:00',
-        'fecha_lote_iba' => '2026-04-14',
-        'total_registros_iba' => 1,
-        'total_registros_reportado_iba' => 1,
-        'total_monto_iba' => 300.00,
-        'total_monto_reportado_iba' => 300.00,
-        'estado_iba' => EstadoImportacionBanco::Procesado,
-    ]);
-
-    $detallePrimeraCuota = ImportacionBancoDetalle::query()->create([
-        'id_importacion_banco' => $importacionPrimeraCuota->id_iba,
-        'numero_documento_ibd' => $persona->numero_documento_per,
-        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
-        'numero_operacion_raw_ibd' => '817041676',
-        'numero_operacion_visible_ibd' => '41676',
-        'numero_operacion_ibd' => '817041676',
-        'codigo_canal_ibd' => 'Y%G',
-        'codigo_oficina_ibd' => '01068',
-        'fecha_pago_ibd' => '2026-04-14',
-        'monto_ibd' => 300.00,
-        'texto_linea_ibd' => str_repeat('0', 152),
-        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
-    ]);
-
-    $importacionSegundaCuota = ImportacionBanco::query()->create([
-        'nombre_archivo_iba' => 'REC10769.TXT',
-        'hash_archivo_iba' => 'hash-cuota-2',
-        'moneda_iba' => 'PEN',
-        'fecha_importacion_iba' => '2026-04-18 08:00:00',
-        'fecha_lote_iba' => '2026-04-17',
-        'total_registros_iba' => 1,
-        'total_registros_reportado_iba' => 1,
-        'total_monto_iba' => 250.00,
-        'total_monto_reportado_iba' => 250.00,
-        'estado_iba' => EstadoImportacionBanco::Procesado,
-    ]);
-
-    $detalleSegundaCuota = ImportacionBancoDetalle::query()->create([
-        'id_importacion_banco' => $importacionSegundaCuota->id_iba,
-        'numero_documento_ibd' => $persona->numero_documento_per,
-        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
-        'numero_operacion_raw_ibd' => '817041999',
-        'numero_operacion_visible_ibd' => '41999',
-        'numero_operacion_ibd' => '817041999',
-        'codigo_canal_ibd' => 'Y%G',
-        'codigo_oficina_ibd' => '01068',
-        'fecha_pago_ibd' => '2026-04-17',
-        'monto_ibd' => 250.00,
-        'texto_linea_ibd' => str_repeat('1', 152),
-        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
-    ]);
-
-    $this->actingAs($usuario);
-
-    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
-
-    Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
-        ->set('generalForm.anio_graduacion', '2026')
-        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
-        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('generalForm.id_colegio', $colegio->id_col)
-        ->set('generalForm.veces_postula_unu', 0)
-        ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
-        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->call('guardarPasoPostulacion')
-        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
-        ->set('pagoForm.numero_operacion', '41676')
-        ->set('pagoForm.fecha_pago', '2026-04-14')
-        ->call('buscarPagosPasoPago')
-        ->assertSet('resultadoPagoDetalleIds', [$detallePrimeraCuota->id_ibd])
-        ->call('seleccionarDetallePago', $detallePrimeraCuota->id_ibd)
-        ->call('confirmarPasoPago')
-        ->assertHasNoErrors()
-        ->assertSet('pasoActual', 5);
-
-    $inscripcion = Inscripcion::query()->firstOrFail();
-    $obligacion = InscripcionObligacionPago::query()->where('id_inscripcion', $inscripcion->id_ins)->firstOrFail();
-
-    expect((float) $obligacion->monto_pagado_iop)->toBe(300.0)
-        ->and((float) $obligacion->saldo_iop)->toBe(250.0)
-        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Parcial);
-
-    Carbon\Carbon::setTestNow('2026-04-18 09:00:00');
-
-    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
-        ->assertSet('pasoActual', 5)
         ->set('pasoActual', 4)
-        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
-        ->set('pagoForm.numero_operacion', '41999')
-        ->set('pagoForm.fecha_pago', '2026-04-17')
-        ->call('buscarPagosPasoPago')
-        ->assertSet('resultadoPagoDetalleIds', [$detalleSegundaCuota->id_ibd])
-        ->call('seleccionarDetallePago', $detalleSegundaCuota->id_ibd)
-        ->call('confirmarPasoPago')
-        ->assertHasNoErrors()
-        ->assertSet('pasoActual', 5)
-        ->assertDispatched('toast', message: 'Pago validado correctamente. Puede continuar con los expedientes.', type: 'success');
+        ->set('generalForm.anio_graduacion', '2025')
+        ->set('generalForm.id_pais_colegio', (string) Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->value('id_pai'))
+        ->set('generalForm.id_tipo_colegio', (string) TipoColegio::query()->value('id_tco'))
+        ->set('generalForm.id_colegio', Colegio::query()->value('id_col'))
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->set('confirmacionDatos', true)
+        ->call('guardarPasoPostulacion');
+}
 
-    $obligacion->refresh();
-    $pagos = InscripcionPago::query()
-        ->where('id_inscripcion_obligacion_pago', $obligacion->id_iop)
-        ->orderBy('numero_cuota_ipa')
-        ->get();
-
-    expect($pagos)->toHaveCount(2)
-        ->and($pagos->pluck('numero_cuota_ipa')->all())->toBe([1, 2])
-        ->and((float) $obligacion->monto_pagado_iop)->toBe(550.0)
-        ->and((float) $obligacion->saldo_iop)->toBe(0.0)
-        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Pagado);
-
-    expect($detallePrimeraCuota->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
-        ->and($detalleSegundaCuota->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado);
-
-    Carbon\Carbon::setTestNow();
-});
-
-test('users can save expediente review and activate the inscripcion when all required documents are approved', function () {
+test('the inscripcion starts by validating a payment and ends active with the payment registered', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
     sembrarConfiguracionAcademicaParaInscripcion();
-    Storage::fake('public');
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    $tipoDocumento = TipoDocumento::query()
-        ->where('longitud_minima_tdo', 8)
-        ->where('longitud_maxima_tdo', 8)
-        ->firstOrFail();
-
-    $estadoCivil = EstadoCivil::query()->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-    $nacionalidad = Nacionalidad::query()->firstOrFail();
-    $ubigeo = Ubigeo::query()->firstOrFail();
-    $identidadEtnica = IdentidadEtnica::query()->firstOrFail();
-    $lenguaNativa = LenguaNativa::query()->firstOrFail();
-    $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '46027897',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'DELGADO',
-        'apellido_materno_per' => 'HUAMANI',
-        'apellido_casada_per' => null,
-        'nombres_per' => 'ROXANA KARINA',
-        'fecha_nacimiento_per' => '2001-02-03',
-        'sexo_per' => 'FEMENINO',
-        'id_estado_civil' => $estadoCivil->id_eci,
-        'id_pais_nacimiento' => $pais->id_pai,
-        'id_nacionalidad' => $nacionalidad->id_nac,
-        'id_ubigeo_nacimiento' => $ubigeo->id_ubi,
-        'id_ubigeo_domicilio' => $ubigeo->id_ubi,
-        'direccion_per' => 'JR LOCAL 123',
-        'celular_per' => '999111222',
-        'telefono_per' => '061999999',
-        'correo_electronico_per' => 'roxana@test.com',
-        'discapacidad_per' => false,
-        'id_tipo_discapacidad' => null,
-        'tipo_lengua_materna_per' => 'NATIVA',
-        'id_identidad_etnica' => $identidadEtnica->id_iet,
-        'id_lengua_nativa' => $lenguaNativa->id_lna,
-        'id_lengua_extranjera' => null,
-        'observacion_per' => null,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $proceso = Proceso::query()
-        ->where('codigo_pro', '2026_1')
-        ->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with([
-            'ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-            'ofertaBase.modalidadLugarInscripcion.lugarInscripcion',
-            'turno',
-        ])
-        ->where('id_proceso', $proceso->id_pro)
-        ->firstOrFail();
-
-    $reglaPago = ReglaPago::query()
-        ->where('id_proceso', $proceso->id_pro)
-        ->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))
-        ->firstOrFail();
-
-    $importacion = ImportacionBanco::query()->create([
-        'nombre_archivo_iba' => 'REC10768.TXT',
-        'hash_archivo_iba' => 'hash-paso-5',
-        'moneda_iba' => 'PEN',
-        'fecha_importacion_iba' => '2026-04-15 08:00:00',
-        'fecha_lote_iba' => '2026-04-14',
-        'total_registros_iba' => 1,
-        'total_registros_reportado_iba' => 1,
-        'total_monto_iba' => 300.00,
-        'total_monto_reportado_iba' => 300.00,
-        'estado_iba' => EstadoImportacionBanco::Procesado,
-    ]);
-
-    $detalle = ImportacionBancoDetalle::query()->create([
-        'id_importacion_banco' => $importacion->id_iba,
-        'numero_documento_ibd' => $persona->numero_documento_per,
-        'nombre_depositante_ibd' => 'ROXANA KARINA DELGADO HUAMANI',
-        'numero_operacion_raw_ibd' => '817041676',
-        'numero_operacion_visible_ibd' => '41676',
-        'numero_operacion_ibd' => '817041676',
-        'codigo_canal_ibd' => 'Y%G',
-        'codigo_oficina_ibd' => '01068',
-        'fecha_pago_ibd' => '2026-04-14',
-        'monto_ibd' => 300.00,
-        'texto_linea_ibd' => str_repeat('0', 152),
-        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
-    ]);
+    $persona = crearPersonaParaPostulacion('46027897');
+    $reglaPago = ReglaPago::query()->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))->firstOrFail();
+    $detalle = crearPagoLibrePrueba('46027897', 300, '41676');
 
     $this->actingAs($usuario);
 
-    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
-
-    $component = Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
-        ->set('generalForm.anio_graduacion', '2026')
-        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
-        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('generalForm.id_colegio', $colegio->id_col)
-        ->set('generalForm.veces_postula_unu', 0)
-        ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
-        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->call('guardarPasoPostulacion')
-        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
+    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pagoForm.numero_documento', '46027897')
         ->set('pagoForm.numero_operacion', '41676')
-        ->set('pagoForm.fecha_pago', '2026-04-14')
         ->call('buscarPagosPasoPago')
-        ->call('seleccionarDetallePago', $detalle->id_ibd)
+        ->assertHasNoErrors()
+        ->assertSet('resultadoPagoDetalleIds', [$detalle->id_ibd])
+        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
         ->call('confirmarPasoPago')
-        ->assertSet('pasoActual', 5);
+        ->assertHasNoErrors()
+        ->assertSet('pagoValidado', true)
+        ->assertSet('pasoActual', 2)
+        ->assertSet('personaForm.numero_documento', '46027897');
 
-    foreach (range(0, 2) as $indice) {
-        $component
-            ->set("expedientesForm.{$indice}.estado_revision", EstadoRevisionExpediente::Aprobado->value)
-            ->set("expedientesForm.{$indice}.nombre_archivo", 'REV-'.$indice)
-            ->set("expedientesForm.{$indice}.observacion", 'DOCUMENTO APROBADO')
-            ->set("archivosExpediente.{$indice}", UploadedFile::fake()->create("expediente-{$indice}.pdf", 120, 'application/pdf'));
-    }
-
-    $component
-        ->call('guardarPasoExpedientes')
+    completarInscripcionDePrueba($componente, $persona)
+        ->assertHasNoErrors()
         ->assertRedirect(route('inscripciones.index'));
 
-    $inscripcion = Inscripcion::query()->firstOrFail();
+    $inscripcion = Inscripcion::query()->sole();
+    $obligacion = InscripcionObligacionPago::query()->where('id_inscripcion', $inscripcion->id_ins)->sole();
 
-    expect($inscripcion->estado_ins)->toBe(EstadoInscripcion::Activo);
-    expect(InscripcionExpediente::query()->where('id_inscripcion', $inscripcion->id_ins)->count())->toBe(3);
-    expect(
-        InscripcionExpediente::query()
-            ->where('id_inscripcion', $inscripcion->id_ins)
-            ->where('estado_revision_iex', EstadoRevisionExpediente::Aprobado->value)
-            ->count()
-    )->toBe(3);
+    expect($inscripcion->estado_ins)->toBe(EstadoInscripcion::Activo)
+        ->and($obligacion->id_regla_pago)->toBe($reglaPago->id_rpa)
+        ->and((float) $obligacion->monto_pagado_iop)->toBe(300.0)
+        ->and($obligacion->estado_iop)->toBe(EstadoObligacionPago::Parcial)
+        ->and($detalle->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado);
 
     Carbon\Carbon::setTestNow();
 });
 
-test('inscripcion is rejected when convenio cupo is already full at validation step', function () {
+test('payments of the same dni are added to reach the minimum', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
     sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-    $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $convenioProceso->update(['cupo_maximo_cpr' => 1]);
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '12345678',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'TORRES',
-        'apellido_materno_per' => 'GARCIA',
-        'nombres_per' => 'JUAN',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $personaExistente = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '87654321',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'LOPEZ',
-        'apellido_materno_per' => 'VERA',
-        'nombres_per' => 'MARIA',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    Inscripcion::query()->create([
-        'codigo_ins' => 'TEST-001',
-        'id_persona' => $personaExistente->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
-        'fecha_inscripcion_ins' => now(),
-        'estado_ins' => 'ACTIVO',
-    ]);
-
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
-        ->set('generalForm.anio_graduacion', '2026')
-        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
-        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('generalForm.id_colegio', $colegio->id_col)
-        ->set('generalForm.veces_postula_unu', 0)
-        ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
-        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
-        ->call('guardarPasoPostulacion')
-        ->assertHasErrors('postulacionForm.id_convenio_proceso');
-
-    expect(Inscripcion::query()->count())->toBe(1);
-
-    Carbon\Carbon::setTestNow();
-});
-
-test('inscripcion with convenio without cupo_maximo is always allowed', function () {
-    $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
-    sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-    $tipoColegio = TipoColegio::query()->firstOrFail();
-    $colegio = Colegio::query()->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $convenioProceso->update(['cupo_maximo_cpr' => 100]);
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '11223344',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'ROJAS',
-        'apellido_materno_per' => 'LIMA',
-        'nombres_per' => 'CARLOS',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+    $persona = crearPersonaParaPostulacion('46027898');
+    $reglaPago = ReglaPago::query()->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))->firstOrFail();
+    $primero = crearPagoLibrePrueba('46027898', 150, '1001');
+    $segundo = crearPagoLibrePrueba('46027898', 125, '1002', 'ADMISIÓN');
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('personaId', $persona->id_per)
-        ->set('pasoActual', 3)
-        ->set('generalForm.anio_graduacion', '2026')
-        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
-        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('generalForm.id_colegio', $colegio->id_col)
-        ->set('generalForm.veces_postula_unu', 0)
-        ->set('generalForm.veces_postula_otras', 0)
-        ->set('postulacionForm.id_modalidad_admision', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
-        ->set('postulacionForm.id_lugar_inscripcion', (string) $procesoOferta->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
-        ->set('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
-        ->set('postulacionForm.id_proceso_oferta', (string) $procesoOferta->id_pof)
-        ->set('postulacionForm.id_convenio_proceso', (string) $convenioProceso->id_cpr)
-        ->call('guardarPasoPostulacion')
-        ->assertHasNoErrors()
-        ->assertSet('pasoActual', 4);
-
-    Carbon\Carbon::setTestNow();
-});
-
-test('buscarPagosPasoPago is blocked when proceso is no longer active', function () {
-    $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
-    sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '11223355',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'PEREZ',
-        'apellido_materno_per' => 'LARA',
-        'nombres_per' => 'ANA',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $inscripcion = Inscripcion::query()->create([
-        'codigo_ins' => 'TEST-PAGO-001',
-        'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
-        'fecha_inscripcion_ins' => now(),
-        'estado_ins' => EstadoInscripcion::Pendiente->value,
-    ]);
-
-    Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('inscripcionId', $inscripcion->id_ins)
-        ->set('pasoActual', 4)
+    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pagoForm.numero_documento', '46027898')
+        ->set('pagoForm.numero_operacion', '1001')
         ->call('buscarPagosPasoPago')
-        ->assertDispatched('toast', type: 'warning');
+        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
+        ->call('confirmarPasoPago')
+        ->assertHasErrors('pagosSeleccionados')
+        ->assertSet('pasoActual', 1)
+        ->set("pagosSeleccionados.{$segundo->id_ibd}", true)
+        ->call('confirmarPasoPago')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 2);
+
+    completarInscripcionDePrueba($componente, $persona)->assertRedirect(route('inscripciones.index'));
+
+    $obligacion = InscripcionObligacionPago::query()->sole();
+
+    expect((float) $obligacion->monto_pagado_iop)->toBe(275.0)
+        ->and(Inscripcion::query()->sole()->estado_ins)->toBe(EstadoInscripcion::Activo)
+        ->and($primero->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
+        ->and($segundo->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('a payment that does not exist or is already used cannot start an inscripcion', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    crearPagoLibrePrueba('46027899', 500, '7777')->update(['estado_ibd' => EstadoImportacionBancoDetalle::Asociado]);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pagoForm.numero_documento', '46027899')
+        ->set('pagoForm.numero_operacion', '7777')
+        ->call('buscarPagosPasoPago')
+        ->assertHasErrors('pagoForm.numero_operacion')
+        ->assertSet('busquedaPagoRealizada', false)
+        ->call('irPaso', 2)
+        ->assertSet('pasoActual', 1);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('a scholarship asks for the resolution number', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $beca = crearReglaPagoPrueba('BECA_T', 50, documento: 'N° DE RESOLUCIÓN');
+    crearPagoLibrePrueba('46027800', 50, '5050');
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pagoForm.numero_documento', '46027800')
+        ->set('pagoForm.numero_operacion', '5050')
+        ->call('buscarPagosPasoPago')
+        ->set('pagoForm.id_regla_pago', (string) $beca->id_rpa)
+        ->call('confirmarPasoPago')
+        ->assertHasErrors('pagoForm.numero_documento_beneficio')
+        ->set('pagoForm.numero_documento_beneficio', 'R-123-2026')
+        ->call('confirmarPasoPago')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 2);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('parentesco unu inscribes with a zero payment and keeps the constancia number', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $persona = crearPersonaParaPostulacion('46027801');
+    $parentesco = crearReglaPagoPrueba('PAR_T', 0, documento: 'N° DE CONSTANCIA');
+    crearPagoLibrePrueba('46027801', 0, '452', 'PARENTESCO UNU');
+
+    $this->actingAs($usuario);
+
+    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+        ->set('pagoForm.numero_documento', '46027801')
+        ->set('pagoForm.numero_operacion', '452')
+        ->call('buscarPagosPasoPago')
+        ->set('pagoForm.id_regla_pago', (string) $parentesco->id_rpa)
+        ->set('pagoForm.numero_documento_beneficio', '452')
+        ->call('confirmarPasoPago')
+        ->assertHasNoErrors();
+
+    completarInscripcionDePrueba($componente, $persona)->assertRedirect(route('inscripciones.index'));
+
+    $obligacion = InscripcionObligacionPago::query()->sole();
+
+    expect($obligacion->estado_iop)->toBe(EstadoObligacionPago::Pagado)
+        ->and($obligacion->numero_documento_beneficio_iop)->toBe('452')
+        ->and(Inscripcion::query()->sole()->estado_ins)->toBe(EstadoInscripcion::Activo);
 
     Carbon\Carbon::setTestNow();
 });
@@ -1891,195 +1492,46 @@ test('buscarPagosPasoPago is blocked when proceso is no longer active', function
 test('confirmarPasoPago is blocked when proceso is no longer active', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
     sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '11223366',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'SOTO',
-        'apellido_materno_per' => 'CRUZ',
-        'nombres_per' => 'LUIS',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $inscripcion = Inscripcion::query()->create([
-        'codigo_ins' => 'TEST-PAGO-002',
-        'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
-        'fecha_inscripcion_ins' => now(),
-        'estado_ins' => EstadoInscripcion::Pendiente->value,
-    ]);
 
     Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
 
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('inscripcionId', $inscripcion->id_ins)
-        ->set('pasoActual', 4)
         ->call('confirmarPasoPago')
-        ->assertDispatched('toast', type: 'warning');
+        ->assertDispatched('toast', type: 'warning')
+        ->assertSet('pasoActual', 1);
 
     Carbon\Carbon::setTestNow();
 });
 
-test('confirmarPasoPago is blocked when convenio is no longer active for the inscripcion', function () {
+test('the inscripcion is not registered until the data is confirmed', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
     sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $convenioProceso->update([
-        'fecha_inicio_cpr' => '2026-04-01',
-        'fecha_fin_cpr' => '2026-04-10',
-    ]);
-
-    $reglaPago = ReglaPago::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->whereNull('id_convenio_proceso')
-        ->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '11224488',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'RUIZ',
-        'apellido_materno_per' => 'LOPEZ',
-        'nombres_per' => 'ANA',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $inscripcion = Inscripcion::query()->create([
-        'codigo_ins' => 'TEST-PAGO-003',
-        'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
-        'fecha_inscripcion_ins' => '2026-04-05 10:00:00',
-        'estado_ins' => EstadoInscripcion::Pendiente->value,
-    ]);
-
-    $importacion = ImportacionBanco::query()->create([
-        'nombre_archivo_iba' => 'REC99999.TXT',
-        'hash_archivo_iba' => 'hash-convenio-vencido',
-        'moneda_iba' => 'PEN',
-        'fecha_importacion_iba' => '2026-04-15 08:00:00',
-        'fecha_lote_iba' => '2026-04-14',
-        'total_registros_iba' => 1,
-        'total_registros_reportado_iba' => 1,
-        'total_monto_iba' => 300.00,
-        'total_monto_reportado_iba' => 300.00,
-        'estado_iba' => EstadoImportacionBanco::Procesado,
-    ]);
-
-    $detalle = ImportacionBancoDetalle::query()->create([
-        'id_importacion_banco' => $importacion->id_iba,
-        'numero_documento_ibd' => $persona->numero_documento_per,
-        'nombre_depositante_ibd' => 'ANA RUIZ LOPEZ',
-        'numero_operacion_raw_ibd' => '999991234',
-        'numero_operacion_visible_ibd' => '91234',
-        'numero_operacion_ibd' => '999991234',
-        'codigo_canal_ibd' => 'Y%G',
-        'codigo_oficina_ibd' => '01068',
-        'fecha_pago_ibd' => '2026-04-14',
-        'monto_ibd' => 300.00,
-        'texto_linea_ibd' => str_repeat('0', 152),
-        'estado_ibd' => EstadoImportacionBancoDetalle::Pendiente,
-    ]);
-
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
+    $persona = crearPersonaParaPostulacion('46027802');
+    $postulacion = postulacionDePrueba(conAula: true);
+
     $this->actingAs($usuario);
 
     Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('inscripcionId', $inscripcion->id_ins)
+        ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
-        ->set('pagoForm.id_regla_pago', (string) $reglaPago->id_rpa)
-        ->set('pagoForm.numero_documento', $persona->numero_documento_per)
-        ->set('pagoForm.numero_operacion', '91234')
-        ->set('pagoForm.fecha_pago', '2026-04-14')
-        ->set('pagoForm.id_detalle_banco', (string) $detalle->id_ibd)
-        ->call('confirmarPasoPago')
-        ->assertDispatched('toast', message: 'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el 10/04/2026.', type: 'warning');
+        ->set('generalForm.anio_graduacion', '2025')
+        ->set('generalForm.id_pais_colegio', (string) Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->value('id_pai'))
+        ->set('generalForm.id_tipo_colegio', (string) TipoColegio::query()->value('id_tco'))
+        ->set('generalForm.id_colegio', Colegio::query()->value('id_col'))
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->call('guardarPasoPostulacion')
+        ->assertHasErrors('confirmacionDatos')
+        ->assertSee('Confirmo que los datos son correctos');
 
-    Carbon\Carbon::setTestNow();
-});
-
-test('guardarPasoExpedientes is blocked when proceso is no longer active', function () {
-    $usuario = Usuario::factory()->create();
-    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
-
-    sembrarConfiguracionAcademicaParaInscripcion();
-
-    $tipoDocumento = TipoDocumento::query()->where('longitud_minima_tdo', 8)->firstOrFail();
-    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
-
-    $procesoOferta = ProcesoOferta::query()
-        ->with(['ofertaBase.modalidadLugarInscripcion'])
-        ->where('estado_pof', 'HABILITADO')
-        ->firstOrFail();
-
-    $convenioProceso = ConvenioProceso::query()
-        ->where('id_proceso', $procesoOferta->id_proceso)
-        ->firstOrFail();
-
-    $persona = Persona::query()->create([
-        'id_tipo_documento' => $tipoDocumento->id_tdo,
-        'numero_documento_per' => '11223377',
-        'solo_un_apellido_per' => false,
-        'apellido_paterno_per' => 'VARGAS',
-        'apellido_materno_per' => 'RIOS',
-        'nombres_per' => 'SARA',
-        'id_pais_nacimiento' => $pais->id_pai,
-        'estado_per' => 'HABILITADO',
-    ]);
-
-    $inscripcion = Inscripcion::query()->create([
-        'codigo_ins' => 'TEST-EXP-001',
-        'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
-        'fecha_inscripcion_ins' => now(),
-        'estado_ins' => EstadoInscripcion::Pendiente->value,
-    ]);
-
-    Carbon\Carbon::setTestNow('2099-01-01 10:00:00');
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripcion-crear')
-        ->set('inscripcionId', $inscripcion->id_ins)
-        ->set('pasoActual', 5)
-        ->call('guardarPasoExpedientes')
-        ->assertDispatched('toast', type: 'warning');
+    expect(Inscripcion::query()->count())->toBe(0);
 
     Carbon\Carbon::setTestNow();
 });

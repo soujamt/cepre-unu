@@ -3,14 +3,14 @@
 @endsection
 
 @section ('header')
-    <x-header.title>Modalidades de admisión</x-header.title>
+    <x-header.title>Modalidades</x-header.title>
 @endsection
 
 @section ('breadcrumbs')
     <x-breadcrumbs>
         <x-breadcrumbs.item href="{{ route('inicio') }}" wire:navigate>Inicio</x-breadcrumbs.item>
         <x-breadcrumbs.separator />
-        <x-breadcrumbs.item href="{{ route('modalidades.index') }}" wire:navigate>Modalidades de admisión</x-breadcrumbs.item>
+        <x-breadcrumbs.item href="{{ route('modalidades.index') }}" wire:navigate>Modalidades</x-breadcrumbs.item>
     </x-breadcrumbs>
 @endsection
 
@@ -80,7 +80,7 @@
                     <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
                     <x-table.heading class="w-28">CÓDIGO</x-table.heading>
                     <x-table.heading>NOMBRE</x-table.heading>
-                    <x-table.heading class="w-24">LUGARES</x-table.heading>
+                    <x-table.heading class="w-24">PROCESOS</x-table.heading>
                     <x-table.heading>ESTADO</x-table.heading>
                     <x-table.heading>REGISTRO</x-table.heading>
                     <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
@@ -100,7 +100,7 @@
                                 <span class="block text-xs text-zinc-500 dark:text-zinc-400">{{ $modalidad->descripcion_mad }}</span>
                             @endif
                         </x-table.cell>
-                        <x-table.cell>{{ $modalidad->lugares_habilitados_count }}</x-table.cell>
+                        <x-table.cell>{{ $modalidad->procesos_habilitados_count }}</x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $modalidad->estado_mad->getColor() }}">
                                 <x-slot name="icon">
@@ -222,6 +222,20 @@
                             required
                             floating
                         />
+
+                        <x-ui.select
+                            label="Aplica a"
+                            wire:model="modalidadForm.condicion_egreso"
+                            :invalid="$errors->has('modalidadForm.condicion_egreso')"
+                            :error="$errors->first('modalidadForm.condicion_egreso')"
+                            required
+                            floating
+                        >
+                            <option value="">Seleccionar</option>
+                            @foreach (App\Enums\CondicionEgresoModalidad::cases() as $condicion)
+                                <option value="{{ $condicion->value }}">{{ $condicion->getNombre() }}</option>
+                            @endforeach
+                        </x-ui.select>
 
                         <x-ui.textarea
                             label="Descripción"

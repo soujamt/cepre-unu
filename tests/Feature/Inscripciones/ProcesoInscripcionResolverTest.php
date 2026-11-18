@@ -1,20 +1,16 @@
 <?php
 
+use App\Enums\EstadoCatalogo;
 use App\Enums\EstadoProceso;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
 use App\Support\ProcesoInscripcionResolver;
 use Carbon\Carbon;
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ConceptoPagoSeeder;
 use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
-use Database\Seeders\OfertaBaseSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,16 +22,11 @@ function sembrarConfiguracionAcademicaInicial(): void
 {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         UbigeoSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
@@ -74,7 +65,7 @@ test('resolver indicates when there is no active process for the current date', 
     Carbon::setTestNow();
 });
 
-test('resolver indicates when the active process has no enabled offers', function () {
+test('resolver indicates when the active process has no enabled carreras', function () {
     sembrarConfiguracionAcademicaInicial();
 
     Carbon::setTestNow('2026-04-15 09:00:00');
@@ -83,14 +74,14 @@ test('resolver indicates when the active process has no enabled offers', functio
         ->where('codigo_pro', '2026_1')
         ->firstOrFail();
 
-    ProcesoOferta::query()
+    ProcesoCarrera::query()
         ->where('id_proceso', $proceso->id_pro)
-        ->update(['estado_pof' => EstadoProceso::Deshabilitado->value]);
+        ->update(['estado_pca' => EstadoCatalogo::Deshabilitado->value]);
 
     $contexto = app(ProcesoInscripcionResolver::class)->resolver();
 
     expect($contexto['disponible'])->toBeFalse()
-        ->and($contexto['mensaje'])->toBe('El proceso activo no tiene ofertas habilitadas para inscripcion.')
+        ->and($contexto['mensaje'])->toBe('El proceso activo no tiene carreras o modalidades habilitadas para inscripcion.')
         ->and($contexto['proceso'])->not->toBeNull()
         ->and($contexto['proceso']?->id_pro)->toBe($proceso->id_pro);
 

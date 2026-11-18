@@ -1,14 +1,12 @@
 <?php
 
 use App\Models\Accion;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
-use App\Models\ModalidadLugarInscripcion;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
+use App\Models\Proceso;
+use App\Models\ProcesoModalidad;
 use App\Models\Rol;
-use App\Models\Sede;
-use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -72,7 +70,7 @@ test('authorized users can access modalidades page', function () {
     $this->actingAs($usuario)
         ->get(route('modalidades.index'))
         ->assertOk()
-        ->assertSee('Modalidades de admisión');
+        ->assertSee('Modalidades');
 });
 
 test('authenticated users without permiso cannot access modalidades page', function () {
@@ -94,6 +92,7 @@ test('authorized users can register a modalidad with description', function () {
         ->set('modalidadForm.codigo', ' 9 ')
         ->set('modalidadForm.nombre', 'Primera opción - Cepreunu')
         ->set('modalidadForm.descripcion', '  Para los mejores puestos  ')
+        ->set('modalidadForm.condicion_egreso', 'EGRESADO')
         ->call('guardar')
         ->assertHasNoErrors()
         ->assertDispatched('toast', message: 'Modalidad registrada correctamente.', type: 'success');
@@ -102,6 +101,7 @@ test('authorized users can register a modalidad with description', function () {
         'codigo_mad' => '9',
         'nombre_mad' => 'PRIMERA OPCIÓN - CEPREUNU',
         'descripcion_mad' => 'Para los mejores puestos',
+        'condicion_egreso_mad' => 'EGRESADO',
         'estado_mad' => 'HABILITADO',
     ]);
 });
@@ -132,6 +132,7 @@ test('authorized users can update a modalidad', function () {
         ->call('cargarModalidad', $modalidad->id_mad)
         ->assertSet('modalidadForm.codigo', '2')
         ->set('modalidadForm.nombre', 'Exoneración')
+        ->set('modalidadForm.condicion_egreso', 'EN_COLEGIO')
         ->call('guardar')
         ->assertHasNoErrors();
 
@@ -139,6 +140,7 @@ test('authorized users can update a modalidad', function () {
         'id_mad' => $modalidad->id_mad,
         'nombre_mad' => 'EXONERACIÓN',
         'descripcion_mad' => null,
+        'condicion_egreso_mad' => 'EN_COLEGIO',
     ]);
 });
 
@@ -156,7 +158,7 @@ test('authorized users can change state of a modalidad', function () {
     expect($modalidad->fresh()->estado_mad->value)->toBe('DESHABILITADO');
 });
 
-test('authorized users can delete a modalidad without lugares', function () {
+test('authorized users can delete a modalidad without procesos', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_eliminar']);
     $modalidad = crearModalidadPrueba();
@@ -170,44 +172,29 @@ test('authorized users can delete a modalidad without lugares', function () {
     $this->assertSoftDeleted('tbl_modalidad_admision', ['id_mad' => $modalidad->id_mad], deletedAtColumn: 'eliminado_en');
 });
 
-test('modalidad assigned to a lugar cannot be deleted', function () {
+test('modalidad enabled in a proceso cannot be deleted', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_eliminar']);
     $modalidad = crearModalidadPrueba();
 
-    $ubigeo = Ubigeo::query()->create([
-        'id_ubi' => '250101',
-        'codigo_departamento_ubi' => '25',
-        'codigo_provincia_ubi' => '01',
-        'codigo_distrito_ubi' => '01',
-        'nombre_departamento_ubi' => 'UCAYALI',
-        'nombre_provincia_ubi' => 'CORONEL PORTILLO',
-        'nombre_distrito_ubi' => 'CALLERIA',
-        'estado_ubi' => 'HABILITADO',
+    $proceso = Proceso::query()->create([
+        'codigo_pro' => '2026_2',
+        'nombre_pro' => '2026-2',
+        'fecha_inicio_pro' => '2026-09-01 00:00:00',
+        'fecha_fin_pro' => '2026-12-31 23:59:59',
+        'estado_pro' => 'HABILITADO',
     ]);
-    $sede = Sede::query()->create([
-        'codigo_sed' => 'SEDCAL',
-        'nombre_sed' => 'SEDE CALLERIA',
-        'id_ubigeo' => $ubigeo->id_ubi,
-        'estado_sed' => 'HABILITADO',
-    ]);
-    $lugar = LugarInscripcion::query()->create([
-        'codigo_lin' => '603',
-        'nombre_lin' => 'PUCALLPA',
-        'id_sede' => $sede->id_sed,
-        'estado_lin' => 'HABILITADO',
-    ]);
-    ModalidadLugarInscripcion::query()->create([
+    ProcesoModalidad::query()->create([
+        'id_proceso' => $proceso->id_pro,
         'id_modalidad_admision' => $modalidad->id_mad,
-        'id_lugar_inscripcion' => $lugar->id_lin,
-        'estado_mli' => 'HABILITADO',
+        'estado_pmo' => 'HABILITADO',
     ]);
 
     $this->actingAs($usuario);
 
     Livewire::test('pages::mantenedores.modalidades')
         ->call('eliminar', $modalidad->id_mad)
-        ->assertDispatched('toast', message: 'La modalidad está asignada a lugares de inscripción y no puede eliminarse. Puede deshabilitarla.', type: 'error');
+        ->assertDispatched('toast', message: 'La modalidad está usada en procesos o inscripciones y no puede eliminarse. Puede deshabilitarla.', type: 'error');
 
     $this->assertNotSoftDeleted('tbl_modalidad_admision', ['id_mad' => $modalidad->id_mad], deletedAtColumn: 'eliminado_en');
 });

@@ -71,6 +71,30 @@ class ConceptoPagoSeeder extends Seeder
                 'permite_cuotas_cpg' => false,
                 'estado_cpg' => 'HABILITADO',
             ],
+            [
+                'id_cpg' => 7,
+                'codigo_cpg' => 'PAR_UNU',
+                'nombre_cpg' => 'PARENTESCO UNU',
+                'descripcion_cpg' => 'HIJO DE TRABAJADOR UNU CON CONSTANCIA DE RECURSOS HUMANOS',
+                'permite_cuotas_cpg' => false,
+                'estado_cpg' => 'HABILITADO',
+            ],
+            [
+                'id_cpg' => 8,
+                'codigo_cpg' => 'BECA_ACA',
+                'nombre_cpg' => 'BECA ACADÉMICA',
+                'descripcion_cpg' => 'BECA CON RESOLUCIÓN; SE PAGAN LOS MÓDULOS',
+                'permite_cuotas_cpg' => false,
+                'estado_cpg' => 'HABILITADO',
+            ],
+            [
+                'id_cpg' => 9,
+                'codigo_cpg' => 'MEDIA_BECA',
+                'nombre_cpg' => 'MEDIA BECA ACADÉMICA',
+                'descripcion_cpg' => 'MEDIA BECA CON RESOLUCIÓN',
+                'permite_cuotas_cpg' => false,
+                'estado_cpg' => 'HABILITADO',
+            ],
         ];
     }
 }

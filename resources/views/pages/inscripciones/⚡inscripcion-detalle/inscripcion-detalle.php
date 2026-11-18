@@ -1,20 +1,13 @@
 <?php
 
-use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
-use App\Enums\EstadoRevisionExpediente;
-use App\Enums\EstadoValidacionPago;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
 use App\Models\InscripcionPago;
-use App\Models\RequisitoExpediente;
 use App\Models\Ubigeo;
+use App\Support\InscripcionPagoManager;
 use App\Traits\AuthorizesPermisos;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 new
@@ -46,24 +39,19 @@ class extends Component
                 'persona.identidadEtnica',
                 'persona.lenguaNativa',
                 'persona.lenguaExtranjera',
-                'procesoOferta.proceso',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.modalidadAdmision',
-                'procesoOferta.ofertaBase.modalidadLugarInscripcion.lugarInscripcion.sede',
-                'procesoOferta.ofertaBase.sedeCarrera.carrera',
-                'procesoOferta.ofertaBase.sedeCarrera.sede',
-                'procesoOferta.turno',
+                'proceso',
+                'sede',
+                'modalidadAdmision',
+                'carrera',
+                'turno',
                 'procesoAula.aula',
                 'procesoAula.turno',
-                'convenioProceso.convenio',
                 'paisColegio',
                 'colegio.tipoColegio',
                 'tipoColegio',
                 'obligacionesPago.reglaPago.conceptoPago',
-                'obligacionesPago.reglaPago.convenioProceso.convenio',
                 'obligacionesPago.pagos.importacionBancoDetalle',
                 'obligacionesPago.pagos.usuarioValidador',
-                'expedientes.tipoExpediente',
-                'expedientes.usuarioRevisor',
             ])
             ->findOrFail($idInscripcion);
     }
@@ -86,15 +74,14 @@ class extends Component
 
     public function descripcionPostulacion(): string
     {
-        $procesoOferta = $this->inscripcionActual->procesoOferta;
+        $inscripcion = $this->inscripcionActual;
 
-        $carrera = $procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA';
-        $sede = $procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE';
-        $modalidad = $procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD';
-        $lugar = $procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->lugarInscripcion?->nombre_lin ?? 'SIN LUGAR';
-        $turno = $procesoOferta?->turno?->nombre_tur ?? 'SIN TURNO';
-
-        return implode(' · ', [$carrera, $sede, $modalidad, $lugar, $turno]);
+        return implode(' · ', [
+            $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA',
+            $inscripcion->sede?->nombre_sed ?? 'SIN SEDE',
+            $inscripcion->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD',
+            $inscripcion->turno?->nombre_tur ?? 'SIN TURNO',
+        ]);
     }
 
     /**
@@ -146,61 +133,9 @@ class extends Component
         ];
     }
 
-    /**
-     * @return array{label:string,color:string,detalle:string}
-     */
-    public function resumenExpedientesGeneral(): array
-    {
-        $expedientes = $this->inscripcionActual->expedientes;
-        $total = $expedientes->count();
-
-        if ($total === 0) {
-            return [
-                'label' => 'SIN CARGA',
-                'color' => 'amber',
-                'detalle' => 'No hay documentos registrados.',
-            ];
-        }
-
-        if ($expedientes->contains(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Rechazado)) {
-            return [
-                'label' => 'RECHAZADO',
-                'color' => 'red',
-                'detalle' => "{$total} documento(s) revisados con rechazo.",
-            ];
-        }
-
-        if ($expedientes->contains(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Observado)) {
-            return [
-                'label' => 'OBSERVADO',
-                'color' => 'sky',
-                'detalle' => "{$total} documento(s) revisados con observacion.",
-            ];
-        }
-
-        if ($expedientes->every(fn ($expediente) => $expediente->estado_revision_iex === EstadoRevisionExpediente::Aprobado)) {
-            return [
-                'label' => 'COMPLETO',
-                'color' => 'green',
-                'detalle' => "{$total} documento(s) aprobados.",
-            ];
-        }
-
-        return [
-            'label' => 'PENDIENTE',
-            'color' => 'amber',
-            'detalle' => "{$total} documento(s) en proceso de revision.",
-        ];
-    }
-
-    public function convenioResumen(): string
-    {
-        return $this->inscripcionActual->convenioProceso?->convenio?->nombre_con ?? 'Sin convenio';
-    }
-
     public function turnoResumen(): string
     {
-        return $this->inscripcionActual->procesoOferta?->turno?->nombre_tur ?? 'Sin turno';
+        return $this->inscripcionActual->turno?->nombre_tur ?? 'Sin turno';
     }
 
     public function aulaResumen(): string
@@ -254,152 +189,21 @@ class extends Component
         return $numeroDocumento;
     }
 
-    public function urlArchivoExpediente(InscripcionExpediente $expediente): ?string
+    public function aprobarRevision(InscripcionPagoManager $manager): void
     {
-        if (blank($expediente->archivo_url_iex)) {
-            return null;
-        }
+        $this->autorizarPermiso('inscripcion', 'estado');
 
-        return Storage::disk('public')->url($expediente->archivo_url_iex);
-    }
-
-    public ?int $idExpedienteRevisar = null;
-
-    public string $estadoRevision = '';
-
-    #[Validate('required|string|min:5|max:500')]
-    public string $observacionRevision = '';
-
-    public function aprobarExpediente(int $idExpediente): void
-    {
-        $this->autorizarPermiso('inscripcion', 'editar');
-
-        $expediente = InscripcionExpediente::query()->findOrFail($idExpediente);
-
-        $expediente->update([
-            'estado_revision_iex' => EstadoRevisionExpediente::Aprobado->value,
-            'observacion_iex' => null,
-            'revisado_en' => now(),
-            'id_usuario_revisor' => Auth::id(),
-        ]);
-
-        $this->inscripcionActual->load('expedientes.tipoExpediente', 'expedientes.usuarioRevisor');
-        $this->recalcularEstadoInscripcion();
-        $this->dispatch('toast', message: 'Expediente aprobado.', type: 'success');
-    }
-
-    public function abrirModalRevision(int $idExpediente, string $estado): void
-    {
-        $this->idExpedienteRevisar = $idExpediente;
-        $this->estadoRevision = $estado;
-        $this->observacionRevision = '';
-        $this->resetValidation('observacionRevision');
-
-        $this->modal('modal-revisar-expediente')->show();
-    }
-
-    public function confirmarRevision(): void
-    {
-        $this->autorizarPermiso('inscripcion', 'editar');
-
-        $this->validate([
-            'observacionRevision' => 'required|string|min:5|max:500',
-        ], [
-            'observacionRevision.required' => 'La observación es obligatoria.',
-            'observacionRevision.min' => 'La observación debe tener al menos 5 caracteres.',
-            'observacionRevision.max' => 'La observación no puede exceder 500 caracteres.',
-        ]);
-
-        $estadoEnum = match ($this->estadoRevision) {
-            'OBSERVADO' => EstadoRevisionExpediente::Observado,
-            'RECHAZADO' => EstadoRevisionExpediente::Rechazado,
-            default => null,
-        };
-
-        if ($estadoEnum === null) {
-            $this->dispatch('toast', message: 'Estado de revisión no válido.', type: 'error');
-
+        if (! $this->inscripcionActual->enRevision()) {
             return;
         }
 
-        try {
-            $expediente = InscripcionExpediente::query()->findOrFail($this->idExpedienteRevisar);
-
-            $expediente->update([
-                'estado_revision_iex' => $estadoEnum->value,
-                'observacion_iex' => $this->observacionRevision,
-                'revisado_en' => now(),
-                'id_usuario_revisor' => Auth::id(),
-            ]);
-        } catch (Throwable $throwable) {
-            report($throwable);
-            $this->dispatch('toast', message: 'No se pudo actualizar el expediente.', type: 'error');
-
-            return;
-        }
-
-        $this->modal('modal-revisar-expediente')->close();
-        $this->idExpedienteRevisar = null;
-        $this->estadoRevision = '';
-        $this->observacionRevision = '';
-
-        $this->inscripcionActual->load('expedientes.tipoExpediente', 'expedientes.usuarioRevisor');
-
-        $label = $estadoEnum === EstadoRevisionExpediente::Observado ? 'observado' : 'rechazado';
-        $this->dispatch('toast', message: "Expediente marcado como {$label}.", type: 'success');
+        $manager->aprobarRevision($this->inscripcionActual, auth()->id());
+        $this->inscripcionActual->refresh();
+        $this->dispatch('toast', message: "Inscripción {$this->inscripcionActual->codigo_ins} aprobada.", type: 'success');
     }
 
     public function volverListado(): void
     {
         $this->redirect(route('inscripciones.index'), navigate: true);
-    }
-
-    private function recalcularEstadoInscripcion(): void
-    {
-        $inscripcion = $this->inscripcionActual;
-
-        if ($inscripcion->estado_ins !== EstadoInscripcion::Pendiente) {
-            return;
-        }
-
-        $procesoId = $inscripcion->procesoOferta?->id_proceso;
-
-        if ($procesoId === null) {
-            return;
-        }
-
-        $requisitosObligatorios = RequisitoExpediente::query()
-            ->where('id_proceso', $procesoId)
-            ->where('obligatorio_rex', true)
-            ->pluck('id_tipo_expediente')
-            ->map(fn (int|string $id): int => (int) $id)
-            ->all();
-
-        if ($requisitosObligatorios === []) {
-            return;
-        }
-
-        $aprobados = $inscripcion->expedientes
-            ->filter(fn ($expediente): bool => in_array((int) $expediente->id_tipo_expediente, $requisitosObligatorios, true)
-                && $expediente->estado_revision_iex === EstadoRevisionExpediente::Aprobado)
-            ->count();
-
-        if ($aprobados !== count($requisitosObligatorios)) {
-            return;
-        }
-
-        $tienePagoValido = $inscripcion->obligacionesPago->contains(
-            fn ($obligacion): bool => $obligacion->estado_iop === EstadoObligacionPago::Exonerado
-                || $obligacion->pagos->contains(
-                    fn ($pago): bool => $pago->estado_validacion_ipa === EstadoValidacionPago::Verificado
-                )
-        );
-
-        if (! $tienePagoValido) {
-            return;
-        }
-
-        $inscripcion->update(['estado_ins' => EstadoInscripcion::Activo->value]);
-        $this->dispatch('toast', message: 'Todos los expedientes obligatorios aprobados. La inscripcion quedo activa.', type: 'success');
     }
 };

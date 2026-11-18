@@ -31,14 +31,6 @@
                 'tono' => 'success',
                 'badge' => $this->actividadHoy['pagos_validados'] > 0 ? 'Validando bien' : 'Sin validaciones',
             ],
-            [
-                'label' => 'Expedientes',
-                'valor' => $this->actividadHoy['expedientes_revisados'],
-                'descripcion' => 'inscripciones con revisión documental hoy',
-                'icon' => 'copy',
-                'tono' => 'neutral',
-                'badge' => $this->actividadHoy['expedientes_revisados'] > 0 ? 'Equipo activo' : 'Sin revisión',
-            ],
         ];
 
         $alertaStyles = [
@@ -80,7 +72,7 @@
 
                 <p class="pt-1 text-xs font-semibold tracking-[0.18em] text-zinc-500 uppercase dark:text-zinc-400">Actividad de hoy</p>
 
-                <x-resumen :columnas="3">
+                <x-resumen :columnas="2">
                     @foreach ($actividadCards as $card)
                         <x-resumen.item
                             :label="$card['label']"
@@ -160,7 +152,7 @@
                     icon="check-circle"
                     tono="success"
                     detalle-icon="check"
-                    detalle="Expedientes y pago completos"
+                    detalle="Con pago validado"
                 />
 
                 <x-resumen.item
@@ -173,12 +165,12 @@
                 />
 
                 <x-resumen.item
-                    label="Docs observados"
-                    :value="$this->estadisticas['docs_observados']"
-                    icon="file-search"
-                    :tono="$this->estadisticas['docs_observados'] > 0 ? 'warning' : 'success'"
-                    :detalle-icon="$this->estadisticas['docs_observados'] > 0 ? 'alert-triangle' : 'check'"
-                    :detalle="$this->estadisticas['docs_observados'] > 0 ? 'Observados o rechazados' : 'Sin observaciones'"
+                    label="Anuladas"
+                    :value="$this->estadisticas['anuladas']"
+                    icon="x-circle"
+                    :tono="$this->estadisticas['anuladas'] > 0 ? 'danger' : 'neutral'"
+                    detalle-icon="block"
+                    detalle="Fuera del flujo activo"
                 />
             </x-resumen>
         </div>
@@ -226,7 +218,7 @@
                                         'UTF-8',
                                     );
                                     $nombreCompleto = trim($tipoTitulo($persona?->nombres_per).' '.$tipoTitulo($persona?->apellido_paterno_per).' '.$tipoTitulo($persona?->apellido_materno_per));
-                                    $carrera = $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car;
+                                    $carrera = $inscripcion->carrera?->nombre_car;
                                     $fecha = $inscripcion->fecha_inscripcion_ins;
                                 @endphp
                                 <li wire:key="inscripcion-reciente-{{ $inscripcion->id_ins }}">
@@ -371,7 +363,7 @@
             ],
             [
                 'label' => 'Conf. Académica',
-                'descripcion' => 'Administra procesos, ofertas, aulas y convenios',
+                'descripcion' => 'Administra procesos, ofertas, aulas y reglas de pago',
                 'icon' => 'cog',
                 'href' => route('procesos.index'),
                 'icon_class' => 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400',

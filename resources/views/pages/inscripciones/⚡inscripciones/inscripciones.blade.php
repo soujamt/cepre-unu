@@ -18,7 +18,7 @@
     <x-resumen
         class="transition-opacity duration-200"
         wire:loading.class="opacity-50"
-        wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
+        wire:target="buscar, idProceso, idModalidad, idSede, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado"
     >
         <x-resumen.item
             label="Total inscritas"
@@ -40,12 +40,12 @@
         />
 
         <x-resumen.item
-            label="Docs observados"
-            :value="$this->resumen['docs_observados']"
-            icon="file-search"
-            :tono="$this->resumen['docs_observados'] > 0 ? 'warning' : 'success'"
-            :detalle-icon="$this->resumen['docs_observados'] > 0 ? 'alert-triangle' : 'check'"
-            :detalle="$this->resumen['docs_observados'] > 0 ? 'Requieren revisión' : 'Sin observaciones'"
+            label="Activas"
+            :value="$this->resumen['activas']"
+            icon="check-circle"
+            tono="success"
+            detalle-icon="wallet"
+            detalle="Con pago validado"
         />
 
         <x-resumen.item
@@ -83,6 +83,29 @@
                     Exportar Excel
                 </flux:button>
             @endpermiso
+
+            @if ($this->totalEnRevision > 0 || $soloEnRevision)
+                <flux:button
+                    :variant="$soloEnRevision ? 'primary' : 'filled'"
+                    color="amber"
+                    wire:click="$toggle('soloEnRevision')"
+                    aria-pressed="{{ $soloEnRevision ? 'true' : 'false' }}"
+                >
+                    En revisión ({{ $this->totalEnRevision }})
+                </flux:button>
+            @endif
+
+            <flux:button
+                variant="filled"
+                wire:click="generarCarnets"
+                wire:loading.attr="disabled"
+                wire:target="generarCarnets"
+            >
+                <x-slot name="icon">
+                    <x-ui.icon name="id-card" size="5" />
+                </x-slot>
+                Generar carnets
+            </flux:button>
 
             @permiso ('inscripcion_crear')
                 <flux:button variant="primary" href="{{ route('inscripciones.crear') }}" wire:navigate>
@@ -166,14 +189,11 @@
                 @endforeach
             </x-ui.select>
 
-            <x-ui.select wire:model.live="idLugarInscripcion" label="Lugar de inscripción" placeholder="Todos los lugares">
-                <option value="">Todos los lugares</option>
-                @foreach ($this->lugaresInscripcionDisponibles as $lugarInscripcion)
-                    <option
-                        wire:key="lugar-inscripcion-{{ $lugarInscripcion->id_lin }}"
-                        value="{{ $lugarInscripcion->id_lin }}"
-                    >
-                        {{ $lugarInscripcion->nombre_lin }}
+            <x-ui.select wire:model.live="idSede" label="Sede" placeholder="Todas las sedes">
+                <option value="">Todas las sedes</option>
+                @foreach ($this->sedesDisponibles as $sede)
+                    <option wire:key="sede-inscripcion-{{ $sede->id_sed }}" value="{{ $sede->id_sed }}">
+                        {{ $sede->nombre_sed }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -183,16 +203,6 @@
                 @foreach (App\Enums\EstadoObligacionPago::cases() as $estadoPago)
                     <option wire:key="pago-{{ $estadoPago->value }}" value="{{ $estadoPago->value }}">
                         {{ ucfirst(strtolower($estadoPago->getNombre())) }}
-                    </option>
-                @endforeach
-            </x-ui.select>
-
-            <x-ui.select wire:model.live="filtroExpediente" label="Expedientes" placeholder="Todos los expedientes">
-                <option value="">Todos los expedientes</option>
-                <option value="sin_carga">Sin carga</option>
-                @foreach (App\Enums\EstadoRevisionExpediente::cases() as $estadoExpediente)
-                    <option wire:key="expediente-{{ $estadoExpediente->value }}" value="{{ $estadoExpediente->value }}">
-                        {{ ucfirst(strtolower($estadoExpediente->getNombre())) }}
                     </option>
                 @endforeach
             </x-ui.select>
@@ -233,9 +243,8 @@
                 @forelse ($this->inscripciones as $inscripcion)
                     @php
                         $resumenPago = $this->resumenPago($inscripcion);
-                        $resumenExpedientes = $this->resumenExpedientes($inscripcion);
-                        $modalidad = $inscripcion->procesoOferta?->ofertaBase?->modalidadLugarInscripcion?->modalidadAdmision?->nombre_mad;
-                        $turno = $inscripcion->procesoOferta?->turno?->nombre_tur;
+                        $modalidad = $inscripcion->modalidadAdmision?->nombre_mad;
+                        $turno = $inscripcion->turno?->nombre_tur;
                         $aula = $inscripcion->procesoAula?->aula?->nombre_aul;
                     @endphp
                     <x-table.row wire:key="inscripcion-{{ $inscripcion->id_ins }}">
@@ -264,10 +273,10 @@
 
                         <x-table.cell class="h-auto py-3 align-top whitespace-normal">
                             <p class="font-medium text-zinc-900 dark:text-zinc-100">
-                                {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->carrera?->nombre_car ?? 'SIN CARRERA' }}
+                                {{ $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA' }}
                             </p>
                             <p class="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                                {{ $inscripcion->procesoOferta?->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->procesoOferta?->ofertaBase?->sedeCarrera?->sede?->nombre_sed ?? 'SIN SEDE' }}
+                                {{ $inscripcion->proceso?->nombre_pro ?? 'SIN PROCESO' }} · {{ $inscripcion->sede?->nombre_sed ?? 'SIN SEDE' }}
                             </p>
                             <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400 dark:text-zinc-500">
                                 @if ($modalidad || $turno)
@@ -293,23 +302,15 @@
                                 </x-slot>
                                 {{ $inscripcion->estado_ins->getNombre() }}
                             </flux:badge>
+                            @if ($inscripcion->enRevision())
+                                <flux:badge color="amber" size="sm" class="ms-1">EN REVISIÓN</flux:badge>
+                            @endif
                             <div class="mt-1.5 flex flex-wrap items-center gap-1">
                                 <flux:badge color="{{ $resumenPago['color'] }}" size="sm" variant="pill" title="Pago">
                                     <x-slot name="icon">
                                         <x-ui.icon name="dollar-circle" size="3" class="me-0.5" />
                                     </x-slot>
                                     {{ $resumenPago['label'] }}
-                                </flux:badge>
-                                <flux:badge
-                                    color="{{ $resumenExpedientes['color'] }}"
-                                    size="sm"
-                                    variant="pill"
-                                    title="Documentos: {{ $resumenExpedientes['detalle'] }}"
-                                >
-                                    <x-slot name="icon">
-                                        <x-ui.icon name="copy" size="3" class="me-0.5" />
-                                    </x-slot>
-                                    {{ $resumenExpedientes['detalle'] }}
                                 </flux:badge>
                             </div>
                         </x-table.cell>
@@ -348,6 +349,24 @@
                                         </flux:menu.item>
                                     @endif
 
+                                    @if ($inscripcion->estado_ins !== App\Enums\EstadoInscripcion::Anulado)
+                                        <flux:menu.item href="{{ route('inscripciones.ficha', encode($inscripcion->id_ins)) }}" target="_blank">
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="file" size="4" class="me-2" />
+                                            </x-slot>
+                                            Ver ficha
+                                        </flux:menu.item>
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
+                                        <flux:menu.item href="{{ route('inscripciones.carnet', encode($inscripcion->id_ins)) }}" target="_blank">
+                                            <x-slot name="icon">
+                                                <x-ui.icon name="id-card" size="4" class="me-2" />
+                                            </x-slot>
+                                            Ver carnet
+                                        </flux:menu.item>
+                                    @endif
+
                                     @if ($this->puedeContinuarRegistro($inscripcion))
                                         @permiso ('inscripcion_crear')
                                             <flux:menu.separator />
@@ -363,7 +382,19 @@
                                         @endpermiso
                                     @endif
 
-                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo)
+                                    @if ($inscripcion->enRevision())
+                                        @permiso ('inscripcion_estado')
+                                            <flux:menu.separator />
+                                            <flux:menu.item wire:click="aprobarRevision({{ $inscripcion->id_ins }})">
+                                                <x-slot name="icon">
+                                                    <x-ui.icon name="check-circle" size="4" class="me-2" />
+                                                </x-slot>
+                                                Aprobar inscripción
+                                            </flux:menu.item>
+                                        @endpermiso
+                                    @endif
+
+                                    @if ($inscripcion->estado_ins === App\Enums\EstadoInscripcion::Activo || $inscripcion->enRevision())
                                         @permiso ('inscripcion_estado')
                                             <flux:menu.separator />
                                             <flux:menu.item
@@ -420,12 +451,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idSede, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, idProceso, idModalidad, idLugarInscripcion, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, filtroExpediente, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, limpiarFiltroExpediente, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
+            wire:target="buscar, idProceso, idModalidad, idSede, idTurno, idProcesoAulaFiltro, filtroEstado, filtroPago, porPagina, limpiarFiltroProceso, limpiarFiltrosAcademicos, limpiarFiltrosSecundarios, limpiarFiltroEstado, limpiarFiltroPago, anularInscripcion, nextPage, previousPage, gotoPage, exportarExcel"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>

@@ -29,11 +29,13 @@ class extends Component
     public array $filtroEstado = [];
 
     /**
-     * @var array{codigo: string, nombre: string}
+     * @var array{codigo: string, nombre: string, hora_inicio: string, hora_fin: string}
      */
     public array $turnoForm = [
         'codigo' => '',
         'nombre' => '',
+        'hora_inicio' => '',
+        'hora_fin' => '',
     ];
 
     public string $tituloModal = 'Nuevo turno';
@@ -84,6 +86,8 @@ class extends Component
                     }
                 },
             ],
+            'turnoForm.hora_inicio' => ['nullable', 'date_format:H:i', 'required_with:turnoForm.hora_fin'],
+            'turnoForm.hora_fin' => ['nullable', 'date_format:H:i', 'required_with:turnoForm.hora_inicio', 'after:turnoForm.hora_inicio'],
         ];
     }
 
@@ -98,6 +102,9 @@ class extends Component
             'turnoForm.codigo.regex' => 'El código solo admite letras, números, guion y guion bajo.',
             'turnoForm.nombre.required' => 'El nombre es obligatorio.',
             'turnoForm.nombre.max' => 'El nombre no debe superar los 255 caracteres.',
+            'turnoForm.hora_fin.after' => 'La hora de fin debe ser posterior a la de inicio.',
+            'turnoForm.hora_inicio.required_with' => 'Indique la hora de inicio.',
+            'turnoForm.hora_fin.required_with' => 'Indique la hora de fin.',
         ];
     }
 
@@ -139,6 +146,8 @@ class extends Component
         $this->turnoForm = [
             'codigo' => $turno->codigo_tur,
             'nombre' => $turno->nombre_tur,
+            'hora_inicio' => substr((string) $turno->hora_inicio_tur, 0, 5),
+            'hora_fin' => substr((string) $turno->hora_fin_tur, 0, 5),
         ];
         $this->tituloModal = 'Editar turno';
         $this->isEdit = true;
@@ -156,6 +165,8 @@ class extends Component
                 $payload = [
                     'codigo_tur' => $this->normalizarMayusculas($data['turnoForm']['codigo']),
                     'nombre_tur' => $this->normalizarMayusculas($data['turnoForm']['nombre']),
+                    'hora_inicio_tur' => filled($data['turnoForm']['hora_inicio'] ?? null) ? $data['turnoForm']['hora_inicio'] : null,
+                    'hora_fin_tur' => filled($data['turnoForm']['hora_fin'] ?? null) ? $data['turnoForm']['hora_fin'] : null,
                 ];
 
                 if ($this->editingId !== null) {
@@ -234,13 +245,13 @@ class extends Component
             DB::transaction(function () use ($id_turno): void {
                 $turno = Turno::query()
                     ->withCount([
-                        'procesosOferta' => fn (Builder $query) => $query->withTrashed(),
+                        'inscripciones' => fn (Builder $query) => $query->withTrashed(),
                         'procesoAulas' => fn (Builder $query) => $query->withTrashed(),
                     ])
                     ->findOrFail($id_turno);
 
-                if ($turno->procesos_oferta_count > 0) {
-                    throw new RuntimeException('El turno se usa en ofertas de procesos y no puede eliminarse. Puede deshabilitarlo.');
+                if ($turno->inscripciones_count > 0) {
+                    throw new RuntimeException('El turno tiene inscripciones y no puede eliminarse. Puede deshabilitarlo.');
                 }
 
                 if ($turno->proceso_aulas_count > 0) {
@@ -276,6 +287,8 @@ class extends Component
         $this->turnoForm = [
             'codigo' => '',
             'nombre' => '',
+            'hora_inicio' => '',
+            'hora_fin' => '',
         ];
         $this->resetValidation();
     }
@@ -284,7 +297,7 @@ class extends Component
     public function turnos(): LengthAwarePaginator
     {
         return Turno::query()
-            ->withCount('procesosOferta')
+            ->withCount('procesoAulas')
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 

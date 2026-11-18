@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\ColegioSearchController;
 use App\Http\Controllers\Api\UbigeoSearchController;
+use App\Http\Controllers\DocumentoInscripcionController;
+use App\Http\Controllers\FotoPostulanteController;
+use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/auth', '/auth/login');
@@ -9,14 +12,34 @@ Route::middleware('guest')->group(function (): void {
     Route::livewire('/auth/login', 'pages::auth.login')->name('login');
 });
 
-Route::redirect('/', '/inicio');
-Route::middleware('auth')->group(function (): void {
+Route::get('/verificar/{token}', VerificacionCarnetController::class)
+    ->middleware('throttle:30,1')
+    ->where('token', '[A-Za-z0-9]{40}')
+    ->name('carnet.verificar');
+
+// Portal del postulante: sin iniciar sesión.
+Route::middleware('throttle:60,1')->group(function (): void {
     Route::get('/api/ubigeos/search', UbigeoSearchController::class)
         ->name('api.ubigeo.search');
 
     Route::get('/api/colegios/search', ColegioSearchController::class)
         ->name('api.colegio.search');
+});
 
+Route::livewire('/postulante', 'pages::publico.portal')->name('publico.portal');
+Route::livewire('/postulante/inscripcion', 'pages::publico.inscripcion')->name('publico.inscripcion');
+Route::livewire('/postulante/consulta', 'pages::publico.consulta')->name('publico.consulta');
+
+Route::middleware(['signed', 'throttle:30,1'])->group(function (): void {
+    Route::get('/postulante/{inscripcion}/ficha', [DocumentoInscripcionController::class, 'fichaPublica'])
+        ->name('publico.ficha');
+
+    Route::get('/postulante/{inscripcion}/carnet', [DocumentoInscripcionController::class, 'carnetPublico'])
+        ->name('publico.carnet');
+});
+
+Route::redirect('/', '/inicio');
+Route::middleware('auth')->group(function (): void {
     // Dashboard
     Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
 
@@ -50,17 +73,9 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:concepto_pago_indice')
         ->name('conceptos-pago.index');
 
-    Route::livewire('/mantenedores/lugares-inscripcion', 'pages::mantenedores.lugares-inscripcion')
-        ->middleware('permiso:lugar_inscripcion_indice')
-        ->name('lugares-inscripcion.index');
-
     Route::livewire('/mantenedores/modalidades', 'pages::mantenedores.modalidades')
         ->middleware('permiso:modalidad_indice')
         ->name('modalidades.index');
-
-    Route::livewire('/mantenedores/ofertas-base', 'pages::mantenedores.ofertas-base')
-        ->middleware('permiso:oferta_base_indice')
-        ->name('ofertas-base.index');
 
     Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
         ->middleware('permiso:sede_indice')
@@ -69,10 +84,6 @@ Route::middleware('auth')->group(function (): void {
     Route::livewire('/mantenedores/colegios', 'pages::mantenedores.colegios')
         ->middleware('permiso:colegio_indice')
         ->name('mantenedor-colegios.index');
-
-    Route::livewire('/mantenedores/tipos-expediente', 'pages::mantenedores.tipos-expediente')
-        ->middleware('permiso:tipo_expediente_indice')
-        ->name('tipos-expediente.index');
 
     Route::livewire('/mantenedores/turnos', 'pages::mantenedores.turnos')
         ->middleware('permiso:turno_indice')
@@ -87,10 +98,6 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:oferta_indice')
         ->name('ofertas.index');
 
-    Route::livewire('/configuracion-academica/ofertas/asignar', 'pages::configuracion-academica.ofertas-asignar')
-        ->middleware('permiso:oferta_crear')
-        ->name('ofertas.asignar');
-
     Route::livewire('/configuracion-academica/aulas', 'pages::configuracion-academica.aulas-proceso')
         ->middleware('permiso:aula_proceso_indice')
         ->name('aulas.index');
@@ -99,17 +106,21 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:aula_proceso_crear')
         ->name('aulas.asignar');
 
+    Route::livewire('/configuracion-academica/codigos-admision', 'pages::configuracion-academica.codigos-admision')
+        ->middleware('permiso:codigo_admision_indice')
+        ->name('codigos-admision.index');
+
+    Route::livewire('/configuracion-academica/carnet', 'pages::configuracion-academica.carnet')
+        ->middleware('permiso:parametro_indice')
+        ->name('carnet.configuracion');
+
+    Route::get('/configuracion-academica/carnet/muestra', [DocumentoInscripcionController::class, 'muestra'])
+        ->middleware('permiso:parametro_indice')
+        ->name('carnet.muestra');
+
     Route::livewire('/configuracion-academica/reglas-pago', 'pages::configuracion-academica.reglas-pago')
         ->middleware('permiso:regla_pago_indice')
         ->name('reglas-pago.index');
-
-    Route::livewire('/configuracion-academica/convenios', 'pages::configuracion-academica.convenios')
-        ->middleware('permiso:convenio_indice')
-        ->name('convenios.index');
-
-    Route::livewire('/configuracion-academica/requisitos', 'pages::configuracion-academica.requisitos')
-        ->middleware('permiso:requisito_expediente_indice')
-        ->name('requisitos.index');
 
     // Inscripciones
     Route::livewire('/inscripciones', 'pages::inscripciones.inscripciones')
@@ -128,9 +139,29 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.detalle');
 
-    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos')
+    Route::get('/inscripciones/{inscripcion}/ficha', [DocumentoInscripcionController::class, 'ficha'])
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.ficha');
+
+    Route::get('/inscripciones/{inscripcion}/carnet', [DocumentoInscripcionController::class, 'carnet'])
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.carnet');
+
+    Route::livewire('/inscripciones/fotos', 'pages::inscripciones.fotos')
+        ->middleware('permiso:foto_indice')
+        ->name('fotos.index');
+
+    Route::get('/fotos/{documento}', FotoPostulanteController::class)
+        ->where('documento', '\d{8,12}')
+        ->name('fotos.ver');
+
+    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos-lista')
         ->middleware('permiso:pago_indice')
         ->name('pagos.index');
+
+    Route::livewire('/inscripciones/pagos/importaciones', 'pages::inscripciones.pagos')
+        ->middleware('permiso:pago_indice')
+        ->name('pagos.importaciones');
 
     Route::livewire('/inscripciones/pagos/validar', 'pages::inscripciones.pagos-validar')
         ->middleware('permiso:pago_crear')

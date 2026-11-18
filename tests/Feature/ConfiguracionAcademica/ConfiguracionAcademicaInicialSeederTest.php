@@ -3,13 +3,8 @@
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ConceptoPagoSeeder;
 use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
-use Database\Seeders\OfertaBaseSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,16 +16,11 @@ uses(RefreshDatabase::class);
 test('academic initial seeder creates a usable base configuration', function () {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         UbigeoSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
@@ -47,32 +37,15 @@ test('academic initial seeder creates a usable base configuration', function () 
 
     $procesoId = $proceso->id_pro;
 
-    $ofertasEsperadas = DB::table('tbl_oferta_base as ofb')
-        ->join('tbl_modalidad_lugar_inscripcion as mli', 'mli.id_mli', '=', 'ofb.id_modalidad_lugar_inscripcion')
-        ->where('mli.id_modalidad_admision', 2)
-        ->where('mli.id_lugar_inscripcion', 603)
-        ->count();
-
-    expect($ofertasEsperadas)->toBe(23);
-
-    expect(DB::table('tbl_proceso_oferta')
+    expect(DB::table('tbl_proceso_modalidad')
         ->where('id_proceso', $procesoId)
-        ->where('id_turno', 1)
-        ->count())->toBe($ofertasEsperadas);
-
-    expect(DB::table('tbl_convenio')
-        ->where('codigo_con', 'HIJO_TRABAJADOR')
-        ->where('monto_descuento_con', 200)
-        ->exists())->toBeTrue();
-
-    expect(DB::table('tbl_convenio')
-        ->where('codigo_con', 'MUNICIPALIDAD')
-        ->where('tipo_beneficio_con', 'EXONERACION_TOTAL')
-        ->exists())->toBeTrue();
-
-    expect(DB::table('tbl_convenio_proceso')
-        ->where('id_proceso', $procesoId)
+        ->where('estado_pmo', 'HABILITADO')
         ->count())->toBe(2);
+
+    expect(DB::table('tbl_proceso_carrera')
+        ->where('id_proceso', $procesoId)
+        ->where('estado_pca', 'HABILITADO')
+        ->count())->toBe(DB::table('tbl_carrera')->where('estado_car', 'HABILITADO')->count());
 
     expect(DB::table('tbl_regla_pago')
         ->where('id_proceso', $procesoId)
@@ -86,10 +59,14 @@ test('academic initial seeder creates a usable base configuration', function () 
         ->where('monto_total_rpa', 550)
         ->where('permite_cuotas_rpa', true)
         ->where('monto_minimo_primera_cuota_rpa', 275)
-        ->where('numero_maximo_cuotas_rpa', 3)
+        ->where('numero_maximo_cuotas_rpa', 2)
         ->exists())->toBeTrue();
 
-    expect(DB::table('tbl_requisito_expediente')
+    expect(DB::table('tbl_regla_pago')->where('id_proceso', $procesoId)->count())->toBe(5);
+
+    expect(DB::table('tbl_regla_pago')
         ->where('id_proceso', $procesoId)
-        ->count())->toBe(3);
+        ->where('monto_total_rpa', 0)
+        ->where('documento_requerido_rpa', 'N° DE CONSTANCIA')
+        ->exists())->toBeTrue();
 });

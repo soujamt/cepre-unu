@@ -77,11 +77,6 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
-                'clave_permiso' => 'tipo_expediente',
-                'nombre_permiso' => 'TIPOS DE EXPEDIENTE',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
                 'clave_permiso' => 'aula',
                 'nombre_permiso' => 'AULAS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
@@ -103,12 +98,7 @@ class PermisoModuloSeeder extends Seeder
             ],
             [
                 'clave_permiso' => 'modalidad',
-                'nombre_permiso' => 'MODALIDADES DE ADMISIÓN',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
-                'clave_permiso' => 'lugar_inscripcion',
-                'nombre_permiso' => 'LUGARES DE INSCRIPCIÓN',
+                'nombre_permiso' => 'MODALIDADES',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
@@ -122,18 +112,13 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
-                'clave_permiso' => 'oferta_base',
-                'nombre_permiso' => 'OFERTAS BASE',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
                 'clave_permiso' => 'proceso',
                 'nombre_permiso' => 'PROCESOS',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
                 'clave_permiso' => 'oferta',
-                'nombre_permiso' => 'OFERTAS',
+                'nombre_permiso' => 'OFERTA DEL PROCESO',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
@@ -142,24 +127,29 @@ class PermisoModuloSeeder extends Seeder
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
-                'clave_permiso' => 'convenio',
-                'nombre_permiso' => 'CONVENIOS',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
-            ],
-            [
                 'clave_permiso' => 'regla_pago',
                 'nombre_permiso' => 'REGLAS DE PAGO',
                 'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
             ],
             [
-                'clave_permiso' => 'requisito_expediente',
-                'nombre_permiso' => 'REQUISITOS DE EXPEDIENTE',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+                'clave_permiso' => 'foto',
+                'nombre_permiso' => 'FOTOS',
+                'acciones' => ['indice', 'crear', 'eliminar', 'exportar_excel'],
+            ],
+            [
+                'clave_permiso' => 'parametro',
+                'nombre_permiso' => 'CONFIGURACIÓN DEL CARNET',
+                'acciones' => ['indice', 'editar'],
+            ],
+            [
+                'clave_permiso' => 'codigo_admision',
+                'nombre_permiso' => 'CÓDIGOS DE ADMISIÓN',
+                'acciones' => ['indice', 'editar'],
             ],
             [
                 'clave_permiso' => 'pago',
                 'nombre_permiso' => 'PAGOS',
-                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar'],
+                'acciones' => ['indice', 'crear', 'editar', 'estado', 'eliminar', 'exportar_excel'],
             ],
             [
                 'clave_permiso' => 'inscripcion',

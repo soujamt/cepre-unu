@@ -1,11 +1,13 @@
 <?php
 
+use App\Enums\CondicionEgresoModalidad;
 use App\Enums\EstadoCatalogo;
 use App\Models\ModalidadAdmision;
 use App\Traits\AuthorizesPermisos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
@@ -15,7 +17,7 @@ use Livewire\WithPagination;
 
 new
 #[Layout('layouts.app')]
-#[Title('Modalidades de admisión')]
+#[Title('Modalidades')]
 class extends Component
 {
     use AuthorizesPermisos;
@@ -29,12 +31,13 @@ class extends Component
     public array $filtroEstado = [];
 
     /**
-     * @var array{codigo: string, nombre: string, descripcion: string}
+     * @var array{codigo: string, nombre: string, descripcion: string, condicion_egreso: string}
      */
     public array $modalidadForm = [
         'codigo' => '',
         'nombre' => '',
         'descripcion' => '',
+        'condicion_egreso' => '',
     ];
 
     public string $tituloModal = 'Nueva modalidad';
@@ -86,6 +89,7 @@ class extends Component
                 },
             ],
             'modalidadForm.descripcion' => ['nullable', 'string', 'max:1000'],
+            'modalidadForm.condicion_egreso' => ['required', Rule::enum(CondicionEgresoModalidad::class)],
         ];
     }
 
@@ -101,6 +105,7 @@ class extends Component
             'modalidadForm.nombre.required' => 'El nombre es obligatorio.',
             'modalidadForm.nombre.max' => 'El nombre no debe superar los 255 caracteres.',
             'modalidadForm.descripcion.max' => 'La descripción no debe superar los 1000 caracteres.',
+            'modalidadForm.condicion_egreso.required' => 'Indique a quién aplica la modalidad.',
         ];
     }
 
@@ -143,6 +148,7 @@ class extends Component
             'codigo' => $modalidad->codigo_mad,
             'nombre' => $modalidad->nombre_mad,
             'descripcion' => (string) ($modalidad->descripcion_mad ?? ''),
+            'condicion_egreso' => (string) ($modalidad->condicion_egreso_mad?->value ?? ''),
         ];
         $this->tituloModal = 'Editar modalidad';
         $this->isEdit = true;
@@ -161,6 +167,7 @@ class extends Component
                     'codigo_mad' => $this->normalizarMayusculas($data['modalidadForm']['codigo']),
                     'nombre_mad' => $this->normalizarMayusculas($data['modalidadForm']['nombre']),
                     'descripcion_mad' => $this->normalizarTexto($data['modalidadForm']['descripcion'] ?? null),
+                    'condicion_egreso_mad' => $data['modalidadForm']['condicion_egreso'],
                 ];
 
                 if ($this->editingId !== null) {
@@ -239,13 +246,14 @@ class extends Component
             DB::transaction(function () use ($id_modalidad): void {
                 $modalidad = ModalidadAdmision::query()
                     ->withCount([
-                        'modalidadesLugarInscripcion' => fn (Builder $query) => $query->withTrashed(),
+                        'procesoModalidades' => fn (Builder $query) => $query->withTrashed(),
+                        'inscripciones' => fn (Builder $query) => $query->withTrashed(),
                         'reglasPago' => fn (Builder $query) => $query->withTrashed(),
                     ])
                     ->findOrFail($id_modalidad);
 
-                if ($modalidad->modalidades_lugar_inscripcion_count > 0) {
-                    throw new RuntimeException('La modalidad está asignada a lugares de inscripción y no puede eliminarse. Puede deshabilitarla.');
+                if ($modalidad->proceso_modalidades_count > 0 || $modalidad->inscripciones_count > 0) {
+                    throw new RuntimeException('La modalidad está usada en procesos o inscripciones y no puede eliminarse. Puede deshabilitarla.');
                 }
 
                 if ($modalidad->reglas_pago_count > 0) {
@@ -282,6 +290,7 @@ class extends Component
             'codigo' => '',
             'nombre' => '',
             'descripcion' => '',
+            'condicion_egreso' => '',
         ];
         $this->resetValidation();
     }
@@ -291,7 +300,7 @@ class extends Component
     {
         return ModalidadAdmision::query()
             ->withCount([
-                'modalidadesLugarInscripcion as lugares_habilitados_count' => fn (Builder $query) => $query->where('estado_mli', EstadoCatalogo::Habilitado->value),
+                'procesoModalidades as procesos_habilitados_count' => fn (Builder $query) => $query->where('estado_pmo', EstadoCatalogo::Habilitado->value),
             ])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);

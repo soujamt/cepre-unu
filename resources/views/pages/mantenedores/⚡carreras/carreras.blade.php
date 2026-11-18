@@ -80,7 +80,7 @@
                     <x-table.heading class="w-16 max-w-16">N&deg;</x-table.heading>
                     <x-table.heading class="w-28">CÓDIGO</x-table.heading>
                     <x-table.heading>NOMBRE</x-table.heading>
-                    <x-table.heading class="w-24">SEDES</x-table.heading>
+                    <x-table.heading class="w-24">PROCESOS</x-table.heading>
                     <x-table.heading>ESTADO</x-table.heading>
                     <x-table.heading>REGISTRO</x-table.heading>
                     <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
@@ -95,7 +95,7 @@
                             <span class="font-mono text-xs font-medium text-zinc-600 dark:text-zinc-300">{{ $carrera->codigo_car }}</span>
                         </x-table.cell>
                         <x-table.cell class="font-medium whitespace-normal text-zinc-800 dark:text-zinc-100">{{ $carrera->nombre_car }}</x-table.cell>
-                        <x-table.cell>{{ $carrera->sede_carreras_count }}</x-table.cell>
+                        <x-table.cell>{{ $carrera->proceso_carreras_count }}</x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $carrera->estado_car->getColor() }}">
                                 <x-slot name="icon">

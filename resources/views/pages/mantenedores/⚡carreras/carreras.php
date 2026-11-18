@@ -233,11 +233,14 @@ class extends Component
         try {
             DB::transaction(function () use ($id_carrera): void {
                 $carrera = Carrera::query()
-                    ->withCount(['sedeCarreras' => fn (Builder $query) => $query->withTrashed()])
+                    ->withCount([
+                        'procesoCarreras' => fn (Builder $query) => $query->withTrashed(),
+                        'inscripciones' => fn (Builder $query) => $query->withTrashed(),
+                    ])
                     ->findOrFail($id_carrera);
 
-                if ($carrera->sede_carreras_count > 0) {
-                    throw new RuntimeException('La carrera está asignada a una sede y no puede eliminarse. Puede deshabilitarla.');
+                if ($carrera->proceso_carreras_count > 0 || $carrera->inscripciones_count > 0) {
+                    throw new RuntimeException('La carrera se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.');
                 }
 
                 $carrera->delete();
@@ -277,7 +280,7 @@ class extends Component
     public function carreras(): LengthAwarePaginator
     {
         return Carrera::query()
-            ->withCount('sedeCarreras')
+            ->withCount('procesoCarreras')
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 

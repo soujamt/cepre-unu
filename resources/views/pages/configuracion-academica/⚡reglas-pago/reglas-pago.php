@@ -2,7 +2,6 @@
 
 use App\Enums\EstadoCatalogo;
 use App\Models\ConceptoPago;
-use App\Models\ConvenioProceso;
 use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
 use App\Models\ReglaPago;
@@ -28,6 +27,11 @@ class extends Component
     use AuthorizesPermisos;
     use WithPagination;
 
+    /**
+     * Documentos que puede pedir una modalidad de pago (beca o parentesco).
+     */
+    public const DOCUMENTOS_REQUERIDOS = ['N° DE CONSTANCIA', 'N° DE RESOLUCIÓN'];
+
     #[Url(as: 'q')]
     public string $buscar = '';
 
@@ -45,12 +49,12 @@ class extends Component
      *     id_concepto_pago:string,
      *     id_proceso:string,
      *     id_modalidad_admision:string,
-     *     id_convenio_proceso:string,
      *     monto_total:string,
      *     permite_cuotas:bool,
      *     monto_minimo_primera_cuota:string,
      *     numero_maximo_cuotas:string,
      *     requiere_pago_completo:bool,
+     *     documento_requerido:string,
      *     vigente_desde:string,
      *     vigente_hasta:string
      * }
@@ -59,12 +63,12 @@ class extends Component
         'id_concepto_pago' => '',
         'id_proceso' => '',
         'id_modalidad_admision' => '',
-        'id_convenio_proceso' => '',
         'monto_total' => '',
         'permite_cuotas' => false,
         'monto_minimo_primera_cuota' => '',
         'numero_maximo_cuotas' => '1',
         'requiere_pago_completo' => false,
+        'documento_requerido' => '',
         'vigente_desde' => '',
         'vigente_hasta' => '',
     ];
@@ -93,16 +97,6 @@ class extends Component
     public function updatedFiltroEstado(): void
     {
         $this->resetPage();
-    }
-
-    public function updatedReglaPagoFormIdProceso(): void
-    {
-        if (
-            filled($this->reglaPagoForm['id_convenio_proceso'])
-            && ! $this->conveniosProcesoDisponibles()->contains('id_cpr', (int) $this->reglaPagoForm['id_convenio_proceso'])
-        ) {
-            $this->reglaPagoForm['id_convenio_proceso'] = '';
-        }
     }
 
     public function updatedReglaPagoFormPermiteCuotas(bool $value): void
@@ -150,18 +144,11 @@ class extends Component
                         ->where('id_proceso', (int) $value);
 
                     $modalidadId = $this->reglaPagoForm['id_modalidad_admision'];
-                    $convenioProcesoId = $this->reglaPagoForm['id_convenio_proceso'];
 
                     if (filled($modalidadId)) {
                         $query->where('id_modalidad_admision', (int) $modalidadId);
                     } else {
                         $query->whereNull('id_modalidad_admision');
-                    }
-
-                    if (filled($convenioProcesoId)) {
-                        $query->where('id_convenio_proceso', (int) $convenioProcesoId);
-                    } else {
-                        $query->whereNull('id_convenio_proceso');
                     }
 
                     if ($this->editingId !== null) {
@@ -174,26 +161,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.id_modalidad_admision' => ['nullable', 'integer', 'exists:tbl_modalidad_admision,id_mad'],
-            'reglaPagoForm.id_convenio_proceso' => [
-                'nullable',
-                'integer',
-                'exists:tbl_convenio_proceso,id_cpr',
-                function (string $attribute, mixed $value, Closure $fail): void {
-                    if (blank($value) || blank($this->reglaPagoForm['id_proceso'])) {
-                        return;
-                    }
-
-                    $perteneceAlProceso = ConvenioProceso::query()
-                        ->where('id_cpr', (int) $value)
-                        ->where('id_proceso', (int) $this->reglaPagoForm['id_proceso'])
-                        ->exists();
-
-                    if (! $perteneceAlProceso) {
-                        $fail('El convenio seleccionado no corresponde al proceso indicado.');
-                    }
-                },
-            ],
-            'reglaPagoForm.monto_total' => ['required', 'numeric', 'gt:0'],
+            'reglaPagoForm.monto_total' => ['required', 'numeric', 'gte:0'],
             'reglaPagoForm.permite_cuotas' => [
                 'boolean',
                 function (string $attribute, mixed $value, Closure $fail): void {
@@ -249,6 +217,7 @@ class extends Component
                 },
             ],
             'reglaPagoForm.requiere_pago_completo' => ['boolean'],
+            'reglaPagoForm.documento_requerido' => ['nullable', Rule::in(self::DOCUMENTOS_REQUERIDOS)],
             'reglaPagoForm.vigente_desde' => [
                 'required',
                 'date',
@@ -269,21 +238,6 @@ class extends Component
 
                         if ($fechaFinProceso !== null && (string) $value > $fechaFinProceso) {
                             $fail('La vigencia inicial no puede ser mayor que la fecha final del proceso.');
-                        }
-                    }
-
-                    $convenioProceso = $this->convenioProcesoSeleccionadoFormulario();
-
-                    if ($convenioProceso !== null) {
-                        $fechaInicioConvenio = $convenioProceso->fecha_inicio_cpr?->format('Y-m-d');
-                        $fechaFinConvenio = $convenioProceso->fecha_fin_cpr?->format('Y-m-d');
-
-                        if ($fechaInicioConvenio !== null && (string) $value < $fechaInicioConvenio) {
-                            $fail('La vigencia inicial no puede ser menor que la fecha de inicio del convenio.');
-                        }
-
-                        if ($fechaFinConvenio !== null && (string) $value > $fechaFinConvenio) {
-                            $fail('La vigencia inicial no puede ser mayor que la fecha final del convenio.');
                         }
                     }
                 },
@@ -311,21 +265,6 @@ class extends Component
                             $fail('La vigencia final no puede ser mayor que la fecha final del proceso.');
                         }
                     }
-
-                    $convenioProceso = $this->convenioProcesoSeleccionadoFormulario();
-
-                    if ($convenioProceso !== null) {
-                        $fechaInicioConvenio = $convenioProceso->fecha_inicio_cpr?->format('Y-m-d');
-                        $fechaFinConvenio = $convenioProceso->fecha_fin_cpr?->format('Y-m-d');
-
-                        if ($fechaInicioConvenio !== null && (string) $value < $fechaInicioConvenio) {
-                            $fail('La vigencia final no puede ser menor que la fecha de inicio del convenio.');
-                        }
-
-                        if ($fechaFinConvenio !== null && (string) $value > $fechaFinConvenio) {
-                            $fail('La vigencia final no puede ser mayor que la fecha final del convenio.');
-                        }
-                    }
                 },
             ],
         ];
@@ -340,9 +279,8 @@ class extends Component
             'reglaPagoForm.id_concepto_pago.required' => 'El concepto de pago es obligatorio.',
             'reglaPagoForm.id_proceso.required' => 'El proceso es obligatorio.',
             'reglaPagoForm.id_modalidad_admision.exists' => 'La modalidad seleccionada no es valida.',
-            'reglaPagoForm.id_convenio_proceso.exists' => 'El convenio seleccionado no es valido.',
             'reglaPagoForm.monto_total.required' => 'El monto total es obligatorio.',
-            'reglaPagoForm.monto_total.gt' => 'El monto total debe ser mayor a cero.',
+            'reglaPagoForm.monto_total.gte' => 'El monto total no puede ser negativo.',
             'reglaPagoForm.numero_maximo_cuotas.required' => 'El numero maximo de cuotas es obligatorio.',
             'reglaPagoForm.vigente_desde.required' => 'La vigencia desde es obligatoria.',
             'reglaPagoForm.vigente_hasta.after_or_equal' => 'La vigencia final no puede ser menor que la inicial.',
@@ -413,18 +351,6 @@ class extends Component
             ->get();
     }
 
-    #[Computed]
-    public function conveniosProcesoDisponibles(): Collection
-    {
-        return ConvenioProceso::query()
-            ->with(['convenio', 'proceso'])
-            ->where('estado_cpr', EstadoCatalogo::Habilitado->value)
-            ->when(filled($this->reglaPagoForm['id_proceso']), fn (Builder $query) => $query
-                ->where('id_proceso', (int) $this->reglaPagoForm['id_proceso']))
-            ->orderByDesc('id_cpr')
-            ->get();
-    }
-
     public function limpiarFiltroEstado(): void
     {
         $this->filtroEstado = [];
@@ -457,7 +383,6 @@ class extends Component
             'id_concepto_pago' => (string) $reglaPago->id_concepto_pago,
             'id_proceso' => (string) $reglaPago->id_proceso,
             'id_modalidad_admision' => $reglaPago->id_modalidad_admision ? (string) $reglaPago->id_modalidad_admision : '',
-            'id_convenio_proceso' => $reglaPago->id_convenio_proceso ? (string) $reglaPago->id_convenio_proceso : '',
             'monto_total' => number_format((float) $reglaPago->monto_total_rpa, 2, '.', ''),
             'permite_cuotas' => $reglaPago->permite_cuotas_rpa,
             'monto_minimo_primera_cuota' => $reglaPago->monto_minimo_primera_cuota_rpa !== null
@@ -465,6 +390,7 @@ class extends Component
                 : '',
             'numero_maximo_cuotas' => (string) $reglaPago->numero_maximo_cuotas_rpa,
             'requiere_pago_completo' => $reglaPago->requiere_pago_completo_rpa,
+            'documento_requerido' => (string) ($reglaPago->documento_requerido_rpa ?? ''),
             'vigente_desde' => $reglaPago->vigente_desde_rpa?->format('Y-m-d') ?? '',
             'vigente_hasta' => $reglaPago->vigente_hasta_rpa?->format('Y-m-d') ?? '',
         ];
@@ -489,9 +415,6 @@ class extends Component
                     'id_modalidad_admision' => filled($data['reglaPagoForm']['id_modalidad_admision'])
                         ? (int) $data['reglaPagoForm']['id_modalidad_admision']
                         : null,
-                    'id_convenio_proceso' => filled($data['reglaPagoForm']['id_convenio_proceso'])
-                        ? (int) $data['reglaPagoForm']['id_convenio_proceso']
-                        : null,
                     'monto_total_rpa' => (float) $data['reglaPagoForm']['monto_total'],
                     'permite_cuotas_rpa' => $permiteCuotas,
                     'monto_minimo_primera_cuota_rpa' => $permiteCuotas
@@ -501,6 +424,9 @@ class extends Component
                         ? (int) $data['reglaPagoForm']['numero_maximo_cuotas']
                         : 1,
                     'requiere_pago_completo_rpa' => (bool) $data['reglaPagoForm']['requiere_pago_completo'],
+                    'documento_requerido_rpa' => filled($data['reglaPagoForm']['documento_requerido'] ?? null)
+                        ? $data['reglaPagoForm']['documento_requerido']
+                        : null,
                     'vigente_desde_rpa' => $data['reglaPagoForm']['vigente_desde'],
                     'vigente_hasta_rpa' => filled($data['reglaPagoForm']['vigente_hasta'])
                         ? $data['reglaPagoForm']['vigente_hasta']
@@ -619,12 +545,12 @@ class extends Component
             'id_concepto_pago' => '',
             'id_proceso' => '',
             'id_modalidad_admision' => '',
-            'id_convenio_proceso' => '',
-            'monto_total' => '',
+                'monto_total' => '',
             'permite_cuotas' => false,
             'monto_minimo_primera_cuota' => '',
             'numero_maximo_cuotas' => '1',
             'requiere_pago_completo' => false,
+            'documento_requerido' => '',
             'vigente_desde' => '',
             'vigente_hasta' => '',
         ];
@@ -639,7 +565,6 @@ class extends Component
                 'conceptoPago',
                 'proceso',
                 'modalidadAdmision',
-                'convenioProceso.convenio',
             ])
             ->withCount('obligacionesPago')
             ->when(filled($this->buscar), function (Builder $query): void {
@@ -652,9 +577,7 @@ class extends Component
                         ->orWhereHas('proceso', fn (Builder $procesoQuery) => $procesoQuery
                             ->where('nombre_pro', 'like', "%{$search}%"))
                         ->orWhereHas('modalidadAdmision', fn (Builder $modalidadQuery) => $modalidadQuery
-                            ->where('nombre_mad', 'like', "%{$search}%"))
-                        ->orWhereHas('convenioProceso.convenio', fn (Builder $convenioQuery) => $convenioQuery
-                            ->where('nombre_con', 'like', "%{$search}%"));
+                            ->where('nombre_mad', 'like', "%{$search}%"));
                 });
             })
             ->when(filled($this->idProceso), fn (Builder $query) => $query->where('id_proceso', (int) $this->idProceso))
@@ -667,9 +590,7 @@ class extends Component
     {
         $proceso = $reglaPago->proceso?->nombre_pro ?? 'SIN PROCESO';
         $modalidad = $reglaPago->modalidadAdmision?->nombre_mad ?? 'TODAS LAS MODALIDADES';
-        $convenio = $reglaPago->convenioProceso?->convenio?->nombre_con ?? 'SIN CONVENIO';
-
-        return "{$proceso} | {$modalidad} | {$convenio}";
+        return "{$proceso} | {$modalidad}";
     }
 
     private function normalizarTexto(?string $valor): ?string
@@ -692,12 +613,4 @@ class extends Component
         return Proceso::query()->find((int) $this->reglaPagoForm['id_proceso']);
     }
 
-    private function convenioProcesoSeleccionadoFormulario(): ?ConvenioProceso
-    {
-        if (blank($this->reglaPagoForm['id_convenio_proceso'])) {
-            return null;
-        }
-
-        return ConvenioProceso::query()->find((int) $this->reglaPagoForm['id_convenio_proceso']);
-    }
 };

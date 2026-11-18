@@ -3,7 +3,7 @@
 namespace App\Support;
 
 use App\Models\Inscripcion;
-use App\Models\ProcesoOferta;
+use App\Models\Proceso;
 
 /**
  * Genera el código visible de una inscripción con el formato {AA}{N}{NNNN}:
@@ -15,20 +15,14 @@ class GeneradorCodigoInscripcion
 {
     public function generar(Inscripcion $inscripcion): string
     {
-        $proceso = ProcesoOferta::query()
-            ->with('proceso')
-            ->find($inscripcion->id_proceso_oferta)
-            ?->proceso;
+        $proceso = Proceso::query()->find($inscripcion->id_proceso);
 
         $anio = $proceso?->anioPeriodo() ?? (int) now()->format('Y');
         $numeroPeriodo = $proceso?->numeroPeriodo() ?? 0;
 
         // Incluye las inscripciones eliminadas para no reutilizar un correlativo
         $correlativo = Inscripcion::withTrashed()
-            ->whereHas(
-                'procesoOferta',
-                fn ($query) => $query->where('id_proceso', $proceso?->id_pro),
-            )
+            ->where('id_proceso', $proceso?->id_pro)
             ->where('id_ins', '<=', $inscripcion->id_ins)
             ->count();
 

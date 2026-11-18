@@ -6,21 +6,16 @@ use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
-use App\Models\ModalidadLugarInscripcion;
 use App\Models\Nacionalidad;
-use App\Models\OfertaBase;
 use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
 use App\Models\ProcesoAula;
-use App\Models\ProcesoOferta;
 use App\Models\Rol;
 use App\Models\Sede;
-use App\Models\SedeCarrera;
 use App\Models\TipoDocumento;
 use App\Models\Turno;
 use App\Models\Ubigeo;
@@ -152,50 +147,16 @@ function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENT
         'estado_sed' => 'HABILITADO',
     ]);
 
-    $lugarInscripcion = LugarInscripcion::query()->create([
-        'codigo_lin' => "LIN{$indice}",
-        'nombre_lin' => "LUGAR {$indice}",
-        'id_sede' => $sede->id_sed,
-        'estado_lin' => 'HABILITADO',
-    ]);
-
     $carrera = Carrera::query()->create([
         'codigo_car' => "CAR{$indice}",
         'nombre_car' => "CARRERA {$indice}",
         'estado_car' => 'HABILITADO',
     ]);
 
-    $sedeCarrera = SedeCarrera::query()->create([
-        'id_sede' => $sede->id_sed,
-        'id_carrera' => $carrera->id_car,
-        'codigo_externo_sca' => "SCA{$indice}",
-        'estado_sca' => 'HABILITADO',
-    ]);
-
-    $modalidadLugar = ModalidadLugarInscripcion::query()->create([
-        'id_modalidad_admision' => $modalidad->id_mad,
-        'id_lugar_inscripcion' => $lugarInscripcion->id_lin,
-        'estado_mli' => 'HABILITADO',
-    ]);
-
-    $ofertaBase = OfertaBase::query()->create([
-        'codigo_externo_ofb' => (string) (2700 + $indice),
-        'id_modalidad_lugar_inscripcion' => $modalidadLugar->id_mli,
-        'id_sede_carrera' => $sedeCarrera->id_sca,
-        'estado_ofb' => 'HABILITADO',
-    ]);
-
     $turno = Turno::query()->create([
         'codigo_tur' => "TUR{$indice}",
         'nombre_tur' => "TURNO {$indice}",
         'estado_tur' => 'HABILITADO',
-    ]);
-
-    $procesoOferta = ProcesoOferta::query()->create([
-        'id_proceso' => $proceso->id_pro,
-        'id_oferta_base' => $ofertaBase->id_ofb,
-        'id_turno' => $turno->id_tur,
-        'estado_pof' => 'HABILITADO',
     ]);
 
     $aula = Aula::query()->create([
@@ -233,13 +194,17 @@ function crearContextoListadoInscripcion(int $indice, string $estado = 'PENDIENT
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => "INS-{$indice}",
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
+        'id_proceso' => $proceso->id_pro,
+        'id_sede' => $sede->id_sed,
+        'id_modalidad_admision' => $modalidad->id_mad,
+        'id_carrera' => $carrera->id_car,
+        'id_turno' => $turno->id_tur,
         'id_proceso_aula' => $procesoAula->id_pau,
         'fecha_inscripcion_ins' => '2026-03-20 08:00:00',
         'estado_ins' => $estado,
     ]);
 
-    return compact('inscripcion', 'proceso', 'persona', 'aula', 'procesoAula');
+    return compact('inscripcion', 'proceso', 'persona', 'aula', 'procesoAula', 'modalidad', 'sede');
 }
 
 test('authorized users can access inscripciones page', function () {
@@ -288,7 +253,7 @@ test('users can filter inscripciones by search process and state', function () {
         ->assertDontSee('INS-1');
 });
 
-test('list defaults to the current proceso and can filter by proceso modalidad and lugar', function () {
+test('list defaults to the current proceso and can filter by proceso modalidad and sede', function () {
     Carbon::setTestNow('2026-04-17 09:30:00');
 
     $usuario = Usuario::factory()->create();
@@ -317,10 +282,10 @@ test('list defaults to the current proceso and can filter by proceso modalidad a
         ->assertSee('INS-10')
         ->assertDontSee('INS-9')
         ->set('idProceso', (string) $contextoProcesoActual['proceso']->id_pro)
-        ->set('idModalidad', (string) $contextoProcesoActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_modalidad_admision)
+        ->set('idModalidad', (string) $contextoProcesoActual['modalidad']->id_mad)
         ->assertSee('INS-9')
         ->assertDontSee('INS-10')
-        ->set('idLugarInscripcion', (string) $contextoProcesoActual['proceso']->procesosOferta->first()->ofertaBase->modalidadLugarInscripcion->id_lugar_inscripcion)
+        ->set('idSede', (string) $contextoProcesoActual['sede']->id_sed)
         ->assertSee('INS-9')
         ->assertDontSee('INS-10');
 

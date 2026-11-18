@@ -9,7 +9,9 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
+        "bacon/bacon-qr-code": "^3.1",
+        "barryvdh/laravel-dompdf": "^3.1",
         "hashids/hashids": "^5.0.2",
         "laravel/framework": "^13.40",
         "laravel/tinker": "^3.0.2",
@@ -25,9 +27,9 @@
         "laravel/sail": "^1.69",
         "mockery/mockery": "^1.6.15",
         "nunomaduro/collision": "^8.9.5",
-        "phpunit/phpunit": "^12.5.33",
-        "pestphp/pest": "^4.7.8",
-        "pestphp/pest-plugin-laravel": "^4.1"
+        "pestphp/pest": "^5.3",
+        "pestphp/pest-plugin-laravel": "^5.0",
+        "phpunit/phpunit": "^13.4"
     },
     "autoload": {
         "psr-4": {

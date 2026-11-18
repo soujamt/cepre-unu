@@ -33,12 +33,13 @@ class extends Component
     public array $filtroEstado = [];
 
     /**
-     * @var array{nombre: string, fecha_inicio: string, fecha_fin: string}
+     * @var array{nombre: string, fecha_inicio: string, fecha_fin: string, anio_egreso_max_ordinario: string}
      */
     public array $procesoForm = [
         'nombre' => '',
         'fecha_inicio' => '',
         'fecha_fin' => '',
+        'anio_egreso_max_ordinario' => '',
     ];
 
     public string $tituloModal = 'Nuevo proceso';
@@ -107,6 +108,7 @@ class extends Component
             ],
             'procesoForm.fecha_inicio' => ['required', 'date'],
             'procesoForm.fecha_fin' => ['required', 'date', 'after:procesoForm.fecha_inicio'],
+            'procesoForm.anio_egreso_max_ordinario' => ['nullable', 'integer', 'digits:4', 'min:1950', 'max:2100'],
         ];
     }
 
@@ -121,6 +123,7 @@ class extends Component
             'procesoForm.fecha_inicio.required' => 'La fecha y hora de apertura es obligatoria.',
             'procesoForm.fecha_fin.required' => 'La fecha y hora de cierre es obligatoria.',
             'procesoForm.fecha_fin.after' => 'El cierre debe ser posterior a la apertura.',
+            'procesoForm.anio_egreso_max_ordinario.digits' => 'Ingrese un año de cuatro dígitos.',
         ];
     }
 
@@ -165,6 +168,7 @@ class extends Component
             'nombre' => $proceso->nombre_pro,
             'fecha_inicio' => $proceso->fecha_inicio_pro?->format('Y-m-d\TH:i') ?? '',
             'fecha_fin' => $proceso->fecha_fin_pro?->format('Y-m-d\TH:i') ?? '',
+            'anio_egreso_max_ordinario' => (string) ($proceso->anio_egreso_max_ordinario_pro ?? ''),
         ];
         $this->tituloModal = 'Editar proceso';
         $this->isEdit = true;
@@ -185,6 +189,9 @@ class extends Component
                     'nombre_pro' => $this->mayusculas($nombreNormalizado),
                     'fecha_inicio_pro' => $data['procesoForm']['fecha_inicio'],
                     'fecha_fin_pro' => $data['procesoForm']['fecha_fin'],
+                    'anio_egreso_max_ordinario_pro' => filled($data['procesoForm']['anio_egreso_max_ordinario'])
+                        ? (int) $data['procesoForm']['anio_egreso_max_ordinario']
+                        : null,
                 ];
 
                 if ($this->editingId) {
@@ -283,14 +290,13 @@ class extends Component
         try {
             DB::transaction(function () use ($id_proceso): void {
                 $proceso = Proceso::query()
-                    ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])
+                    ->withCount(['procesoCarreras', 'procesoModalidades', 'reglasPago'])
                     ->findOrFail($id_proceso);
 
                 if (
-                    $proceso->procesos_oferta_count > 0
-                    || $proceso->convenios_proceso_count > 0
+                    $proceso->proceso_carreras_count > 0
+                    || $proceso->proceso_modalidades_count > 0
                     || $proceso->reglas_pago_count > 0
-                    || $proceso->requisitos_expediente_count > 0
                 ) {
                     throw new RuntimeException('El proceso tiene configuraciones relacionadas y no puede eliminarse.');
                 }
@@ -325,6 +331,7 @@ class extends Component
             'nombre' => '',
             'fecha_inicio' => '',
             'fecha_fin' => '',
+            'anio_egreso_max_ordinario' => '',
         ];
         $this->resetValidation();
     }
@@ -335,7 +342,7 @@ class extends Component
         app(EstadoAcademicoSynchronizer::class)->sync();
 
         return Proceso::query()
-            ->withCount(['procesosOferta', 'conveniosProceso', 'reglasPago', 'requisitosExpediente'])
+            ->withCount(['procesoCarreras', 'procesoModalidades', 'reglasPago'])
             ->when(filled($this->buscar), function (Builder $query): void {
                 $search = $this->normalizarTexto($this->buscar);
 

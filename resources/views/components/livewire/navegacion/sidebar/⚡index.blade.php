@@ -23,7 +23,7 @@ new class extends Component
             [
                 'label' => 'MANTENEDORES',
                 'icon' => 'folder',
-                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'lugares-inscripcion.*', 'modalidades.*', 'ofertas-base.*', 'sedes.*', 'tipos-expediente.*', 'turnos.*'),
+                'active' => $this->routeIs('mantenedores.*', 'mantenedor-aulas.*', 'carreras.*', 'mantenedor-colegios.*', 'conceptos-pago.*', 'modalidades.*', 'sedes.*', 'turnos.*'),
                 'items' => [
                     [
                         'label' => 'AULAS',
@@ -50,34 +50,16 @@ new class extends Component
                         'permiso' => 'concepto_pago_indice',
                     ],
                     [
-                        'label' => 'LUGARES DE INSCRIPCIÓN',
-                        'href' => route('lugares-inscripcion.index'),
-                        'active' => $this->routeIs('lugares-inscripcion.*'),
-                        'permiso' => 'lugar_inscripcion_indice',
-                    ],
-                    [
                         'label' => 'MODALIDADES',
                         'href' => route('modalidades.index'),
                         'active' => $this->routeIs('modalidades.*'),
                         'permiso' => 'modalidad_indice',
                     ],
                     [
-                        'label' => 'OFERTAS BASE',
-                        'href' => route('ofertas-base.index'),
-                        'active' => $this->routeIs('ofertas-base.*'),
-                        'permiso' => 'oferta_base_indice',
-                    ],
-                    [
                         'label' => 'SEDES',
                         'href' => route('sedes.index'),
                         'active' => $this->routeIs('sedes.*'),
                         'permiso' => 'sede_indice',
-                    ],
-                    [
-                        'label' => 'TIPOS DE EXPEDIENTE',
-                        'href' => route('tipos-expediente.index'),
-                        'active' => $this->routeIs('tipos-expediente.*'),
-                        'permiso' => 'tipo_expediente_indice',
                     ],
                     [
                         'label' => 'TURNOS',
@@ -94,28 +76,28 @@ new class extends Component
                     'configuraciones.*',
                     'procesos.*',
                     'ofertas.*',
-                    'convenios.*',
                     'reglas-pago.*',
-                    'requisitos.*',
-                    'requisitos-expediente.*',
+                    'carnet.*',
+                    'codigos-admision.*',
                     'aulas.*'
                 ),
                 'items' => [
                     ['label' => 'PROCESOS', 'href' => route('procesos.index'), 'active' => $this->routeIs('procesos.*'), 'permiso' => 'proceso_indice'],
                     ['label' => 'AULAS', 'href' => route('aulas.index'), 'active' => $this->routeIs('aulas.*'), 'permiso' => 'aula_proceso_indice'],
-                    ['label' => 'OFERTAS', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
-                    ['label' => 'CONVENIOS', 'href' => route('convenios.index'), 'active' => $this->routeIs('convenios.*'), 'permiso' => 'convenio_indice'],
+                    ['label' => 'OFERTA DEL PROCESO', 'href' => route('ofertas.index'), 'active' => $this->routeIs('ofertas.*'), 'permiso' => 'oferta_indice'],
                     ['label' => 'REGLAS DE PAGO', 'href' => route('reglas-pago.index'), 'active' => $this->routeIs('reglas-pago.*'), 'permiso' => 'regla_pago_indice'],
-                    ['label' => 'REQUISITOS', 'href' => route('requisitos.index'), 'active' => $this->routeIs('requisitos.*', 'requisitos-expediente.*'), 'permiso' => 'requisito_expediente_indice'],
+                    ['label' => 'CÓDIGOS DE ADMISIÓN', 'href' => route('codigos-admision.index'), 'active' => $this->routeIs('codigos-admision.*'), 'permiso' => 'codigo_admision_indice'],
+                    ['label' => 'CARNET', 'href' => route('carnet.configuracion'), 'active' => $this->routeIs('carnet.*'), 'permiso' => 'parametro_indice'],
                 ],
             ],
             [
                 'label' => 'INSCRIPCIONES',
                 'icon' => 'clipboard-detail',
-                'active' => $this->routeIs('inscripciones.*', 'pagos.*'),
+                'active' => $this->routeIs('inscripciones.*', 'pagos.*', 'fotos.*'),
                 'items' => [
                     ['label' => 'INSCRIPCIONES', 'href' => route('inscripciones.index'), 'active' => $this->routeIs('inscripciones.*'), 'permiso' => 'inscripcion_indice'],
-                    ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.index'), 'permiso' => 'pago_indice'],
+                    ['label' => 'FOTOS', 'href' => route('fotos.index'), 'active' => $this->routeIs('fotos.*'), 'permiso' => 'foto_indice'],
+                    ['label' => 'PAGOS', 'href' => route('pagos.index'), 'active' => $this->routeIs('pagos.index', 'pagos.importaciones'), 'permiso' => 'pago_indice'],
                     ['label' => 'VALIDAR PAGOS', 'href' => route('pagos.validar'), 'active' => $this->routeIs('pagos.validar'), 'permiso' => 'pago_crear'],
                 ],
             ],

@@ -78,7 +78,6 @@ function crearReglaPagoDelConcepto(ConceptoPago $concepto, bool $permiteCuotas):
         'id_concepto_pago' => $concepto->id_cpg,
         'id_proceso' => $proceso->id_pro,
         'id_modalidad_admision' => null,
-        'id_convenio_proceso' => null,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => $permiteCuotas,
         'monto_minimo_primera_cuota_rpa' => $permiteCuotas ? 200 : 0,

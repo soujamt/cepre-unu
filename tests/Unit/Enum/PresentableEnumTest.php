@@ -7,11 +7,9 @@ use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoProceso;
-use App\Enums\EstadoRevisionExpediente;
 use App\Enums\EstadoUsuario;
 use App\Enums\EstadoValidacionPago;
 use App\Enums\SexoPersona;
-use App\Enums\TipoBeneficioConvenio;
 
 dataset('presentable-enums', [
     EstadoCatalogo::class,
@@ -20,11 +18,9 @@ dataset('presentable-enums', [
     EstadoInscripcion::class,
     EstadoObligacionPago::class,
     EstadoProceso::class,
-    EstadoRevisionExpediente::class,
     EstadoUsuario::class,
     EstadoValidacionPago::class,
     SexoPersona::class,
-    TipoBeneficioConvenio::class,
 ]);
 
 it('builds reusable option arrays for presentable enums', function (string $enumClass): void {

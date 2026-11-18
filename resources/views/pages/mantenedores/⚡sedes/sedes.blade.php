@@ -82,7 +82,7 @@
                     <x-table.heading class="w-28">CÓDIGO</x-table.heading>
                     <x-table.heading>NOMBRE</x-table.heading>
                     <x-table.heading>UBICACIÓN</x-table.heading>
-                    <x-table.heading class="w-24">CARRERAS</x-table.heading>
+                    <x-table.heading class="w-24">INSCRITOS</x-table.heading>
                     <x-table.heading>ESTADO</x-table.heading>
                     <x-table.heading>REGISTRO</x-table.heading>
                     <x-table.heading class="w-14"><span class="sr-only">Acciones</span></x-table.heading>
@@ -109,19 +109,7 @@
                             @endif
                         </x-table.cell>
                         <x-table.cell>
-                            @if ($puedeEditar)
-                                <button
-                                    type="button"
-                                    wire:click="cargarCarrerasSede({{ $sede->id_sed }})"
-                                    class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-medium text-index-600 transition-colors hover:bg-index-50 dark:text-index-300 dark:hover:bg-index-500/10"
-                                    title="Asignar carreras"
-                                >
-                                    {{ $sede->carreras_habilitadas_count }}
-                                    <x-ui.icon name="pencil" size="3.5" />
-                                </button>
-                            @else
-                                {{ $sede->carreras_habilitadas_count }}
-                            @endif
+                            {{ $sede->inscripciones_count }}
                         </x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $sede->estado_sed->getColor() }}">
@@ -156,12 +144,6 @@
                                                 Editar
                                             </flux:menu.item>
 
-                                            <flux:menu.item wire:click="cargarCarrerasSede({{ $sede->id_sed }})">
-                                                <x-slot name="icon">
-                                                    <x-ui.icon name="education" size="4" class="me-2" />
-                                                </x-slot>
-                                                Carreras
-                                            </flux:menu.item>
                                         @endpermiso
 
                                         @permiso ('sede_estado')
@@ -205,12 +187,12 @@
         <div
             class="absolute inset-0 bg-white/50 dark:bg-zinc-950/50"
             wire:loading
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, guardarCarreras, cambiarEstado, eliminar"
+            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         ></div>
         <div
             class="absolute inset-0 flex items-center justify-center"
             wire:loading.flex
-            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, guardarCarreras, cambiarEstado, eliminar"
+            wire:target="buscar, filtroEstado, limpiarFiltroEstado, nextPage, previousPage, gotoPage, guardar, cambiarEstado, eliminar"
         >
             <x-ui.icon name="loader-lines" size="6" class="animate-spin text-zinc-500 dark:text-zinc-300" />
         </div>
@@ -289,79 +271,6 @@
         </flux:modal>
     @endif
 
-    @if ($puedeEditar)
-        <flux:modal flyout variant="floating" name="modal-sede-carreras" class="px-0! py-5! md:w-lg!">
-            <div class="space-y-5" x-data="{ filtro: '' }">
-                <div class="space-y-1 px-5">
-                    <flux:heading size="lg">Carreras de la sede</flux:heading>
-                    <flux:text>{{ $sedeCarrerasNombre }}</flux:text>
-                </div>
-                <flux:separator variant="subtle" />
-
-                <form wire:submit="guardarCarreras" class="space-y-5">
-                    <div class="space-y-3 px-5">
-                        <div class="flex items-center justify-between gap-3">
-                            <flux:input x-model="filtro" size="sm" placeholder="Filtrar carreras" class="max-w-60">
-                                <x-slot name="icon">
-                                    <x-ui.icon name="search" size="4" class="text-zinc-400 dark:text-zinc-500" />
-                                </x-slot>
-                            </flux:input>
-                            <span class="text-sm text-zinc-500 dark:text-zinc-400">
-                                <span class="font-medium text-zinc-800 dark:text-zinc-100">{{ count($carrerasSeleccionadas) }}</span> seleccionadas
-                            </span>
-                        </div>
-
-                        @error ('carrerasSeleccionadas.*')
-                            <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-
-                        <div class="grid grid-cols-1 gap-2">
-                            @forelse ($this->carrerasDisponibles as $carrera)
-                                <label
-                                    wire:key="sede-carrera-{{ $carrera->id_car }}"
-                                    x-show="filtro === '' || @js(mb_strtolower($carrera->nombre_car.' '.$carrera->codigo_car)).includes(filtro.toLowerCase())"
-                                    class="flex min-w-0 cursor-pointer items-center gap-3 rounded-lg border border-zinc-200 px-3 py-2 transition-colors hover:border-index-300 hover:bg-index-50/60 has-checked:border-index-300 has-checked:bg-index-50/60 dark:border-white/10 dark:hover:border-index-500/40 dark:hover:bg-index-500/10 dark:has-checked:border-index-500/40 dark:has-checked:bg-index-500/10"
-                                >
-                                    <input
-                                        type="checkbox"
-                                        wire:model.live="carrerasSeleccionadas"
-                                        value="{{ $carrera->id_car }}"
-                                        class="size-4 shrink-0 rounded border-zinc-300 accent-index-500 dark:border-zinc-600 dark:bg-zinc-900"
-                                    />
-                                    <span class="min-w-0 flex-1 text-sm leading-5 font-medium text-zinc-800 dark:text-zinc-100">{{ $carrera->nombre_car }}</span>
-                                    @if ($carrera->estado_car !== \App\Enums\EstadoCatalogo::Habilitado)
-                                        <flux:badge size="sm" color="{{ $carrera->estado_car->getColor() }}">{{ $carrera->estado_car->getNombre() }}</flux:badge>
-                                    @endif
-                                    <span class="shrink-0 font-mono text-xs text-zinc-400 dark:text-zinc-500">{{ $carrera->codigo_car }}</span>
-                                </label>
-                            @empty
-                                <div class="flex flex-col items-center justify-center gap-2 py-6 text-center">
-                                    <x-ui.icon name="education" size="10" class="text-zinc-400 dark:text-zinc-500" />
-                                    <p class="text-sm text-zinc-500 dark:text-zinc-400">No hay carreras habilitadas. Regístrelas primero en Carreras.</p>
-                                </div>
-                            @endforelse
-                        </div>
-
-                        <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                            Al quitar una carrera que ya tiene ofertas configuradas, se deshabilita en la sede en lugar de eliminarse.
-                        </p>
-                    </div>
-
-                    <flux:separator variant="subtle" />
-
-                    <div class="flex px-5">
-                        <flux:spacer />
-                        <flux:button variant="primary" type="submit" class="font-normal">
-                            <x-slot name="icon">
-                                <x-ui.icon name="save" size="5" class="text-white" />
-                            </x-slot>
-                            Guardar
-                        </flux:button>
-                    </div>
-                </form>
-            </div>
-        </flux:modal>
-    @endif
 </div>
 
 @script

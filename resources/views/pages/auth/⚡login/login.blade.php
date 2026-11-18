@@ -127,6 +127,11 @@
                         <span class="h-px flex-1 bg-zinc-200 dark:bg-white/10"></span>
                     </div>
                 </form>
+
+                <p class="mt-6 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                    ¿Eres postulante?
+                    <a href="{{ route('publico.portal') }}" class="font-medium text-zinc-900 underline underline-offset-4 dark:text-white">Inscríbete o consulta tu aula</a>
+                </p>
             </div>
         </div>
 
@@ -170,7 +175,7 @@
                         @foreach ([
                             ['icon' => 'group', 'label' => 'Inscritos', 'valor' => '1 248', 'color' => 'text-index-500 bg-index-50 dark:bg-index-500/10'],
                             ['icon' => 'wallet', 'label' => 'Pagos validados', 'valor' => '1 102', 'color' => 'text-green-600 bg-green-50 dark:bg-green-500/10'],
-                            ['icon' => 'folder-open', 'label' => 'Expedientes', 'valor' => '986', 'color' => 'text-purple-600 bg-purple-50 dark:bg-purple-500/10'],
+                            ['icon' => 'school', 'label' => 'Aulas asignadas', 'valor' => '986', 'color' => 'text-purple-600 bg-purple-50 dark:bg-purple-500/10'],
                         ] as $indicador)
                             <div class="rounded-xl border border-zinc-100 p-2.5 dark:border-white/[0.06]">
                                 <div class="flex items-center justify-between">

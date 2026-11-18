@@ -106,7 +106,7 @@
                             <span class="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{{ $proceso->fecha_fin_pro->format('h:i a') }}</span>
                         </x-table.cell>
                         <x-table.cell>
-                            {{ $proceso->procesos_oferta_count + $proceso->convenios_proceso_count + $proceso->reglas_pago_count + $proceso->requisitos_expediente_count }}
+                            {{ $proceso->proceso_carreras_count + $proceso->proceso_modalidades_count + $proceso->reglas_pago_count }}
                         </x-table.cell>
                         <x-table.cell>
                             <flux:badge color="{{ $proceso->estado_pro->getColor() }}">
@@ -232,6 +232,19 @@
                             :invalid="$errors->has('procesoForm.fecha_fin')"
                             :error="$errors->first('procesoForm.fecha_fin')"
                             required
+                            floating
+                        />
+
+                        <x-ui.input
+                            label="Año de egreso máximo para Ordinario"
+                            type="text"
+                            inputmode="numeric"
+                            maxlength="4"
+                            pattern="\d{4}"
+                            hint="Quien egresó hasta este año entra como Ordinario; los demás, como Extraordinario o Reserva. Si lo deja vacío se usa el año anterior a la apertura."
+                            wire:model="procesoForm.anio_egreso_max_ordinario"
+                            :invalid="$errors->has('procesoForm.anio_egreso_max_ordinario')"
+                            :error="$errors->first('procesoForm.anio_egreso_max_ordinario')"
                             floating
                         />
                     </div>

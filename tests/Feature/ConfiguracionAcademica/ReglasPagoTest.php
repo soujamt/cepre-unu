@@ -2,8 +2,6 @@
 
 use App\Models\Accion;
 use App\Models\ConceptoPago;
-use App\Models\Convenio;
-use App\Models\ConvenioProceso;
 use App\Models\ModalidadAdmision;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
@@ -58,7 +56,7 @@ function otorgarPermisosReglaPago(Usuario $usuario, array $claves): void
 }
 
 /**
- * @return array{proceso: Proceso, conceptoPago: ConceptoPago, modalidad: ModalidadAdmision, convenioProceso: ConvenioProceso}
+ * @return array{proceso: Proceso, conceptoPago: ConceptoPago, modalidad: ModalidadAdmision}
  */
 function crearContextoReglaPago(int $indice, bool $permiteCuotasConcepto = true): array
 {
@@ -85,25 +83,7 @@ function crearContextoReglaPago(int $indice, bool $permiteCuotasConcepto = true)
         'estado_mad' => 'HABILITADO',
     ]);
 
-    $convenio = Convenio::query()->create([
-        'codigo_con' => "CON{$indice}",
-        'nombre_con' => "CONVENIO {$indice}",
-        'descripcion_con' => 'Convenio de prueba',
-        'tipo_beneficio_con' => 'DESCUENTO',
-        'monto_descuento_con' => 50,
-        'estado_con' => 'HABILITADO',
-    ]);
-
-    $convenioProceso = ConvenioProceso::query()->create([
-        'id_convenio' => $convenio->id_con,
-        'id_proceso' => $proceso->id_pro,
-        'fecha_inicio_cpr' => '2026-01-10',
-        'fecha_fin_cpr' => '2026-03-15',
-        'cupo_maximo_cpr' => 100,
-        'estado_cpr' => 'HABILITADO',
-    ]);
-
-    return compact('proceso', 'conceptoPago', 'modalidad', 'convenioProceso');
+    return compact('proceso', 'conceptoPago', 'modalidad');
 }
 
 test('authorized users can access reglas de pago page', function () {
@@ -136,7 +116,6 @@ test('authorized users can register a regla de pago', function () {
         ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
         ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
         ->set('reglaPagoForm.id_modalidad_admision', (string) $contexto['modalidad']->id_mad)
-        ->set('reglaPagoForm.id_convenio_proceso', (string) $contexto['convenioProceso']->id_cpr)
         ->set('reglaPagoForm.monto_total', '550.00')
         ->set('reglaPagoForm.permite_cuotas', true)
         ->set('reglaPagoForm.monto_minimo_primera_cuota', '275.00')
@@ -151,7 +130,6 @@ test('authorized users can register a regla de pago', function () {
         'id_concepto_pago' => $contexto['conceptoPago']->id_cpg,
         'id_proceso' => $contexto['proceso']->id_pro,
         'id_modalidad_admision' => $contexto['modalidad']->id_mad,
-        'id_convenio_proceso' => $contexto['convenioProceso']->id_cpr,
         'monto_total_rpa' => 550.00,
         'permite_cuotas_rpa' => true,
         'monto_minimo_primera_cuota_rpa' => 275.00,
@@ -187,7 +165,6 @@ test('regla pago filters include the current enabled proceso and the historical 
         'id_concepto_pago' => $contextoHistorico['conceptoPago']->id_cpg,
         'id_proceso' => $contextoHistorico['proceso']->id_pro,
         'id_modalidad_admision' => null,
-        'id_convenio_proceso' => null,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => false,
         'monto_minimo_primera_cuota_rpa' => 0,
@@ -218,7 +195,6 @@ test('authorized users can update a regla de pago', function () {
         'id_concepto_pago' => $contextoA['conceptoPago']->id_cpg,
         'id_proceso' => $contextoA['proceso']->id_pro,
         'id_modalidad_admision' => null,
-        'id_convenio_proceso' => null,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => false,
         'monto_minimo_primera_cuota_rpa' => 0,
@@ -235,7 +211,6 @@ test('authorized users can update a regla de pago', function () {
         ->set('reglaPagoForm.id_concepto_pago', (string) $contextoB['conceptoPago']->id_cpg)
         ->set('reglaPagoForm.id_proceso', (string) $contextoB['proceso']->id_pro)
         ->set('reglaPagoForm.id_modalidad_admision', (string) $contextoB['modalidad']->id_mad)
-        ->set('reglaPagoForm.id_convenio_proceso', (string) $contextoB['convenioProceso']->id_cpr)
         ->set('reglaPagoForm.monto_total', '300.00')
         ->set('reglaPagoForm.permite_cuotas', false)
         ->set('reglaPagoForm.numero_maximo_cuotas', '1')
@@ -251,7 +226,6 @@ test('authorized users can update a regla de pago', function () {
         'id_concepto_pago' => $contextoB['conceptoPago']->id_cpg,
         'id_proceso' => $contextoB['proceso']->id_pro,
         'id_modalidad_admision' => $contextoB['modalidad']->id_mad,
-        'id_convenio_proceso' => $contextoB['convenioProceso']->id_cpr,
         'monto_total_rpa' => 300.00,
         'permite_cuotas_rpa' => false,
         'numero_maximo_cuotas_rpa' => 1,
@@ -331,7 +305,6 @@ test('regla de pago validates duplicate context and cuotas availability', functi
         'id_concepto_pago' => $contexto['conceptoPago']->id_cpg,
         'id_proceso' => $contexto['proceso']->id_pro,
         'id_modalidad_admision' => null,
-        'id_convenio_proceso' => null,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => false,
         'monto_minimo_primera_cuota_rpa' => 0,
@@ -347,7 +320,6 @@ test('regla de pago validates duplicate context and cuotas availability', functi
         ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
         ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
         ->set('reglaPagoForm.id_modalidad_admision', '')
-        ->set('reglaPagoForm.id_convenio_proceso', '')
         ->set('reglaPagoForm.monto_total', '550.00')
         ->set('reglaPagoForm.permite_cuotas', true)
         ->set('reglaPagoForm.monto_minimo_primera_cuota', '275.00')
@@ -359,4 +331,29 @@ test('regla de pago validates duplicate context and cuotas availability', functi
             'reglaPagoForm.permite_cuotas',
             'reglaPagoForm.id_proceso',
         ]);
+});
+
+test('a regla de pago can be free and require a document number', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReglaPago($usuario, ['regla_pago_indice', 'regla_pago_crear']);
+
+    $contexto = crearContextoReglaPago(12, false);
+
+    $this->actingAs($usuario);
+
+    Livewire::test('pages::configuracion-academica.reglas-pago')
+        ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
+        ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
+        ->set('reglaPagoForm.monto_total', '0')
+        ->set('reglaPagoForm.documento_requerido', 'N° DE CONSTANCIA')
+        ->set('reglaPagoForm.vigente_desde', '2026-01-10')
+        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
+        ->call('guardar')
+        ->assertHasNoErrors();
+
+    $this->assertDatabaseHas('tbl_regla_pago', [
+        'id_proceso' => $contexto['proceso']->id_pro,
+        'monto_total_rpa' => 0,
+        'documento_requerido_rpa' => 'N° DE CONSTANCIA',
+    ]);
 });

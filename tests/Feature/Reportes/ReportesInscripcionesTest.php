@@ -4,28 +4,19 @@ use App\Exports\InscripcionesFormatoCepreExport;
 use App\Models\Accion;
 use App\Models\Carrera;
 use App\Models\ConceptoPago;
-use App\Models\Convenio;
-use App\Models\ConvenioProceso;
 use App\Models\EstadoCivil;
 use App\Models\Inscripcion;
-use App\Models\InscripcionExpediente;
-use App\Models\LugarInscripcion;
 use App\Models\ModalidadAdmision;
-use App\Models\ModalidadLugarInscripcion;
 use App\Models\Nacionalidad;
-use App\Models\OfertaBase;
 use App\Models\Pais;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Persona;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
 use App\Models\ReglaPago;
 use App\Models\Rol;
 use App\Models\Sede;
-use App\Models\SedeCarrera;
 use App\Models\TipoDocumento;
-use App\Models\TipoExpediente;
 use App\Models\Turno;
 use App\Models\Ubigeo;
 use App\Models\Usuario;
@@ -87,9 +78,9 @@ function otorgarPermisosReporteInscripcion(Usuario $usuario, array $claves): voi
 }
 
 /**
- * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,lugar:LugarInscripcion,turno:Turno,convenioProceso:ConvenioProceso}
+ * @return array{inscripcion:Inscripcion,proceso:Proceso,modalidad:ModalidadAdmision,sede:Sede,carrera:Carrera,turno:Turno}
  */
-function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO', ?string $nombreConvenio = null): array
+function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO'): array
 {
     $ubigeo = Ubigeo::query()->create([
         'id_ubi' => sprintf('2601%02d', $indice),
@@ -157,67 +148,16 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO',
         'estado_sed' => 'HABILITADO',
     ]);
 
-    $lugar = LugarInscripcion::query()->create([
-        'codigo_lin' => "REP-LIN-{$indice}",
-        'nombre_lin' => "LUGAR REPORTE {$indice}",
-        'id_sede' => $sede->id_sed,
-        'estado_lin' => 'HABILITADO',
-    ]);
-
     $carrera = Carrera::query()->create([
         'codigo_car' => "REP-CAR-{$indice}",
         'nombre_car' => "CARRERA REPORTE {$indice}",
         'estado_car' => 'HABILITADO',
     ]);
 
-    $sedeCarrera = SedeCarrera::query()->create([
-        'id_sede' => $sede->id_sed,
-        'id_carrera' => $carrera->id_car,
-        'codigo_externo_sca' => "REP-SCA-{$indice}",
-        'estado_sca' => 'HABILITADO',
-    ]);
-
-    $modalidadLugar = ModalidadLugarInscripcion::query()->create([
-        'id_modalidad_admision' => $modalidad->id_mad,
-        'id_lugar_inscripcion' => $lugar->id_lin,
-        'estado_mli' => 'HABILITADO',
-    ]);
-
-    $ofertaBase = OfertaBase::query()->create([
-        'codigo_externo_ofb' => (string) (3700 + $indice),
-        'id_modalidad_lugar_inscripcion' => $modalidadLugar->id_mli,
-        'id_sede_carrera' => $sedeCarrera->id_sca,
-        'estado_ofb' => 'HABILITADO',
-    ]);
-
     $turno = Turno::query()->create([
         'codigo_tur' => "REP-TUR-{$indice}",
         'nombre_tur' => "TURNO REPORTE {$indice}",
         'estado_tur' => 'HABILITADO',
-    ]);
-
-    $procesoOferta = ProcesoOferta::query()->create([
-        'id_proceso' => $proceso->id_pro,
-        'id_oferta_base' => $ofertaBase->id_ofb,
-        'id_turno' => $turno->id_tur,
-        'estado_pof' => 'HABILITADO',
-    ]);
-
-    $convenio = Convenio::query()->create([
-        'codigo_con' => "REP-CON-{$indice}",
-        'nombre_con' => $nombreConvenio ?? "CONVENIO REPORTE {$indice}",
-        'tipo_beneficio_con' => 'DESCUENTO',
-        'monto_descuento_con' => 100,
-        'estado_con' => 'HABILITADO',
-    ]);
-
-    $convenioProceso = ConvenioProceso::query()->create([
-        'id_convenio' => $convenio->id_con,
-        'id_proceso' => $proceso->id_pro,
-        'fecha_inicio_cpr' => '2026-04-01',
-        'fecha_fin_cpr' => '2026-04-30',
-        'cupo_maximo_cpr' => 10,
-        'estado_cpr' => 'HABILITADO',
     ]);
 
     $persona = Persona::query()->create([
@@ -238,13 +178,16 @@ function crearContextoReporteInscripcion(int $indice, string $estado = 'ACTIVO',
     $inscripcion = Inscripcion::query()->create([
         'codigo_ins' => "REP-INS-{$indice}",
         'id_persona' => $persona->id_per,
-        'id_proceso_oferta' => $procesoOferta->id_pof,
-        'id_convenio_proceso' => $convenioProceso->id_cpr,
+        'id_proceso' => $proceso->id_pro,
+        'id_sede' => $sede->id_sed,
+        'id_modalidad_admision' => $modalidad->id_mad,
+        'id_carrera' => $carrera->id_car,
+        'id_turno' => $turno->id_tur,
         'fecha_inscripcion_ins' => '2026-04-17 09:00:00',
         'estado_ins' => $estado,
     ]);
 
-    return compact('inscripcion', 'proceso', 'modalidad', 'lugar', 'turno', 'convenioProceso');
+    return compact('inscripcion', 'proceso', 'modalidad', 'sede', 'carrera', 'turno');
 }
 
 test('authorized users can access reportes de inscripciones page', function () {
@@ -275,8 +218,8 @@ test('reportes de inscripciones defaults to current semester and filters data', 
     $usuario = Usuario::factory()->create();
     otorgarPermisosReporteInscripcion($usuario, ['reporte_inscripcion_indice']);
 
-    $contextoActual = crearContextoReporteInscripcion(2, 'ACTIVO', 'HIJOS UNU');
-    $contextoAnterior = crearContextoReporteInscripcion(3, 'ANULADO', 'MUNICIPALIDAD');
+    $contextoActual = crearContextoReporteInscripcion(2, 'ACTIVO');
+    $contextoAnterior = crearContextoReporteInscripcion(3, 'ANULADO');
 
     $conceptoPago = ConceptoPago::query()->create([
         'codigo_cpg' => 'REP-CUOTA',
@@ -289,7 +232,6 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'id_concepto_pago' => $conceptoPago->id_cpg,
         'id_proceso' => $contextoActual['proceso']->id_pro,
         'id_modalidad_admision' => $contextoActual['modalidad']->id_mad,
-        'id_convenio_proceso' => $contextoActual['convenioProceso']->id_cpr,
         'monto_total_rpa' => 500,
         'permite_cuotas_rpa' => true,
         'monto_minimo_primera_cuota_rpa' => 250,
@@ -298,12 +240,6 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'vigente_desde_rpa' => '2026-04-01',
         'vigente_hasta_rpa' => '2026-04-30',
         'estado_rpa' => 'HABILITADO',
-    ]);
-
-    $tipoExpediente = TipoExpediente::query()->create([
-        'codigo_tex' => 'REP-DNI',
-        'nombre_tex' => 'DNI',
-        'estado_tex' => 'HABILITADO',
     ]);
 
     $contextoAnterior['proceso']->update([
@@ -323,31 +259,21 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         'actualizado_en' => now(),
     ]);
 
-    InscripcionExpediente::query()->create([
-        'id_inscripcion' => $contextoActual['inscripcion']->id_ins,
-        'id_tipo_expediente' => $tipoExpediente->id_tex,
-        'nombre_archivo_iex' => 'doc.pdf',
-        'archivo_url_iex' => 'expedientes/doc.pdf',
-        'estado_revision_iex' => 'OBSERVADO',
-    ]);
-
     $this->actingAs($usuario);
 
     Livewire::test('pages::reportes.inscripciones')
         ->assertSet('idProceso', (string) $contextoActual['proceso']->id_pro)
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('MODALIDAD REPORTE 2')
-        ->assertSee('HIJOS UNU')
         ->assertDontSee('CARRERA REPORTE 3')
         ->set('idProceso', '')
         ->assertSee('CARRERA REPORTE 2')
         ->assertSee('CARRERA REPORTE 3')
         ->set('idProceso', (string) $contextoActual['proceso']->id_pro)
-        ->assertSee('HIJOS UNU')
-        ->assertDontSee('MUNICIPALIDAD');
+        ->assertDontSee('CARRERA REPORTE 3');
 });
 
-test('authorized users can export reporte inscripciones to excel respecting active filters', function () {
+test('authorized users can export reporte inscripciones with names instead of admission codes', function () {
     Carbon::setTestNow('2026-04-17 09:30:00');
     Excel::fake();
 
@@ -367,8 +293,13 @@ test('authorized users can export reporte inscripciones to excel respecting acti
     Excel::assertDownloaded('reporte-inscripciones-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export) use ($contextoA): bool {
         $rows = $export->collection();
 
+        $fila = $rows->first();
+        $headings = $export->headings();
+
         expect($rows)->toHaveCount(1)
-            ->and($rows->first()[1])->toBe($contextoA['inscripcion']->persona->numero_documento_per);
+            ->and($fila[1])->toBe($contextoA['inscripcion']->persona->numero_documento_per)
+            ->and($fila[array_search('CODIGO_LUGAR_INSCRIPCION', $headings, true)])->toBe('SEDE REPORTE 10 / MODALIDAD REPORTE 10')
+            ->and($fila[array_search('CODIGO_CARRERA', $headings, true)])->toBe('CARRERA REPORTE 10');
 
         return true;
     });

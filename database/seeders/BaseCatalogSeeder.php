@@ -11,7 +11,6 @@ class BaseCatalogSeeder extends Seeder
         $this->call([
             PermisoModuloSeeder::class,
             TurnoSeeder::class,
-            TipoExpedienteSeeder::class,
             ConceptoPagoSeeder::class,
             TipoDocumentoSeeder::class,
             TipoDiscapacidadSeeder::class,

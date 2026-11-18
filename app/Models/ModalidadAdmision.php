@@ -2,19 +2,21 @@
 
 namespace App\Models;
 
+use App\Enums\CondicionEgresoModalidad;
 use App\Enums\EstadoCatalogo;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
-#[Fillable(['codigo_mad', 'nombre_mad', 'descripcion_mad', 'estado_mad'])]
+#[Fillable(['codigo_mad', 'nombre_mad', 'descripcion_mad', 'condicion_egreso_mad', 'estado_mad'])]
 #[Table('tbl_modalidad_admision', key: 'id_mad')]
 class ModalidadAdmision extends LegacyModel
 {
     protected function casts(): array
     {
         return array_merge(parent::casts(), [
+            'condicion_egreso_mad' => CondicionEgresoModalidad::class,
             'estado_mad' => EstadoCatalogo::class,
         ]);
     }
@@ -34,6 +36,16 @@ class ModalidadAdmision extends LegacyModel
             'id_mad',
             'id_mli',
         );
+    }
+
+    public function procesoModalidades(): HasMany
+    {
+        return $this->hasMany(ProcesoModalidad::class, 'id_modalidad_admision', 'id_mad');
+    }
+
+    public function inscripciones(): HasMany
+    {
+        return $this->hasMany(Inscripcion::class, 'id_modalidad_admision', 'id_mad');
     }
 
     public function reglasPago(): HasMany

@@ -1,23 +1,19 @@
 <?php
 
-use App\Enums\EstadoProceso;
-use App\Models\ConvenioProceso;
+use App\Enums\EstadoCatalogo;
 use App\Models\Inscripcion;
+use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
-use App\Models\ProcesoOferta;
+use App\Models\ProcesoCarrera;
+use App\Models\ProcesoModalidad;
 use App\Models\ReglaPago;
 use App\Support\ValidadorVigenciaInscripcion;
 use Carbon\Carbon;
 use Database\Seeders\CarreraSeeder;
 use Database\Seeders\ConceptoPagoSeeder;
 use Database\Seeders\ConfiguracionAcademicaInicialSeeder;
-use Database\Seeders\LugarInscripcionSeeder;
 use Database\Seeders\ModalidadAdmisionSeeder;
-use Database\Seeders\ModalidadLugarInscripcionSeeder;
-use Database\Seeders\OfertaBaseSeeder;
-use Database\Seeders\SedeCarreraSeeder;
 use Database\Seeders\SedeSeeder;
-use Database\Seeders\TipoExpedienteSeeder;
 use Database\Seeders\TurnoSeeder;
 use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,26 +24,19 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     foreach ([
         TurnoSeeder::class,
-        TipoExpedienteSeeder::class,
         ConceptoPagoSeeder::class,
         UbigeoSeeder::class,
         SedeSeeder::class,
         CarreraSeeder::class,
-        LugarInscripcionSeeder::class,
         ModalidadAdmisionSeeder::class,
-        ModalidadLugarInscripcionSeeder::class,
-        SedeCarreraSeeder::class,
-        OfertaBaseSeeder::class,
         ConfiguracionAcademicaInicialSeeder::class,
     ] as $seederClass) {
         Artisan::call('db:seed', ['--class' => $seederClass, '--no-interaction' => true]);
     }
 
     $this->proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $this->procesoOferta = ProcesoOferta::query()
-        ->where('id_proceso', $this->proceso->id_pro)
-        ->where('estado_pof', EstadoProceso::Habilitado->value)
-        ->firstOrFail();
+    $this->procesoCarrera = ProcesoCarrera::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
+    $this->modalidad = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
     $this->validador = app(ValidadorVigenciaInscripcion::class);
 });
 
@@ -55,50 +44,49 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
-test('an enabled offer of the active process is accepted', function () {
-    $oferta = $this->validador->ofertaVigente($this->procesoOferta->id_pof, $this->proceso);
+test('an enabled carrera and modalidad of the active process are accepted', function () {
+    $this->validador->postulacionVigente(
+        $this->procesoCarrera->id_sede,
+        $this->procesoCarrera->id_carrera,
+        $this->modalidad->id_mad,
+        $this->proceso,
+    );
 
-    expect($oferta->id_pof)->toBe($this->procesoOferta->id_pof)
-        ->and($oferta->relationLoaded('ofertaBase'))->toBeTrue();
+    expect(true)->toBeTrue();
 });
 
-test('a disabled offer is rejected', function () {
-    $this->procesoOferta->update(['estado_pof' => EstadoProceso::Deshabilitado->value]);
+test('a disabled carrera is rejected', function () {
+    $this->procesoCarrera->update(['estado_pca' => EstadoCatalogo::Deshabilitado->value]);
 
-    $this->validador->ofertaVigente($this->procesoOferta->id_pof, $this->proceso);
-})->throws(RuntimeException::class, 'La oferta seleccionada ya no se encuentra disponible para el proceso activo.');
+    $this->validador->postulacionVigente(
+        $this->procesoCarrera->id_sede,
+        $this->procesoCarrera->id_carrera,
+        $this->modalidad->id_mad,
+        $this->proceso,
+    );
+})->throws(RuntimeException::class, 'La carrera seleccionada ya no se encuentra habilitada en esa sede para el proceso activo.');
 
-test('without an agreement there is nothing to validate', function () {
-    expect($this->validador->convenioVigente(null, $this->proceso))->toBeNull();
-});
+test('a disabled modalidad is rejected', function () {
+    ProcesoModalidad::query()
+        ->where('id_proceso', $this->proceso->id_pro)
+        ->where('id_modalidad_admision', $this->modalidad->id_mad)
+        ->update(['estado_pmo' => EstadoCatalogo::Deshabilitado->value]);
 
-test('an agreement is accepted inside its validity window', function () {
-    Carbon::setTestNow('2026-04-15 10:00:00');
-
-    $convenioProceso = ConvenioProceso::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
-
-    expect($this->validador->convenioVigente($convenioProceso->id_cpr, $this->proceso)?->id_cpr)
-        ->toBe($convenioProceso->id_cpr);
-});
-
-test('an expired agreement is rejected with its end date', function () {
-    Carbon::setTestNow('2026-05-10 10:00:00');
-
-    $convenioProceso = ConvenioProceso::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
-
-    $this->validador->convenioVigente($convenioProceso->id_cpr, $this->proceso);
-})->throws(
-    RuntimeException::class,
-    'El convenio asociado a la inscripción ya no se encuentra vigente para el proceso activo. Su vigencia terminó el 30/04/2026.',
-);
+    $this->validador->postulacionVigente(
+        $this->procesoCarrera->id_sede,
+        $this->procesoCarrera->id_carrera,
+        $this->modalidad->id_mad,
+        $this->proceso,
+    );
+})->throws(RuntimeException::class, 'La modalidad de la postulación ya no se encuentra habilitada para el proceso activo.');
 
 test('a payment rule of the inscription process is accepted inside its validity window', function () {
     Carbon::setTestNow('2026-04-15 10:00:00');
 
     $reglaPago = ReglaPago::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
     $inscripcion = (new Inscripcion)->forceFill([
-        'id_proceso_oferta' => $this->procesoOferta->id_pof,
-        'id_convenio_proceso' => null,
+        'id_proceso' => $this->proceso->id_pro,
+        'id_modalidad_admision' => $this->modalidad->id_mad,
     ]);
 
     expect($this->validador->reglaPagoVigente($reglaPago->id_rpa, $inscripcion)->id_rpa)->toBe($reglaPago->id_rpa);
@@ -109,8 +97,8 @@ test('an expired payment rule is rejected with its end date', function () {
 
     $reglaPago = ReglaPago::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
     $inscripcion = (new Inscripcion)->forceFill([
-        'id_proceso_oferta' => $this->procesoOferta->id_pof,
-        'id_convenio_proceso' => null,
+        'id_proceso' => $this->proceso->id_pro,
+        'id_modalidad_admision' => $this->modalidad->id_mad,
     ]);
 
     $this->validador->reglaPagoVigente($reglaPago->id_rpa, $inscripcion);

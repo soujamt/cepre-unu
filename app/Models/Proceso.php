@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * AAAA-N (por ejemplo 2026-2). La inscripción se abre en la fecha y hora de
  * inicio y se cierra en la fecha y hora de fin (hora de America/Lima).
  */
-#[Fillable(['codigo_pro', 'nombre_pro', 'fecha_inicio_pro', 'fecha_fin_pro', 'estado_pro'])]
+#[Fillable(['codigo_pro', 'nombre_pro', 'fecha_inicio_pro', 'fecha_fin_pro', 'anio_egreso_max_ordinario_pro', 'estado_pro'])]
 #[Table('tbl_proceso', key: 'id_pro')]
 class Proceso extends LegacyModel
 {
@@ -23,6 +23,7 @@ class Proceso extends LegacyModel
         return array_merge(parent::casts(), [
             'fecha_inicio_pro' => 'datetime',
             'fecha_fin_pro' => 'datetime',
+            'anio_egreso_max_ordinario_pro' => 'integer',
             'estado_pro' => EstadoProceso::class,
         ]);
     }
@@ -43,24 +44,39 @@ class Proceso extends LegacyModel
         return preg_match(self::FORMATO_NOMBRE, (string) $this->nombre_pro, $partes) ? (int) $partes[2] : null;
     }
 
+    /**
+     * Último año de egreso que entra como ORDINARIO. Si no se configuró, es el
+     * año anterior al de apertura: quien termina el colegio ese año aún no egresó.
+     */
+    public function anioEgresoMaximoOrdinario(): int
+    {
+        return $this->anio_egreso_max_ordinario_pro
+            ?? ((int) ($this->fecha_inicio_pro?->format('Y') ?? now()->format('Y'))) - 1;
+    }
+
+    public function inscripciones(): HasMany
+    {
+        return $this->hasMany(Inscripcion::class, 'id_proceso', 'id_pro');
+    }
+
+    public function procesoModalidades(): HasMany
+    {
+        return $this->hasMany(ProcesoModalidad::class, 'id_proceso', 'id_pro');
+    }
+
+    public function procesoCarreras(): HasMany
+    {
+        return $this->hasMany(ProcesoCarrera::class, 'id_proceso', 'id_pro');
+    }
+
     public function procesosOferta(): HasMany
     {
         return $this->hasMany(ProcesoOferta::class, 'id_proceso', 'id_pro');
     }
 
-    public function conveniosProceso(): HasMany
-    {
-        return $this->hasMany(ConvenioProceso::class, 'id_proceso', 'id_pro');
-    }
-
     public function reglasPago(): HasMany
     {
         return $this->hasMany(ReglaPago::class, 'id_proceso', 'id_pro');
-    }
-
-    public function requisitosExpediente(): HasMany
-    {
-        return $this->hasMany(RequisitoExpediente::class, 'id_proceso', 'id_pro');
     }
 
     public function procesoAulas(): HasMany

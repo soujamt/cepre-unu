@@ -3,9 +3,11 @@
 namespace App\Support;
 
 use App\Enums\EstadoImportacionBancoDetalle;
+use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Enums\EstadoValidacionPago;
 use App\Models\ImportacionBancoDetalle;
+use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use Carbon\Carbon;
@@ -101,10 +103,31 @@ class InscripcionPagoManager
             $obligacion->estado_iop = $this->resolverEstadoObligacion($montoPagadoNuevo, $saldoNuevo);
             $obligacion->save();
 
+            $this->activarInscripcionPendiente($obligacion);
+
             return $pago->fresh([
                 'importacionBancoDetalle',
                 'obligacionPago',
             ]);
+        });
+    }
+
+    /**
+     * Asocia varios pagos del mismo DNI a la obligación en una sola transacción.
+     *
+     * @param  iterable<ImportacionBancoDetalle>  $detalles
+     * @return list<InscripcionPago>
+     */
+    public function asociarDetalles(InscripcionObligacionPago $obligacion, iterable $detalles): array
+    {
+        return DB::transaction(function () use ($obligacion, $detalles): array {
+            $pagos = [];
+
+            foreach ($detalles as $detalle) {
+                $pagos[] = $this->asociarDetalleAObligacion($obligacion->fresh(), $detalle);
+            }
+
+            return $pagos;
         });
     }
 
@@ -152,9 +175,7 @@ class InscripcionPagoManager
                         continue;
                     }
 
-                    $saldoPendiente = $this->saldoPendienteActual($obligacionActual);
-
-                    if (round((float) $detalle->monto_ibd, 2) > $saldoPendiente) {
+                    if ($this->saldoPendienteActual($obligacionActual) <= 0) {
                         $omitidos++;
 
                         continue;
@@ -265,42 +286,46 @@ class InscripcionPagoManager
         }
     }
 
+    /**
+     * Reglas del sistema anterior: se acepta pagar de más (S/ 501 sobre 500)
+     * y el mínimo se alcanza sumando varios pagos del mismo DNI, así que aquí
+     * solo se impide seguir pagando una obligación ya cubierta.
+     */
     private function validarMontoSegunRegla(
         InscripcionObligacionPago $obligacion,
         float $montoDetalle,
         float $saldoPendiente,
         int $numeroPagosVerificados,
     ): void {
+        if ($obligacion->reglaPago === null) {
+            throw new DomainException('La obligacion de pago no tiene una regla de pago asociada.');
+        }
+
+        $esGratuita = round((float) $obligacion->monto_total_iop, 2) <= 0;
+
+        if ($esGratuita && $numeroPagosVerificados === 0 && $montoDetalle <= 0) {
+            return;
+        }
+
         if ($saldoPendiente <= 0) {
             throw new DomainException('La obligacion de pago ya se encuentra cubierta.');
         }
+    }
 
-        if ($montoDetalle > $saldoPendiente) {
-            throw new DomainException('El monto del pago excede el saldo pendiente de la obligacion.');
-        }
-
+    /**
+     * Monto que debe estar pagado para activar la inscripción: el mínimo de la
+     * primera cuota si la regla permite cuotas, o el total si no.
+     */
+    public function montoMinimoParaActivar(InscripcionObligacionPago $obligacion): float
+    {
         $reglaPago = $obligacion->reglaPago;
+        $montoTotal = round((float) $obligacion->monto_total_iop, 2);
 
-        if ($reglaPago === null) {
-            throw new DomainException('La obligacion no tiene una regla de pago asociada.');
+        if ($reglaPago !== null && $reglaPago->permite_cuotas_rpa && ! $reglaPago->requiere_pago_completo_rpa) {
+            return min(round((float) $reglaPago->monto_minimo_primera_cuota_rpa, 2), $montoTotal);
         }
 
-        if (! $reglaPago->permite_cuotas_rpa && $numeroPagosVerificados > 0) {
-            throw new DomainException('La regla de pago no permite registrar mas de un pago.');
-        }
-
-        if ((! $reglaPago->permite_cuotas_rpa || $reglaPago->requiere_pago_completo_rpa) && $montoDetalle < $saldoPendiente) {
-            throw new DomainException('La regla de pago requiere cubrir el saldo completo en este registro.');
-        }
-
-        if (
-            $reglaPago->permite_cuotas_rpa
-            && $numeroPagosVerificados === 0
-            && (float) $reglaPago->monto_minimo_primera_cuota_rpa > 0
-            && $montoDetalle < (float) $reglaPago->monto_minimo_primera_cuota_rpa
-        ) {
-            throw new DomainException('El pago no alcanza el monto minimo requerido para la primera cuota.');
-        }
+        return $montoTotal;
     }
 
     private function saldoPendienteActual(InscripcionObligacionPago $obligacion): float
@@ -310,6 +335,45 @@ class InscripcionPagoManager
             ->sum('monto_ipa');
 
         return round(max((float) $obligacion->monto_total_iop - $montoPagadoActual, 0), 2);
+    }
+
+    /**
+     * Aprueba una inscripción hecha en el portal: deja de estar en revisión y
+     * se activa si lo pagado ya alcanza el mínimo.
+     */
+    public function aprobarRevision(Inscripcion $inscripcion, ?int $idUsuario): void
+    {
+        DB::transaction(function () use ($inscripcion, $idUsuario): void {
+            $inscripcion->update([
+                'requiere_revision_ins' => false,
+                'revisado_en' => now(),
+                'id_usuario_revisor' => $idUsuario,
+            ]);
+
+            $inscripcion->obligacionesPago()->get()->each(function (InscripcionObligacionPago $obligacion) use ($inscripcion): void {
+                $obligacion->setRelation('inscripcion', $inscripcion);
+                $this->activarInscripcionPendiente($obligacion);
+            });
+        });
+    }
+
+    /**
+     * La inscripción pendiente se activa cuando lo pagado alcanza el mínimo,
+     * salvo que esté en revisión.
+     */
+    private function activarInscripcionPendiente(InscripcionObligacionPago $obligacion): void
+    {
+        $inscripcion = $obligacion->inscripcion;
+
+        if ($inscripcion === null || $inscripcion->estado_ins !== EstadoInscripcion::Pendiente || $inscripcion->requiere_revision_ins) {
+            return;
+        }
+
+        if (round((float) $obligacion->monto_pagado_iop, 2) < $this->montoMinimoParaActivar($obligacion)) {
+            return;
+        }
+
+        $inscripcion->update(['estado_ins' => EstadoInscripcion::Activo->value]);
     }
 
     private function resolverEstadoObligacion(float $montoPagado, float $saldoPendiente): EstadoObligacionPago
