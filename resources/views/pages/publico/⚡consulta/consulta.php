@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EstadoInscripcion;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Models\Inscripcion;
 use Illuminate\Database\Eloquent\Builder;
@@ -87,7 +88,7 @@ class extends Component
     {
         $inscripcion = $this->inscripcion;
 
-        return $inscripcion === null || $inscripcion->estado_ins === App\Enums\EstadoInscripcion::Anulado
+        return $inscripcion === null || $inscripcion->estado_ins === EstadoInscripcion::Anulado
             ? null
             : DocumentoInscripcionController::enlacesPublicos($inscripcion);
     }

@@ -76,10 +76,10 @@ class extends Component
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, array<string, mixed>>
+     * @return Illuminate\Support\Collection<int, array<string, mixed>>
      */
     #[Computed]
-    public function combinaciones(): \Illuminate\Support\Collection
+    public function combinaciones(): Illuminate\Support\Collection
     {
         $proceso = $this->procesoSeleccionado;
 
