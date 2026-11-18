@@ -175,8 +175,8 @@ flowchart LR
     V --> R
 ```
 
-- **TXT del banco:** en `Inscripciones › Pagos` se sube el archivo (recaudación BBVA). El sistema valida cabecera, detalle y cierre, y crea un pago LIBRE por cada depósito.
-- **Pago manual:** en la misma pantalla, **Registrar pago**, con la ubicación (ADMISIÓN, POSGRADO, PARENTESCO UNU u OTRA CUENTA UNU), el DNI, el N° de operación y el monto.
+- **TXT del banco:** en `Inscripciones › Pagos`, pestaña **Importaciones TXT**, se sube el archivo (recaudación BBVA). El sistema valida cabecera, detalle y cierre, y crea un pago LIBRE por cada depósito.
+- **Pago manual:** en `Inscripciones › Pagos`, pestaña **Pagos**, botón **Nuevo pago**, con la ubicación (ADMISIÓN, POSGRADO, PARENTESCO UNU u OTRA CUENTA UNU), el DNI, el N° de operación y el monto.
 - **Cuotas siguientes:** después de importar un TXT, el botón **Validar pagos pendientes** asocia automáticamente los pagos de quienes ya tienen saldo. También se puede hacer uno por uno en `Inscripciones › Validar pagos`.
 
 Validaciones:
