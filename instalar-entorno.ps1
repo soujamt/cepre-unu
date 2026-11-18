@@ -6,13 +6,12 @@
     Prepara todo el entorno y recrea la base de datos solo con los catalogos:
       - seguridad: permisos, rol ADMINISTRADOR y usuario superadmin;
       - mantenedores: carreras, sedes (con sus carreras), modalidades, lugares de
-        inscripcion (con sus modalidades), ofertas base, turnos, conceptos de pago
-        y tipos de expediente;
+        inscripcion (con sus modalidades), ofertas base, turnos y conceptos de pago;
       - catalogos generales: ubigeo, paises, nacionalidades, colegios, tipos de
         documento, estados civiles, lenguas, identidades etnicas y discapacidades.
 
-    NO crea procesos, ofertas por proceso, aulas por proceso, convenios, reglas de
-    pago, requisitos, inscripciones, personas ni importaciones del banco.
+    NO crea procesos, ofertas por proceso, aulas por proceso, reglas de pago,
+    inscripciones, personas ni importaciones del banco.
 
     ATENCION: borra todas las tablas de la base configurada en .env y las vuelve a
     crear. Pide confirmacion escribiendo el nombre de la base.
@@ -27,6 +26,7 @@
       7. instala dependencias JS y compila los assets.
 
     Despues de instalar, use iniciar-red-local.ps1 para servir el sistema en la red.
+    Para actualizar un sistema con datos use actualizar-sistema.ps1, no este script.
 
 .PARAMETER ConAulasDeEjemplo
     Agrega 20 aulas genericas ("Aula 001" a "Aula 020"). Por defecto no se crean:
@@ -84,7 +84,11 @@ foreach ($programa in 'php', 'composer', 'npm') {
 }
 & php -r "exit(version_compare(PHP_VERSION, '8.4.0', '>=') ? 0 : 1);"
 if ($LASTEXITCODE -ne 0) {
-    throw 'Se requiere PHP 8.4 o superior.'
+    throw 'Se requiere PHP 8.4 o superior. En Herd, elija PHP 8.4 y vuelva a abrir la consola.'
+}
+$extensionesFaltantes = & php -r "echo implode(',', array_filter(['gd', 'zip', 'mbstring', 'dom', 'fileinfo', 'pdo_mysql'], fn (`$e) => ! extension_loaded(`$e)));"
+if ($extensionesFaltantes) {
+    throw "Faltan extensiones de PHP: $extensionesFaltantes. Activelas en el php.ini de Herd."
 }
 
 # 2. .env ---------------------------------------------------------------------
@@ -180,6 +184,6 @@ if (-not $ConAulasDeEjemplo) {
 else {
     Write-Host '  1. Revisar las aulas de ejemplo en Mantenedores > Aulas.'
 }
-Write-Host '  2. Configurar el proceso en Configuracion Academica: Procesos, Ofertas, Aulas,'
-Write-Host '     Convenios, Reglas de pago y Requisitos (ver FLUJO_PROCESOS_CEPRE.md).'
+Write-Host '  2. Configurar el proceso en Configuracion Academica: Procesos, Aulas, Ofertas,'
+Write-Host '     Reglas de pago y Carnet (datos y firma del director).'
 Write-Host '  3. Iniciar el sistema en la red local con iniciar-red-local.bat.'
