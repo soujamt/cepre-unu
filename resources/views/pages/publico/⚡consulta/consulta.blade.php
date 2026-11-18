@@ -36,7 +36,7 @@
                     />
                 </div>
                 <div class="sm:col-span-3">
-                    <flux:button type="submit" variant="primary" class="w-full font-normal">
+                    <flux:button type="submit" variant="primary" class="h-12 w-full font-normal">
                         <x-slot name="icon">
                             <x-ui.icon name="search" size="5" class="text-white" />
                         </x-slot>
