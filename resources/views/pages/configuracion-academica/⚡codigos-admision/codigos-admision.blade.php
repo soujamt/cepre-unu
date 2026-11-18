@@ -117,14 +117,14 @@
 
                 <flux:button class="w-full font-normal" wire:click="descargarPlantilla" :disabled="$this->combinaciones->isEmpty()">
                     <x-slot name="icon">
-                        <x-ui.icon name="download" size="5" />
+                        <x-ui.icon name="arrow-in-down-square-half" size="5" />
                     </x-slot>
                     Descargar plantilla
                 </flux:button>
 
                 @if ($puedeEditar)
                     <label class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 px-3 py-2.5 text-sm text-zinc-700 hover:bg-zinc-50 focus-within:ring-2 focus-within:ring-zinc-400 dark:border-white/15 dark:text-zinc-200 dark:hover:bg-white/5">
-                        <x-ui.icon name="upload" size="5" />
+                        <x-ui.icon name="arrow-out-up-square-half" size="5" />
                         <span wire:loading.remove wire:target="plantilla">Subir plantilla llena</span>
                         <span wire:loading wire:target="plantilla">Cargando…</span>
                         <input type="file" accept=".xlsx,.xls" wire:model="plantilla" class="sr-only" />

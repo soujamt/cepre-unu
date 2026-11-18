@@ -39,7 +39,7 @@
             @permiso ('foto_exportar_excel')
                 <flux:button class="font-normal" wire:click="exportarFotos">
                     <x-slot name="icon">
-                        <x-ui.icon name="download" size="5" />
+                        <x-ui.icon name="arrow-in-down-square-half" size="5" />
                     </x-slot>
                     Exportar fotos
                 </flux:button>
@@ -49,7 +49,7 @@
                 <flux:modal.trigger name="modal-subir-fotos">
                     <flux:button class="font-normal" variant="primary">
                         <x-slot name="icon">
-                            <x-ui.icon name="upload" size="5" class="text-white" />
+                            <x-ui.icon name="arrow-out-up-square-half" size="5" class="text-white" />
                         </x-slot>
                         Subir fotos
                     </flux:button>
