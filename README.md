@@ -4,7 +4,7 @@ Sistema de gestión académica y de inscripciones para CEPRE UNU, construido con
 
 ## Requisitos
 
-- PHP 8.3 o superior
+- PHP 8.4 o superior
 - Composer
 - Node.js 20 o superior
 - NPM

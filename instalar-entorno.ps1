@@ -82,9 +82,9 @@ foreach ($programa in 'php', 'composer', 'npm') {
         throw "No se encontro '$programa' en el PATH. Instale Laravel Herd o agregue '$programa' al PATH."
     }
 }
-& php -r "exit(version_compare(PHP_VERSION, '8.3.0', '>=') ? 0 : 1);"
+& php -r "exit(version_compare(PHP_VERSION, '8.4.0', '>=') ? 0 : 1);"
 if ($LASTEXITCODE -ne 0) {
-    throw 'Se requiere PHP 8.3 o superior.'
+    throw 'Se requiere PHP 8.4 o superior.'
 }
 
 # 2. .env ---------------------------------------------------------------------

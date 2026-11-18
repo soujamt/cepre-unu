@@ -96,7 +96,7 @@ Componentes recomendados:
 
 - Ubuntu Server 22.04 LTS o superior;
 - Nginx;
-- PHP 8.3 y PHP-FPM;
+- PHP 8.4 y PHP-FPM;
 - Composer;
 - Node.js 20;
 - MySQL 8;
@@ -109,7 +109,7 @@ Componentes recomendados:
 
 Según la configuración actual del proyecto, se recomienda trabajar con:
 
-- PHP 8.3 o superior;
+- PHP 8.4 o superior;
 - Composer;
 - Node.js 20 o superior;
 - NPM;
@@ -662,9 +662,9 @@ sudo apt upgrade -y
 sudo apt install -y nginx mysql-server unzip git curl supervisor software-properties-common
 ```
 
-## 9.4. Instalar PHP 8.3 y extensiones necesarias
+## 9.4. Instalar PHP 8.4 y extensiones necesarias
 
-Si el repositorio del sistema no ofrece PHP 8.3 de forma directa, agregar el PPA de Ondrej:
+Si el repositorio del sistema no ofrece PHP 8.4 de forma directa, agregar el PPA de Ondrej:
 
 ```bash
 sudo add-apt-repository ppa:ondrej/php -y
@@ -674,7 +674,7 @@ sudo apt update
 Instalar PHP-FPM y extensiones:
 
 ```bash
-sudo apt install -y php8.3 php8.3-fpm php8.3-cli php8.3-mysql php8.3-bcmath php8.3-curl php8.3-mbstring php8.3-xml php8.3-zip php8.3-intl php8.3-gd php8.3-common php8.3-opcache
+sudo apt install -y php8.4 php8.4-fpm php8.4-cli php8.4-mysql php8.4-bcmath php8.4-curl php8.4-mbstring php8.4-xml php8.4-zip php8.4-intl php8.4-gd php8.4-common php8.4-opcache
 ```
 
 ## 9.5. Instalar Composer
@@ -800,7 +800,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
     }
