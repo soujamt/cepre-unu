@@ -185,43 +185,133 @@
 }
 
 /**
- * Avisos (sonner): tarjeta compacta y translúcida con una sombra suave; el texto manda,
- * el color queda solo en el ícono.
+ * Avisos (sonner): tarjeta con el ícono en un recuadro del color del tipo, título en
+ * negrita, mensaje en gris y una línea de color al pie que se vacía con el tiempo.
  */
 [data-sonner-toaster] [data-sonner-toast].aviso-toast {
-    gap: 0.625rem;
-    width: auto;
-    min-width: 18rem;
-    max-width: 24rem;
-    padding: 0.625rem 0.875rem;
-    border-radius: var(--radius-xl);
-    border: 1px solid rgb(228 228 231 / 0.8);
-    background: rgb(255 255 255 / 0.92);
+    --tono: var(--color-index-500);
+    --tono-suave: rgb(41 111 240 / 0.12);
+
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem 1rem 0.875rem;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgb(228 228 231 / 0.9);
+    background:
+        linear-gradient(100deg, var(--tono-suave), transparent 38%),
+        rgb(255 255 255 / 0.97);
     color: var(--color-zinc-700);
     box-shadow:
-        0 1px 2px rgb(16 24 40 / 0.04),
-        0 10px 24px -12px rgb(16 24 40 / 0.18);
-    backdrop-filter: blur(10px);
+        0 1px 2px rgb(16 24 40 / 0.05),
+        0 18px 40px -16px rgb(16 24 40 / 0.28);
+    backdrop-filter: blur(12px);
+}
+
+[data-sonner-toast].aviso-toast[data-type='success'] {
+    --tono: #10b981;
+    --tono-suave: rgb(16 185 129 / 0.12);
+}
+
+[data-sonner-toast].aviso-toast[data-type='error'] {
+    --tono: #ef4444;
+    --tono-suave: rgb(239 68 68 / 0.11);
+}
+
+[data-sonner-toast].aviso-toast[data-type='warning'] {
+    --tono: #f59e0b;
+    --tono-suave: rgb(245 158 11 / 0.13);
+}
+
+[data-sonner-toast].aviso-toast[data-type='loading'] {
+    --tono: var(--color-zinc-400);
+    --tono-suave: transparent;
 }
 
 .dark [data-sonner-toaster] [data-sonner-toast].aviso-toast {
-    border-color: rgb(255 255 255 / 0.08);
-    background: rgb(28 28 30 / 0.92);
+    border-color: rgb(255 255 255 / 0.09);
+    background:
+        linear-gradient(100deg, var(--tono-suave), transparent 38%),
+        rgb(30 30 33 / 0.96);
     color: var(--color-zinc-200);
-    box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.6);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.04),
+        0 18px 40px -14px rgb(0 0 0 / 0.7);
 }
 
-[data-sonner-toast].aviso-toast [data-icon] {
+/* Recuadro del ícono */
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'].aviso-toast [data-icon] {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.125rem;
+    height: 2.125rem;
     margin: 0;
+    border-radius: 0.75rem;
+    background: var(--tono-suave);
+    color: var(--tono);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tono) 22%, transparent);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'].aviso-toast [data-icon] > * {
+    width: auto;
+    height: auto;
+}
+
+.aviso-toast-contenido {
+    gap: 0.125rem;
+    padding-top: 0.0625rem;
 }
 
 .aviso-toast-titulo {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
     line-height: 1.35;
+    color: var(--color-zinc-900);
+}
+
+.dark .aviso-toast-titulo {
+    color: #fff;
 }
 
 .aviso-toast-descripcion {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
     color: var(--color-zinc-500);
+}
+
+.dark .aviso-toast-descripcion {
+    color: var(--color-zinc-400);
+}
+
+/* Línea de tiempo al pie: se vacía en lo que dura el aviso y se detiene al pasar el mouse. */
+[data-sonner-toast].aviso-toast [data-content]::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--tono);
+    opacity: 0.75;
+    transform-origin: left;
+    animation: aviso-tiempo 4.5s linear forwards;
+}
+
+[data-sonner-toast].aviso-toast[data-type='loading'] [data-content]::after {
+    display: none;
+}
+
+[data-sonner-toaster]:hover [data-sonner-toast].aviso-toast [data-content]::after {
+    animation-play-state: paused;
+}
+
+@keyframes aviso-tiempo {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
 }

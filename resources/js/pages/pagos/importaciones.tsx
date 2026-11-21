@@ -7,7 +7,7 @@ import { FiltroEstado } from '@/components/filtro-estado';
 import { InsigniaEstado } from '@/components/insignia-estado';
 import { MenuAcciones } from '@/components/menu-acciones';
 import { EstadoVacio, Panel } from '@/components/panel';
-import { Buscador, CeldaRegistro, Paginacion, TablaDatos, useFiltros } from '@/components/tabla-datos';
+import { Buscador, CeldaRegistro, TablaDatos, useFiltros } from '@/components/tabla-datos';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useConfirmacion } from '@/components/dialogo-confirmacion';
@@ -59,7 +59,13 @@ interface Previsualizacion {
     total_monto: number | string;
     total_monto_reportado: number | string;
     observaciones: string[];
-    duplicados: { tipo: string; documento: string | null; operacion: string | null; fecha_pago: string | null; monto: number }[];
+    duplicados: {
+        tipo: string;
+        documento: string | null;
+        operacion: string | null;
+        fecha_pago: string | null;
+        monto: number;
+    }[];
     muestra: DetalleTxt[];
     valido: boolean;
 }
@@ -114,29 +120,31 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-                <Buscador valor={String(filtro.buscar)} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Buscar por archivo" />
-                <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estado) => cambiarFiltro({ estado }, true)} valores={['PENDIENTE', 'PROCESADO', 'OBSERVADO']} />
-                <div className="flex flex-wrap gap-2 sm:ms-auto">
-                    <Button variant="outline" asChild>
-                        <Enlace href={pagos.url()}>
-                            <Wallet className="size-4.5" />
-                            Ver pagos
-                        </Enlace>
-                    </Button>
-                    {puede('pago_crear') && (
-                        <>
-                            <Button onClick={() => archivo.current?.click()}>
-                                <FileArrowUp className="size-4.5" />
-                                Importar TXT
-                            </Button>
-                            <input ref={archivo} type="file" accept=".txt,.TXT" className="sr-only" onChange={(evento) => subir(evento.target.files)} />
-                        </>
-                    )}
-                </div>
-            </div>
-
             <TablaDatos
+                barra={
+                    <>
+                        <Buscador valor={String(filtro.buscar)} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Buscar por archivo" />
+                        <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estado) => cambiarFiltro({ estado }, true)} valores={['PENDIENTE', 'PROCESADO', 'OBSERVADO']} />
+                        <div className="flex flex-wrap gap-2 sm:ms-auto">
+                            <Button variant="outline" asChild>
+                                <Enlace href={pagos.url()}>
+                                    <Wallet className="size-4.5" />
+                                    Ver pagos
+                                </Enlace>
+                            </Button>
+                            {puede('pago_crear') && (
+                                <>
+                                    <Button onClick={() => archivo.current?.click()}>
+                                        <FileArrowUp className="size-4.5" />
+                                        Importar TXT
+                                    </Button>
+                                    <input ref={archivo} type="file" accept=".txt,.TXT" className="sr-only" onChange={(evento) => subir(evento.target.files)} />
+                                </>
+                            )}
+                        </div>
+                    </>
+                }
+                paginado={lista}
                 columnas={[
                     {
                         clave: 'archivo',
@@ -159,9 +167,22 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                             </>
                         ),
                     },
-                    { clave: 'monto', titulo: 'Monto', className: 'tabular-nums font-medium', celda: (importacion) => soles(importacion.monto) },
-                    { clave: 'estado', titulo: 'Estado', celda: (importacion) => <InsigniaEstado estado={importacion.estado} /> },
-                    { clave: 'importado', titulo: 'Importado', celda: (importacion) => <CeldaRegistro registro={importacion.importado} /> },
+                    {
+                        clave: 'monto',
+                        titulo: 'Monto',
+                        className: 'tabular-nums font-medium',
+                        celda: (importacion) => soles(importacion.monto),
+                    },
+                    {
+                        clave: 'estado',
+                        titulo: 'Estado',
+                        celda: (importacion) => <InsigniaEstado estado={importacion.estado} />,
+                    },
+                    {
+                        clave: 'importado',
+                        titulo: 'Importado',
+                        celda: (importacion) => <CeldaRegistro registro={importacion.importado} />,
+                    },
                     {
                         clave: 'acciones',
                         titulo: <span className="sr-only">Acciones</span>,
@@ -174,7 +195,12 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                                         icono: Eye,
                                         alSeleccionar: () => router.get(importaciones.url(), { ...filtros, importacion: String(importacion.id) }, { preserveScroll: true }),
                                     },
-                                    { etiqueta: 'Asociar pendientes', icono: DoubleCheck, alSeleccionar: () => void validar(importacion), visible: puede('pago_crear') && importacion.pendientes > 0 },
+                                    {
+                                        etiqueta: 'Asociar pendientes',
+                                        icono: DoubleCheck,
+                                        alSeleccionar: () => void validar(importacion),
+                                        visible: puede('pago_crear') && importacion.pendientes > 0,
+                                    },
                                 ]}
                             />
                         ),
@@ -184,8 +210,6 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                 claveFila={(importacion) => importacion.id}
                 vacio={<EstadoVacio icono={Receipt} titulo="Aún no se importaron archivos del banco." />}
             />
-            <Paginacion paginado={lista} />
-
             {detalle && (
                 <Panel titulo={`Pagos de ${detalle.archivo}`} descripcion={`Lote del ${detalle.fechaLote ?? '—'} · ${detalle.pagos.length} pago(s)`}>
                     <TablaDatos
@@ -211,9 +235,23 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                                     </>
                                 ),
                             },
-                            { clave: 'fecha', titulo: 'Fecha', className: 'tabular-nums', celda: (pago) => pago.fecha ?? '—' },
-                            { clave: 'monto', titulo: 'Monto', className: 'tabular-nums font-medium', celda: (pago) => soles(pago.monto) },
-                            { clave: 'estado', titulo: 'Estado', celda: (pago) => <InsigniaEstado estado={pago.estado} /> },
+                            {
+                                clave: 'fecha',
+                                titulo: 'Fecha',
+                                className: 'tabular-nums',
+                                celda: (pago) => pago.fecha ?? '—',
+                            },
+                            {
+                                clave: 'monto',
+                                titulo: 'Monto',
+                                className: 'tabular-nums font-medium',
+                                celda: (pago) => soles(pago.monto),
+                            },
+                            {
+                                clave: 'estado',
+                                titulo: 'Estado',
+                                celda: (pago) => <InsigniaEstado estado={pago.estado} />,
+                            },
                         ]}
                         filas={detalle.pagos}
                         claveFila={(pago) => pago.id}
@@ -264,12 +302,31 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                                 <TablaDatos
                                     className="shadow-none"
                                     columnas={[
-                                        { clave: 'tipo', titulo: 'Tipo', celda: (fila) => <InsigniaEstado estado={fila.tipo === 'Ya importado' ? 'OBSERVADO' : 'PENDIENTE'} className="normal-case" /> },
+                                        {
+                                            clave: 'tipo',
+                                            titulo: 'Tipo',
+                                            celda: (fila) => <InsigniaEstado estado={fila.tipo === 'Ya importado' ? 'OBSERVADO' : 'PENDIENTE'} className="normal-case" />,
+                                        },
                                         { clave: 'detalleTipo', titulo: 'Motivo', celda: (fila) => fila.tipo },
-                                        { clave: 'documento', titulo: 'DNI', className: 'font-mono', celda: (fila) => fila.documento ?? '—' },
-                                        { clave: 'operacion', titulo: 'Operación', className: 'font-mono', celda: (fila) => fila.operacion ?? '—' },
+                                        {
+                                            clave: 'documento',
+                                            titulo: 'DNI',
+                                            className: 'font-mono',
+                                            celda: (fila) => fila.documento ?? '—',
+                                        },
+                                        {
+                                            clave: 'operacion',
+                                            titulo: 'Operación',
+                                            className: 'font-mono',
+                                            celda: (fila) => fila.operacion ?? '—',
+                                        },
                                         { clave: 'fecha', titulo: 'Fecha', celda: (fila) => fila.fecha_pago ?? '—' },
-                                        { clave: 'monto', titulo: 'Monto', className: 'tabular-nums', celda: (fila) => soles(fila.monto) },
+                                        {
+                                            clave: 'monto',
+                                            titulo: 'Monto',
+                                            className: 'tabular-nums',
+                                            celda: (fila) => soles(fila.monto),
+                                        },
                                     ]}
                                     filas={previsualizacion.duplicados}
                                     claveFila={(fila) => `${fila.tipo}-${fila.documento}-${fila.operacion}`}
@@ -282,11 +339,31 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                             <TablaDatos
                                 className="shadow-none"
                                 columnas={[
-                                    { clave: 'documento', titulo: 'DNI', className: 'font-mono', celda: (fila) => fila.numero_documento_normalizado ?? fila.numero_documento ?? '—' },
-                                    { clave: 'depositante', titulo: 'Depositante', className: 'whitespace-normal', celda: (fila) => fila.nombre_depositante ?? '—' },
-                                    { clave: 'operacion', titulo: 'Operación', className: 'font-mono', celda: (fila) => fila.numero_operacion_visible ?? '—' },
+                                    {
+                                        clave: 'documento',
+                                        titulo: 'DNI',
+                                        className: 'font-mono',
+                                        celda: (fila) => fila.numero_documento_normalizado ?? fila.numero_documento ?? '—',
+                                    },
+                                    {
+                                        clave: 'depositante',
+                                        titulo: 'Depositante',
+                                        className: 'whitespace-normal',
+                                        celda: (fila) => fila.nombre_depositante ?? '—',
+                                    },
+                                    {
+                                        clave: 'operacion',
+                                        titulo: 'Operación',
+                                        className: 'font-mono',
+                                        celda: (fila) => fila.numero_operacion_visible ?? '—',
+                                    },
                                     { clave: 'fecha', titulo: 'Fecha', celda: (fila) => fila.fecha_pago ?? '—' },
-                                    { clave: 'monto', titulo: 'Monto', className: 'tabular-nums', celda: (fila) => soles(fila.monto ?? 0) },
+                                    {
+                                        clave: 'monto',
+                                        titulo: 'Monto',
+                                        className: 'tabular-nums',
+                                        celda: (fila) => soles(fila.monto ?? 0),
+                                    },
                                 ]}
                                 filas={previsualizacion.muestra}
                                 claveFila={(fila) => `${fila.numero_documento}-${fila.numero_operacion_visible}-${fila.fecha_pago}`}

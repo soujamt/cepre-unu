@@ -1,10 +1,11 @@
+import type * as React from 'react';
 import { Alert, CircleCheck, Info, LoaderCircle, OctagonX } from '@keyline-icons/react/fill';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import { useTema } from '@/hooks/use-tema';
 
 /**
- * Avisos (toasts) discretos: tarjeta compacta con un punto de color en el ícono,
- * sin botón de cerrar y de corta duración, abajo a la derecha.
+ * Avisos (toasts): tarjeta con el ícono en un recuadro del color del tipo, título,
+ * mensaje y una línea de color abajo que marca el tiempo que queda. Abajo a la derecha.
  */
 function Toaster(props: ToasterProps) {
     const { oscuro } = useTema();
@@ -14,19 +15,21 @@ function Toaster(props: ToasterProps) {
             theme={oscuro ? 'dark' : 'light'}
             className="toaster group"
             position="bottom-right"
-            duration={3500}
+            duration={4500}
             visibleToasts={3}
-            gap={8}
+            gap={10}
+            style={{ '--width': '364px' } as React.CSSProperties}
             icons={{
-                success: <CircleCheck className="size-4 text-green-500" />,
-                info: <Info className="size-4 text-index-500" />,
-                warning: <Alert className="size-4 text-amber-500" />,
-                error: <OctagonX className="size-4 text-red-500" />,
-                loading: <LoaderCircle className="size-4 animate-spin text-zinc-400" />,
+                success: <CircleCheck className="size-[18px]" />,
+                info: <Info className="size-[18px]" />,
+                warning: <Alert className="size-[18px]" />,
+                error: <OctagonX className="size-[18px]" />,
+                loading: <LoaderCircle className="size-[18px] animate-spin" />,
             }}
             toastOptions={{
                 classNames: {
                     toast: 'aviso-toast',
+                    content: 'aviso-toast-contenido',
                     title: 'aviso-toast-titulo',
                     description: 'aviso-toast-descripcion',
                 },

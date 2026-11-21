@@ -118,11 +118,11 @@ export default function CodigosAdmision({ procesos, proceso, filas, avance, erro
 
                     <div className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.07] dark:bg-white/[0.02] dark:shadow-none">
                         <table className="w-full text-sm">
-                            <thead className="bg-zinc-50/80 text-xs font-medium text-zinc-500 dark:bg-white/[0.03] dark:text-zinc-400">
+                            <thead className="border-b border-zinc-200/70 bg-zinc-50/80 text-[11px] font-semibold tracking-[0.06em] text-zinc-500 uppercase dark:border-white/[0.06] dark:bg-white/[0.025] dark:text-zinc-400">
                                 <tr>
-                                    <th className="h-11 px-4 text-start font-medium">Lugar / carrera</th>
-                                    <th className="h-11 px-4 text-start font-medium">Modalidad</th>
-                                    <th className="h-11 w-44 px-4 text-start font-medium">Código de Admisión</th>
+                                    <th className="h-10 px-4 text-start font-semibold">Lugar / carrera</th>
+                                    <th className="h-10 px-4 text-start font-semibold">Modalidad</th>
+                                    <th className="h-10 w-44 px-4 text-start font-semibold">Código de Admisión</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">

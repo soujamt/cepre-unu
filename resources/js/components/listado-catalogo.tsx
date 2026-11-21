@@ -6,7 +6,7 @@ import { InsigniaEstado } from '@/components/insignia-estado';
 import { MenuAcciones } from '@/components/menu-acciones';
 import type { AccionFila } from '@/components/menu-acciones';
 import { EstadoVacio } from '@/components/panel';
-import { Buscador, CeldaRegistro, Paginacion, TablaDatos, useFiltros } from '@/components/tabla-datos';
+import { Buscador, CeldaRegistro, TablaDatos, useFiltros } from '@/components/tabla-datos';
 import type { Columna } from '@/components/tabla-datos';
 import { Button } from '@/components/ui/button';
 import type { ControlCatalogo, LlaveCatalogo } from '@/hooks/use-catalogo';
@@ -71,24 +71,35 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
 
     return (
         <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
-                <Buscador valor={String(filtro.buscar)} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder={placeholderBusqueda} />
-                {filtrosExtra?.(cambiarFiltro, filtro)}
-                <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estados) => cambiarFiltro({ estado: estados }, true)} valores={estadosFiltro} />
-                {puede(`${permiso}_crear`) && (
-                    <Button className="w-full sm:ms-auto sm:w-auto" onClick={alNuevo ?? catalogo.abrirNuevo}>
-                        <Plus className="size-4.5" />
-                        {textoNuevo}
-                    </Button>
-                )}
-            </div>
-
             <TablaDatos
+                barra={
+                    <>
+                        <Buscador valor={String(filtro.buscar)} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder={placeholderBusqueda} />
+                        {filtrosExtra?.(cambiarFiltro, filtro)}
+                        <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estados) => cambiarFiltro({ estado: estados }, true)} valores={estadosFiltro} />
+                        {puede(`${permiso}_crear`) && (
+                            <Button className="w-full sm:ms-auto sm:w-auto" onClick={alNuevo ?? catalogo.abrirNuevo}>
+                                <Plus className="size-4.5" />
+                                {textoNuevo}
+                            </Button>
+                        )}
+                    </>
+                }
+                paginado={paginado}
                 columnas={[
-                    { clave: 'numero', titulo: 'N°', className: 'w-16 tabular-nums', celda: (_fila, indice) => (paginado.from ?? 1) + indice },
+                    {
+                        clave: 'numero',
+                        titulo: 'N°',
+                        className: 'w-16 tabular-nums',
+                        celda: (_fila, indice) => (paginado.from ?? 1) + indice,
+                    },
                     ...columnas,
                     { clave: 'estado', titulo: 'Estado', celda: (fila) => <InsigniaEstado estado={fila.estado} /> },
-                    { clave: 'registro', titulo: 'Registro', celda: (fila) => <CeldaRegistro registro={fila.registro} /> },
+                    {
+                        clave: 'registro',
+                        titulo: 'Registro',
+                        celda: (fila) => <CeldaRegistro registro={fila.registro} />,
+                    },
                     {
                         clave: 'acciones',
                         titulo: <span className="sr-only">Acciones</span>,
@@ -96,10 +107,26 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
                         celda: (fila) => (
                             <MenuAcciones
                                 acciones={[
-                                    { etiqueta: 'Editar', icono: PenLine, alSeleccionar: () => catalogo.abrirEdicion(fila), visible: puede(`${permiso}_editar`) && !ocultarAccion?.(fila, 'editar') },
-                                    { etiqueta: 'Estado', icono: RefreshCw, alSeleccionar: () => void catalogo.cambiarEstado(fila), visible: puede(`${permiso}_estado`) && !ocultarAccion?.(fila, 'estado') },
+                                    {
+                                        etiqueta: 'Editar',
+                                        icono: PenLine,
+                                        alSeleccionar: () => catalogo.abrirEdicion(fila),
+                                        visible: puede(`${permiso}_editar`) && !ocultarAccion?.(fila, 'editar'),
+                                    },
+                                    {
+                                        etiqueta: 'Estado',
+                                        icono: RefreshCw,
+                                        alSeleccionar: () => void catalogo.cambiarEstado(fila),
+                                        visible: puede(`${permiso}_estado`) && !ocultarAccion?.(fila, 'estado'),
+                                    },
                                     ...(accionesExtra?.(fila) ?? []),
-                                    { etiqueta: 'Eliminar', icono: Bin, alSeleccionar: () => void catalogo.eliminar(fila), peligro: true, visible: puede(`${permiso}_eliminar`) && !ocultarAccion?.(fila, 'eliminar') },
+                                    {
+                                        etiqueta: 'Eliminar',
+                                        icono: Bin,
+                                        alSeleccionar: () => void catalogo.eliminar(fila),
+                                        peligro: true,
+                                        visible: puede(`${permiso}_eliminar`) && !ocultarAccion?.(fila, 'eliminar'),
+                                    },
                                 ]}
                             />
                         ),
@@ -110,15 +137,7 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
                 vacio={<EstadoVacio icono={vacio.icono} titulo={vacio.titulo} />}
             />
 
-            <Paginacion paginado={paginado} />
-
-            <HojaFormulario
-                abierta={catalogo.hoja.abierta}
-                alCerrar={catalogo.hoja.cerrar}
-                titulo={catalogo.hoja.titulo}
-                alEnviar={catalogo.guardar}
-                procesando={catalogo.procesando}
-            >
+            <HojaFormulario abierta={catalogo.hoja.abierta} alCerrar={catalogo.hoja.cerrar} titulo={catalogo.hoja.titulo} alEnviar={catalogo.guardar} procesando={catalogo.procesando}>
                 {campos}
             </HojaFormulario>
         </div>

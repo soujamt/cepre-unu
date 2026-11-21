@@ -1,34 +1,17 @@
 import { router, useForm } from '@inertiajs/react';
-import {
-    Ban,
-    BadgeCheck,
-    Building,
-    CircleCheck,
-    CircleDollarSign,
-    CircleX,
-    ClipboardList,
-    Download,
-    Eye,
-    FileText,
-    Filter,
-    IdCard,
-    PenLine,
-    Plus,
-    ShieldCheck,
-    Users,
-} from '@keyline-icons/react/fill';
+import { Ban, BadgeCheck, Building, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Download, Eye, FileText, SlidersHorizontal, IdCard, PenLine, Plus, ShieldCheck, Users } from '@keyline-icons/react/fill';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Aviso } from '@/components/aviso';
 import { CampoArea } from '@/components/campo';
 import { Enlace } from '@/components/enlace';
-import { FiltroEstado } from '@/components/filtro-estado';
+import { ContadorFiltro, FiltroEstado, claseBotonFiltro } from '@/components/filtro-estado';
 import { FiltroLista } from '@/components/filtro-lista';
 import { InsigniaEstado } from '@/components/insignia-estado';
 import { MenuAcciones } from '@/components/menu-acciones';
 import { EstadoVacio } from '@/components/panel';
 import { Resumen, ResumenItem } from '@/components/resumen';
-import { Buscador, Paginacion, TablaDatos, useFiltros } from '@/components/tabla-datos';
+import { Buscador, TablaDatos, useFiltros } from '@/components/tabla-datos';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -77,7 +60,15 @@ interface PropsInscripciones {
     filtros: Filtros;
     resumen: { total: number; activas: number; pendientes: number; pagoPendiente: number; anuladas: number };
     totalEnRevision: number;
-    opciones: { procesos: Opcion[]; modalidades: Opcion[]; sedes: Opcion[]; turnos: Opcion[]; aulas: Opcion[]; estados: Opcion[]; pagos: Opcion[] };
+    opciones: {
+        procesos: Opcion[];
+        modalidades: Opcion[];
+        sedes: Opcion[];
+        turnos: Opcion[];
+        aulas: Opcion[];
+        estados: Opcion[];
+        pagos: Opcion[];
+    };
 }
 
 interface AulaDisponible {
@@ -96,7 +87,13 @@ function DialogoAnular({ inscripcion, alCerrar }: { inscripcion: Inscripcion | n
 
     const enviar = (): void => {
         if (inscripcion) {
-            formulario.post(anular.url(inscripcion.id), { preserveScroll: true, onSuccess: () => { formulario.reset(); alCerrar(); } });
+            formulario.post(anular.url(inscripcion.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    formulario.reset();
+                    alCerrar();
+                },
+            });
         }
     };
 
@@ -107,7 +104,15 @@ function DialogoAnular({ inscripcion, alCerrar }: { inscripcion: Inscripcion | n
                     <DialogTitle>Anular inscripción {inscripcion?.codigo}</DialogTitle>
                     <DialogDescription>Se libera el aula asignada y el carnet deja de ser válido. Esta acción no se puede deshacer.</DialogDescription>
                 </DialogHeader>
-                <CampoArea etiqueta="Motivo de anulación" value={formulario.data.motivo} onChange={(evento) => formulario.setData('motivo', evento.target.value)} error={formulario.errors.motivo} maxLength={500} ayuda="Mínimo 10 caracteres." requerido />
+                <CampoArea
+                    etiqueta="Motivo de anulación"
+                    value={formulario.data.motivo}
+                    onChange={(evento) => formulario.setData('motivo', evento.target.value)}
+                    error={formulario.errors.motivo}
+                    maxLength={500}
+                    ayuda="Mínimo 10 caracteres."
+                    requerido
+                />
                 <DialogFooter>
                     <Button variant="outline" onClick={alCerrar}>
                         Cancelar
@@ -193,7 +198,7 @@ function DialogoAula({ inscripcion, alCerrar }: { inscripcion: Inscripcion | nul
                                         llena && 'cursor-not-allowed opacity-60',
                                     )}
                                 >
-                                    <input type="radio" name="aula" className="size-4 accent-index-500" disabled={llena} checked={elegida === opcion.id} onChange={() => setElegida(opcion.id)} />
+                                    <input type="radio" name="aula" className="accent-index-500 size-4" disabled={llena} checked={elegida === opcion.id} onChange={() => setElegida(opcion.id)} />
                                     <span className="min-w-0 flex-1">
                                         <span className="block text-sm font-medium text-zinc-900 dark:text-white">{opcion.nombre}</span>
                                         <span className="block text-xs text-zinc-500 dark:text-zinc-400">
@@ -278,71 +283,89 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                 </Aviso>
             )}
 
-            <div className="flex flex-wrap items-center gap-3">
-                <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Código, DNI, apellidos o carrera" className="min-w-48 flex-1 sm:max-w-md" />
-                <FiltroLista
-                    valor={procesoVisible}
-                    alCambiar={(proceso) => cambiarFiltro({ proceso: proceso === '' ? TODOS : proceso, procesoElegido: proceso === '' ? TODOS : null, modalidad: '', sede: '', turno: '', aula: '' }, true)}
-                    opciones={opciones.procesos}
-                    textoTodos="Todos los procesos"
-                    className="sm:w-44"
-                />
-                <FiltroEstado seleccionados={filtro.estado} alCambiar={(estado) => cambiarFiltro({ estado }, true)} valores={['PENDIENTE', 'ACTIVO', 'ANULADO']} />
-                <Popover>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" className="font-normal">
-                            <Filter className="size-4.5" />
-                            Más filtros
-                            {secundariosActivos > 0 && <span className="ms-1 inline-flex min-w-5 items-center justify-center rounded-full bg-index-500 px-1.5 text-[11px] leading-5 font-semibold text-white">{secundariosActivos}</span>}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="start" className="grid w-72 gap-2.5">
-                        <FiltroLista valor={filtro.modalidad} alCambiar={(modalidad) => cambiarFiltro({ modalidad }, true)} opciones={opciones.modalidades} textoTodos="Todas las modalidades" className="sm:w-full" />
-                        <FiltroLista valor={filtro.sede} alCambiar={(sede) => cambiarFiltro({ sede }, true)} opciones={opciones.sedes} textoTodos="Todas las sedes" className="sm:w-full" />
-                        <FiltroLista valor={filtro.turno} alCambiar={(turno) => cambiarFiltro({ turno, aula: '' }, true)} opciones={opciones.turnos} textoTodos="Todos los turnos" className="sm:w-full" />
-                        <FiltroLista valor={filtro.aula} alCambiar={(valor) => cambiarFiltro({ aula: valor }, true)} opciones={opciones.aulas} textoTodos="Todas las aulas" className="sm:w-full" />
-                        <FiltroLista valor={filtro.pago} alCambiar={(pago) => cambiarFiltro({ pago }, true)} opciones={opciones.pagos} textoTodos="Cualquier estado de pago" className="sm:w-full" />
-                        {secundariosActivos > 0 && (
-                            <Button variant="ghost" size="sm" onClick={() => cambiarFiltro({ modalidad: '', sede: '', turno: '', aula: '', pago: '' }, true)}>
-                                Limpiar filtros
-                            </Button>
-                        )}
-                    </PopoverContent>
-                </Popover>
-                <div className="ms-auto flex flex-wrap gap-2">
-                    {puede('inscripcion_exportar_excel') && (
-                        <Button variant="outline" asChild>
-                            <a href={conConsulta(exportar.url())}>
-                                <Download className="size-4.5" />
-                                Excel
-                            </a>
-                        </Button>
-                    )}
-                    <Button variant="outline" asChild>
-                        <a href={conConsulta(carnets.url())}>
-                            <IdCard className="size-4.5" />
-                            Carnets
-                        </a>
-                    </Button>
-                    {puede('inscripcion_crear') && (
-                        <Button asChild>
-                            <Enlace href={crear.url()}>
-                                <Plus className="size-4.5" />
-                                Nueva inscripción
-                            </Enlace>
-                        </Button>
-                    )}
-                </div>
-            </div>
-
             <TablaDatos
+                barra={
+                    <>
+                        <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Código, DNI, apellidos o carrera" className="min-w-48 flex-1 sm:max-w-md" />
+                        <FiltroLista
+                            valor={procesoVisible}
+                            alCambiar={(proceso) =>
+                                cambiarFiltro(
+                                    {
+                                        proceso: proceso === '' ? TODOS : proceso,
+                                        procesoElegido: proceso === '' ? TODOS : null,
+                                        modalidad: '',
+                                        sede: '',
+                                        turno: '',
+                                        aula: '',
+                                    },
+                                    true,
+                                )
+                            }
+                            opciones={opciones.procesos}
+                            textoTodos="Todos los procesos"
+                            className="sm:w-44"
+                        />
+                        <FiltroEstado seleccionados={filtro.estado} alCambiar={(estado) => cambiarFiltro({ estado }, true)} valores={['PENDIENTE', 'ACTIVO', 'ANULADO']} />
+                        <Popover>
+                            <PopoverTrigger className={claseBotonFiltro(secundariosActivos > 0)}>
+                                <SlidersHorizontal className={cn('size-4', secundariosActivos > 0 ? 'text-index-500' : 'text-zinc-400')} />
+                                Más filtros
+                                <ContadorFiltro cantidad={secundariosActivos} />
+                            </PopoverTrigger>
+                            <PopoverContent align="start" className="grid w-72 gap-2.5">
+                                <FiltroLista
+                                    valor={filtro.modalidad}
+                                    alCambiar={(modalidad) => cambiarFiltro({ modalidad }, true)}
+                                    opciones={opciones.modalidades}
+                                    textoTodos="Todas las modalidades"
+                                    className="sm:w-full"
+                                />
+                                <FiltroLista valor={filtro.sede} alCambiar={(sede) => cambiarFiltro({ sede }, true)} opciones={opciones.sedes} textoTodos="Todas las sedes" className="sm:w-full" />
+                                <FiltroLista valor={filtro.turno} alCambiar={(turno) => cambiarFiltro({ turno, aula: '' }, true)} opciones={opciones.turnos} textoTodos="Todos los turnos" className="sm:w-full" />
+                                <FiltroLista valor={filtro.aula} alCambiar={(valor) => cambiarFiltro({ aula: valor }, true)} opciones={opciones.aulas} textoTodos="Todas las aulas" className="sm:w-full" />
+                                <FiltroLista valor={filtro.pago} alCambiar={(pago) => cambiarFiltro({ pago }, true)} opciones={opciones.pagos} textoTodos="Cualquier estado de pago" className="sm:w-full" />
+                                {secundariosActivos > 0 && (
+                                    <Button variant="ghost" size="sm" onClick={() => cambiarFiltro({ modalidad: '', sede: '', turno: '', aula: '', pago: '' }, true)}>
+                                        Limpiar filtros
+                                    </Button>
+                                )}
+                            </PopoverContent>
+                        </Popover>
+                        <div className="ms-auto flex flex-wrap gap-2">
+                            {puede('inscripcion_exportar_excel') && (
+                                <Button variant="outline" asChild>
+                                    <a href={conConsulta(exportar.url())}>
+                                        <Download className="size-4.5" />
+                                        Excel
+                                    </a>
+                                </Button>
+                            )}
+                            <Button variant="outline" asChild>
+                                <a href={conConsulta(carnets.url())}>
+                                    <IdCard className="size-4.5" />
+                                    Carnets
+                                </a>
+                            </Button>
+                            {puede('inscripcion_crear') && (
+                                <Button asChild>
+                                    <Enlace href={crear.url()}>
+                                        <Plus className="size-4.5" />
+                                        Nueva inscripción
+                                    </Enlace>
+                                </Button>
+                            )}
+                        </div>
+                    </>
+                }
+                paginado={inscripciones}
                 columnas={[
                     {
                         clave: 'codigo',
                         titulo: 'Código',
                         celda: (inscripcion) => (
                             <>
-                                <Enlace href={detalle.url(inscripcion.id)} className="block font-mono font-medium text-index-600 hover:underline dark:text-index-300">
+                                <Enlace href={detalle.url(inscripcion.id)} className="text-index-600 dark:text-index-300 block font-mono font-medium hover:underline">
                                     {inscripcion.codigo}
                                 </Enlace>
                                 <span className="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{inscripcion.fecha}</span>
@@ -393,7 +416,11 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                             </span>
                         ),
                     },
-                    { clave: 'pago', titulo: 'Pago', celda: (inscripcion) => <InsigniaEstado estado={inscripcion.pago} /> },
+                    {
+                        clave: 'pago',
+                        titulo: 'Pago',
+                        celda: (inscripcion) => <InsigniaEstado estado={inscripcion.pago} />,
+                    },
                     {
                         clave: 'acciones',
                         titulo: <span className="sr-only">Acciones</span>,
@@ -405,19 +432,53 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                             return (
                                 <MenuAcciones
                                     acciones={[
-                                        { etiqueta: 'Ver detalle', icono: Eye, alSeleccionar: () => router.visit(detalle.url(inscripcion.id)) },
+                                        {
+                                            etiqueta: 'Ver detalle',
+                                            icono: Eye,
+                                            alSeleccionar: () => router.visit(detalle.url(inscripcion.id)),
+                                        },
                                         {
                                             etiqueta: 'Continuar registro',
                                             icono: PenLine,
                                             alSeleccionar: () => (window.location.href = continuar.url(inscripcion.id)),
                                             visible: inscripcion.estado === 'PENDIENTE' && puede('inscripcion_crear'),
                                         },
-                                        { etiqueta: 'Aprobar revisión', icono: ShieldCheck, alSeleccionar: () => aprobarRevision(inscripcion), visible: inscripcion.enRevision && puede('inscripcion_estado') },
-                                        { etiqueta: 'Validar pago', icono: BadgeCheck, alSeleccionar: () => router.visit(validar.url({ query: { buscar: inscripcion.codigo } })), visible: conSaldo && vigente && puede('pago_crear') },
-                                        { etiqueta: 'Asignar aula', icono: Building, alSeleccionar: () => setAsignando(inscripcion), visible: vigente && puede('inscripcion_editar') },
-                                        { etiqueta: 'Ficha (PDF)', icono: FileText, alSeleccionar: () => window.open(ficha.url(inscripcion.id), '_blank') },
-                                        { etiqueta: 'Carnet (PDF)', icono: IdCard, alSeleccionar: () => window.open(carnet.url(inscripcion.id), '_blank'), visible: inscripcion.estado === 'ACTIVO' },
-                                        { etiqueta: 'Anular', icono: Ban, alSeleccionar: () => setAnulando(inscripcion), peligro: true, visible: (inscripcion.estado === 'ACTIVO' || inscripcion.enRevision) && puede('inscripcion_estado') },
+                                        {
+                                            etiqueta: 'Aprobar revisión',
+                                            icono: ShieldCheck,
+                                            alSeleccionar: () => aprobarRevision(inscripcion),
+                                            visible: inscripcion.enRevision && puede('inscripcion_estado'),
+                                        },
+                                        {
+                                            etiqueta: 'Validar pago',
+                                            icono: BadgeCheck,
+                                            alSeleccionar: () => router.visit(validar.url({ query: { buscar: inscripcion.codigo } })),
+                                            visible: conSaldo && vigente && puede('pago_crear'),
+                                        },
+                                        {
+                                            etiqueta: 'Asignar aula',
+                                            icono: Building,
+                                            alSeleccionar: () => setAsignando(inscripcion),
+                                            visible: vigente && puede('inscripcion_editar'),
+                                        },
+                                        {
+                                            etiqueta: 'Ficha (PDF)',
+                                            icono: FileText,
+                                            alSeleccionar: () => window.open(ficha.url(inscripcion.id), '_blank'),
+                                        },
+                                        {
+                                            etiqueta: 'Carnet (PDF)',
+                                            icono: IdCard,
+                                            alSeleccionar: () => window.open(carnet.url(inscripcion.id), '_blank'),
+                                            visible: inscripcion.estado === 'ACTIVO',
+                                        },
+                                        {
+                                            etiqueta: 'Anular',
+                                            icono: Ban,
+                                            alSeleccionar: () => setAnulando(inscripcion),
+                                            peligro: true,
+                                            visible: (inscripcion.estado === 'ACTIVO' || inscripcion.enRevision) && puede('inscripcion_estado'),
+                                        },
                                     ]}
                                 />
                             );
@@ -427,18 +488,20 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                 filas={inscripciones.data}
                 claveFila={(inscripcion) => inscripcion.id}
                 vacio={<EstadoVacio icono={ClipboardList} titulo="No se encontraron inscripciones con los filtros actuales." />}
+                pie={
+                    <FiltroLista
+                        valor={filtro.porPagina === 10 ? '' : String(filtro.porPagina)}
+                        alCambiar={(valor) => cambiarFiltro({ porPagina: Number(valor) || 10 }, true)}
+                        opciones={[25, 50, 100].map((cantidad) => ({
+                            valor: String(cantidad),
+                            nombre: `${cantidad} por página`,
+                        }))}
+                        textoTodos="10 por página"
+                        resaltar={false}
+                        className="h-8! sm:w-36"
+                    />
+                }
             />
-
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <FiltroLista
-                    valor={filtro.porPagina === 10 ? '' : String(filtro.porPagina)}
-                    alCambiar={(valor) => cambiarFiltro({ porPagina: Number(valor) || 10 }, true)}
-                    opciones={[25, 50, 100].map((cantidad) => ({ valor: String(cantidad), nombre: `${cantidad} por página` }))}
-                    textoTodos="10 por página"
-                    className="sm:w-40"
-                />
-                <Paginacion paginado={inscripciones} />
-            </div>
 
             <DialogoAnular inscripcion={anulando} alCerrar={() => setAnulando(null)} />
             <DialogoAula inscripcion={asignando} alCerrar={cerrarAula} />
@@ -450,5 +513,8 @@ Inscripciones.layout = {
     titulo: 'Inscripciones',
     subtitulo: 'Postulantes inscritos por proceso, con su estado, pago, aula y documentos.',
     icono: 'inscripciones',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Inscripciones', href: index.url() }],
+    migas: [
+        { titulo: 'Inicio', href: inicio.url() },
+        { titulo: 'Inscripciones', href: index.url() },
+    ],
 };

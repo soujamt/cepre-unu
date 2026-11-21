@@ -9,7 +9,7 @@ import { MenuAcciones } from '@/components/menu-acciones';
 import { Aviso } from '@/components/aviso';
 import { EstadoVacio } from '@/components/panel';
 import { Resumen, ResumenItem } from '@/components/resumen';
-import { Buscador, Paginacion, TablaDatos, useFiltros } from '@/components/tabla-datos';
+import { Buscador, TablaDatos, useFiltros } from '@/components/tabla-datos';
 import { Button } from '@/components/ui/button';
 import { useCatalogo } from '@/hooks/use-catalogo';
 import { usePermiso } from '@/hooks/use-permiso';
@@ -61,7 +61,15 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
     const [filtro, cambiarFiltro] = useFiltros(filtros);
     const [soloObservacion, setSoloObservacion] = useState(false);
     const { formulario, control } = useCatalogo({
-        vacio: { fecha: hoy, dni: '', referencia: '', importe: '', numero_operacion: '', ubicacion: ubicaciones[0] ?? '', observacion: '' } as FormularioPago,
+        vacio: {
+            fecha: hoy,
+            dni: '',
+            referencia: '',
+            importe: '',
+            numero_operacion: '',
+            ubicacion: ubicaciones[0] ?? '',
+            observacion: '',
+        } as FormularioPago,
         aFormulario: (pago: Pago) => pago.formulario,
         idDe: (pago) => pago.id,
         nombreDe: (pago) => `${pago.operacion ?? ''} del DNI ${pago.dni ?? ''}`,
@@ -78,34 +86,43 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                 <ResumenItem etiqueta="Registrados" valor={resumen.registrados} icono={CircleCheck} tono="exito" detalle="Usados en una inscripción" />
             </Resumen>
 
-            <div className="flex flex-wrap items-center gap-3">
-                <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Buscar por DNI, operación o referencia" />
-                <FiltroLista valor={filtro.estado} alCambiar={(estado) => cambiarFiltro({ estado }, true)} opciones={estados} textoTodos="Todos los estados" className="sm:w-48" />
-                <div className="flex flex-wrap gap-2 sm:ms-auto">
-                    {puede('pago_exportar_excel') && (
-                        <Button variant="outline" asChild>
-                            <a href={exportar.url({ query: { buscar: filtro.buscar || undefined, estado: filtro.estado || undefined } })}>
-                                <Download className="size-4.5" />
-                                Excel
-                            </a>
-                        </Button>
-                    )}
-                    <Button variant="outline" asChild>
-                        <Enlace href={importaciones.url()}>
-                            <FileArrowUp className="size-4.5" />
-                            Importaciones TXT
-                        </Enlace>
-                    </Button>
-                    {puede('pago_crear') && (
-                        <Button onClick={control.abrirNuevo}>
-                            <Plus className="size-4.5" />
-                            Registrar pago
-                        </Button>
-                    )}
-                </div>
-            </div>
-
             <TablaDatos
+                barra={
+                    <>
+                        <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Buscar por DNI, operación o referencia" />
+                        <FiltroLista valor={filtro.estado} alCambiar={(estado) => cambiarFiltro({ estado }, true)} opciones={estados} textoTodos="Todos los estados" className="sm:w-48" />
+                        <div className="flex flex-wrap gap-2 sm:ms-auto">
+                            {puede('pago_exportar_excel') && (
+                                <Button variant="outline" asChild>
+                                    <a
+                                        href={exportar.url({
+                                            query: {
+                                                buscar: filtro.buscar || undefined,
+                                                estado: filtro.estado || undefined,
+                                            },
+                                        })}
+                                    >
+                                        <Download className="size-4.5" />
+                                        Excel
+                                    </a>
+                                </Button>
+                            )}
+                            <Button variant="outline" asChild>
+                                <Enlace href={importaciones.url()}>
+                                    <FileArrowUp className="size-4.5" />
+                                    Importaciones TXT
+                                </Enlace>
+                            </Button>
+                            {puede('pago_crear') && (
+                                <Button onClick={control.abrirNuevo}>
+                                    <Plus className="size-4.5" />
+                                    Registrar pago
+                                </Button>
+                            )}
+                        </div>
+                    </>
+                }
+                paginado={pagos}
                 columnas={[
                     { clave: 'fecha', titulo: 'Fecha', className: 'tabular-nums', celda: (pago) => pago.fecha ?? '—' },
                     {
@@ -120,8 +137,18 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                             </>
                         ),
                     },
-                    { clave: 'importe', titulo: 'Importe', className: 'text-end tabular-nums font-medium', celda: (pago) => soles(pago.importe) },
-                    { clave: 'operacion', titulo: 'N° operación', className: 'font-mono', celda: (pago) => pago.operacion ?? '—' },
+                    {
+                        clave: 'importe',
+                        titulo: 'Importe',
+                        className: 'text-end tabular-nums font-medium',
+                        celda: (pago) => soles(pago.importe),
+                    },
+                    {
+                        clave: 'operacion',
+                        titulo: 'N° operación',
+                        className: 'font-mono',
+                        celda: (pago) => pago.operacion ?? '—',
+                    },
                     {
                         clave: 'ubicacion',
                         titulo: 'Ubicación',
@@ -140,7 +167,7 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                         celda: (pago) =>
                             pago.inscripcion ? (
                                 <>
-                                    <Enlace href={detalle.url(pago.inscripcion.id)} className="inline-flex items-center gap-1 font-medium text-index-600 tabular-nums hover:underline dark:text-index-300">
+                                    <Enlace href={detalle.url(pago.inscripcion.id)} className="text-index-600 dark:text-index-300 inline-flex items-center gap-1 font-medium tabular-nums hover:underline">
                                         <Enlazado className="size-3.5" />
                                         {pago.inscripcion.codigo}
                                     </Enlace>
@@ -150,7 +177,12 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                                 <span className="text-zinc-400">—</span>
                             ),
                     },
-                    { clave: 'observacion', titulo: 'Observación', className: 'max-w-48 truncate', celda: (pago) => pago.observacion ?? <span className="text-zinc-400">—</span> },
+                    {
+                        clave: 'observacion',
+                        titulo: 'Observación',
+                        className: 'max-w-48 truncate',
+                        celda: (pago) => pago.observacion ?? <span className="text-zinc-400">—</span>,
+                    },
                     {
                         clave: 'acciones',
                         titulo: <span className="sr-only">Acciones</span>,
@@ -158,8 +190,19 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                         celda: (pago) => (
                             <MenuAcciones
                                 acciones={[
-                                    { etiqueta: pago.editable ? 'Editar' : 'Editar observación', icono: PenLine, alSeleccionar: () => control.abrirEdicion(pago), visible: puede('pago_editar') },
-                                    { etiqueta: 'Eliminar', icono: Bin, alSeleccionar: () => void control.eliminar(pago), peligro: true, visible: puede('pago_eliminar') && pago.editable },
+                                    {
+                                        etiqueta: pago.editable ? 'Editar' : 'Editar observación',
+                                        icono: PenLine,
+                                        alSeleccionar: () => control.abrirEdicion(pago),
+                                        visible: puede('pago_editar'),
+                                    },
+                                    {
+                                        etiqueta: 'Eliminar',
+                                        icono: Bin,
+                                        alSeleccionar: () => void control.eliminar(pago),
+                                        peligro: true,
+                                        visible: puede('pago_eliminar') && pago.editable,
+                                    },
                                 ]}
                             />
                         ),
@@ -169,8 +212,6 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                 claveFila={(pago) => pago.id}
                 vacio={<EstadoVacio icono={Wallet} titulo="No se encontraron pagos." />}
             />
-            <Paginacion paginado={pagos} />
-
             <HojaFormulario abierta={control.hoja.abierta} alCerrar={control.hoja.cerrar} titulo={control.hoja.titulo} alEnviar={control.guardar} procesando={control.procesando}>
                 {soloObservacion && (
                     <Aviso tono="info" titulo="Solo se puede editar la observación">
@@ -178,7 +219,16 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                     </Aviso>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <CampoTexto etiqueta="Fecha" type="date" max={hoy} value={formulario.data.fecha} onChange={(evento) => formulario.setData('fecha', evento.target.value)} error={formulario.errors.fecha} disabled={soloObservacion} requerido />
+                    <CampoTexto
+                        etiqueta="Fecha"
+                        type="date"
+                        max={hoy}
+                        value={formulario.data.fecha}
+                        onChange={(evento) => formulario.setData('fecha', evento.target.value)}
+                        error={formulario.errors.fecha}
+                        disabled={soloObservacion}
+                        requerido
+                    />
                     <CampoTexto
                         etiqueta="DNI"
                         inputMode="numeric"
@@ -222,7 +272,14 @@ export default function Pagos({ pagos, filtros, resumen, estados, ubicaciones, h
                         requerido
                     />
                 </div>
-                <CampoSelect etiqueta="Ubicación" value={formulario.data.ubicacion} onChange={(evento) => formulario.setData('ubicacion', evento.target.value)} error={formulario.errors.ubicacion} disabled={soloObservacion} requerido>
+                <CampoSelect
+                    etiqueta="Ubicación"
+                    value={formulario.data.ubicacion}
+                    onChange={(evento) => formulario.setData('ubicacion', evento.target.value)}
+                    error={formulario.errors.ubicacion}
+                    disabled={soloObservacion}
+                    requerido
+                >
                     {ubicaciones.map((ubicacion) => (
                         <option key={ubicacion} value={ubicacion}>
                             {ubicacion}

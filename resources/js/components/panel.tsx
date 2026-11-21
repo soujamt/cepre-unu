@@ -39,15 +39,19 @@ export function Panel({
  */
 export function EstadoVacio({ icono: IconoVacio, titulo, descripcion, accion }: { icono?: Icono; titulo: string; descripcion?: ReactNode; accion?: ReactNode }) {
     return (
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-4 px-6 py-14 text-center">
             {IconoVacio && (
-                <span className="flex size-12 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white text-zinc-400 shadow-card dark:border-white/[0.07] dark:bg-white/[0.03] dark:text-zinc-500">
-                    <IconoVacio className="size-6" />
+                <span className="relative flex size-20 items-center justify-center">
+                    <span aria-hidden className="absolute inset-0 rounded-full border border-dashed border-zinc-200 dark:border-white/10" />
+                    <span aria-hidden className="absolute inset-3 rounded-full bg-zinc-50 dark:bg-white/[0.03]" />
+                    <span className="relative flex size-11 items-center justify-center rounded-2xl border border-zinc-200/80 bg-white text-zinc-400 shadow-[0_4px_12px_-4px_rgba(16,24,40,0.12)] dark:border-white/[0.08] dark:bg-zinc-800 dark:text-zinc-400 dark:shadow-none">
+                        <IconoVacio className="size-5.5" />
+                    </span>
                 </span>
             )}
             <div className="space-y-1">
-                <p className="text-sm font-medium text-zinc-900 dark:text-white">{titulo}</p>
-                {descripcion && <p className="max-w-sm text-sm text-pretty text-zinc-500 dark:text-zinc-400">{descripcion}</p>}
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">{titulo}</p>
+                {descripcion && <p className="max-w-sm text-[13px] text-pretty text-zinc-500 dark:text-zinc-400">{descripcion}</p>}
             </div>
             {accion}
         </div>

@@ -10,12 +10,20 @@ import PublicoLayout from '@/layouts/publico-layout';
 
 const nombreApp = import.meta.env.VITE_APP_NAME || 'CEPRE UNU';
 
+/** Título de cada tipo de aviso; el mensaje del servidor va debajo, como descripción. */
+const titulosAviso = {
+    success: 'Listo',
+    error: 'No se pudo completar',
+    warning: 'Atención',
+    info: 'Información',
+} as const;
+
 // Avisos enviados por el servidor con Inertia::flash('toast', [...]); también los de la primera carga.
 router.on('flash', (evento) => {
     const aviso = evento.detail.flash.toast;
 
     if (aviso) {
-        toast[aviso.type](aviso.message);
+        toast[aviso.type](titulosAviso[aviso.type], { description: aviso.message });
     }
 });
 

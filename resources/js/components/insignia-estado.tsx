@@ -1,6 +1,5 @@
-import { Lock, SquareCheck, SquareX } from '@keyline-icons/react/fill';
 import { Badge } from '@/components/ui/badge';
-import type { Icono } from '@/lib/iconos';
+import { cn } from '@/lib/utils';
 
 type Variante = 'exito' | 'destructive' | 'aviso' | 'info' | 'secondary' | 'default';
 
@@ -30,21 +29,17 @@ const variantes: Record<string, Variante> = {
 };
 
 /**
- * Íconos de los estados de los catálogos (habilitado / deshabilitado).
+ * Insignia de estado: pastilla redondeada con un punto del color del estado.
  */
-const iconos: Record<string, Icono> = {
-    HABILITADO: SquareCheck,
-    DESHABILITADO: SquareX,
-    CERRADO: Lock,
-};
-
 export function InsigniaEstado({ estado, className }: { estado: string; className?: string }) {
-    const clave = estado.toUpperCase();
-    const IconoEstado = iconos[clave];
+    const variante = variantes[estado.toUpperCase()] ?? 'secondary';
 
     return (
-        <Badge variant={variantes[clave] ?? 'secondary'} className={className}>
-            {IconoEstado && <IconoEstado />}
+        <Badge variant={variante} className={cn('gap-1.5 rounded-full ps-2 pe-2.5 text-[11.5px] font-semibold tracking-wide', className)}>
+            <span className="relative flex size-1.5">
+                {variante === 'aviso' && <span className="absolute inset-0 animate-ping rounded-full bg-current opacity-50" />}
+                <span className="relative size-1.5 rounded-full bg-current" />
+            </span>
             {estado}
         </Badge>
     );

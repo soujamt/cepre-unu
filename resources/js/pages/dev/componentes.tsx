@@ -112,16 +112,16 @@ export default function Componentes() {
             <div className="grid gap-6 lg:grid-cols-2">
                 <Panel titulo="Avisos y confirmación">
                     <div className="flex flex-wrap gap-3">
-                        <Button variant="outline" onClick={() => toast.success('Inscripción registrada correctamente.')}>
+                        <Button variant="outline" onClick={() => toast.success('Listo', { description: 'Inscripción registrada correctamente.' })}>
                             Éxito
                         </Button>
-                        <Button variant="outline" onClick={() => toast.error('No se pudo guardar la postulación.')}>
+                        <Button variant="outline" onClick={() => toast.error('No se pudo completar', { description: 'No se pudo guardar la postulación.' })}>
                             Error
                         </Button>
-                        <Button variant="outline" onClick={() => toast.warning('El pago no alcanza el mínimo.')}>
+                        <Button variant="outline" onClick={() => toast.warning('Atención', { description: 'El pago no alcanza el mínimo.' })}>
                             Advertencia
                         </Button>
-                        <Button variant="outline" onClick={() => toast.info('Los pagos quedan registrados al terminar.')}>
+                        <Button variant="outline" onClick={() => toast.info('Información', { description: 'Los pagos quedan registrados al terminar.' })}>
                             Información
                         </Button>
                         <Button

@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { claseListaFiltro } from '@/components/filtro-lista';
 import { InsigniaEstado } from '@/components/insignia-estado';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
@@ -30,7 +31,7 @@ export function SelectorProceso({
 
     return (
         <Select value={valor === null || valor === undefined ? undefined : String(valor)} onValueChange={cambiar}>
-            <SelectTrigger aria-label="Proceso" className={cn('h-10! w-full bg-control sm:w-64', className)}>
+            <SelectTrigger aria-label="Proceso" className={cn(claseListaFiltro(false), 'sm:w-64', className)}>
                 <span className="text-zinc-500 dark:text-zinc-400">Proceso:</span>
                 <SelectValue placeholder="Seleccione un proceso" />
             </SelectTrigger>
