@@ -115,6 +115,11 @@ abstract class AsistenteInscripcion
     }
 
     /**
+     * Portal del postulante (true) o asistente del personal (false).
+     */
+    abstract public function esModoPublico(): bool;
+
+    /**
      * Raíces de los datos que el navegador puede cambiar.
      *
      * @return list<string>
@@ -149,6 +154,10 @@ abstract class AsistenteInscripcion
     public function establecer(string $ruta, mixed $valor): void
     {
         abort_unless($this->esEditable($ruta), 403, 'Este dato no se puede cambiar.');
+
+        // Laravel convierte el texto vacío en null (ConvertEmptyStringsToNull); en el
+        // asistente un campo vacío es siempre '', como lo esperan los traits.
+        $valor ??= '';
 
         $raiz = Str::before($ruta, '.');
 

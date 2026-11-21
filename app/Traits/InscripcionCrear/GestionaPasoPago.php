@@ -156,7 +156,9 @@ trait GestionaPasoPago
 
         if ($pagoBuscado === null) {
             $this->limpiarBusquedaPago();
-            $this->addError('pagoForm.numero_operacion', 'No hay un pago LIBRE con ese DNI y número de operación.');
+            $this->addError('busquedaPago', $this->esModoPublico()
+                ? 'Revise el DNI y el número de operación de su voucher. Si pagó hoy, el pago puede tardar en aparecer; intente más tarde o acérquese al CEPRE-UNU.'
+                : 'Revise el DNI y el número de operación del voucher. El pago debe estar cargado desde el TXT del banco o registrado en Pagos, y no debe estar usado en otra inscripción.');
 
             return;
         }

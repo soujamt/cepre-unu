@@ -1427,7 +1427,7 @@ test('a payment that does not exist or is already used cannot start an inscripci
         ->set('pagoForm.numero_documento', '46027899')
         ->set('pagoForm.numero_operacion', '7777')
         ->call('buscarPagosPasoPago')
-        ->assertHasErrors('pagoForm.numero_operacion')
+        ->assertHasErrors('busquedaPago')
         ->assertSet('busquedaPagoRealizada', false)
         ->call('irPaso', 2)
         ->assertSet('pasoActual', 1);
@@ -1537,4 +1537,18 @@ test('the inscripcion is not registered until the data is confirmed', function (
     expect(Inscripcion::query()->count())->toBe(0);
 
     Carbon\Carbon::setTestNow();
+});
+
+test('clearing a select in the wizard keeps an empty value instead of failing', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    $this->actingAs($usuario);
+
+    $asistente = AsistentePrueba::personal(test())
+        ->set('personaForm.tipo_lengua_materna', 'NATIVA')
+        ->set('personaForm.tipo_lengua_materna', '');
+
+    $asistente->respuesta()->assertRedirect();
+    $asistente->assertSet('personaForm.tipo_lengua_materna', '');
 });

@@ -102,6 +102,12 @@ export function PasoPago({ asistente, control, alSalir }: { asistente: DatosAsis
                 </div>
             </form>
 
+            {errores.busquedaPago && (
+                <Aviso tono="aviso" titulo="No encontramos un pago libre con esos datos">
+                    {errores.busquedaPago}
+                </Aviso>
+            )}
+
             {asistente.busquedaPagoRealizada && (
                 <div className="space-y-5">
                     <fieldset className="space-y-2">
