@@ -9,7 +9,8 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -95,7 +96,7 @@ test('authorized users can access pagos page', function () {
     $this->actingAs($usuario)
         ->get(route('pagos.importaciones'))
         ->assertOk()
-        ->assertSee('Pagos');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('pagos/importaciones')->has('importaciones.data')->where('previsualizacion', null));
 });
 
 test('authenticated users without permiso cannot access pagos page', function () {
@@ -112,17 +113,22 @@ test('authorized users can import a valid bank txt file', function () {
 
     $archivo = UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido());
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.previsualizar'), ['archivo' => $archivo])
+        ->assertSessionHasNoErrors();
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', $archivo)
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertSet('previsualizacionImportacion.valido', true)
-        ->assertSee('El archivo cuadra con los totales reportados por el banco')
-        ->call('confirmarImportacion')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast');
+    $this->actingAs($usuario)
+        ->get(route('pagos.importaciones'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('previsualizacion.valido', true)
+            ->where('previsualizacion.nombre_archivo', 'REC10768.TXT')
+            ->has('previsualizacion.muestra', 2)
+            ->missing('previsualizacion.detalles'));
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.confirmar'))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Archivo TXT importado correctamente.'])
+        ->assertSessionMissing('importacion_banco.previsualizacion');
 
     $importacion = ImportacionBanco::query()->first();
 
@@ -160,9 +166,10 @@ test('authorized users can import a valid bank txt file', function () {
         'estado_ibd' => 'PENDIENTE',
     ]);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('verDetalle', $importacion?->id_iba)
-        ->assertSee('07450332');
+    $this->actingAs($usuario)
+        ->get(route('pagos.importaciones', ['importacion' => $importacion?->id_iba]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('detalle.pagos', fn ($pagos): bool => collect($pagos)->contains('documento', '07450332')));
 });
 
 test('the same txt file cannot be imported twice', function () {
@@ -171,18 +178,13 @@ test('the same txt file cannot be imported twice', function () {
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido()))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->call('confirmarImportacion')
-        ->assertHasNoErrors();
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido())]);
+    $this->post(route('pagos.importaciones.confirmar'));
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768-COPIA.TXT', crearTxtBancoValido()))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Este archivo TXT ya fue importado anteriormente.', type: 'warning');
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC10768-COPIA.TXT', crearTxtBancoValido())])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'Este archivo TXT ya fue importado anteriormente.'])
+        ->assertSessionMissing('importacion_banco.previsualizacion');
 
     expect(ImportacionBanco::query()->count())->toBe(1);
     expect(ImportacionBanco::query()->first()?->detalles()->count())->toBe(2);
@@ -194,11 +196,9 @@ test('invalid txt files are rejected without creating imports', function () {
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC-INVALIDO.TXT', 'contenido invalido'))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast');
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC-INVALIDO.TXT', 'contenido invalido')])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.type', 'error');
 
     expect(ImportacionBanco::query()->count())->toBe(0);
 });
@@ -217,15 +217,18 @@ test('txt imports with inconsistent totals are rejected before creating imports'
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC-OBSERVADO.TXT', $contenidoObservado))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertSet('previsualizacionImportacion.valido', false)
-        ->assertSee('El archivo tiene observaciones y no se importara')
-        ->assertSee('El monto total no cuadra')
-        ->call('confirmarImportacion')
-        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC-OBSERVADO.TXT', $contenidoObservado)])
+        ->assertSessionHas('importacion_banco.previsualizacion.valido', false);
+
+    $this->get(route('pagos.importaciones'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('previsualizacion', function ($previsualizacion): bool {
+            $json = json_encode($previsualizacion, JSON_UNESCAPED_UNICODE);
+
+            return str_contains($json, 'El monto total no cuadra');
+        }));
+
+    $this->post(route('pagos.importaciones.confirmar'))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No se puede importar un TXT con observaciones.']);
 
     expect(ImportacionBanco::query()->count())->toBe(0);
 });
@@ -236,22 +239,21 @@ test('txt imports with details already imported are rejected before creating dup
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido()))
-        ->call('importar')
-        ->call('confirmarImportacion')
-        ->assertHasNoErrors();
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC10768.TXT', crearTxtBancoValido())]);
+    $this->post(route('pagos.importaciones.confirmar'))->assertSessionHasNoErrors();
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC10769.TXT', crearTxtBancoConDetalleExistente()))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertSet('previsualizacionImportacion.valido', false)
-        ->assertSee('Pagos duplicados')
-        ->assertSee('Ya importado')
-        ->assertSee('41670')
-        ->call('confirmarImportacion')
-        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC10769.TXT', crearTxtBancoConDetalleExistente())])
+        ->assertSessionHas('importacion_banco.previsualizacion.valido', false);
+
+    $this->get(route('pagos.importaciones'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('previsualizacion', function ($previsualizacion): bool {
+            $json = json_encode($previsualizacion, JSON_UNESCAPED_UNICODE);
+
+            return str_contains($json, 'Ya importado') && str_contains($json, '41670');
+        }));
+
+    $this->post(route('pagos.importaciones.confirmar'))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No se puede importar un TXT con observaciones.']);
 
     expect(ImportacionBanco::query()->count())->toBe(1);
 });
@@ -262,16 +264,18 @@ test('txt imports with duplicate details in the same file are rejected before cr
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->set('archivo', UploadedFile::fake()->createWithContent('REC-DUPLICADO.TXT', crearTxtBancoConDetalleDuplicadoInterno()))
-        ->call('importar')
-        ->assertHasNoErrors()
-        ->assertSet('previsualizacionImportacion.valido', false)
-        ->assertSee('Pagos duplicados')
-        ->assertSee('Duplicado en el TXT')
-        ->assertSee('41670')
-        ->call('confirmarImportacion')
-        ->assertDispatched('toast', message: 'No se puede importar un TXT con observaciones.', type: 'warning');
+    $this->post(route('pagos.importaciones.previsualizar'), ['archivo' => UploadedFile::fake()->createWithContent('REC-DUPLICADO.TXT', crearTxtBancoConDetalleDuplicadoInterno())])
+        ->assertSessionHas('importacion_banco.previsualizacion.valido', false);
+
+    $this->get(route('pagos.importaciones'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('previsualizacion', function ($previsualizacion): bool {
+            $json = json_encode($previsualizacion, JSON_UNESCAPED_UNICODE);
+
+            return str_contains($json, 'Duplicado en el TXT') && str_contains($json, '41670');
+        }));
+
+    $this->post(route('pagos.importaciones.confirmar'))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No se puede importar un TXT con observaciones.']);
 
     expect(ImportacionBanco::query()->count())->toBe(0);
 });

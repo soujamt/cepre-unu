@@ -12,6 +12,7 @@ use App\Http\Controllers\ConfiguracionAcademica\ReglaPagoController;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\Inscripciones\FotoController;
 use App\Http\Controllers\Mantenedores\AulaController;
 use App\Http\Controllers\Mantenedores\CarreraController;
 use App\Http\Controllers\Mantenedores\ColegioController;
@@ -19,6 +20,9 @@ use App\Http\Controllers\Mantenedores\ConceptoPagoController;
 use App\Http\Controllers\Mantenedores\ModalidadController;
 use App\Http\Controllers\Mantenedores\SedeController;
 use App\Http\Controllers\Mantenedores\TurnoController;
+use App\Http\Controllers\Pagos\ImportacionPagoController;
+use App\Http\Controllers\Pagos\PagoController;
+use App\Http\Controllers\Pagos\ValidarPagoController;
 use App\Http\Controllers\Publico\PortalController;
 use App\Http\Controllers\Seguridad\PermisoController;
 use App\Http\Controllers\Seguridad\RolController;
@@ -179,25 +183,73 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.carnet');
 
-    Route::livewire('/inscripciones/fotos', 'pages::inscripciones.fotos')
+    Route::get('/inscripciones/fotos', [FotoController::class, 'index'])
         ->middleware('permiso:foto_indice')
         ->name('fotos.index');
+
+    Route::get('/inscripciones/fotos/exportar', [FotoController::class, 'exportar'])
+        ->middleware('permiso:foto_exportar_excel')
+        ->name('fotos.exportar');
+
+    Route::post('/inscripciones/fotos', [FotoController::class, 'store'])
+        ->middleware('permiso:foto_crear')
+        ->name('fotos.store');
+
+    Route::delete('/inscripciones/fotos/{foto}', [FotoController::class, 'destroy'])
+        ->middleware('permiso:foto_eliminar')
+        ->name('fotos.destroy');
 
     Route::get('/fotos/{documento}', FotoPostulanteController::class)
         ->where('documento', '\d{8,12}')
         ->name('fotos.ver');
 
-    Route::livewire('/inscripciones/pagos', 'pages::inscripciones.pagos-lista')
+    Route::get('/inscripciones/pagos', [PagoController::class, 'index'])
         ->middleware('permiso:pago_indice')
         ->name('pagos.index');
 
-    Route::livewire('/inscripciones/pagos/importaciones', 'pages::inscripciones.pagos')
+    Route::get('/inscripciones/pagos/exportar', [PagoController::class, 'exportar'])
+        ->middleware('permiso:pago_exportar_excel')
+        ->name('pagos.exportar');
+
+    Route::post('/inscripciones/pagos', [PagoController::class, 'store'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.store');
+
+    Route::put('/inscripciones/pagos/{pago}', [PagoController::class, 'update'])
+        ->middleware('permiso:pago_editar')
+        ->name('pagos.update');
+
+    Route::delete('/inscripciones/pagos/{pago}', [PagoController::class, 'destroy'])
+        ->middleware('permiso:pago_eliminar')
+        ->name('pagos.destroy');
+
+    Route::get('/inscripciones/pagos/importaciones', [ImportacionPagoController::class, 'index'])
         ->middleware('permiso:pago_indice')
         ->name('pagos.importaciones');
 
-    Route::livewire('/inscripciones/pagos/validar', 'pages::inscripciones.pagos-validar')
+    Route::post('/inscripciones/pagos/importaciones/previsualizar', [ImportacionPagoController::class, 'previsualizar'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.previsualizar');
+
+    Route::post('/inscripciones/pagos/importaciones/confirmar', [ImportacionPagoController::class, 'confirmar'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.confirmar');
+
+    Route::delete('/inscripciones/pagos/importaciones/previsualizacion', [ImportacionPagoController::class, 'cancelar'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.cancelar');
+
+    Route::post('/inscripciones/pagos/importaciones/{importacion}/validar-pendientes', [ImportacionPagoController::class, 'validarPendientes'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.validar-pendientes');
+
+    Route::get('/inscripciones/pagos/validar', [ValidarPagoController::class, 'index'])
         ->middleware('permiso:pago_crear')
         ->name('pagos.validar');
+
+    Route::post('/inscripciones/pagos/validar', [ValidarPagoController::class, 'confirmar'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.validar.confirmar');
 
     // Reportes
     Route::livewire('/reportes/inscripciones', 'pages::reportes.inscripciones')

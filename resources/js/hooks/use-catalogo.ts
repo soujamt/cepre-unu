@@ -13,7 +13,7 @@ interface RutasCatalogo {
     /** Sin ruta de registro, el formulario solo edita (por ejemplo, la capacidad de un aula asignada). */
     store?: { url: () => string };
     update: { url: (id: LlaveCatalogo) => string };
-    estado: { url: (id: LlaveCatalogo) => string };
+    estado?: { url: (id: LlaveCatalogo) => string };
     destroy: { url: (id: LlaveCatalogo) => string };
 }
 
@@ -93,7 +93,7 @@ export function useCatalogo<TFila, TFormulario extends FormDataType<TFormulario>
             textoConfirmar: 'Aceptar',
         });
 
-        if (confirmado) {
+        if (confirmado && rutas.estado) {
             router.patch(rutas.estado.url(idDe(fila)), {}, { preserveScroll: true });
         }
     };

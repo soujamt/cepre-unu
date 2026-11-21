@@ -10,7 +10,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -46,7 +47,10 @@ test('authorized users can see the photos page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosFoto($usuario, ['foto_indice']);
 
-    $this->actingAs($usuario)->get(route('fotos.index'))->assertOk()->assertSee('Total fotos');
+    $this->actingAs($usuario)
+        ->get(route('fotos.index'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('inscripciones/fotos')->where('total', 0)->has('procesos'));
 });
 
 test('users without permiso cannot see the photos page', function () {
@@ -57,20 +61,16 @@ test('photos are uploaded in batch using the dni from the file name and resized 
     $usuario = Usuario::factory()->create();
     otorgarPermisosFoto($usuario, ['foto_indice', 'foto_crear']);
 
-    $this->actingAs($usuario);
+    $archivos = [UploadedFile::fake()->image('47940211.jpg', 600, 900), UploadedFile::fake()->image('foto sin dni.png', 400, 400)];
 
-    Livewire::test('pages::inscripciones.fotos')
-        ->set('archivos', [
-            UploadedFile::fake()->image('47940211.jpg', 600, 900),
-            UploadedFile::fake()->image('foto sin dni.png', 400, 400),
-        ])
-        ->assertSet('documentos', ['47940211', ''])
-        ->call('subirFotos')
-        ->assertHasErrors('documentos.1')
-        ->set('documentos.1', '61417851')
-        ->call('subirFotos')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: '2 foto(s) guardada(s) correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('fotos.store'), ['archivos' => $archivos, 'documentos' => ['47940211', '']])
+        ->assertSessionHasErrors(['documentos.1' => 'Escriba el DNI de la foto.']);
+
+    $this->actingAs($usuario)
+        ->post(route('fotos.store'), ['archivos' => $archivos, 'documentos' => ['47940211', '61417851']])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => '2 foto(s) guardada(s) correctamente.']);
 
     $foto = FotoPostulante::deDocumento('47940211');
     $imagen = imagecreatefromstring(Storage::disk('local')->get($foto->archivo_fot));
@@ -86,11 +86,8 @@ test('uploading a photo for the same dni replaces it', function () {
     $this->actingAs($usuario);
 
     foreach ([1, 2] as $vez) {
-        Livewire::test('pages::inscripciones.fotos')
-            ->set('archivos', [UploadedFile::fake()->image("47940211-{$vez}.jpg", 300, 400)])
-            ->set('documentos.0', '47940211')
-            ->call('subirFotos')
-            ->assertHasNoErrors();
+        $this->post(route('fotos.store'), ['archivos' => [UploadedFile::fake()->image("47940211-{$vez}.jpg", 300, 400)], 'documentos' => ['47940211']])
+            ->assertSessionHasNoErrors();
     }
 
     expect(FotoPostulante::query()->count())->toBe(1);
@@ -100,12 +97,9 @@ test('non image files are rejected', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosFoto($usuario, ['foto_indice', 'foto_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.fotos')
-        ->set('archivos', [UploadedFile::fake()->create('47940211.pdf', 10, 'application/pdf')])
-        ->call('subirFotos')
-        ->assertHasErrors('archivos.0');
+    $this->actingAs($usuario)
+        ->post(route('fotos.store'), ['archivos' => [UploadedFile::fake()->create('47940211.pdf', 10, 'application/pdf')], 'documentos' => ['47940211']])
+        ->assertSessionHasErrors('archivos.0');
 
     expect(FotoPostulante::query()->count())->toBe(0);
 });
@@ -114,16 +108,14 @@ test('a photo can be deleted and exported', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosFoto($usuario, ['foto_indice', 'foto_crear', 'foto_eliminar', 'foto_exportar_excel']);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('fotos.store'), ['archivos' => [UploadedFile::fake()->image('47940211.jpg'), UploadedFile::fake()->image('61417851.jpg')], 'documentos' => ['47940211', '61417851']]);
 
-    $componente = Livewire::test('pages::inscripciones.fotos')
-        ->set('archivos', [UploadedFile::fake()->image('47940211.jpg'), UploadedFile::fake()->image('61417851.jpg')])
-        ->call('subirFotos');
+    $this->actingAs($usuario)->get(route('fotos.exportar'))->assertDownload();
 
-    $componente->call('exportarFotos')->assertFileDownloaded();
-
-    $componente->call('eliminar', FotoPostulante::deDocumento('47940211')->id_fot)
-        ->assertDispatched('toast', message: 'Foto eliminada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->delete(route('fotos.destroy', FotoPostulante::deDocumento('47940211')))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Foto eliminada correctamente.']);
 
     expect(FotoPostulante::query()->count())->toBe(1)
         ->and(Storage::disk('local')->exists('fotos/47940211.jpg'))->toBeFalse();
