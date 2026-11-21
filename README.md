@@ -47,7 +47,7 @@ resources/js/
 
 ```bash
 composer install
-npm install
+npm ci
 ```
 
 ### 2. Crear y configurar el archivo `.env`
@@ -153,11 +153,10 @@ Este comando ejecuta:
 Forma parte de la base institucional y contiene:
 
 - sedes
-- modalidades de admisión
-- lugares de inscripción
 - carreras
-- relaciones sede-carrera
-- oferta base
+- modalidades de admisión
+
+Cada proceso define después su propia oferta (modalidades y carreras por sede) desde `Configuración académica > Oferta del proceso`.
 
 La fuente principal está en:
 
@@ -169,12 +168,9 @@ Este seeder ya no corre por defecto. Debe ejecutarse solo si deseas dejar un cic
 
 Incluye:
 
-- semestre inicial
-- proceso inicial
-- proceso-oferta
-- convenios
-- reglas de pago
-- requisitos por proceso
+- el proceso inicial
+- su oferta: modalidades y carreras por sede
+- las reglas de pago del sistema anterior (cuota única, fraccionado, parentesco UNU, beca y media beca)
 
 Comando:
 
@@ -186,14 +182,18 @@ php artisan db:seed --class=AcademicBootstrapSeeder --no-interaction
 
 No ejecutar en producción si no deseas datos genéricos.
 
-Actualmente incluye:
-
-- aulas genéricas
+Actualmente incluye el proceso `2026-1` con 50 inscripciones de demostración, sus pagos, aulas y el usuario `gestor.cepre`.
 
 Comando:
 
 ```bash
 php artisan db:seed --class=DevelopmentDataSeeder --no-interaction
+```
+
+Para cargar (o borrar) postulantes ficticios sobre una base ya configurada:
+
+```bash
+php artisan cepre:datos-prueba
 ```
 
 ## Usuario Inicial
@@ -243,7 +243,7 @@ Esto inicia:
 
 ```bash
 composer install
-npm install
+npm ci
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --force
@@ -257,7 +257,7 @@ npm run build
 
 ```bash
 composer install
-npm install
+npm ci
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --force
