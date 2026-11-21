@@ -1,143 +1,146 @@
 import { usePage } from '@inertiajs/react';
 import { ChevronDown } from '@keyline-icons/react';
 import { useEffect, useState } from 'react';
-import type { ReactNode } from 'react';
 import { Enlace } from '@/components/enlace';
 import { Marca } from '@/components/marca';
 import { TarjetaUsuario } from '@/components/menu-usuario';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { usePermiso } from '@/hooks/use-permiso';
-import { iconosMenu } from '@/lib/iconos';
-import { gruposMenu, hrefActivo, itemInicio } from '@/lib/navegacion';
-import type { GrupoMenu, ItemMenu } from '@/lib/navegacion';
+import { iconos } from '@/lib/iconos';
+import { hrefActivo, itemInicio, seccionesMenu } from '@/lib/navegacion';
+import type { ItemMenu, SeccionMenu } from '@/lib/navegacion';
 import { cn } from '@/lib/utils';
 
-function EnlaceMenu({ item, className, alNavegar, children }: { item: ItemMenu; className: string; alNavegar?: () => void; children: ReactNode }) {
+/** Secciones que el usuario cerró; se recuerdan entre visitas. */
+const CLAVE_CERRADAS = 'menu.secciones-cerradas';
+
+function leerCerradas(): string[] {
+    try {
+        return JSON.parse(localStorage.getItem(CLAVE_CERRADAS) ?? '[]') as string[];
+    } catch {
+        return [];
+    }
+}
+
+function ItemDelMenu({ item, activo, alNavegar }: { item: ItemMenu; activo: boolean; alNavegar?: () => void }) {
+    const { trazo: IconoTrazo, relleno: IconoRelleno } = iconos[item.icono];
+    const Icono = activo ? IconoRelleno : IconoTrazo;
+
     return (
-        <Enlace href={item.href} prefetch className={className} onClick={alNavegar}>
-            {children}
+        <Enlace
+            href={item.href}
+            prefetch
+            onClick={alNavegar}
+            aria-current={activo ? 'page' : undefined}
+            className={cn(
+                'group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors duration-150',
+                activo
+                    ? 'bg-white font-medium text-zinc-900 shadow-[0_1px_2px_rgba(16,24,40,0.06)] ring-1 ring-zinc-200/80 dark:bg-white/[0.07] dark:text-white dark:shadow-none dark:ring-white/[0.06]'
+                    : 'text-zinc-600 hover:bg-zinc-200/50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[0.04] dark:hover:text-zinc-100',
+            )}
+        >
+            <Icono
+                className={cn(
+                    'size-[18px] transition-colors',
+                    activo ? 'text-index-500 dark:text-index-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300',
+                )}
+            />
+            <span className="truncate">{item.titulo}</span>
         </Enlace>
     );
 }
 
-function Grupo({ grupo, activo, hrefActual, alNavegar }: { grupo: GrupoMenu; activo: boolean; hrefActual: string | null; alNavegar?: () => void }) {
-    const [abierto, setAbierto] = useState(activo);
-
-    // Al navegar a una pantalla del grupo, el grupo se abre (el layout se conserva entre páginas).
-    useEffect(() => {
-        if (activo) {
-            setAbierto(true);
-        }
-    }, [activo]);
-    const { trazo: IconoTrazo, relleno: IconoRelleno } = iconosMenu[grupo.icono];
-    const IconoGrupo = activo ? IconoRelleno : IconoTrazo;
-
+function Seccion({
+    seccion,
+    hrefActual,
+    abierta,
+    alAlternar,
+    alNavegar,
+}: {
+    seccion: SeccionMenu;
+    hrefActual: string | null;
+    abierta: boolean;
+    alAlternar: () => void;
+    alNavegar?: () => void;
+}) {
     return (
-        <Collapsible open={abierto} onOpenChange={setAbierto}>
-            <CollapsibleTrigger
-                className={cn(
-                    'group flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors hover:bg-zinc-200/60 hover:text-zinc-900 dark:hover:bg-white/[0.04] dark:hover:text-zinc-100',
-                    activo ? 'font-medium text-zinc-900 dark:text-white' : 'text-zinc-600 dark:text-zinc-400',
-                )}
-            >
-                <IconoGrupo
-                    className={cn(
-                        'size-5 transition-colors',
-                        activo ? 'text-index-500 dark:text-index-400' : 'text-zinc-400 group-hover:text-zinc-600 dark:text-zinc-500 dark:group-hover:text-zinc-300',
-                    )}
-                />
-                <span>{grupo.titulo}</span>
-                <ChevronDown className={cn('ms-auto size-4 text-zinc-400 transition-transform duration-200 dark:text-zinc-500', abierto && 'rotate-180')} />
+        <Collapsible open={abierta} onOpenChange={alAlternar} className="border-t border-dashed border-zinc-300/70 pt-3 dark:border-white/[0.08]">
+            <CollapsibleTrigger className="group flex h-7 w-full items-center justify-between rounded-md px-2.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 dark:text-zinc-500 dark:hover:text-zinc-300">
+                {seccion.titulo}
+                <ChevronDown className={cn('size-3.5 opacity-0 transition-[opacity,transform] duration-200 group-hover:opacity-100 group-focus-visible:opacity-100', !abierta && '-rotate-90 opacity-100')} />
             </CollapsibleTrigger>
-            <CollapsibleContent className="relative ms-[1.2rem] mt-0.5 mb-1 flex flex-col gap-0.5 border-s border-zinc-200 ps-2.5 dark:border-white/[0.08]">
-                {grupo.items.map((item) => {
-                    const actual = item.href === hrefActual;
-
-                    return (
-                        <EnlaceMenu
-                            key={item.href}
-                            item={item}
-                            alNavegar={alNavegar}
-                            className={cn(
-                                'relative flex h-8 items-center rounded-md px-2.5 text-[13px] transition-colors',
-                                actual
-                                    ? 'bg-index-50 font-medium text-index-600 dark:bg-index-500/10 dark:text-index-300'
-                                    : 'text-zinc-500 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[0.04] dark:hover:text-zinc-100',
-                            )}
-                        >
-                            {actual && <span className="absolute -start-[11px] top-1.5 bottom-1.5 w-0.5 rounded-full bg-index-500" />}
-                            {item.titulo}
-                        </EnlaceMenu>
-                    );
-                })}
+            <CollapsibleContent className="mt-1 flex flex-col gap-0.5 pb-3">
+                {seccion.items.map((item) => (
+                    <ItemDelMenu key={item.href} item={item} activo={item.href === hrefActual} alNavegar={alNavegar} />
+                ))}
             </CollapsibleContent>
         </Collapsible>
     );
 }
 
 /**
- * Menú lateral con los mismos grupos y permisos que el de las pantallas Livewire.
+ * Menú lateral por secciones, con un ícono por pantalla. Solo muestra lo que el usuario
+ * puede abrir; en modo oscuro queda casi negro para separarse del panel principal.
  */
 export function MenuLateral({ alNavegar, className }: { alNavegar?: () => void; className?: string }) {
     const { url } = usePage();
-    const puede = usePermiso();
-    const anio = new Date().getFullYear();
     const { version } = usePage().props.app;
+    const puede = usePermiso();
+    const [cerradas, setCerradas] = useState<string[]>(leerCerradas);
 
-    const grupos = gruposMenu
-        .map((grupo) => ({ ...grupo, items: grupo.items.filter((item) => !item.permiso || puede(item.permiso)) }))
-        .filter((grupo) => grupo.items.length > 0);
+    const secciones = seccionesMenu
+        .map((seccion) => ({ ...seccion, items: seccion.items.filter((item) => !item.permiso || puede(item.permiso)) }))
+        .filter((seccion) => seccion.items.length > 0);
 
-    const hrefActual = hrefActivo(url, [itemInicio.href, ...grupos.flatMap((grupo) => grupo.items.map((item) => item.href))]);
-    const inicioActivo = hrefActual === itemInicio.href;
-    const IconoInicio = inicioActivo ? iconosMenu.inicio.relleno : iconosMenu.inicio.trazo;
+    const hrefActual = hrefActivo(url, [itemInicio.href, ...secciones.flatMap((seccion) => seccion.items.map((item) => item.href))]);
+    const seccionActiva = secciones.find((seccion) => seccion.items.some((item) => item.href === hrefActual))?.titulo;
+
+    // La sección de la pantalla actual siempre queda abierta.
+    useEffect(() => {
+        if (seccionActiva && cerradas.includes(seccionActiva)) {
+            setCerradas((actuales) => actuales.filter((titulo) => titulo !== seccionActiva));
+        }
+    }, [seccionActiva, cerradas]);
+
+    useEffect(() => {
+        localStorage.setItem(CLAVE_CERRADAS, JSON.stringify(cerradas));
+    }, [cerradas]);
+
+    const alternar = (titulo: string): void => {
+        setCerradas((actuales) => (actuales.includes(titulo) ? actuales.filter((actual) => actual !== titulo) : [...actuales, titulo]));
+    };
 
     return (
         <aside className={cn('flex h-full w-68 flex-col bg-surface', className)}>
-            <div className="flex h-18 shrink-0 items-center px-4">
+            <div className="flex h-16 shrink-0 items-center px-4">
                 <Marca />
             </div>
 
-            <div className="scrollbar-fino flex-1 overflow-y-auto px-3 pt-2 pb-4">
-                <p className="px-2.5 pb-2 text-[11px] font-medium tracking-[0.08em] text-zinc-400 uppercase dark:text-zinc-500">Menú principal</p>
-                <nav className="space-y-0.5" aria-label="Menú principal">
-                    <EnlaceMenu
-                        item={itemInicio}
+            <nav className="scrollbar-fino flex-1 space-y-3 overflow-y-auto px-3 pt-1 pb-4" aria-label="Menú principal">
+                <ItemDelMenu item={itemInicio} activo={hrefActual === itemInicio.href} alNavegar={alNavegar} />
+
+                {secciones.map((seccion) => (
+                    <Seccion
+                        key={seccion.titulo}
+                        seccion={seccion}
+                        hrefActual={hrefActual}
+                        abierta={!cerradas.includes(seccion.titulo)}
+                        alAlternar={() => alternar(seccion.titulo)}
                         alNavegar={alNavegar}
-                        className={cn(
-                            'group flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors',
-                            inicioActivo
-                                ? 'bg-white font-medium text-zinc-900 shadow-xs ring-1 ring-zinc-200/80 dark:bg-zinc-800 dark:text-white dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] dark:ring-white/[0.08]'
-                                : 'text-zinc-600 hover:bg-zinc-200/60 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/[0.04] dark:hover:text-zinc-100',
-                        )}
-                    >
-                        <IconoInicio className={cn('size-5', inicioActivo ? 'text-index-500 dark:text-index-400' : 'text-zinc-400 dark:text-zinc-500')} />
-                        {itemInicio.titulo}
-                    </EnlaceMenu>
+                    />
+                ))}
+            </nav>
 
-                    {grupos.map((grupo) => (
-                        <Grupo
-                            key={grupo.titulo}
-                            grupo={grupo}
-                            activo={grupo.items.some((item) => item.href === hrefActual)}
-                            hrefActual={hrefActual}
-                            alNavegar={alNavegar}
-                        />
-                    ))}
-                </nav>
-            </div>
-
-            <div className="hidden px-3 pb-2 md:block">
-                <div className="rounded-xl border border-zinc-200/80 bg-white p-2.5 shadow-xs dark:border-white/[0.06] dark:bg-zinc-900 dark:shadow-none">
+            <div className="px-3 pb-3">
+                <div className="rounded-2xl border border-zinc-200/80 bg-white p-2.5 shadow-[0_1px_2px_rgba(16,24,40,0.04)] dark:border-white/[0.06] dark:bg-white/[0.03] dark:shadow-none">
                     <TarjetaUsuario />
                 </div>
-            </div>
-
-            <div className="flex h-11 shrink-0 items-center justify-between px-5">
-                <span className="text-[11px] text-zinc-400 dark:text-zinc-500">CEPRE UNU © {anio}</span>
-                <span className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-400">
-                    {version}
-                </span>
+                <div className="flex items-center justify-between px-2 pt-2.5">
+                    <span className="text-[11px] text-zinc-400 dark:text-zinc-500">CEPRE UNU © {new Date().getFullYear()}</span>
+                    <span className="rounded-md border border-zinc-200 bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-400">
+                        {version}
+                    </span>
+                </div>
             </div>
         </aside>
     );

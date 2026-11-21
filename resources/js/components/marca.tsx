@@ -8,7 +8,7 @@ export function Marca({ className, tamano = 'md' }: { className?: string; tamano
         <div className={cn('flex min-w-0 items-center gap-3', className)}>
             <span
                 className={cn(
-                    'flex shrink-0 items-center justify-center rounded-xl border border-zinc-200/80 bg-white shadow-xs dark:border-white/10 dark:bg-zinc-900 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
+                    'flex shrink-0 items-center justify-center rounded-xl border border-zinc-200/80 bg-white shadow-[0_1px_2px_rgba(16,24,40,0.06)] dark:border-white/10 dark:bg-white/[0.06] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]',
                     tamano === 'lg' ? 'size-11' : 'size-10',
                 )}
             >

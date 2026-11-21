@@ -83,6 +83,7 @@ export default function Turnos({ turnos, filtros }: { turnos: Paginado<Turno>; f
 
 Turnos.layout = {
     titulo: 'Turnos',
+    subtitulo: 'Turnos de clase con su horario; se asignan a las aulas de cada proceso.',
     icono: 'turnos',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Turnos', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Turnos', href: index.url() }],
 };

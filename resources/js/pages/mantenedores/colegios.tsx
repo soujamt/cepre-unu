@@ -148,6 +148,7 @@ export default function Colegios({ colegios, filtros, tipos }: PropsColegios) {
 
 Colegios.layout = {
     titulo: 'Colegios',
+    subtitulo: 'Colegios de procedencia de los postulantes, con su tipo y ubicación.',
     icono: 'colegios',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Colegios', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Colegios', href: index.url() }],
 };

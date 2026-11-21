@@ -19,12 +19,12 @@ interface PropsCampo {
  */
 const claseControl = (invalido: boolean): string =>
     cn(
-        'peer block w-full appearance-none rounded-lg border bg-control text-base text-zinc-700 shadow-xs sm:text-sm dark:text-zinc-200',
-        'placeholder:text-transparent focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-background focus:outline-hidden',
+        'peer block w-full appearance-none rounded-lg border bg-control text-base text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-[border-color,box-shadow] sm:text-sm dark:text-zinc-200 dark:shadow-none',
+        'placeholder:text-transparent focus:outline-hidden',
         'disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-500 disabled:shadow-none dark:disabled:bg-white/5 dark:disabled:text-zinc-400',
         invalido
-            ? 'border-red-500 focus:ring-red-500'
-            : 'border-zinc-200 border-b-zinc-300/80 dark:border-white/10 dark:border-b-white/10',
+            ? 'border-red-400 focus:border-red-400 focus:ring-3 focus:ring-red-500/15'
+            : 'border-zinc-200 focus:border-index-400 focus:ring-3 focus:ring-index-500/15 dark:border-white/10 dark:focus:border-index-500/60',
     );
 
 /**

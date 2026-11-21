@@ -94,10 +94,10 @@ export function Combobox({
                         aria-expanded={abierto}
                         aria-invalid={invalido || undefined}
                         className={cn(
-                            'relative flex h-12 w-full min-w-0 items-end rounded-lg border bg-control ps-3.5 pe-10 pb-1.5 text-start text-base text-zinc-700 shadow-xs sm:text-sm dark:text-zinc-200',
-                            'focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:outline-hidden',
+                            'relative flex h-12 w-full min-w-0 items-end rounded-lg border bg-control ps-3.5 pe-10 pb-1.5 text-start text-base text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-[border-color,box-shadow] sm:text-sm dark:text-zinc-200 dark:shadow-none',
+                            'focus-visible:border-index-400 focus-visible:ring-3 focus-visible:ring-index-500/15 focus-visible:outline-hidden data-[state=open]:border-index-400 data-[state=open]:ring-3 data-[state=open]:ring-index-500/15',
                             'disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-500 dark:disabled:bg-white/5',
-                            invalido ? 'border-red-500' : 'border-zinc-200 border-b-zinc-300/80 dark:border-white/10',
+                            invalido ? 'border-red-400' : 'border-zinc-200 dark:border-white/10',
                         )}
                     >
                         <span

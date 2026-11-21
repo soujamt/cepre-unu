@@ -11,9 +11,9 @@ const buttonVariants = cva(
         // Botón principal: #296FF0 con borde degradado, sombra, brillo interior y anillo del mismo color.
         default: "btn-primario",
         destructive:
-          "bg-red-500 text-white shadow-xs hover:bg-red-600 focus-visible:ring-red-500/30",
+          "bg-red-500 text-white shadow-[0_1px_2px_rgba(16,24,40,0.08),inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-red-600 focus-visible:ring-red-500/30",
         outline:
-          "border border-zinc-200 border-b-zinc-300/80 bg-control text-zinc-700 shadow-xs hover:bg-control-hover hover:text-zinc-900 dark:border-white/10 dark:text-zinc-200 dark:hover:text-white",
+          "border border-zinc-200 bg-white text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] hover:bg-zinc-50 hover:text-zinc-900 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-200 dark:shadow-none dark:hover:bg-white/[0.07] dark:hover:text-white",
         secondary:
           "bg-zinc-800/5 text-zinc-800 hover:bg-zinc-800/10 dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
         ghost:

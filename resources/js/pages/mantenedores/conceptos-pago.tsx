@@ -101,6 +101,7 @@ export default function ConceptosPago({ conceptos, filtros }: { conceptos: Pagin
 
 ConceptosPago.layout = {
     titulo: 'Conceptos de pago',
+    subtitulo: 'Conceptos que se cobran en las reglas de pago, en un solo pago o en cuotas.',
     icono: 'conceptos',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Conceptos de pago', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Conceptos de pago', href: index.url() }],
 };

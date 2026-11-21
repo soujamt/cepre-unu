@@ -63,6 +63,7 @@ export default function Carreras({ carreras, filtros }: { carreras: Paginado<Car
 
 Carreras.layout = {
     titulo: 'Carreras',
+    subtitulo: 'Carreras profesionales que se ofrecen en los procesos de admisión.',
     icono: 'carreras',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Carreras', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Carreras', href: index.url() }],
 };

@@ -1,16 +1,17 @@
 import { Head, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { EncabezadoApp } from '@/components/encabezado-app';
+import { EncabezadoApp, TituloPagina } from '@/components/encabezado-app';
 import { MenuLateral } from '@/components/menu-lateral';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import type { DatosLayout } from '@/types';
 
 /**
- * Layout de las pantallas del personal: menú lateral y panel con encabezado.
- * Es persistente; cada página indica su título, ícono y migas con `Pagina.layout`.
+ * Layout de las pantallas del personal: menú lateral sobre el fondo y el panel blanco
+ * (o gris oscuro en modo oscuro) con la ruta de navegación, el título y el contenido.
+ * Es persistente; cada página indica su título, ícono, subtítulo y migas con `Pagina.layout`.
  */
-export default function AppLayout({ titulo, icono, migas, children }: DatosLayout & { children: ReactNode }) {
+export default function AppLayout({ titulo, subtitulo, icono, migas, children }: DatosLayout & { children: ReactNode }) {
     const [menuMovil, setMenuMovil] = useState(false);
 
     useEffect(() => router.on('navigate', () => setMenuMovil(false)), []);
@@ -22,26 +23,21 @@ export default function AppLayout({ titulo, icono, migas, children }: DatosLayou
             <MenuLateral className="hidden md:flex" />
 
             <Sheet open={menuMovil} onOpenChange={setMenuMovil}>
-                <SheetContent side="left" className="w-68 border-0 p-0 sm:max-w-68 [&>button]:hidden">
+                <SheetContent side="left" className="w-72 border-0 bg-surface p-0 sm:max-w-72 [&>button]:hidden">
                     <SheetTitle className="sr-only">Menú principal</SheetTitle>
                     <SheetDescription className="sr-only">Navegación del sistema</SheetDescription>
-                    <MenuLateral alNavegar={() => setMenuMovil(false)} />
+                    <MenuLateral alNavegar={() => setMenuMovil(false)} className="w-full" />
                 </SheetContent>
             </Sheet>
 
-            <main className="flex w-full min-w-0 flex-1 flex-col md:py-2 md:pe-2">
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white md:rounded-2xl md:border md:border-zinc-200/80 md:shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.08)] dark:bg-zinc-900 dark:md:border-white/[0.06] dark:md:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                    <EncabezadoApp titulo={titulo} icono={icono} migas={migas} alAbrirMenu={() => setMenuMovil(true)} />
+            <main className="flex w-full min-w-0 flex-1 flex-col md:py-2.5 md:pe-2.5">
+                <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white md:rounded-3xl md:border md:border-zinc-200/70 md:shadow-[0_1px_3px_rgba(16,24,40,0.04),0_12px_32px_-16px_rgba(16,24,40,0.10)] dark:bg-zinc-900 dark:md:border-white/[0.06] dark:md:shadow-none">
+                    <EncabezadoApp migas={migas} alAbrirMenu={() => setMenuMovil(true)} />
 
                     <div className="scrollbar-fino flex min-h-0 flex-1 flex-col overflow-y-auto" scroll-region="">
-                        {titulo && (
-                            <div className="flex items-center gap-3 border-b border-zinc-200/80 px-4 py-3 md:hidden dark:border-white/[0.06]">
-                                <h1 className="text-base font-semibold tracking-tight text-zinc-900 dark:text-white">{titulo}</h1>
-                            </div>
-                        )}
-                        <div className="flex min-h-0 flex-1 flex-col px-4 pt-5 sm:px-6 sm:pt-6">
+                        <div className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6 px-4 pt-6 pb-10 sm:px-8 sm:pt-7">
+                            {titulo && <TituloPagina titulo={titulo} subtitulo={subtitulo} icono={icono} />}
                             <div className="flex-1">{children}</div>
-                            <div className="h-6 shrink-0" />
                         </div>
                     </div>
                 </div>

@@ -107,6 +107,7 @@ export default function Sedes({ sedes, filtros }: { sedes: Paginado<Sede>; filtr
 
 Sedes.layout = {
     titulo: 'Sedes',
+    subtitulo: 'Sedes y filiales donde se ofrecen las carreras y se registran inscripciones.',
     icono: 'sedes',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Sedes', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Sedes', href: index.url() }],
 };

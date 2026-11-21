@@ -1,4 +1,4 @@
-import type { NombreIconoMenu } from '@/lib/iconos';
+import type { NombreIcono } from '@/lib/iconos';
 import { inicio } from '@/routes';
 import { index as aulasProceso } from '@/routes/aulas';
 import { configuracion as carnet } from '@/routes/carnet';
@@ -24,74 +24,67 @@ import { index as usuarios } from '@/routes/usuarios';
 export interface ItemMenu {
     titulo: string;
     href: string;
+    icono: NombreIcono;
     /** Acción que debe tener el usuario para ver el ítem. */
     permiso?: string;
 }
 
-export interface GrupoMenu {
+export interface SeccionMenu {
     titulo: string;
-    icono: NombreIconoMenu;
     items: ItemMenu[];
 }
 
-export const itemInicio: ItemMenu & { icono: NombreIconoMenu } = {
+export const itemInicio: ItemMenu = {
     titulo: 'Inicio',
     href: inicio.url(),
     icono: 'inicio',
 };
 
 /**
- * Mismos grupos, orden y permisos que el menú lateral de las pantallas Livewire.
+ * Secciones del menú lateral: primero el trabajo diario (inscripciones y reportes),
+ * luego la configuración. Cada ítem se muestra solo con su permiso.
  */
-export const gruposMenu: GrupoMenu[] = [
+export const seccionesMenu: SeccionMenu[] = [
     {
-        titulo: 'Seguridad',
-        icono: 'seguridad',
+        titulo: 'Inscripciones',
         items: [
-            { titulo: 'Usuarios', href: usuarios.url(), permiso: 'usuario_indice' },
-            { titulo: 'Roles', href: roles.url(), permiso: 'rol_indice' },
-            { titulo: 'Permisos', href: permisos.url(), permiso: 'permiso_indice' },
+            { titulo: 'Inscripciones', href: inscripciones.url(), icono: 'inscripciones', permiso: 'inscripcion_indice' },
+            { titulo: 'Pagos', href: pagos.url(), icono: 'pagos', permiso: 'pago_indice' },
+            { titulo: 'Validar pagos', href: validarPagos.url(), icono: 'validarPagos', permiso: 'pago_crear' },
+            { titulo: 'Fotos', href: fotos.url(), icono: 'fotos', permiso: 'foto_indice' },
+            { titulo: 'Reporte de inscripciones', href: reporteInscripciones.url(), icono: 'reportes', permiso: 'reporte_inscripcion_indice' },
+        ],
+    },
+    {
+        titulo: 'Configuración académica',
+        items: [
+            { titulo: 'Procesos', href: procesos.url(), icono: 'procesos', permiso: 'proceso_indice' },
+            { titulo: 'Oferta del proceso', href: ofertas.url(), icono: 'oferta', permiso: 'oferta_indice' },
+            { titulo: 'Aulas por proceso', href: aulasProceso.url(), icono: 'aulasProceso', permiso: 'aula_proceso_indice' },
+            { titulo: 'Reglas de pago', href: reglasPago.url(), icono: 'reglasPago', permiso: 'regla_pago_indice' },
+            { titulo: 'Códigos de Admisión', href: codigosAdmision.url(), icono: 'codigos', permiso: 'codigo_admision_indice' },
+            { titulo: 'Carnet', href: carnet.url(), icono: 'carnet', permiso: 'parametro_indice' },
         ],
     },
     {
         titulo: 'Mantenedores',
-        icono: 'mantenedores',
         items: [
-            { titulo: 'Aulas', href: aulas.url(), permiso: 'aula_indice' },
-            { titulo: 'Carreras', href: carreras.url(), permiso: 'carrera_indice' },
-            { titulo: 'Colegios', href: colegios.url(), permiso: 'colegio_indice' },
-            { titulo: 'Conceptos de pago', href: conceptosPago.url(), permiso: 'concepto_pago_indice' },
-            { titulo: 'Modalidades', href: modalidades.url(), permiso: 'modalidad_indice' },
-            { titulo: 'Sedes', href: sedes.url(), permiso: 'sede_indice' },
-            { titulo: 'Turnos', href: turnos.url(), permiso: 'turno_indice' },
+            { titulo: 'Aulas', href: aulas.url(), icono: 'aulas', permiso: 'aula_indice' },
+            { titulo: 'Carreras', href: carreras.url(), icono: 'carreras', permiso: 'carrera_indice' },
+            { titulo: 'Colegios', href: colegios.url(), icono: 'colegios', permiso: 'colegio_indice' },
+            { titulo: 'Conceptos de pago', href: conceptosPago.url(), icono: 'conceptos', permiso: 'concepto_pago_indice' },
+            { titulo: 'Modalidades', href: modalidades.url(), icono: 'modalidades', permiso: 'modalidad_indice' },
+            { titulo: 'Sedes', href: sedes.url(), icono: 'sedes', permiso: 'sede_indice' },
+            { titulo: 'Turnos', href: turnos.url(), icono: 'turnos', permiso: 'turno_indice' },
         ],
     },
     {
-        titulo: 'Conf. académica',
-        icono: 'configuracion',
+        titulo: 'Seguridad',
         items: [
-            { titulo: 'Procesos', href: procesos.url(), permiso: 'proceso_indice' },
-            { titulo: 'Aulas', href: aulasProceso.url(), permiso: 'aula_proceso_indice' },
-            { titulo: 'Oferta del proceso', href: ofertas.url(), permiso: 'oferta_indice' },
-            { titulo: 'Reglas de pago', href: reglasPago.url(), permiso: 'regla_pago_indice' },
-            { titulo: 'Códigos de Admisión', href: codigosAdmision.url(), permiso: 'codigo_admision_indice' },
-            { titulo: 'Carnet', href: carnet.url(), permiso: 'parametro_indice' },
+            { titulo: 'Usuarios', href: usuarios.url(), icono: 'usuarios', permiso: 'usuario_indice' },
+            { titulo: 'Roles', href: roles.url(), icono: 'roles', permiso: 'rol_indice' },
+            { titulo: 'Permisos', href: permisos.url(), icono: 'permisos', permiso: 'permiso_indice' },
         ],
-    },
-    {
-        titulo: 'Inscripciones',
-        icono: 'inscripciones',
-        items: [
-            { titulo: 'Inscripciones', href: inscripciones.url(), permiso: 'inscripcion_indice' },
-            { titulo: 'Fotos', href: fotos.url(), permiso: 'foto_indice' },
-            { titulo: 'Pagos', href: pagos.url(), permiso: 'pago_indice' },
-            { titulo: 'Validar pagos', href: validarPagos.url(), permiso: 'pago_crear' },
-        ],
-    },
-    {
-        titulo: 'Reportes',
-        icono: 'reportes',
-        items: [{ titulo: 'Rep. inscripciones', href: reporteInscripciones.url(), permiso: 'reporte_inscripcion_indice' }],
     },
 ];
 

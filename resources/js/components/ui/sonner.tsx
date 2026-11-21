@@ -1,10 +1,10 @@
 import { Alert, CircleCheck, Info, LoaderCircle, OctagonX } from '@keyline-icons/react';
-import type { CSSProperties } from 'react';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import { useTema } from '@/hooks/use-tema';
 
 /**
- * Contenedor de avisos (toasts) con el tema del sistema y los íconos de Keyline.
+ * Avisos (toasts) discretos: tarjeta compacta con un punto de color en el ícono,
+ * sin botón de cerrar y de corta duración, abajo a la derecha.
  */
 function Toaster(props: ToasterProps) {
     const { oscuro } = useTema();
@@ -14,22 +14,23 @@ function Toaster(props: ToasterProps) {
             theme={oscuro ? 'dark' : 'light'}
             className="toaster group"
             position="bottom-right"
-            closeButton
+            duration={3500}
+            visibleToasts={3}
+            gap={8}
             icons={{
-                success: <CircleCheck className="size-4 text-green-600 dark:text-green-400" />,
-                info: <Info className="size-4 text-sky-600 dark:text-sky-400" />,
-                warning: <Alert className="size-4 text-amber-600 dark:text-amber-400" />,
-                error: <OctagonX className="size-4 text-red-600 dark:text-red-400" />,
-                loading: <LoaderCircle className="size-4 animate-spin" />,
+                success: <CircleCheck className="size-4 text-green-500" />,
+                info: <Info className="size-4 text-index-500" />,
+                warning: <Alert className="size-4 text-amber-500" />,
+                error: <OctagonX className="size-4 text-red-500" />,
+                loading: <LoaderCircle className="size-4 animate-spin text-zinc-400" />,
             }}
-            style={
-                {
-                    '--normal-bg': 'var(--popover)',
-                    '--normal-text': 'var(--popover-foreground)',
-                    '--normal-border': 'var(--border)',
-                    '--border-radius': 'calc(var(--radius) + 2px)',
-                } as CSSProperties
-            }
+            toastOptions={{
+                classNames: {
+                    toast: 'aviso-toast',
+                    title: 'aviso-toast-titulo',
+                    description: 'aviso-toast-descripcion',
+                },
+            }}
             {...props}
         />
     );

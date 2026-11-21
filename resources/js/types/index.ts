@@ -1,4 +1,4 @@
-import type { NombreIconoPagina } from '@/lib/iconos';
+import type { NombreIcono } from '@/lib/iconos';
 
 export type TipoAviso = 'success' | 'error' | 'warning' | 'info';
 
@@ -36,9 +36,9 @@ export interface Miga {
  */
 export interface DatosLayout {
     titulo?: string;
-    /** Texto bajo el título (portal del postulante). */
+    /** Texto breve bajo el título que explica para qué sirve la pantalla. */
     subtitulo?: string;
-    icono?: NombreIconoPagina;
+    icono?: NombreIcono;
     migas?: Miga[];
 }
 

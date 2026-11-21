@@ -33,8 +33,8 @@
     --input: var(--color-zinc-200);
     --ring: var(--color-500);
 
-    /** Fondo de la aplicación detrás del panel principal **/
-    --surface: var(--color-zinc-100);
+    /** Fondo de la aplicación y del menú lateral, detrás del panel principal **/
+    --surface: #f4f4f5;
 
     /** Superficie de controles (inputs, selects, botones de filtro) **/
     --control: #ffffff;
@@ -62,10 +62,11 @@
     --input: rgb(255 255 255 / 0.1);
     --ring: var(--color-400);
 
-    --surface: var(--color-zinc-950);
+    /** El menú lateral queda casi negro para separarse del panel principal. **/
+    --surface: #070708;
 
-    --control: #292929;
-    --control-hover: #303030;
+    --control: rgb(255 255 255 / 0.035);
+    --control-hover: rgb(255 255 255 / 0.06);
 }
 
 @theme inline {
@@ -175,4 +176,46 @@
 .cambiando-tema *::before,
 .cambiando-tema *::after {
     transition: none !important;
+}
+
+/**
+ * Avisos (sonner): tarjeta compacta y translúcida con una sombra suave; el texto manda,
+ * el color queda solo en el ícono.
+ */
+[data-sonner-toaster] [data-sonner-toast].aviso-toast {
+    gap: 0.625rem;
+    width: auto;
+    min-width: 18rem;
+    max-width: 24rem;
+    padding: 0.625rem 0.875rem;
+    border-radius: var(--radius-xl);
+    border: 1px solid rgb(228 228 231 / 0.8);
+    background: rgb(255 255 255 / 0.92);
+    color: var(--color-zinc-700);
+    box-shadow:
+        0 1px 2px rgb(16 24 40 / 0.04),
+        0 10px 24px -12px rgb(16 24 40 / 0.18);
+    backdrop-filter: blur(10px);
+}
+
+.dark [data-sonner-toaster] [data-sonner-toast].aviso-toast {
+    border-color: rgb(255 255 255 / 0.08);
+    background: rgb(28 28 30 / 0.92);
+    color: var(--color-zinc-200);
+    box-shadow: 0 12px 28px -12px rgb(0 0 0 / 0.6);
+}
+
+[data-sonner-toast].aviso-toast [data-icon] {
+    margin: 0;
+}
+
+.aviso-toast-titulo {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.aviso-toast-descripcion {
+    font-size: 0.75rem;
+    color: var(--color-zinc-500);
 }

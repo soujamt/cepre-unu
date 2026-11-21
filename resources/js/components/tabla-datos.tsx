@@ -28,14 +28,14 @@ interface PropsTablaDatos<T> {
  */
 export function TablaDatos<T>({ columnas, filas, claveFila, vacio, className }: PropsTablaDatos<T>) {
     return (
-        <div className={cn('overflow-hidden rounded-xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900', className)}>
+        <div className={cn('overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.07] dark:bg-white/[0.02] dark:shadow-none', className)}>
             <Table>
-                <TableHeader className="bg-zinc-50/80 dark:bg-white/[0.02]">
+                <TableHeader className="bg-zinc-50/80 dark:bg-white/[0.03]">
                     <TableRow className="hover:bg-transparent">
                         {columnas.map((columna) => (
                             <TableHead
                                 key={columna.clave}
-                                className={cn('h-10 px-4 text-xs font-medium tracking-wide text-zinc-500 uppercase dark:text-zinc-400', columna.className)}
+                                className={cn('h-11 px-4', columna.className, 'text-xs font-medium text-zinc-500 dark:text-zinc-400')}
                             >
                                 {columna.titulo}
                             </TableHead>
@@ -51,9 +51,9 @@ export function TablaDatos<T>({ columnas, filas, claveFila, vacio, className }: 
                         </TableRow>
                     ) : (
                         filas.map((fila, indice) => (
-                            <TableRow key={claveFila(fila)} className="border-zinc-100 dark:border-white/[0.04]">
+                            <TableRow key={claveFila(fila)} className="border-zinc-100 transition-colors hover:bg-zinc-50/70 dark:border-white/[0.04] dark:hover:bg-white/[0.02]">
                                 {columnas.map((columna) => (
-                                    <TableCell key={columna.clave} className={cn('px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300', columna.className)}>
+                                    <TableCell key={columna.clave} className={cn('px-4 py-3.5 text-sm text-zinc-700 dark:text-zinc-300', columna.className)}>
                                         {columna.celda(fila, indice)}
                                     </TableCell>
                                 ))}
@@ -180,7 +180,7 @@ export function Buscador({ valor, alCambiar, placeholder = 'Buscar…', classNam
                 onChange={(evento) => alCambiar(evento.target.value)}
                 placeholder={placeholder}
                 aria-label={placeholder}
-                className="h-10 w-full rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-control ps-9 pe-9 text-sm text-zinc-700 shadow-xs placeholder:text-zinc-400 focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-background focus:outline-hidden dark:border-white/10 dark:text-zinc-200 [&::-webkit-search-cancel-button]:hidden"
+                className="h-10 w-full rounded-lg border border-zinc-200 bg-white ps-9 pe-9 text-sm text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-shadow placeholder:text-zinc-400 focus:border-index-300 focus:ring-3 focus:ring-index-500/15 focus:outline-hidden dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-200 dark:focus:border-index-500/50 [&::-webkit-search-cancel-button]:hidden"
             />
             {valor !== '' && (
                 <button

@@ -108,6 +108,7 @@ export default function Modalidades({ modalidades, filtros, condiciones }: Props
 
 Modalidades.layout = {
     titulo: 'Modalidades',
+    subtitulo: 'Modalidades de admisión y a quién aplican según su situación escolar.',
     icono: 'modalidades',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Modalidades', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Modalidades', href: index.url() }],
 };

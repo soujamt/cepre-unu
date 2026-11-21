@@ -16,7 +16,7 @@
     --color-900: #163876;
     --color-950: #092353;
 
-    --radius: 0.25rem;
+    --radius: 0.625rem;
 }
 
 @theme {
@@ -259,20 +259,20 @@
     --color-zinc-950: #0b0b0b;
 
     /**
-     * Radios sobrios e institucionales: nada pasa de 6 px. Botones, campos e insignias
-     * (rounded-md / rounded-lg) quedan en 4 px; tarjetas y paneles (rounded-xl / 2xl) en 6 px.
+     * Radios marcados pero sobrios: insignias y menús en 6-8 px, botones y campos en 10 px,
+     * tarjetas y paneles en 16 px.
      **/
-    --radius-xs: 0.125rem;
-    --radius-sm: 0.125rem;
-    --radius-md: 0.25rem;
-    --radius-lg: 0.25rem;
-    --radius-xl: 0.375rem;
-    --radius-2xl: 0.375rem;
-    --radius-3xl: 0.375rem;
-    --radius-4xl: 0.375rem;
+    --radius-xs: 0.25rem;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.625rem;
+    --radius-xl: 0.75rem;
+    --radius-2xl: 1rem;
+    --radius-3xl: 1.25rem;
+    --radius-4xl: 1.5rem;
 
     /** Sombras sutiles para tarjetas y superficies **/
-    --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px -1px rgb(0 0 0 / 0.04);
+    --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 1px 0 rgb(16 24 40 / 0.02);
     --shadow-card-hover: 0 2px 4px -1px rgb(0 0 0 / 0.06), 0 6px 16px -6px rgb(0 0 0 / 0.08);
     --shadow-pop: 0 4px 8px -2px rgb(0 0 0 / 0.06), 0 16px 32px -12px rgb(0 0 0 / 0.18);
 }

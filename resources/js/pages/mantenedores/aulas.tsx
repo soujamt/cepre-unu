@@ -122,6 +122,7 @@ export default function Aulas({ aulas, filtros, pisos, lugares }: PropsAulas) {
 
 Aulas.layout = {
     titulo: 'Aulas',
+    subtitulo: 'Aulas por piso y local; se asignan a los turnos de cada proceso.',
     icono: 'aulas',
-    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Aulas', href: index.url() }],
+    migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Mantenedores' }, { titulo: 'Aulas', href: index.url() }],
 };
