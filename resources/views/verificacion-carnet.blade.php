@@ -6,7 +6,7 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Verificación de carnet - CEPRE UNU</title>
     <link rel="shortcut icon" href="{{ asset('assets/media/logo_unu.png') }}" type="image/x-icon" />
-    @vite (['resources/css/app.css'])
+    @vite (['resources/css/inertia.css'])
 </head>
 <body class="min-h-screen bg-zinc-50 text-zinc-800 antialiased">
     <main class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-10">

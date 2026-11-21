@@ -12,7 +12,8 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -68,11 +69,34 @@ function crearCarreraPrueba(string $codigo = 'ENF', string $nombre = 'ENFERMERÍ
 test('authorized users can access carreras page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice']);
+    crearCarreraPrueba();
 
     $this->actingAs($usuario)
         ->get(route('carreras.index'))
         ->assertOk()
-        ->assertSee('Carreras');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/carreras')
+            ->has('carreras.data', 1)
+            ->where('carreras.data.0.codigo', 'ENF')
+            ->where('carreras.data.0.estado', 'HABILITADO'));
+});
+
+test('carreras can be searched and filtered by state', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosCarrera($usuario, ['carrera_indice']);
+    crearCarreraPrueba('ENF', 'ENFERMERÍA');
+    crearCarreraPrueba('MED', 'MEDICINA HUMANA')->update(['estado_car' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario)
+        ->get(route('carreras.index', ['buscar' => 'medic']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('carreras.data', 1)->where('carreras.data.0.codigo', 'MED'));
+
+    $this->actingAs($usuario)
+        ->get(route('carreras.index', ['estado' => ['HABILITADO']]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('carreras.data', 1)
+            ->where('carreras.data.0.codigo', 'ENF')
+            ->where('filtros.estado', ['HABILITADO']));
 });
 
 test('authenticated users without permiso cannot access carreras page', function () {
@@ -87,12 +111,8 @@ test('users without crear permiso cannot register a carrera', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->set('carreraForm.codigo', 'MED')
-        ->set('carreraForm.nombre', 'Medicina humana')
-        ->call('guardar')
+    $this->actingAs($usuario)
+        ->post(route('carreras.store'), ['codigo' => 'MED', 'nombre' => 'Medicina humana'])
         ->assertForbidden();
 
     expect(Carrera::query()->count())->toBe(0);
@@ -102,15 +122,10 @@ test('authorized users can register a carrera in uppercase', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->call('cargarCarrera')
-        ->set('carreraForm.codigo', ' med ')
-        ->set('carreraForm.nombre', 'Medicina   humana')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Carrera registrada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('carreras.store'), ['codigo' => ' med ', 'nombre' => 'Medicina   humana'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Carrera registrada correctamente.']);
 
     $this->assertDatabaseHas('tbl_carrera', [
         'codigo_car' => 'MED',
@@ -126,13 +141,12 @@ test('carrera code and name must be unique including deleted carreras', function
     crearCarreraPrueba('ENF', 'ENFERMERÍA');
     crearCarreraPrueba('ADM', 'ADMINISTRACIÓN')->delete();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->set('carreraForm.codigo', 'enf')
-        ->set('carreraForm.nombre', 'administración')
-        ->call('guardar')
-        ->assertHasErrors(['carreraForm.codigo', 'carreraForm.nombre']);
+    $this->actingAs($usuario)
+        ->post(route('carreras.store'), ['codigo' => 'enf', 'nombre' => 'administración'])
+        ->assertSessionHasErrors([
+            'codigo' => 'Ya existe una carrera con ese código.',
+            'nombre' => 'Ya existe una carrera con ese nombre.',
+        ]);
 
     expect(Carrera::query()->withTrashed()->count())->toBe(2);
 });
@@ -141,13 +155,18 @@ test('carrera code only accepts letters, numbers and dashes', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_crear']);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('carreras.store'), ['codigo' => 'MED HUM', 'nombre' => 'Medicina humana'])
+        ->assertSessionHasErrors(['codigo' => 'El código solo admite letras, números, guion y guion bajo.']);
+});
 
-    Livewire::test('pages::mantenedores.carreras')
-        ->set('carreraForm.codigo', 'MED HUM')
-        ->set('carreraForm.nombre', 'Medicina humana')
-        ->call('guardar')
-        ->assertHasErrors(['carreraForm.codigo' => 'regex']);
+test('carrera requires code and name', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_crear']);
+
+    $this->actingAs($usuario)
+        ->post(route('carreras.store'), ['codigo' => '  ', 'nombre' => ''])
+        ->assertSessionHasErrors(['codigo' => 'El código es obligatorio.', 'nombre' => 'El nombre es obligatorio.']);
 });
 
 test('authorized users can update a carrera keeping its own code', function () {
@@ -155,14 +174,10 @@ test('authorized users can update a carrera keeping its own code', function () {
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_editar']);
     $carrera = crearCarreraPrueba('ENF', 'ENFERMERIA');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->call('cargarCarrera', $carrera->id_car)
-        ->assertSet('carreraForm.codigo', 'ENF')
-        ->set('carreraForm.nombre', 'Enfermería técnica')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('carreras.update', $carrera->id_car), ['codigo' => 'ENF', 'nombre' => 'Enfermería técnica'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Carrera actualizada correctamente.');
 
     $this->assertDatabaseHas('tbl_carrera', [
         'id_car' => $carrera->id_car,
@@ -177,11 +192,9 @@ test('authorized users can change state of a carrera', function () {
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_estado']);
     $carrera = crearCarreraPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->call('cambiarEstado', $carrera->id_car)
-        ->assertDispatched('toast', message: 'Estado de la carrera actualizado.', type: 'success');
+    $this->actingAs($usuario)
+        ->patch(route('carreras.estado', $carrera->id_car))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado de la carrera actualizado.']);
 
     expect($carrera->fresh()->estado_car->value)->toBe('DESHABILITADO');
 });
@@ -191,11 +204,9 @@ test('authorized users can delete a carrera without procesos', function () {
     otorgarPermisosCarrera($usuario, ['carrera_indice', 'carrera_eliminar']);
     $carrera = crearCarreraPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->call('eliminar', $carrera->id_car)
-        ->assertDispatched('toast', message: 'Carrera eliminada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->delete(route('carreras.destroy', $carrera->id_car))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Carrera eliminada correctamente.']);
 
     $this->assertSoftDeleted('tbl_carrera', ['id_car' => $carrera->id_car], deletedAtColumn: 'eliminado_en');
 });
@@ -235,11 +246,12 @@ test('carrera enabled in a proceso cannot be deleted', function () {
         'estado_pca' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.carreras')
-        ->call('eliminar', $carrera->id_car)
-        ->assertDispatched('toast', message: 'La carrera se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('carreras.destroy', $carrera->id_car))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', [
+            'type' => 'error',
+            'message' => 'La carrera se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.',
+        ]);
 
     $this->assertNotSoftDeleted('tbl_carrera', ['id_car' => $carrera->id_car], deletedAtColumn: 'eliminado_en');
 });

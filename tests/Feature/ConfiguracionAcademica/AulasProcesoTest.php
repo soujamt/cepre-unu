@@ -11,7 +11,8 @@ use App\Models\Turno;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -106,7 +107,7 @@ test('authorized users can access aulas por proceso page', function () {
     $this->actingAs($usuario)
         ->get(route('aulas.index'))
         ->assertOk()
-        ->assertSee('Aulas por proceso');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('configuracion-academica/aulas-proceso')->has('asignaciones.data'));
 });
 
 test('users can filter aulas por proceso by proceso turno and estado', function () {
@@ -116,22 +117,17 @@ test('users can filter aulas por proceso by proceso turno and estado', function 
     $contextoA = crearAulaProcesoContexto(1, 'HABILITADO');
     $contextoB = crearAulaProcesoContexto(2, 'DESHABILITADO');
 
-    $this->actingAs($usuario);
+    $soloB = fn (array $consulta) => $this->actingAs($usuario)
+        ->get(route('aulas.index', $consulta))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('asignaciones.data', 1)->where('asignaciones.data.0.aula', $contextoB['aula']->nombre_aul));
 
-    Livewire::test('pages::configuracion-academica.aulas-proceso')
-        ->assertSee($contextoA['aula']->nombre_aul)
-        ->assertSee($contextoB['aula']->nombre_aul)
-        ->set('idProceso', (string) $contextoB['proceso']->id_pro)
-        ->assertDontSee($contextoA['aula']->nombre_aul)
-        ->assertSee($contextoB['aula']->nombre_aul)
-        ->set('idProceso', '')
-        ->set('idTurno', (string) $contextoB['turno']->id_tur)
-        ->assertDontSee($contextoA['aula']->nombre_aul)
-        ->assertSee($contextoB['aula']->nombre_aul)
-        ->set('idTurno', '')
-        ->set('filtroEstado.DESHABILITADO', true)
-        ->assertDontSee($contextoA['aula']->nombre_aul)
-        ->assertSee($contextoB['aula']->nombre_aul);
+    $this->actingAs($usuario)
+        ->get(route('aulas.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('asignaciones.data', 2));
+
+    $soloB(['proceso' => $contextoB['proceso']->id_pro]);
+    $soloB(['turno' => $contextoB['turno']->id_tur]);
+    $soloB(['estado' => ['DESHABILITADO']]);
 });
 
 test('asignar aulas lists every proceso', function () {
@@ -141,11 +137,14 @@ test('asignar aulas lists every proceso', function () {
     $contextoA = crearAulaProcesoContexto(1);
     $contextoB = crearAulaProcesoContexto(2);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
-        ->assertSee($contextoA['proceso']->nombre_pro)
-        ->assertSee($contextoB['proceso']->nombre_pro);
+    $this->actingAs($usuario)
+        ->get(route('aulas.asignar', ['proceso' => $contextoA['proceso']->id_pro, 'turno' => $contextoA['turno']->id_tur]))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('configuracion-academica/aulas-proceso-asignar')
+            ->where('procesos', fn ($procesos): bool => collect($procesos)->pluck('nombre')->contains($contextoA['proceso']->nombre_pro)
+                && collect($procesos)->pluck('nombre')->contains($contextoB['proceso']->nombre_pro))
+            ->where('aulas', fn ($aulas): bool => collect($aulas)->firstWhere('id', $contextoA['aula']->id_aul)['asignada'] === true));
 });
 
 test('asignar aulas allows the same aula in different turnos for one proceso', function () {
@@ -160,16 +159,14 @@ test('asignar aulas allows the same aula in different turnos for one proceso', f
         'estado_tur' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
-        ->set('idProceso', (string) $contexto['proceso']->id_pro)
-        ->set('idTurno', (string) $turnoTarde->id_tur)
-        ->set("seleccionadas.{$contexto['aula']->id_aul}", true)
-        ->set("capacidades.{$contexto['aula']->id_aul}", '50')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Aulas asignadas correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('aulas.store'), [
+            'proceso' => $contexto['proceso']->id_pro,
+            'turno' => $turnoTarde->id_tur,
+            'aulas' => [['id' => $contexto['aula']->id_aul, 'capacidad' => '50']],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Aulas asignadas correctamente.']);
 
     expect(ProcesoAula::query()
         ->where('id_proceso', $contexto['proceso']->id_pro)
@@ -190,16 +187,14 @@ test('asignar aulas restores a soft deleted assignment for the same proceso turn
     $contexto = crearAulaProcesoContexto(1);
     $contexto['asignacion']->delete();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.aulas-proceso-asignar')
-        ->set('idProceso', (string) $contexto['proceso']->id_pro)
-        ->set('idTurno', (string) $contexto['turno']->id_tur)
-        ->set("seleccionadas.{$contexto['aula']->id_aul}", true)
-        ->set("capacidades.{$contexto['aula']->id_aul}", '55')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Aulas asignadas correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('aulas.store'), [
+            'proceso' => $contexto['proceso']->id_pro,
+            'turno' => $contexto['turno']->id_tur,
+            'aulas' => [['id' => $contexto['aula']->id_aul, 'capacidad' => '55']],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Aulas asignadas correctamente.']);
 
     $asignacionRestaurada = ProcesoAula::query()
         ->withTrashed()
@@ -208,4 +203,41 @@ test('asignar aulas restores a soft deleted assignment for the same proceso turn
     expect($asignacionRestaurada->trashed())->toBeFalse()
         ->and($asignacionRestaurada->capacidad_pau)->toBe(55)
         ->and($asignacionRestaurada->estado_pau->value)->toBe('HABILITADO');
+});
+
+test('asignar aulas requires proceso, turno and a valid capacity', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosAulaProceso($usuario, ['aula_proceso_crear']);
+    $contexto = crearAulaProcesoContexto(1);
+
+    $this->actingAs($usuario)
+        ->post(route('aulas.store'), ['proceso' => '', 'turno' => '', 'aulas' => [['id' => $contexto['aula']->id_aul, 'capacidad' => '0']]])
+        ->assertSessionHasErrors([
+            'proceso' => 'Debe seleccionar un proceso.',
+            'turno' => 'Debe seleccionar un turno.',
+            'aulas.0.capacidad' => 'Todas las aulas seleccionadas deben tener una capacidad válida (mayor a 0).',
+        ]);
+});
+
+test('authorized users can update the capacity, state and delete an assignment without inscripciones', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosAulaProceso($usuario, ['aula_proceso_indice', 'aula_proceso_editar', 'aula_proceso_estado', 'aula_proceso_eliminar']);
+    $contexto = crearAulaProcesoContexto(1);
+
+    $this->actingAs($usuario)
+        ->put(route('aulas.update', $contexto['asignacion']), ['capacidad' => '35'])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Capacidad actualizada correctamente.']);
+
+    $this->actingAs($usuario)
+        ->patch(route('aulas.estado', $contexto['asignacion']))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado actualizado.']);
+
+    expect($contexto['asignacion']->fresh()->capacidad_pau)->toBe(35)
+        ->and($contexto['asignacion']->fresh()->estado_pau->value)->toBe('DESHABILITADO');
+
+    $this->actingAs($usuario)
+        ->delete(route('aulas.destroy', $contexto['asignacion']))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Asignación eliminada correctamente.']);
+
+    expect($contexto['asignacion']->fresh()->trashed())->toBeTrue();
 });

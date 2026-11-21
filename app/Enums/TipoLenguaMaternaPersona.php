@@ -9,6 +9,7 @@ enum TipoLenguaMaternaPersona: string implements PresentableEnum
 {
     use HasPresentableOptions;
 
+    case Castellano = 'CASTELLANO';
     case Nativa = 'NATIVA';
     case Extranjera = 'EXTRANJERA';
 
@@ -20,6 +21,7 @@ enum TipoLenguaMaternaPersona: string implements PresentableEnum
     public function getColor(): string
     {
         return match ($this) {
+            self::Castellano => 'zinc',
             self::Nativa => 'emerald',
             self::Extranjera => 'sky',
         };
@@ -28,6 +30,7 @@ enum TipoLenguaMaternaPersona: string implements PresentableEnum
     public function getIcon(): string
     {
         return match ($this) {
+            self::Castellano => 'message',
             self::Nativa => 'translate',
             self::Extranjera => 'globe',
         };

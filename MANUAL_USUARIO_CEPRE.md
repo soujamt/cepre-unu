@@ -2,12 +2,14 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE USUARIO DEL SISTEMA DE INSCRIPCIONES
 
-**Versión:** 1.2  
+**Versión:** 1.3  
 **Documento:** Manual de usuario funcional  
 **Dirigido a:** SuperAdministrador y Gestor de Inscripciones CEPRE  
 **Fecha:** Noviembre 2026
 
 > **Cambios en la versión 1.2:** el pago se valida primero y el asistente pasa a tener 4 pasos; la modalidad se asigna sola según el año de egreso; cada proceso define su propia oferta (modalidades y carreras por sede); se agregaron los pagos manuales, el portal del postulante con revisión de las inscripciones en línea, las fotos, la ficha de matrícula, el carnet con QR y los códigos de Admisión. Se retiraron los expedientes, los convenios, los requisitos, los lugares de inscripción y las ofertas base. Los diagramas del flujo completo están en `FLUJO_PROCESOS_CEPRE.md`.
+
+> **Cambios en la versión 1.3:** se renovó la interfaz. Las pantallas cambian sin recargar la página, los formularios se abren en un panel lateral a la derecha, las acciones delicadas (eliminar, anular, cambiar de estado) piden confirmación en un diálogo y los mensajes aparecen abajo a la derecha. El menú lateral agrupa los módulos en secciones que se pueden plegar, y el tema claro u oscuro se elige con el botón de la barra superior. Los módulos, permisos y procedimientos no cambian.
 
 ---
 
@@ -809,13 +811,14 @@ Registrar o recuperar los datos del postulante.
 
 1. si el DNI ya está registrado, el sistema carga sus datos automáticamente; si no, se pueden buscar en RENIEC (cuando el servicio está configurado) o escribirlos;
 2. completar o verificar:
-   - tipo y número de documento;
+   - tipo y número de documento (si el número tiene 8 dígitos, el tipo DNI se elige solo);
    - apellidos y nombres (con las opciones `Solo un apellido` y `Tiene apellido de casado(a)`);
    - fecha de nacimiento, sexo y estado civil;
    - país de nacimiento, nacionalidad, ubigeo de nacimiento y de domicilio, y dirección;
    - celular, teléfono y correo electrónico;
    - nombre completo y celular del apoderado (ambos celulares con 9 dígitos y empezando en 9);
-   - lengua materna, lengua extranjera, identidad étnica y discapacidad;
+   - identidad étnica y lengua materna: `CASTELLANO`, `NATIVA` (se elige la lengua nativa) o `EXTRANJERA` (se elige la lengua extranjera); por ejemplo, un postulante mestizo cuya lengua materna es el castellano marca `MESTIZO` y `CASTELLANO`;
+   - discapacidad, si corresponde;
 3. guardar el paso.
 
 #### 16.4.3. Resultado esperado

@@ -31,4 +31,15 @@ class ImportacionBancoDetalle extends LegacyModel
     {
         return $this->hasOne(InscripcionPago::class, 'id_importacion_banco_detalle', 'id_ibd');
     }
+
+    /**
+     * Un pago registrado a mano se puede corregir o eliminar mientras siga libre; los del
+     * TXT y los ya usados en una inscripción solo admiten observación.
+     */
+    public function esEditableAMano(): bool
+    {
+        return $this->origen_ibd === 'MANUAL'
+            && $this->estado_ibd === EstadoImportacionBancoDetalle::Pendiente
+            && ! $this->inscripcionPago()->exists();
+    }
 }

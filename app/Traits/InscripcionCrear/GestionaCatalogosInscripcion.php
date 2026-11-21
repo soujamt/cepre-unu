@@ -14,7 +14,6 @@ use App\Models\TipoDiscapacidad;
 use App\Models\TipoDocumento;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 
 /**
  * Catálogos del asistente de inscripción: se consultan una vez y se guardan en el estado del componente.
@@ -24,55 +23,46 @@ use Livewire\Attributes\Computed;
  */
 trait GestionaCatalogosInscripcion
 {
-    #[Computed]
     public function tiposDocumento(): EloquentCollection
     {
         return $this->hidratarModelos(TipoDocumento::class, $this->tiposDocumentoCatalogo);
     }
 
-    #[Computed]
     public function estadosCiviles(): EloquentCollection
     {
         return $this->hidratarModelos(EstadoCivil::class, $this->estadosCivilesCatalogo);
     }
 
-    #[Computed]
     public function paises(): EloquentCollection
     {
         return $this->hidratarModelos(Pais::class, $this->paisesCatalogo);
     }
 
-    #[Computed]
     public function nacionalidades(): EloquentCollection
     {
         return $this->hidratarModelos(Nacionalidad::class, $this->nacionalidadesCatalogo);
     }
 
-    #[Computed]
     public function identidadesEtnicas(): EloquentCollection
     {
         return $this->hidratarModelos(IdentidadEtnica::class, $this->identidadesEtnicasCatalogo);
     }
 
-    #[Computed]
     public function lenguasNativas(): EloquentCollection
     {
         return $this->hidratarModelos(LenguaNativa::class, $this->lenguasNativasCatalogo);
     }
 
-    #[Computed]
     public function lenguasExtranjeras(): EloquentCollection
     {
         return $this->hidratarModelos(LenguaExtranjera::class, $this->lenguasExtranjerasCatalogo);
     }
 
-    #[Computed]
     public function tiposDiscapacidad(): EloquentCollection
     {
         return $this->hidratarModelos(TipoDiscapacidad::class, $this->tiposDiscapacidadCatalogo);
     }
 
-    #[Computed]
     public function tiposColegio(): EloquentCollection
     {
         return $this->hidratarModelos(TipoColegio::class, $this->tiposColegioCatalogo);
@@ -95,7 +85,6 @@ trait GestionaCatalogosInscripcion
         );
     }
 
-    #[Computed]
     public function paisPeruId(): string
     {
         $paisPeru = $this->paises()

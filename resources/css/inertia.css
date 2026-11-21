@@ -1,0 +1,339 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '@fontsource-variable/inter';
+@import './paleta.css';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../js/**/*.{ts,tsx}';
+@source '../views/app.blade.php';
+@source '../views/errors/*.blade.php';
+@source '../views/verificacion-carnet.blade.php';
+
+/**
+ * Variables de shadcn/ui con la paleta del sistema: azul #296FF0 como color
+ * principal y los neutros de la escala zinc.
+ */
+:root {
+    --background: #ffffff;
+    --foreground: var(--color-zinc-800);
+    --card: #ffffff;
+    --card-foreground: var(--color-zinc-800);
+    --popover: #ffffff;
+    --popover-foreground: var(--color-zinc-800);
+    --primary: var(--color-500);
+    --primary-foreground: #ffffff;
+    --secondary: var(--color-zinc-100);
+    --secondary-foreground: var(--color-zinc-900);
+    --muted: var(--color-zinc-100);
+    --muted-foreground: var(--color-zinc-500);
+    --accent: var(--color-zinc-100);
+    --accent-foreground: var(--color-zinc-900);
+    --destructive: var(--color-red-500);
+    --destructive-foreground: #ffffff;
+    --border: var(--color-zinc-200);
+    --input: var(--color-zinc-200);
+    --ring: var(--color-500);
+
+    /** Fondo de las páginas públicas y de acceso **/
+    --surface: #f4f4f5;
+
+    /** Menú lateral y marco del panel principal: oscuro en los dos temas **/
+    --menu: #0c0c0f;
+
+    /**
+     * Gráficos: colores validados para el fondo blanco (scripts de la guía de visualización).
+     * Estados: activo / pendiente / anulado. Series: azul, naranja, aqua (en ese orden).
+     */
+    --grafico-activo: #1baf7a;
+    --grafico-pendiente: #eda100;
+    --grafico-anulado: #e34948;
+    --grafico-serie-1: #2a78d6;
+    --grafico-serie-2: #eb6834;
+    --grafico-serie-3: #1baf7a;
+    --grafico-neutro: #a1a1aa;
+    --grafico-grilla: #ececee;
+
+    /** Superficie de controles (inputs, selects, botones de filtro) **/
+    --control: #ffffff;
+    --control-hover: #fafafa;
+}
+
+.dark {
+    --background: var(--color-zinc-900);
+    --foreground: var(--color-zinc-100);
+    --card: var(--color-zinc-900);
+    --card-foreground: var(--color-zinc-100);
+    --popover: var(--color-zinc-900);
+    --popover-foreground: var(--color-zinc-100);
+    --primary: var(--color-500);
+    --primary-foreground: #ffffff;
+    --secondary: var(--color-zinc-800);
+    --secondary-foreground: var(--color-zinc-100);
+    --muted: var(--color-zinc-800);
+    --muted-foreground: var(--color-zinc-400);
+    --accent: rgb(255 255 255 / 0.05);
+    --accent-foreground: var(--color-zinc-100);
+    --destructive: var(--color-red-500);
+    --destructive-foreground: #ffffff;
+    --border: rgb(255 255 255 / 0.08);
+    --input: rgb(255 255 255 / 0.1);
+    --ring: var(--color-400);
+
+    --surface: #070708;
+    --menu: #060608;
+
+    --grafico-activo: #199e70;
+    --grafico-pendiente: #c98500;
+    --grafico-anulado: #d03b3b;
+    --grafico-serie-1: #3987e5;
+    --grafico-serie-2: #d95926;
+    --grafico-serie-3: #199e70;
+    --grafico-neutro: #71717a;
+    --grafico-grilla: rgb(255 255 255 / 0.06);
+
+    --control: rgb(255 255 255 / 0.035);
+    --control-hover: rgb(255 255 255 / 0.06);
+}
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-surface: var(--surface);
+    --color-menu: var(--menu);
+    --color-control: var(--control);
+    --color-control-hover: var(--control-hover);
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    html {
+        font-feature-settings:
+            'cv05' 1,
+            'cv08' 1;
+    }
+
+    body {
+        @apply bg-surface text-foreground antialiased;
+    }
+
+    table {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /** Los íconos mantienen su tamaño aunque el texto de al lado ocupe poco espacio. **/
+    svg {
+        flex-shrink: 0;
+    }
+
+    button,
+    [role='button'] {
+        cursor: pointer;
+    }
+}
+
+/**
+ * Botón primario: relleno #296FF0, borde interno de 1 px degradado blanco al 40 %,
+ * sombra negra al 20 % (Y 3, desenfoque 6), brillo interior blanco al 24 %
+ * (desenfoque 6, expansión 2) y anillo de 1 px del mismo color.
+ */
+@utility btn-primario {
+    color: var(--color-white);
+    border: 1px solid transparent;
+    background:
+        linear-gradient(var(--primary), var(--primary)) padding-box,
+        linear-gradient(to bottom, rgb(255 255 255 / 0.4), rgb(255 255 255 / 0)) border-box;
+    box-shadow:
+        0 3px 6px 0 rgb(0 0 0 / 0.2),
+        inset 0 0 6px 2px rgb(255 255 255 / 0.24),
+        0 0 0 1px var(--primary);
+    transition:
+        filter 150ms ease,
+        box-shadow 150ms ease,
+        transform 150ms ease;
+
+    &:hover {
+        filter: brightness(1.06);
+    }
+
+    &:active {
+        transform: translateY(0.5px);
+        box-shadow:
+            0 1px 3px 0 rgb(0 0 0 / 0.2),
+            inset 0 0 6px 2px rgb(255 255 255 / 0.24),
+            0 0 0 1px var(--primary);
+    }
+
+    &:disabled {
+        filter: saturate(0.7);
+    }
+}
+
+@utility scrollbar-fino {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-zinc-300) transparent;
+
+    &:where(.dark, .dark *) {
+        scrollbar-color: var(--color-zinc-700) transparent;
+    }
+}
+
+/** Sin transiciones mientras se cambia de tema (evita el parpadeo) **/
+.cambiando-tema,
+.cambiando-tema *,
+.cambiando-tema *::before,
+.cambiando-tema *::after {
+    transition: none !important;
+}
+
+/**
+ * Avisos (sonner): tarjeta con el ícono en un recuadro del color del tipo, título en
+ * negrita, mensaje en gris y una línea de color al pie que se vacía con el tiempo.
+ */
+[data-sonner-toaster] [data-sonner-toast].aviso-toast {
+    --tono: var(--color-index-500);
+    --tono-suave: rgb(41 111 240 / 0.12);
+
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem 1rem 0.875rem;
+    overflow: hidden;
+    border-radius: 1rem;
+    border: 1px solid rgb(228 228 231 / 0.9);
+    background:
+        linear-gradient(100deg, var(--tono-suave), transparent 38%),
+        rgb(255 255 255 / 0.97);
+    color: var(--color-zinc-700);
+    box-shadow:
+        0 1px 2px rgb(16 24 40 / 0.05),
+        0 18px 40px -16px rgb(16 24 40 / 0.28);
+    backdrop-filter: blur(12px);
+}
+
+[data-sonner-toast].aviso-toast[data-type='success'] {
+    --tono: #10b981;
+    --tono-suave: rgb(16 185 129 / 0.12);
+}
+
+[data-sonner-toast].aviso-toast[data-type='error'] {
+    --tono: #ef4444;
+    --tono-suave: rgb(239 68 68 / 0.11);
+}
+
+[data-sonner-toast].aviso-toast[data-type='warning'] {
+    --tono: #f59e0b;
+    --tono-suave: rgb(245 158 11 / 0.13);
+}
+
+[data-sonner-toast].aviso-toast[data-type='loading'] {
+    --tono: var(--color-zinc-400);
+    --tono-suave: transparent;
+}
+
+.dark [data-sonner-toaster] [data-sonner-toast].aviso-toast {
+    border-color: rgb(255 255 255 / 0.09);
+    background:
+        linear-gradient(100deg, var(--tono-suave), transparent 38%),
+        rgb(30 30 33 / 0.96);
+    color: var(--color-zinc-200);
+    box-shadow:
+        inset 0 1px 0 rgb(255 255 255 / 0.04),
+        0 18px 40px -14px rgb(0 0 0 / 0.7);
+}
+
+/* Recuadro del ícono */
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'].aviso-toast [data-icon] {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    margin: 0;
+    border-radius: 0.75rem;
+    background: var(--tono-suave);
+    color: var(--tono);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tono) 22%, transparent);
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-styled='true'].aviso-toast [data-icon] > * {
+    width: auto;
+    height: auto;
+}
+
+.aviso-toast-contenido {
+    gap: 0.125rem;
+    padding-top: 0.0625rem;
+}
+
+.aviso-toast-titulo {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--color-zinc-900);
+}
+
+.dark .aviso-toast-titulo {
+    color: #fff;
+}
+
+.aviso-toast-descripcion {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--color-zinc-500);
+}
+
+.dark .aviso-toast-descripcion {
+    color: var(--color-zinc-400);
+}
+
+/* Línea de tiempo al pie: se vacía en lo que dura el aviso y se detiene al pasar el mouse. */
+[data-sonner-toast].aviso-toast [data-content]::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--tono);
+    opacity: 0.75;
+    transform-origin: left;
+    animation: aviso-tiempo 4.5s linear forwards;
+}
+
+[data-sonner-toast].aviso-toast[data-type='loading'] [data-content]::after {
+    display: none;
+}
+
+[data-sonner-toaster]:hover [data-sonner-toast].aviso-toast [data-content]::after {
+    animation-play-state: paused;
+}
+
+@keyframes aviso-tiempo {
+    from {
+        transform: scaleX(1);
+    }
+
+    to {
+        transform: scaleX(0);
+    }
+}

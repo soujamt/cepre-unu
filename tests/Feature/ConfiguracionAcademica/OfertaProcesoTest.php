@@ -14,7 +14,8 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -99,9 +100,10 @@ test('authorized users can access oferta del proceso page', function () {
     $this->actingAs($usuario)
         ->get(route('ofertas.index'))
         ->assertOk()
-        ->assertSee('Oferta del proceso')
-        ->assertSee('EXTRAORDINARIO O RESERVA')
-        ->assertSee('PUCALLPA - CALLERÍA');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('configuracion-academica/ofertas')
+            ->where('modalidades', fn ($modalidades): bool => collect($modalidades)->contains('nombre', 'EXTRAORDINARIO O RESERVA'))
+            ->where('sedes', fn ($sedes): bool => collect($sedes)->contains('nombre', 'PUCALLPA - CALLERÍA')));
 });
 
 test('users without permiso cannot access oferta del proceso page', function () {
@@ -116,16 +118,17 @@ test('authorized users can enable modalidades and carreras per sede for a proces
     $contexto = crearContextoOfertaProceso();
     [$sistemas, $derecho] = $contexto['carreras'];
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->get(route('ofertas.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('proceso.id', $contexto['proceso']->id_pro));
 
-    Livewire::test('pages::configuracion-academica.ofertas')
-        ->assertSet('idProceso', (string) $contexto['proceso']->id_pro)
-        ->set("modalidadesSeleccionadas.{$contexto['ordinario']->id_mad}", true)
-        ->set("modalidadesSeleccionadas.{$contexto['reserva']->id_mad}", true)
-        ->set("carrerasSeleccionadas.{$contexto['sede']->id_sed}.{$sistemas->id_car}", true)
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Oferta del proceso guardada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->put(route('ofertas.update', $contexto['proceso']), [
+            'modalidades' => [$contexto['ordinario']->id_mad, $contexto['reserva']->id_mad],
+            'carreras' => [$contexto['sede']->id_sed => [$sistemas->id_car]],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Oferta del proceso guardada correctamente.']);
 
     expect(ProcesoModalidad::query()->where('id_proceso', $contexto['proceso']->id_pro)->where('estado_pmo', 'HABILITADO')->count())->toBe(2)
         ->and(ProcesoCarrera::query()->where('id_proceso', $contexto['proceso']->id_pro)->where('id_carrera', $sistemas->id_car)->value('estado_pca')?->value)->toBe('HABILITADO')
@@ -150,13 +153,16 @@ test('unchecking a carrera disables it without deleting the record', function ()
         'estado_pca' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->get(route('ofertas.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where("seleccion.carreras.{$contexto['sede']->id_sed}", [$sistemas->id_car]));
 
-    Livewire::test('pages::configuracion-academica.ofertas')
-        ->assertSet("carrerasSeleccionadas.{$contexto['sede']->id_sed}.{$sistemas->id_car}", true)
-        ->call('quitarTodasLasCarreras', $contexto['sede']->id_sed)
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('ofertas.update', $contexto['proceso']), [
+            'modalidades' => [$contexto['ordinario']->id_mad],
+            'carreras' => [$contexto['sede']->id_sed => []],
+        ])
+        ->assertSessionHasNoErrors();
 
     expect(ProcesoCarrera::query()->where('id_carrera', $sistemas->id_car)->value('estado_pca')?->value)->toBe('DESHABILITADO');
 });
@@ -166,11 +172,11 @@ test('oferta del proceso requires at least one modalidad', function () {
     otorgarPermisosOfertaProceso($usuario, ['oferta_indice', 'oferta_editar']);
     crearContextoOfertaProceso();
 
-    $this->actingAs($usuario);
+    $contexto = Proceso::query()->firstOrFail();
 
-    Livewire::test('pages::configuracion-academica.ofertas')
-        ->call('guardar')
-        ->assertHasErrors('modalidadesSeleccionadas');
+    $this->actingAs($usuario)
+        ->put(route('ofertas.update', $contexto), ['modalidades' => [], 'carreras' => []])
+        ->assertSessionHasErrors(['modalidades' => 'Habilite al menos una modalidad.']);
 
     expect(ProcesoModalidad::query()->count())->toBe(0);
 });
@@ -180,10 +186,20 @@ test('users without editar permiso cannot save the oferta', function () {
     otorgarPermisosOfertaProceso($usuario, ['oferta_indice']);
     $contexto = crearContextoOfertaProceso();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.ofertas')
-        ->set("modalidadesSeleccionadas.{$contexto['ordinario']->id_mad}", true)
-        ->call('guardar')
+    $this->actingAs($usuario)
+        ->put(route('ofertas.update', $contexto['proceso']), ['modalidades' => [$contexto['ordinario']->id_mad]])
         ->assertForbidden();
+});
+
+test('the oferta of a closed proceso cannot be modified', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosOfertaProceso($usuario, ['oferta_indice', 'oferta_editar']);
+    $contexto = crearContextoOfertaProceso();
+    $contexto['proceso']->update(['estado_pro' => 'CERRADO']);
+
+    $this->actingAs($usuario)
+        ->put(route('ofertas.update', $contexto['proceso']), ['modalidades' => [$contexto['ordinario']->id_mad]])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'El proceso ya cerró; su oferta no se puede modificar.']);
+
+    expect(ProcesoModalidad::query()->count())->toBe(0);
 });

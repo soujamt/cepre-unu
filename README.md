@@ -1,12 +1,43 @@
 # CEPRE UNU
 
-Sistema de gestión académica y de inscripciones para CEPRE UNU, construido con Laravel, Livewire 4, Flux UI y Tailwind CSS 4.
+Sistema de gestión académica y de inscripciones del Centro Preuniversitario de la Universidad Nacional de Ucayali (CEPRE UNU). El personal configura cada proceso, registra y valida los pagos del banco e inscribe a los postulantes; los postulantes también pueden inscribirse en línea con su voucher.
+
+## Tecnologías
+
+| Capa | Herramientas |
+|---|---|
+| Backend | Laravel 13, PHP 8.4, MySQL |
+| Frontend | Inertia 3, React 19, TypeScript, Tailwind CSS 4 |
+| Componentes | shadcn/ui (Radix), sonner, íconos Keyline |
+| Rutas tipadas | Laravel Wayfinder |
+| Documentos | DomPDF (ficha y carnet con QR), Laravel Excel |
+| Pruebas | Pest 5, `tsc --noEmit` en la integración continua |
+
+## Lo más destacado
+
+- **Asistente de inscripción en 4 pasos** (pago, datos personales, datos generales y postulación). Lo usan el personal y el portal público. Su estado vive en la sesión del servidor y el navegador solo puede cambiar los campos del formulario y llamar a las acciones permitidas. El pago validado, la persona y el paso actual los decide siempre el servidor.
+- **Pagos bancarios**: importación del TXT del banco con previsualización, validación de cuotas y pagos manuales. Cada pago queda libre o se asocia a una inscripción.
+- **Portal del postulante**: inscripción con el DNI que pagó, revisión del personal antes de activarla, y ficha y carnet descargables con enlaces firmados.
+- **Permisos por rol**: el menú, los botones y las rutas se filtran con los mismos permisos.
+- **Interfaz** con tema claro y oscuro, tablas con filtros en la URL, formularios en paneles laterales y confirmaciones en diálogos.
+
+## Estructura del frontend
+
+```
+resources/js/
+├── pages/          Pantallas de Inertia, agrupadas por área
+├── components/     Componentes propios y de shadcn/ui (components/ui)
+├── layouts/        Layout de la aplicación, de acceso y del portal
+├── hooks/          usePermiso, useTema, useCatalogo…
+├── lib/            Navegación, íconos y utilidades
+└── routes/         Rutas tipadas que genera Wayfinder
+```
 
 ## Requisitos
 
 - PHP 8.4 o superior
 - Composer
-- Node.js 20 o superior
+- Node.js 20.19 o superior
 - NPM
 - MySQL/MariaDB
 
@@ -249,6 +280,7 @@ Después de la instalación inicial, validar:
 
 ```bash
 php artisan test --compact
+npm run types:check
 ```
 
 ## Mantenimiento Útil

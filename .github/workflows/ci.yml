@@ -47,15 +47,19 @@ jobs:
       - name: Instalar dependencias de PHP
         run: composer install --no-interaction --prefer-dist --no-progress
 
+      # Wayfinder usa artisan al compilar, así que el .env va antes del build.
+      - name: Preparar el entorno
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
       - name: Instalar dependencias de Node y compilar assets
         run: |
           npm ci
           npm run build
 
-      - name: Preparar el entorno
-        run: |
-          cp .env.example .env
-          php artisan key:generate
+      - name: Revisar los tipos de TypeScript
+        run: npm run types:check
 
       - name: Revisar el estilo con Pint
         run: vendor/bin/pint --test

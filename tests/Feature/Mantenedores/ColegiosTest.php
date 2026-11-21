@@ -26,7 +26,8 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -74,10 +75,25 @@ test('authorized users can access colegios page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosColegio($usuario, ['colegio_indice']);
 
+    $publico = TipoColegio::query()->create(['codigo_tco' => 'PUB', 'nombre_tco' => 'PUBLICO', 'estado_tco' => 'HABILITADO']);
+    Colegio::query()->create(['id_col' => '0915389', 'nombre_col' => 'AGROPECUARIO PADRE ABAD', 'id_tipo_colegio' => $publico->id_tco, 'estado_col' => 'HABILITADO']);
+    Colegio::query()->create(['id_col' => '0915390', 'nombre_col' => 'SAN FERNANDO', 'estado_col' => 'HABILITADO']);
+
     $this->actingAs($usuario)
         ->get(route('mantenedor-colegios.index'))
         ->assertOk()
-        ->assertSee('Colegios');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/colegios')
+            ->has('colegios.data', 2)
+            ->where('tipos', [['valor' => (string) $publico->id_tco, 'nombre' => 'PUBLICO']]));
+
+    $this->actingAs($usuario)
+        ->get(route('mantenedor-colegios.index', ['tipo' => $publico->id_tco]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('colegios.data', 1)
+            ->where('colegios.data.0.id', '0915389')
+            ->where('colegios.data.0.tipo', 'PUBLICO')
+            ->where('filtros.tipo', (string) $publico->id_tco));
 });
 
 test('authenticated users without permiso cannot access colegios page', function () {
@@ -109,17 +125,17 @@ test('authorized users can register a colegio', function () {
         'estado_ubi' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->set('colegioForm.id', '0915389')
-        ->set('colegioForm.codigo_modular', '0915389')
-        ->set('colegioForm.nombre', 'Agropecuario Padre Abad')
-        ->set('colegioForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
-        ->set('colegioForm.id_ubigeo', $ubigeo->id_ubi)
-        ->set('colegioForm.direccion', 'Avenida Centenario 100')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('mantenedor-colegios.store'), [
+            'id' => ' 0915389 ',
+            'codigo_modular' => '0915389',
+            'nombre' => 'Agropecuario Padre Abad',
+            'id_tipo_colegio' => (string) $tipoColegio->id_tco,
+            'id_ubigeo' => $ubigeo->id_ubi,
+            'direccion' => 'Avenida Centenario 100',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Colegio registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_colegio', [
         'id_col' => '0915389',
@@ -182,17 +198,17 @@ test('authorized users can update a colegio', function () {
         'estado_col' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->call('cargarColegio', $colegio->id_col)
-        ->set('colegioForm.codigo_modular', '0915390')
-        ->set('colegioForm.nombre', 'Agropecuario Padre Abad Privado')
-        ->set('colegioForm.id_tipo_colegio', (string) $otroTipoColegio->id_tco)
-        ->set('colegioForm.id_ubigeo', $otroUbigeo->id_ubi)
-        ->set('colegioForm.direccion', 'Jiron Central 123')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('mantenedor-colegios.update', $colegio), [
+            'id' => 'OTRO',
+            'codigo_modular' => '0915390',
+            'nombre' => 'Agropecuario Padre Abad Privado',
+            'id_tipo_colegio' => (string) $otroTipoColegio->id_tco,
+            'id_ubigeo' => $otroUbigeo->id_ubi,
+            'direccion' => 'Jiron Central 123',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Colegio actualizado correctamente.');
 
     $this->assertDatabaseHas('tbl_colegio', [
         'id_col' => '0915389',
@@ -216,11 +232,9 @@ test('authorized users can change state of a colegio', function () {
         'estado_col' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->call('cambiarEstado', $colegio->id_col)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('mantenedor-colegios.estado', $colegio))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del colegio actualizado.']);
 
     $this->assertDatabaseHas('tbl_colegio', [
         'id_col' => $colegio->id_col,
@@ -240,16 +254,14 @@ test('authorized users can delete a colegio without inscripciones', function () 
         'estado_col' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->call('eliminar', $colegio->id_col)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('mantenedor-colegios.destroy', $colegio))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Colegio eliminado correctamente.']);
 
     $colegioEliminado = Colegio::query()->withTrashed()->find($colegio->id_col);
 
-    expect($colegioEliminado)->not->toBeNull();
-    expect($colegioEliminado?->id_usuario_eliminador)->toBe($usuario->id_usu);
+    expect($colegioEliminado?->trashed())->toBeTrue()
+        ->and($colegioEliminado?->id_usuario_eliminador)->toBe($usuario->id_usu);
 });
 
 test('authenticated users cannot register duplicated colegio by codigo modular or name', function () {
@@ -263,16 +275,12 @@ test('authenticated users cannot register duplicated colegio by codigo modular o
         'estado_col' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->set('colegioForm.id', '0915390')
-        ->set('colegioForm.codigo_modular', '0915389')
-        ->set('colegioForm.nombre', 'Agropecuario Padre Abad')
-        ->call('guardar')
-        ->assertHasErrors([
-            'colegioForm.codigo_modular',
-            'colegioForm.nombre',
+    $this->actingAs($usuario)
+        ->post(route('mantenedor-colegios.store'), ['id' => '0915389', 'codigo_modular' => '0915389', 'nombre' => 'Agropecuario Padre Abad'])
+        ->assertSessionHasErrors([
+            'id' => 'Ya existe un colegio con ese código.',
+            'codigo_modular' => 'Ya existe un colegio con ese código modular.',
+            'nombre' => 'Ya existe un colegio con ese nombre.',
         ]);
 });
 
@@ -416,11 +424,9 @@ test('authenticated users cannot delete a colegio with inscripciones', function 
         'estado_ins' => 'PENDIENTE',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.colegios')
-        ->call('eliminar', $colegio->id_col)
-        ->assertDispatched('toast', message: 'El colegio tiene inscripciones relacionadas y no puede eliminarse.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('mantenedor-colegios.destroy', $colegio))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El colegio tiene inscripciones relacionadas y no puede eliminarse.']);
 
     expect(Colegio::query()->find($colegio->id_col))->not->toBeNull();
 });

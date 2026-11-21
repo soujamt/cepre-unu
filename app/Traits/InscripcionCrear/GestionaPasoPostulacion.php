@@ -19,7 +19,6 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Livewire\Attributes\Computed;
 use RuntimeException;
 use Throwable;
 
@@ -49,20 +48,17 @@ trait GestionaPasoPostulacion
     /**
      * @return array{disponible:bool,mensaje:string,proceso:?Proceso}
      */
-    #[Computed]
     public function contextoProcesoPostulacion(): array
     {
         return $this->contextoProcesoPostulacionCache
             ?? $this->refrescarContextoProcesoPostulacion();
     }
 
-    #[Computed]
     public function procesoPostulacionActivo(): ?Proceso
     {
         return $this->contextoProcesoPostulacion()['proceso'];
     }
 
-    #[Computed]
     public function inicioInscripcionBloqueado(): bool
     {
         return $this->inscripcionId === null
@@ -72,7 +68,6 @@ trait GestionaPasoPostulacion
     /**
      * Modalidad que corresponde al año de egreso ingresado en el paso 2.
      */
-    #[Computed]
     public function modalidadPostulacion(): ?ModalidadAdmision
     {
         $proceso = $this->procesoPostulacionActivo();
@@ -88,7 +83,6 @@ trait GestionaPasoPostulacion
     /**
      * Carreras habilitadas en el proceso activo, con su sede.
      */
-    #[Computed]
     public function carrerasProcesoDisponibles(): EloquentCollection
     {
         $proceso = $this->procesoPostulacionActivo();
@@ -109,7 +103,6 @@ trait GestionaPasoPostulacion
     /**
      * @return Collection<int, array{id:string,nombre:string}>
      */
-    #[Computed]
     public function sedesPostulacionDisponibles(): Collection
     {
         return $this->carrerasProcesoDisponibles()
@@ -125,7 +118,6 @@ trait GestionaPasoPostulacion
     /**
      * @return Collection<int, array{id:string,nombre:string}>
      */
-    #[Computed]
     public function carrerasPostulacionDisponibles(): Collection
     {
         return $this->carrerasProcesoDisponibles()
@@ -144,7 +136,6 @@ trait GestionaPasoPostulacion
      *
      * @return Collection<int, array{id:string,nombre:string}>
      */
-    #[Computed]
     public function turnosPostulacionDisponibles(): Collection
     {
         $proceso = $this->procesoPostulacionActivo();

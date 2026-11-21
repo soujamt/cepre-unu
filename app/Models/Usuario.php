@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use WeakMap;
 
 #[Table('tbl_usuario', key: 'id_usu')]
@@ -158,6 +159,60 @@ class Usuario extends Authenticatable
     public function esAdministrador(): bool
     {
         return $this->permisosDeLaSolicitud()['administrador'];
+    }
+
+    /**
+     * Permisos del usuario para el frontend: si es administrador (acceso total)
+     * y las claves de las acciones que le dan sus roles.
+     *
+     * @return array{administrador: bool, claves: list<string>}
+     */
+    public function resumenPermisos(): array
+    {
+        $permisos = $this->permisosDeLaSolicitud();
+
+        return [
+            'administrador' => $permisos['administrador'],
+            'claves' => array_keys($permisos['claves']),
+        ];
+    }
+
+    /**
+     * Nombre para mostrar, con mayúscula inicial en cada palabra.
+     */
+    public function nombreVisible(): string
+    {
+        return Str::title(mb_strtolower($this->nombres_usu ?: 'Usuario', 'UTF-8'));
+    }
+
+    /**
+     * Iniciales de las dos primeras palabras del nombre, para el avatar.
+     */
+    public function iniciales(): string
+    {
+        $palabras = collect(preg_split('/\s+/u', trim($this->nombreVisible())))->filter()->values();
+
+        return mb_strtoupper(
+            $palabras->take(2)->map(fn (string $palabra): string => mb_substr($palabra, 0, 1))->implode(''),
+            'UTF-8',
+        );
+    }
+
+    /**
+     * Correo con el usuario oculto salvo los dos primeros caracteres: su********@unu.edu.pe.
+     */
+    public function correoOculto(): string
+    {
+        $partes = explode('@', (string) $this->correo_usu);
+
+        if (count($partes) !== 2) {
+            return (string) $this->correo_usu;
+        }
+
+        [$nombreUsuario, $dominio] = $partes;
+        $visibles = strlen($nombreUsuario) <= 2 ? 0 : 2;
+
+        return substr($nombreUsuario, 0, $visibles).str_repeat('*', strlen($nombreUsuario) - $visibles).'@'.$dominio;
     }
 
     /**

@@ -13,7 +13,6 @@ use App\Models\ReglaPago;
 use App\Support\InscripcionPagoManager;
 use App\Support\ValidadorVigenciaInscripcion;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Livewire\Attributes\Computed;
 use RuntimeException;
 
 /**
@@ -58,7 +57,6 @@ trait GestionaPasoPago
      * Reglas vigentes del proceso activo. Las que dependen de la modalidad se
      * comprueban al guardar la postulación, cuando ya se conoce el año de egreso.
      */
-    #[Computed]
     public function reglasPagoDisponibles(): EloquentCollection
     {
         $proceso = $this->procesoPostulacionActivo();
@@ -79,7 +77,6 @@ trait GestionaPasoPago
             ->get();
     }
 
-    #[Computed]
     public function reglaPagoSeleccionada(): ?ReglaPago
     {
         if ($this->pagoForm['id_regla_pago'] === '') {
@@ -90,7 +87,6 @@ trait GestionaPasoPago
             ->first(fn (ReglaPago $regla): bool => (string) $regla->id_rpa === (string) $this->pagoForm['id_regla_pago']);
     }
 
-    #[Computed]
     public function detallesPagoEncontrados(): EloquentCollection
     {
         if ($this->resultadoPagoDetalleIds === []) {
@@ -104,7 +100,6 @@ trait GestionaPasoPago
             ->get();
     }
 
-    #[Computed]
     public function montoPagosSeleccionados(): float
     {
         return round((float) $this->detallesPagoEncontrados
@@ -130,7 +125,6 @@ trait GestionaPasoPago
         return $total;
     }
 
-    #[Computed]
     public function tienePagoValidadoWizard(): bool
     {
         if ($this->inscripcionId === null) {
@@ -162,7 +156,9 @@ trait GestionaPasoPago
 
         if ($pagoBuscado === null) {
             $this->limpiarBusquedaPago();
-            $this->addError('pagoForm.numero_operacion', 'No hay un pago LIBRE con ese DNI y número de operación.');
+            $this->addError('busquedaPago', $this->esModoPublico()
+                ? 'Revise el DNI y el número de operación de su voucher. Si pagó hoy, el pago puede tardar en aparecer; intente más tarde o acérquese al CEPRE-UNU.'
+                : 'Revise el DNI y el número de operación del voucher. El pago debe estar cargado desde el TXT del banco o registrado en Pagos, y no debe estar usado en otra inscripción.');
 
             return;
         }
@@ -230,6 +226,7 @@ trait GestionaPasoPago
 
         if ($this->personaId === null) {
             $this->personaForm['numero_documento'] = trim($this->pagoForm['numero_documento']);
+            $this->preseleccionarTipoDocumento();
             $this->autocompletarPersonaRegistrada();
         }
 

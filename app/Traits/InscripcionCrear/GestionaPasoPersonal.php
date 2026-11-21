@@ -11,7 +11,6 @@ use App\Models\Ubigeo;
 use App\Services\ReniecService;
 use Closure;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Computed;
 use Throwable;
 
 /**
@@ -80,15 +79,18 @@ trait GestionaPasoPersonal
         if ($valor === TipoLenguaMaternaPersona::Extranjera->value) {
             $this->personaForm['id_lengua_nativa'] = '';
         }
+
+        if ($valor === TipoLenguaMaternaPersona::Castellano->value) {
+            $this->personaForm['id_lengua_nativa'] = '';
+            $this->personaForm['id_lengua_extranjera'] = '';
+        }
     }
 
-    #[Computed]
     public function esTipoDocumentoDni(): bool
     {
         return $this->esTipoDocumentoDniSeleccionado();
     }
 
-    #[Computed]
     public function puedeConsultarReniec(): bool
     {
         return $this->esTipoDocumentoDniSeleccionado() && strlen($this->personaForm['numero_documento']) === 8;
@@ -404,10 +406,28 @@ trait GestionaPasoPersonal
     {
         $tipoDocumento = $this->tipoDocumentoSeleccionado();
 
-        if ($tipoDocumento === null) {
-            return false;
+        return $tipoDocumento !== null && $this->tipoDocumentoEsDni($tipoDocumento);
+    }
+
+    /**
+     * Elige DNI como tipo de documento cuando todavía no hay uno y el número tiene 8 dígitos
+     * (el número viene del pago validado). Con otra longitud, el tipo lo elige el usuario.
+     */
+    private function preseleccionarTipoDocumento(): void
+    {
+        if ($this->personaForm['id_tipo_documento'] !== '' || preg_match('/^\d{8}$/', (string) $this->personaForm['numero_documento']) !== 1) {
+            return;
         }
 
+        $dni = $this->tiposDocumento()->first(fn (TipoDocumento $tipo): bool => $this->tipoDocumentoEsDni($tipo));
+
+        if ($dni !== null) {
+            $this->personaForm['id_tipo_documento'] = (string) $dni->id_tdo;
+        }
+    }
+
+    private function tipoDocumentoEsDni(TipoDocumento $tipoDocumento): bool
+    {
         $codigo = trim((string) $tipoDocumento->codigo_tdo);
         $nombre = mb_strtoupper(trim((string) $tipoDocumento->nombre_tdo), 'UTF-8');
         $longitudMinima = (int) ($tipoDocumento->longitud_minima_tdo ?? 0);
