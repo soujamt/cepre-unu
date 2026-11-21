@@ -1,11 +1,12 @@
 import { useHttp } from '@inertiajs/react';
-import { ArrowLeft, FileText, IdCard, Search } from '@keyline-icons/react/fill';
+import { ArrowLeft, ArrowRight, FileText, IdCard, Search } from '@keyline-icons/react/fill';
 import type { FormEvent } from 'react';
+import { Aviso } from '@/components/aviso';
 import { CampoTexto } from '@/components/campo';
 import { Enlace } from '@/components/enlace';
 import { InsigniaEstado } from '@/components/insignia-estado';
 import { Button } from '@/components/ui/button';
-import { portal } from '@/routes/publico';
+import { inscripcion, portal } from '@/routes/publico';
 import { buscar } from '@/routes/publico/consulta';
 
 interface Resultado {
@@ -24,6 +25,8 @@ interface Resultado {
 export default function Consulta() {
     const consulta = useHttp<{ documento: string; operacion: string }, Resultado>({ documento: '', operacion: '' });
     const resultado = consulta.hasErrors ? null : consulta.response;
+    /** El pago existe y está libre, pero el postulante no terminó de inscribirse. */
+    const pagoSinInscripcion = (consulta.errors as Record<string, string | undefined>).pago_sin_inscripcion;
 
     const enviar = (evento: FormEvent): void => {
         evento.preventDefault();
@@ -32,7 +35,7 @@ export default function Consulta() {
 
     return (
         <div className="space-y-5">
-            <form onSubmit={enviar} noValidate className="rounded-xl border border-zinc-200/80 bg-white p-5 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">
+            <form onSubmit={enviar} noValidate className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-card sm:p-6 dark:border-white/[0.06] dark:bg-zinc-900">
                 <div className="grid gap-4 sm:grid-cols-12">
                     <CampoTexto
                         etiqueta="DNI / CE"
@@ -66,6 +69,23 @@ export default function Consulta() {
                     </div>
                 </div>
             </form>
+
+            {pagoSinInscripcion && (
+                <Aviso
+                    tono="aviso"
+                    titulo="Aún no completa su inscripción"
+                    accion={
+                        <Button asChild>
+                            <Enlace href={inscripcion.url()}>
+                                Inscribirme
+                                <ArrowRight className="size-4.5" />
+                            </Enlace>
+                        </Button>
+                    }
+                >
+                    {pagoSinInscripcion}
+                </Aviso>
+            )}
 
             {resultado && (
                 <section aria-live="polite" className="rounded-xl border border-zinc-200/80 bg-white p-6 shadow-card dark:border-white/[0.06] dark:bg-zinc-900">

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Publico;
 
 use App\Models\Inscripcion;
+use App\Support\InscripcionPagoManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\RateLimiter;
@@ -15,6 +16,11 @@ use Illuminate\Validation\ValidationException;
 class ConsultaInscripcionRequest extends FormRequest
 {
     private const INTENTOS_POR_MINUTO = 8;
+
+    /**
+     * Clave del error cuando el pago existe y está libre, pero no hay inscripción.
+     */
+    public const CLAVE_PAGO_SIN_INSCRIPCION = 'pago_sin_inscripcion';
 
     public function authorize(): bool
     {
@@ -70,10 +76,27 @@ class ConsultaInscripcionRequest extends FormRequest
             ->orderByDesc('id_ins')
             ->first();
 
+        if ($inscripcion === null && $this->tienePagoSinInscripcion()) {
+            throw ValidationException::withMessages([
+                self::CLAVE_PAGO_SIN_INSCRIPCION => 'Su pago está registrado, pero aún no completa su inscripción. Use la opción Inscribirme con el mismo DNI y número de operación.',
+            ]);
+        }
+
         if ($inscripcion === null) {
             throw ValidationException::withMessages(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
         }
 
         return $inscripcion;
+    }
+
+    /**
+     * El documento tiene un pago importado del banco con ese número de operación que todavía
+     * no se usó en ninguna inscripción (el postulante pagó, pero no terminó de inscribirse).
+     */
+    private function tienePagoSinInscripcion(): bool
+    {
+        return app(InscripcionPagoManager::class)
+            ->buscarDetallesDisponibles($this->string('documento')->toString(), $this->string('operacion')->toString())
+            ->isNotEmpty();
     }
 }

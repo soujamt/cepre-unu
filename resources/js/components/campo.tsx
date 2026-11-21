@@ -1,7 +1,9 @@
-import { CircleAlert, Eye, EyeOff } from '@keyline-icons/react/fill';
-import { useId, useState } from 'react';
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { ChevronDown, CircleAlert, Eye, EyeOff } from '@keyline-icons/react/fill';
+import { Select as SelectPrimitive } from 'radix-ui';
+import { Children, Fragment, isValidElement, useId, useState } from 'react';
+import type { InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem } from '@/components/ui/select';
 import type { Icono } from '@/lib/iconos';
 import { cn } from '@/lib/utils';
 
@@ -154,54 +156,121 @@ export function CampoArea({ etiqueta, error, ayuda, requerido, className, id, ro
     );
 }
 
-type PropsCampoSelect = PropsCampo & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className'> & { children: ReactNode };
+type PropsCampoSelect = PropsCampo & {
+    id?: string;
+    name?: string;
+    value?: string | number;
+    defaultValue?: string | number;
+    disabled?: boolean;
+    /** Recibe un evento con target.value, igual que un <select> nativo. */
+    onChange?: (evento: { target: { value: string } }) => void;
+    /** Las opciones, como <option value="…">texto</option> (también dentro de fragmentos o de componentes simples). */
+    children: ReactNode;
+};
+
+interface OpcionSelect {
+    valor: string;
+    texto: ReactNode;
+    deshabilitada: boolean;
+}
+
+/** Radix no admite un ítem con valor vacío; este valor representa la opción vacía. */
+const VALOR_VACIO = '__vacio__';
 
 /**
- * Lista desplegable nativa con etiqueta flotante. Mientras el valor está vacío
- * (opción "Seleccionar …") la etiqueta queda al centro, como en los campos de texto.
+ * Lee las opciones de los hijos: elementos <option>, fragmentos, listas y componentes
+ * sin estado que devuelven opciones (por ejemplo <Opciones /> del asistente).
  */
-export function CampoSelect({ etiqueta, error, ayuda, requerido, className, id, children, value, defaultValue, onChange, ...select }: PropsCampoSelect) {
+function leerOpciones(hijos: ReactNode): OpcionSelect[] {
+    return Children.toArray(hijos).flatMap((hijo): OpcionSelect[] => {
+        if (!isValidElement<{ value?: string | number; children?: ReactNode; disabled?: boolean }>(hijo)) {
+            return [];
+        }
+
+        if (hijo.type === 'option') {
+            return [{ valor: String(hijo.props.value ?? ''), texto: hijo.props.children, deshabilitada: Boolean(hijo.props.disabled) }];
+        }
+
+        if (hijo.type === Fragment) {
+            return leerOpciones(hijo.props.children);
+        }
+
+        if (typeof hijo.type === 'function') {
+            return leerOpciones((hijo.type as (props: unknown) => ReactNode)(hijo.props));
+        }
+
+        return [];
+    });
+}
+
+/**
+ * Lista desplegable con el Select de shadcn y etiqueta flotante, de 48 px como los demás
+ * campos. Mientras el valor está vacío la etiqueta queda al centro; la lista se abre
+ * debajo, con búsqueda por teclado y la opción elegida marcada.
+ */
+export function CampoSelect({ etiqueta, error, ayuda, requerido, className, id, name, children, value, defaultValue, disabled, onChange }: PropsCampoSelect) {
     const idGenerado = useId();
     const idCampo = id ?? idGenerado;
     const [valorLocal, setValorLocal] = useState(String(defaultValue ?? ''));
-    const vacio = String(value ?? valorLocal) === '';
+    const valor = String(value ?? valorLocal);
+    const vacio = valor === '';
     const invalido = Boolean(error);
+    const opciones = leerOpciones(children);
+
+    const cambiar = (nuevo: string): void => {
+        const real = nuevo === VALOR_VACIO ? '' : nuevo;
+        setValorLocal(real);
+        onChange?.({ target: { value: real } });
+    };
 
     return (
         <Contenedor className={className} mensaje={<Mensaje id={`${idCampo}-mensaje`} error={error} ayuda={ayuda} />}>
-            <select
-                {...select}
-                id={idCampo}
-                value={value}
-                defaultValue={defaultValue}
-                onChange={(evento) => {
-                    setValorLocal(evento.target.value);
-                    onChange?.(evento);
-                }}
-                aria-required={requerido || undefined}
-                data-vacio={vacio || undefined}
-                aria-invalid={invalido || undefined}
-                aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
-                className={cn(
-                    claseControl(invalido),
-                    'h-12 cursor-pointer bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a1a1a1%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22/%3E%3C/svg%3E")] bg-[length:1rem] bg-[position:right_0.85rem_center] bg-no-repeat ps-3.5 pe-10 pt-5 pb-1.5 leading-5.5',
-                    // Con la opción vacía el texto "Seleccionar …" se oculta y solo se ve la etiqueta;
-                    // las opciones de la lista mantienen su color.
-                    'data-vacio:text-transparent [&>option]:text-zinc-700 dark:[&>option]:bg-zinc-900 dark:[&>option]:text-zinc-200',
-                )}
-            >
-                {children}
-            </select>
+            <Select value={vacio ? VALOR_VACIO : valor} onValueChange={cambiar} disabled={disabled} name={name}>
+                <SelectPrimitive.Trigger
+                    id={idCampo}
+                    aria-required={requerido || undefined}
+                    aria-invalid={invalido || undefined}
+                    aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
+                    className={cn(
+                        claseControl(invalido),
+                        'group/select flex h-12 cursor-pointer items-end ps-3.5 pe-10 pb-1.5 text-start leading-5.5',
+                        'data-[state=open]:ring-3',
+                        invalido ? 'data-[state=open]:ring-red-500/15' : 'data-[state=open]:border-index-400 data-[state=open]:ring-index-500/15 dark:data-[state=open]:border-index-500/60',
+                    )}
+                >
+                    <span className={cn('block min-w-0 truncate', vacio && 'invisible')}>
+                        <SelectPrimitive.Value />
+                    </span>
+                    <ChevronDown
+                        className={cn(
+                            'pointer-events-none absolute end-3.5 top-1/2 size-4 -translate-y-1/2 transition-transform duration-200 group-data-[state=open]/select:rotate-180',
+                            invalido ? 'text-red-400' : 'text-zinc-400 dark:text-white/50',
+                        )}
+                    />
+                </SelectPrimitive.Trigger>
+                <SelectContent position="popper" align="start" sideOffset={6} className="max-h-72 w-(--radix-select-trigger-width) rounded-xl p-0.5">
+                    {opciones.map((opcion) => (
+                        <SelectItem
+                            key={opcion.valor || VALOR_VACIO}
+                            value={opcion.valor || VALOR_VACIO}
+                            disabled={opcion.deshabilitada}
+                            className={cn('rounded-lg py-2 ps-3 text-[13.5px] data-[state=checked]:font-medium data-[state=checked]:text-index-600 dark:data-[state=checked]:text-index-300', opcion.valor === '' && 'text-zinc-400 data-[state=checked]:font-normal data-[state=checked]:text-zinc-400 dark:text-zinc-500 dark:data-[state=checked]:text-zinc-500 [&_[data-slot=select-item-indicator]]:hidden')}
+                        >
+                            {opcion.texto}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
             <label
                 htmlFor={idCampo}
                 className={cn(
                     'pointer-events-none absolute start-3.5 z-10 origin-left transition-all duration-200 ease-out',
                     vacio ? 'top-1/2 -translate-y-1/2 text-[13px]' : 'top-1.5 text-[10px]',
-                    invalido ? 'text-red-500' : 'text-zinc-500 peer-focus:text-primary dark:text-zinc-400 dark:peer-focus:text-white',
+                    invalido ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400',
                 )}
             >
-                <span className="inline-flex items-center gap-1">
-                    {etiqueta}
+                <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap">
+                    <span className="truncate">{etiqueta}</span>
                     {requerido && <span className="text-red-500">*</span>}
                 </span>
             </label>

@@ -293,6 +293,15 @@ test('the online lookup shows the aula with dni and operation number', function 
         ->assertJsonValidationErrors(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
 });
 
+test('the online lookup tells the applicant when the payment exists but the inscription is missing', function () {
+    pagoLibreDelPortal('46027897', 300, '41676');
+
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '41676'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['pago_sin_inscripcion'])
+        ->assertJsonMissingValidationErrors(['operacion']);
+});
+
 test('the online lookup validates the document and the operation number', function () {
     $this->postJson(route('publico.consulta.buscar'), ['documento' => '123', 'operacion' => 'ABC'])
         ->assertUnprocessable()
