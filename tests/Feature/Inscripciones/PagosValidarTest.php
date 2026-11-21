@@ -583,3 +583,24 @@ test('users cannot validate an imported payment that was already associated', fu
         ->post(route('pagos.validar.confirmar'), ['obligacion' => $contexto['obligacion']->id_iop, 'detalle' => $contexto['detalle']->id_ibd])
         ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El pago bancario seleccionado ya no se encuentra disponible.']);
 });
+
+test('searching imported payments validates the search data on the server', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+
+    $this->actingAs($usuario)
+        ->get(route('pagos.validar', [
+            'obligacion' => $contexto['obligacion']->id_iop,
+            'dni' => '123',
+            'operacion' => '',
+            'fecha' => now()->addDay()->toDateString(),
+            'buscar_pago' => 1,
+        ]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('busquedaRealizada', false)
+            ->where('erroresBusqueda.dni', 'El DNI debe tener entre 8 y 12 dígitos.')
+            ->where('erroresBusqueda.operacion', 'Ingrese el número de operación del voucher.')
+            ->where('erroresBusqueda.fecha', 'La fecha de pago no puede ser posterior a hoy.'));
+});

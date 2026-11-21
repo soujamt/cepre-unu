@@ -1,4 +1,4 @@
-import { Save } from '@keyline-icons/react';
+import { Save } from '@keyline-icons/react/fill';
 import type { FormEvent, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';

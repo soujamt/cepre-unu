@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ShieldKey, ShieldUser } from '@keyline-icons/react';
+import { ShieldKey, ShieldUser } from '@keyline-icons/react/fill';
 import { CampoArea, CampoTexto } from '@/components/campo';
 import { ListadoCatalogo } from '@/components/listado-catalogo';
 import { Badge } from '@/components/ui/badge';

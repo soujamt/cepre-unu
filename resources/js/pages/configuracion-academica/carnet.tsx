@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { FileText, ImagePlus, Save } from '@keyline-icons/react';
+import { FileText, ImagePlus, Save } from '@keyline-icons/react/fill';
 import { useEffect, useState } from 'react';
 import { CampoArea, CampoTexto } from '@/components/campo';
 import { Panel } from '@/components/panel';

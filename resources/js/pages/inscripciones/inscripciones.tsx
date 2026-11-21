@@ -16,7 +16,7 @@ import {
     Plus,
     ShieldCheck,
     Users,
-} from '@keyline-icons/react';
+} from '@keyline-icons/react/fill';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Aviso } from '@/components/aviso';
@@ -279,7 +279,7 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
             )}
 
             <div className="flex flex-wrap items-center gap-3">
-                <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Código, DNI, apellidos o carrera" />
+                <Buscador valor={filtro.buscar} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder="Código, DNI, apellidos o carrera" className="min-w-48 flex-1 sm:max-w-md" />
                 <FiltroLista
                     valor={procesoVisible}
                     alCambiar={(proceso) => cambiarFiltro({ proceso: proceso === '' ? TODOS : proceso, procesoElegido: proceso === '' ? TODOS : null, modalidad: '', sede: '', turno: '', aula: '' }, true)}
@@ -309,7 +309,7 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                         )}
                     </PopoverContent>
                 </Popover>
-                <div className="flex flex-wrap gap-2 sm:ms-auto">
+                <div className="ms-auto flex flex-wrap gap-2">
                     {puede('inscripcion_exportar_excel') && (
                         <Button variant="outline" asChild>
                             <a href={conConsulta(exportar.url())}>

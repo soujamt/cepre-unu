@@ -1,4 +1,4 @@
-import { CircleCheck, Clock, Download, FileArrowUp, Link as Enlazado, PenLine, Bin, Plus, Wallet } from '@keyline-icons/react';
+import { CircleCheck, Clock, Download, FileArrowUp, Link as Enlazado, PenLine, Bin, Plus, Wallet } from '@keyline-icons/react/fill';
 import { useState } from 'react';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { Enlace } from '@/components/enlace';

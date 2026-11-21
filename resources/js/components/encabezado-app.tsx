@@ -1,4 +1,4 @@
-import { Menu } from '@keyline-icons/react';
+import { Menu } from '@keyline-icons/react/fill';
 import { Fragment } from 'react';
 import { BotonTema } from '@/components/boton-tema';
 import { Enlace } from '@/components/enlace';
@@ -13,7 +13,7 @@ import type { Miga } from '@/types';
  * Ícono de la pantalla en un recuadro azul con degradado y brillo interior, como el botón principal.
  */
 export function IconoPagina({ nombre, className }: { nombre: NombreIcono; className?: string }) {
-    const Icono = iconos[nombre].relleno;
+    const Icono = iconos[nombre];
 
     return (
         <span

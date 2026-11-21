@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from '@keyline-icons/react';
+import { ArrowLeft, ArrowRight } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';

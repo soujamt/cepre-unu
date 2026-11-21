@@ -1,4 +1,4 @@
-import { IdCard, Search } from '@keyline-icons/react';
+import { IdCard, Search } from '@keyline-icons/react/fill';
 import { Aviso } from '@/components/aviso';
 import type { TonoAviso } from '@/components/aviso';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
@@ -18,8 +18,6 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
     const texto = (campo: string): string => String(persona[campo] ?? '');
     const bandera = (campo: string): boolean => persona[campo] === true;
     const esDni = catalogos.tipoDocumentoDni !== '' && texto('id_tipo_documento') === catalogos.tipoDocumentoDni;
-    const numero = texto('numero_documento').replace(/\D/g, '');
-    const puedeBuscar = texto('id_tipo_documento') !== '' && (esDni ? numero.length === 8 : numero.length > 0);
     const campo = (nombre: string, etiqueta: string, propiedades: Partial<React.ComponentProps<typeof CampoTexto>> = {}) => (
         <CampoTexto etiqueta={etiqueta} value={texto(nombre)} onChange={(evento) => cambiar('personaForm', nombre, evento.target.value)} error={errores[`personaForm.${nombre}`]} {...propiedades} />
     );
@@ -49,7 +47,7 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
                         disabled={asistente.modoPublico}
                         requerido
                     />
-                    <Button size="lg" variant="outline" onClick={() => accion('buscarDatosPersona')} disabled={!puedeBuscar || procesando}>
+                    <Button size="lg" variant="outline" onClick={() => accion('buscarDatosPersona')} disabled={procesando}>
                         {esDni ? <IdCard className="size-4.5" /> : <Search className="size-4.5" />}
                         Buscar datos
                     </Button>
@@ -100,7 +98,7 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
                         }}
                         buscar={buscarUbigeos}
                         etiquetaSeleccionada={etiquetas.ubigeoNacimiento}
-                        placeholderBusqueda="Escriba al menos 2 letras…"
+                        placeholderBusqueda="Distrito, provincia o código…"
                         error={errores['personaForm.id_ubigeo_nacimiento']}
                         requerido
                     />
@@ -113,7 +111,7 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
                         }}
                         buscar={buscarUbigeos}
                         etiquetaSeleccionada={etiquetas.ubigeoDomicilio}
-                        placeholderBusqueda="Escriba al menos 2 letras…"
+                        placeholderBusqueda="Distrito, provincia o código…"
                         error={errores['personaForm.id_ubigeo_domicilio']}
                         requerido
                     />

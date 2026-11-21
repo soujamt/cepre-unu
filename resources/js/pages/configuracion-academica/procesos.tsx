@@ -1,4 +1,4 @@
-import { CalendarDays } from '@keyline-icons/react';
+import { CalendarDays } from '@keyline-icons/react/fill';
 import { CampoTexto } from '@/components/campo';
 import { ListadoCatalogo } from '@/components/listado-catalogo';
 import { CeldaRegistro } from '@/components/tabla-datos';

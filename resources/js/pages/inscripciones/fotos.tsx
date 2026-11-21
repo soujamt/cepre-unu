@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bin, Camera, Download, ImagePlus, Upload, X } from '@keyline-icons/react';
+import { Bin, Camera, Download, ImagePlus, Upload, X } from '@keyline-icons/react/fill';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useConfirmacion } from '@/components/dialogo-confirmacion';
 import { FiltroLista } from '@/components/filtro-lista';

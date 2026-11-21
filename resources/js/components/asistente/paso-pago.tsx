@@ -1,4 +1,4 @@
-import { ArrowRight, Search } from '@keyline-icons/react';
+import { ArrowRight, Search } from '@keyline-icons/react/fill';
 import { Aviso } from '@/components/aviso';
 import { CampoSelect, CampoTexto } from '@/components/campo';
 import type { ControlAsistente } from '@/components/asistente/use-asistente';
@@ -64,6 +64,7 @@ export function PasoPago({ asistente, control, alSalir }: { asistente: DatosAsis
                     evento.preventDefault();
                     accion('buscarPagosPasoPago');
                 }}
+                noValidate
                 className="space-y-4"
             >
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">

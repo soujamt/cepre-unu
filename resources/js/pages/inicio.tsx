@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/react';
-import { ArrowUpRight, Ban, CalendarDays, Check, ChevronRight, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Clock, Minus, TrendingUp, Users } from '@keyline-icons/react';
+import { ArrowUpRight, Ban, CalendarDays, Check, ChevronRight, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Clock, Minus, TrendingUp, Users } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';
@@ -263,7 +263,7 @@ export default function Inicio({ proceso, estadisticas, actividadHoy, alertas, r
                                 href={href}
                                 className="group flex min-w-0 items-center gap-3.5 rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-card transition-[border-color,box-shadow] hover:border-zinc-300 hover:shadow-card-hover dark:border-white/[0.07] dark:bg-white/[0.02] dark:shadow-none dark:hover:border-white/15"
                             >
-                                <RecuadroIcono icono={iconos[icono].relleno} tono={tono} />
+                                <RecuadroIcono icono={iconos[icono]} tono={tono} />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium text-zinc-900 dark:text-white">{titulo}</p>
                                     <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">{descripcion}</p>

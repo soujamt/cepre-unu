@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { ArrowLeft, Save, ShieldKey } from '@keyline-icons/react';
+import { ArrowLeft, Save, ShieldKey } from '@keyline-icons/react/fill';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';
 import { EstadoVacio } from '@/components/panel';

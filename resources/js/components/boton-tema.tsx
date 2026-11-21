@@ -1,4 +1,4 @@
-import { Moon, Sun } from '@keyline-icons/react';
+import { Moon, Sun } from '@keyline-icons/react/fill';
 import { Button } from '@/components/ui/button';
 import { useTema } from '@/hooks/use-tema';
 

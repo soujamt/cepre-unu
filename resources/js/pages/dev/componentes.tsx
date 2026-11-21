@@ -1,5 +1,5 @@
-import { CircleCheck, ClipboardList, Download, Inbox, Mail, Plus, Search, Users, CircleX } from '@keyline-icons/react';
-import { ClipboardList as ClipboardListRelleno } from '@keyline-icons/react/fill';
+import { CircleCheck, ClipboardList, Download, Inbox, Mail, Plus, Search, Users, CircleX } from '@keyline-icons/react/fill';
+import { ClipboardList as ClipboardListTrazo } from '@keyline-icons/react';
 import { ClipboardList as ClipboardListDosTonos } from '@keyline-icons/react/two-tone';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -90,7 +90,7 @@ export default function Componentes() {
                             { valor: '3', etiqueta: 'NOCHE', detalle: '17:00 – 22:00 (virtual)' },
                         ]}
                     />
-                    <Combobox etiqueta="Ubigeo de domicilio" valor={ubigeo} alCambiar={(valor) => setUbigeo(valor)} buscar={buscarUbigeos} placeholderBusqueda="Escriba al menos 2 letras…" />
+                    <Combobox etiqueta="Ubigeo de domicilio" valor={ubigeo} alCambiar={(valor) => setUbigeo(valor)} buscar={buscarUbigeos} placeholderBusqueda="Distrito, provincia o código…" />
                     <CampoArea etiqueta="Observación general" className="md:col-span-2 lg:col-span-3" ayuda="Opcional." />
                 </div>
             </Panel>
@@ -137,13 +137,13 @@ export default function Componentes() {
                     </div>
                 </Panel>
 
-                <Panel titulo="Íconos" descripcion="Keyline: trazo en la interfaz, relleno para lo activo y dos tonos en los encabezados.">
+                <Panel titulo="Íconos" descripcion="Keyline: relleno en toda la interfaz; trazo y dos tonos como referencia.">
                     <div className="flex items-center gap-6 text-zinc-600 dark:text-zinc-300">
                         <span className="flex flex-col items-center gap-1 text-xs">
-                            <ClipboardList className="size-6" /> Trazo
+                            <ClipboardListTrazo className="size-6" /> Trazo
                         </span>
                         <span className="flex flex-col items-center gap-1 text-xs">
-                            <ClipboardListRelleno className="size-6 text-index-500 dark:text-index-400" /> Relleno
+                            <ClipboardList className="size-6 text-index-500 dark:text-index-400" /> Relleno
                         </span>
                         <span className="flex flex-col items-center gap-1 text-xs">
                             <ClipboardListDosTonos className="size-6 text-index-500 dark:text-index-300" /> Dos tonos

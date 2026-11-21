@@ -1,4 +1,4 @@
-import { School } from '@keyline-icons/react';
+import { School } from '@keyline-icons/react/fill';
 import { useState } from 'react';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { Combobox } from '@/components/combobox';
@@ -130,7 +130,7 @@ export default function Colegios({ colegios, filtros, tipos }: PropsColegios) {
                         }}
                         buscar={buscarUbigeos}
                         etiquetaSeleccionada={etiquetaUbigeo}
-                        placeholderBusqueda="Escriba al menos 2 letras…"
+                        placeholderBusqueda="Distrito, provincia o código…"
                         error={formulario.errors.id_ubigeo}
                     />
                     <CampoArea

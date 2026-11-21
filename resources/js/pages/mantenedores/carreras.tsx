@@ -1,4 +1,4 @@
-import { GraduationCap } from '@keyline-icons/react';
+import { GraduationCap } from '@keyline-icons/react/fill';
 import { CampoTexto } from '@/components/campo';
 import { ListadoCatalogo } from '@/components/listado-catalogo';
 import { useCatalogo } from '@/hooks/use-catalogo';

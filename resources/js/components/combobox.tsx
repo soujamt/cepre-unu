@@ -1,4 +1,4 @@
-import { Check, ChevronDown, CircleAlert, LoaderCircle } from '@keyline-icons/react';
+import { Check, ChevronDown, CircleAlert, LoaderCircle } from '@keyline-icons/react/fill';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

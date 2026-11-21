@@ -1,5 +1,5 @@
 import { useForm, usePage } from '@inertiajs/react';
-import { Alert, Lock, Mail, ShieldCheck } from '@keyline-icons/react';
+import { Alert, Lock, Mail, ShieldCheck } from '@keyline-icons/react/fill';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { CampoTexto } from '@/components/campo';

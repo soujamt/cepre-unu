@@ -1,4 +1,4 @@
-import { Camera } from '@keyline-icons/react';
+import { Camera } from '@keyline-icons/react/fill';
 import { useRef } from 'react';
 import { Aviso } from '@/components/aviso';
 import { CampoSelect } from '@/components/campo';

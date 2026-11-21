@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,7 +41,10 @@ class ValidarPagoController extends Controller
             ? null
             : InscripcionObligacionPago::query()->with(['inscripcion.persona', 'reglaPago.conceptoPago', 'pagos.importacionBancoDetalle'])->find((int) $filtros['obligacion']);
 
-        $busquedaRealizada = $seleccionada !== null && $filtros['dni'] !== '' && $filtros['operacion'] !== '' && $filtros['fecha'] !== '';
+        $erroresBusqueda = $seleccionada !== null && $request->boolean('buscar_pago') ? $this->erroresDeBusqueda($filtros) : [];
+
+        $busquedaRealizada = $seleccionada !== null && $erroresBusqueda === []
+            && $filtros['dni'] !== '' && $filtros['operacion'] !== '' && $filtros['fecha'] !== '';
 
         return Inertia::render('pagos/validar', [
             'filtros' => $filtros,
@@ -55,6 +59,7 @@ class ValidarPagoController extends Controller
                 ])->values(),
             ],
             'busquedaRealizada' => $busquedaRealizada,
+            'erroresBusqueda' => (object) $erroresBusqueda,
             'pagosEncontrados' => $busquedaRealizada
                 ? $this->pagos->buscarDetallesDisponibles($filtros['dni'], $filtros['operacion'], $filtros['fecha'])
                     ->sortByDesc('fecha_pago_ibd')
@@ -70,6 +75,31 @@ class ValidarPagoController extends Controller
                     ->values()
                 : [],
         ]);
+    }
+
+    /**
+     * Valida los datos con los que se busca el pago del banco (el primer mensaje de cada campo).
+     *
+     * @param  array{dni: string, operacion: string, fecha: string}  $filtros
+     * @return array<string, string>
+     */
+    private function erroresDeBusqueda(array $filtros): array
+    {
+        $validador = Validator::make($filtros, [
+            'dni' => ['required', 'regex:/^\d{8,12}$/'],
+            'operacion' => ['required', 'regex:/^\d+$/'],
+            'fecha' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
+        ], [
+            'dni.required' => 'Ingrese el DNI del depositante.',
+            'dni.regex' => 'El DNI debe tener entre 8 y 12 dígitos.',
+            'operacion.required' => 'Ingrese el número de operación del voucher.',
+            'operacion.regex' => 'El número de operación solo admite dígitos.',
+            'fecha.required' => 'Ingrese la fecha de pago.',
+            'fecha.date_format' => 'La fecha de pago no es válida.',
+            'fecha.before_or_equal' => 'La fecha de pago no puede ser posterior a hoy.',
+        ]);
+
+        return collect($validador->errors()->messages())->map(fn (array $mensajes): string => $mensajes[0])->all();
     }
 
     public function confirmar(Request $request): RedirectResponse

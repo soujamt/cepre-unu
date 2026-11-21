@@ -1,4 +1,4 @@
-import { Alert, CircleQuestion } from '@keyline-icons/react';
+import { Alert, CircleQuestion } from '@keyline-icons/react/fill';
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import {

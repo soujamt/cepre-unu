@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { DoubleCheck, Eye, FileArrowUp, Receipt, Wallet } from '@keyline-icons/react';
+import { DoubleCheck, Eye, FileArrowUp, Receipt, Wallet } from '@keyline-icons/react/fill';
 import { useRef } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';

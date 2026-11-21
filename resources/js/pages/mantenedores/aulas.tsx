@@ -1,4 +1,4 @@
-import { Building } from '@keyline-icons/react';
+import { Building } from '@keyline-icons/react/fill';
 import { CampoSelect, CampoTexto } from '@/components/campo';
 import { ListadoCatalogo } from '@/components/listado-catalogo';
 import { Badge } from '@/components/ui/badge';

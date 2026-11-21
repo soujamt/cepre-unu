@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { ChartBar, CircleCheck, ClipboardList, School, Users, Wallet } from '@keyline-icons/react';
+import { ChartBar, CircleCheck, ClipboardList, School, Users, Wallet } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { BotonTema } from '@/components/boton-tema';
 import { Marca } from '@/components/marca';

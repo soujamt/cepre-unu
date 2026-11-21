@@ -1,4 +1,4 @@
-import { ListChecks } from '@keyline-icons/react';
+import { ListChecks } from '@keyline-icons/react/fill';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { ListadoCatalogo } from '@/components/listado-catalogo';
 import { useCatalogo } from '@/hooks/use-catalogo';

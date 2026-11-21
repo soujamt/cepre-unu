@@ -1,4 +1,4 @@
-import { Alert, CircleCheck, Info, LoaderCircle, OctagonX } from '@keyline-icons/react';
+import { Alert, CircleCheck, Info, LoaderCircle, OctagonX } from '@keyline-icons/react/fill';
 import { Toaster as Sonner, type ToasterProps } from 'sonner';
 import { useTema } from '@/hooks/use-tema';
 

@@ -3,13 +3,10 @@ import { search as buscarColegio } from '@/routes/api/colegio';
 import { search as buscarUbigeo } from '@/routes/api/ubigeo';
 
 /**
- * Busca ubigeos por código o nombre (mínimo 2 caracteres) para un <Combobox buscar={...} />.
+ * Busca ubigeos por código o nombre para un <Combobox buscar={...} />. Sin texto, el
+ * servidor devuelve los distritos de Ucayali; al buscar, Ucayali aparece primero.
  */
 export async function buscarUbigeos(texto: string): Promise<OpcionCombobox[]> {
-    if (texto.trim().length < 2) {
-        return [];
-    }
-
     const respuesta = await fetch(buscarUbigeo.url({ query: { query: texto } }), { headers: { Accept: 'application/json' } });
 
     if (!respuesta.ok) {

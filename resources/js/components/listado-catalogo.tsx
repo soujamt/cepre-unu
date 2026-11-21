@@ -1,4 +1,4 @@
-import { Bin, PenLine, Plus, RefreshCw } from '@keyline-icons/react';
+import { Bin, PenLine, Plus, RefreshCw } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { FiltroEstado } from '@/components/filtro-estado';
 import { HojaFormulario } from '@/components/hoja-formulario';

@@ -1,4 +1,4 @@
-import { CircleAlert, Eye, EyeOff } from '@keyline-icons/react';
+import { CircleAlert, Eye, EyeOff } from '@keyline-icons/react/fill';
 import { useId, useState } from 'react';
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -46,8 +46,8 @@ const claseEtiqueta = (invalido: boolean, multilinea: boolean, conIcono: boolean
 function Etiqueta({ htmlFor, texto, requerido, className }: { htmlFor: string; texto: string; requerido?: boolean; className: string }) {
     return (
         <label htmlFor={htmlFor} className={className}>
-            <span className="inline-flex items-center gap-1">
-                {texto}
+            <span className="inline-flex max-w-full items-center gap-1 whitespace-nowrap">
+                <span className="truncate">{texto}</span>
                 {requerido && <span className="text-red-500">*</span>}
             </span>
         </label>
@@ -107,7 +107,7 @@ export function CampoTexto({ etiqueta, error, ayuda, requerido, className, icono
                 id={idCampo}
                 type={esClave && mostrarClave ? 'text' : type}
                 placeholder=" "
-                required={requerido}
+                aria-required={requerido || undefined}
                 aria-invalid={invalido || undefined}
                 aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
                 className={cn(claseControl(invalido), 'h-12 pt-5.5 pb-1.5 leading-5.5', IconoInicio ? 'ps-10' : 'ps-3.5', esClave ? 'pe-11' : 'pe-3.5')}
@@ -144,7 +144,7 @@ export function CampoArea({ etiqueta, error, ayuda, requerido, className, id, ro
                 id={idCampo}
                 rows={rows}
                 placeholder=" "
-                required={requerido}
+                aria-required={requerido || undefined}
                 aria-invalid={invalido || undefined}
                 aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}
                 className={cn(claseControl(invalido), 'min-h-12 resize-y px-3.5 pt-6 pb-2 leading-5.5')}
@@ -178,7 +178,7 @@ export function CampoSelect({ etiqueta, error, ayuda, requerido, className, id, 
                     setValorLocal(evento.target.value);
                     onChange?.(evento);
                 }}
-                required={requerido}
+                aria-required={requerido || undefined}
                 data-vacio={vacio || undefined}
                 aria-invalid={invalido || undefined}
                 aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}

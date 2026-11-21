@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Building, Filter, Save } from '@keyline-icons/react';
+import { Building, Filter, Save } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';

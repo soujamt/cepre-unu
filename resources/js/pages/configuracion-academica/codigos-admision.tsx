@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Download, FileSpreadsheet, MapPin, Save, Upload } from '@keyline-icons/react';
+import { Download, FileSpreadsheet, MapPin, Save, Upload } from '@keyline-icons/react/fill';
 import { useRef } from 'react';
 import { Aviso } from '@/components/aviso';
 import { EstadoVacio } from '@/components/panel';

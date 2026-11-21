@@ -1,5 +1,5 @@
-import { router } from '@inertiajs/react';
-import { BadgeCheck, ClipboardList, Search } from '@keyline-icons/react';
+import { router, usePage } from '@inertiajs/react';
+import { BadgeCheck, ClipboardList, Search } from '@keyline-icons/react/fill';
 import { useState } from 'react';
 import { Aviso } from '@/components/aviso';
 import { CampoTexto } from '@/components/campo';
@@ -40,6 +40,7 @@ interface PropsValidar {
     obligaciones: Obligacion[];
     seleccionada: (Obligacion & { pagos: { id: number; operacion: string | null; fecha: string | null; monto: number }[] }) | null;
     busquedaRealizada: boolean;
+    erroresBusqueda: Partial<Record<'dni' | 'operacion' | 'fecha', string>>;
     pagosEncontrados: PagoBanco[];
 }
 
@@ -55,7 +56,8 @@ function Paso({ numero, titulo, children }: { numero: number; titulo: string; ch
     );
 }
 
-export default function Validar({ filtros, obligaciones, seleccionada, busquedaRealizada, pagosEncontrados }: PropsValidar) {
+export default function Validar({ filtros, obligaciones, seleccionada, busquedaRealizada, erroresBusqueda, pagosEncontrados }: PropsValidar) {
+    const { errors: errores } = usePage().props;
     const [filtro, cambiarFiltro] = useFiltros({ buscar: filtros.buscar });
     const [busqueda, setBusqueda] = useState({ dni: filtros.dni, operacion: filtros.operacion, fecha: filtros.fecha });
     const [elegido, setElegido] = useState<number | null>(null);
@@ -73,12 +75,12 @@ export default function Validar({ filtros, obligaciones, seleccionada, busquedaR
     const buscarPagos = (evento: React.FormEvent): void => {
         evento.preventDefault();
         setElegido(null);
-        visitar({ buscar: String(filtro.buscar), obligacion: filtros.obligacion, ...busqueda });
+        visitar({ buscar: String(filtro.buscar), obligacion: filtros.obligacion, ...busqueda, buscar_pago: '1' });
     };
 
     const confirmarPago = (): void => {
-        if (seleccionada && elegido !== null) {
-            router.post(confirmar.url(), { obligacion: seleccionada.id, detalle: elegido }, { preserveScroll: true, onStart: () => setEnviando(true), onFinish: () => setEnviando(false), onSuccess: () => setElegido(null) });
+        if (seleccionada) {
+            router.post(confirmar.url(), { obligacion: seleccionada.id, detalle: elegido ?? '' }, { preserveScroll: true, onStart: () => setEnviando(true), onFinish: () => setEnviando(false), onSuccess: () => setElegido(null) });
         }
     };
 
@@ -141,14 +143,16 @@ export default function Validar({ filtros, obligaciones, seleccionada, busquedaR
                                 <span className="ms-auto text-zinc-500 tabular-nums dark:text-zinc-400">Saldo {soles(seleccionada.saldo)}</span>
                             </div>
 
-                            <form onSubmit={buscarPagos} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-                                <CampoTexto etiqueta="DNI" inputMode="numeric" value={busqueda.dni} onChange={(evento) => setBusqueda({ ...busqueda, dni: evento.target.value.replace(/\D/g, '') })} requerido />
-                                <CampoTexto etiqueta="N° de operación" inputMode="numeric" value={busqueda.operacion} onChange={(evento) => setBusqueda({ ...busqueda, operacion: evento.target.value.replace(/\D/g, '') })} requerido />
-                                <CampoTexto etiqueta="Fecha de pago" type="date" value={busqueda.fecha} onChange={(evento) => setBusqueda({ ...busqueda, fecha: evento.target.value })} requerido />
-                                <Button type="submit" size="lg" disabled={!busqueda.dni || !busqueda.operacion || !busqueda.fecha}>
-                                    <Search className="size-4.5" />
-                                    Buscar
-                                </Button>
+                            <form onSubmit={buscarPagos} noValidate className="grid gap-3 sm:grid-cols-3">
+                                <CampoTexto etiqueta="DNI" inputMode="numeric" maxLength={12} value={busqueda.dni} onChange={(evento) => setBusqueda({ ...busqueda, dni: evento.target.value.replace(/\D/g, '') })} error={erroresBusqueda.dni} requerido />
+                                <CampoTexto etiqueta="N° de operación" inputMode="numeric" value={busqueda.operacion} onChange={(evento) => setBusqueda({ ...busqueda, operacion: evento.target.value.replace(/\D/g, '') })} error={erroresBusqueda.operacion} requerido />
+                                <CampoTexto etiqueta="Fecha de pago" type="date" value={busqueda.fecha} onChange={(evento) => setBusqueda({ ...busqueda, fecha: evento.target.value })} error={erroresBusqueda.fecha} requerido />
+                                <div className="flex justify-end sm:col-span-3">
+                                    <Button type="submit" variant="outline" className="w-full sm:w-auto">
+                                        <Search className="size-4.5" />
+                                        Buscar pago
+                                    </Button>
+                                </div>
                             </form>
 
                             {busquedaRealizada &&
@@ -181,8 +185,14 @@ export default function Validar({ filtros, obligaciones, seleccionada, busquedaR
                                     </div>
                                 ))}
 
-                            <div className="flex justify-end">
-                                <Button onClick={confirmarPago} disabled={elegido === null || enviando}>
+                            {errores.detalle && (
+                                <p role="alert" className="text-sm font-medium text-red-500 dark:text-red-400">
+                                    {errores.detalle}
+                                </p>
+                            )}
+
+                            <div className="flex justify-end border-t border-zinc-100 pt-4 dark:border-white/[0.06]">
+                                <Button onClick={confirmarPago} disabled={enviando}>
                                     <BadgeCheck className="size-4.5" />
                                     {enviando ? 'Validando…' : 'Validar y asociar pago'}
                                 </Button>

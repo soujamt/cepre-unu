@@ -1,4 +1,4 @@
-import { CreditCard } from '@keyline-icons/react';
+import { CreditCard } from '@keyline-icons/react/fill';
 import { CampoCasilla, CampoSelect, CampoTexto } from '@/components/campo';
 import { FiltroLista } from '@/components/filtro-lista';
 import { ListadoCatalogo } from '@/components/listado-catalogo';

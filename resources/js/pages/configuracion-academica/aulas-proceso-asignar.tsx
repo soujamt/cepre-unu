@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { ArrowLeft, Building, Save } from '@keyline-icons/react';
+import { ArrowLeft, Building, Save } from '@keyline-icons/react/fill';
 import { useMemo, useState } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';

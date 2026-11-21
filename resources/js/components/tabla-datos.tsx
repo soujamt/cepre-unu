@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ChevronLeft, ChevronRight, Search, X } from '@keyline-icons/react';
+import { ChevronLeft, ChevronRight, Search, X } from '@keyline-icons/react/fill';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';

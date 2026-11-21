@@ -35,8 +35,11 @@
     --input: var(--color-zinc-200);
     --ring: var(--color-500);
 
-    /** Fondo de la aplicación y del menú lateral, detrás del panel principal **/
+    /** Fondo de las páginas públicas y de acceso **/
     --surface: #f4f4f5;
+
+    /** Menú lateral y marco del panel principal: oscuro en los dos temas **/
+    --menu: #0c0c0f;
 
     /** Superficie de controles (inputs, selects, botones de filtro) **/
     --control: #ffffff;
@@ -64,8 +67,8 @@
     --input: rgb(255 255 255 / 0.1);
     --ring: var(--color-400);
 
-    /** El menú lateral queda casi negro para separarse del panel principal. **/
     --surface: #070708;
+    --menu: #060608;
 
     --control: rgb(255 255 255 / 0.035);
     --control-hover: rgb(255 255 255 / 0.06);
@@ -92,6 +95,7 @@
     --color-input: var(--input);
     --color-ring: var(--ring);
     --color-surface: var(--surface);
+    --color-menu: var(--menu);
     --color-control: var(--control);
     --color-control-hover: var(--control-hover);
 }

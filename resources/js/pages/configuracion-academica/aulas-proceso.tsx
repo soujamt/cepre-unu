@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Layers } from '@keyline-icons/react';
+import { Layers } from '@keyline-icons/react/fill';
 import { CampoTexto } from '@/components/campo';
 import { FiltroLista } from '@/components/filtro-lista';
 import { ListadoCatalogo } from '@/components/listado-catalogo';

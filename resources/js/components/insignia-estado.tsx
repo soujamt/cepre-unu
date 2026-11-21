@@ -1,4 +1,4 @@
-import { Lock, SquareCheck, SquareX } from '@keyline-icons/react';
+import { Lock, SquareCheck, SquareX } from '@keyline-icons/react/fill';
 import { Badge } from '@/components/ui/badge';
 import type { Icono } from '@/lib/iconos';
 

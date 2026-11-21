@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, BadgeCheck, FileText, IdCard, ShieldCheck } from '@keyline-icons/react';
+import { ArrowLeft, BadgeCheck, FileText, IdCard, ShieldCheck } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';

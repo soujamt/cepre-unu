@@ -1,5 +1,5 @@
 import { useHttp } from '@inertiajs/react';
-import { ArrowLeft, FileText, IdCard, Search } from '@keyline-icons/react';
+import { ArrowLeft, FileText, IdCard, Search } from '@keyline-icons/react/fill';
 import type { FormEvent } from 'react';
 import { CampoTexto } from '@/components/campo';
 import { Enlace } from '@/components/enlace';

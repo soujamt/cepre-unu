@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { ChevronDown, Power } from '@keyline-icons/react';
+import { ChevronDown, Power } from '@keyline-icons/react/fill';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';

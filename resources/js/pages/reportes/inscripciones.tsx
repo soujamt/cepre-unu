@@ -1,4 +1,4 @@
-import { Ban, CircleCheck, CircleDollarSign, Clock, Download, Users } from '@keyline-icons/react';
+import { Ban, CircleCheck, CircleDollarSign, Clock, Download, Users } from '@keyline-icons/react/fill';
 import { FiltroLista } from '@/components/filtro-lista';
 import { Panel } from '@/components/panel';
 import { Resumen, ResumenItem } from '@/components/resumen';

@@ -1,4 +1,4 @@
-import { ChevronRight, Search, SquarePen } from '@keyline-icons/react';
+import { ChevronRight, Search, SquarePen } from '@keyline-icons/react/fill';
 import { Enlace } from '@/components/enlace';
 import type { Icono } from '@/lib/iconos';
 import { consulta, inscripcion } from '@/routes/publico';

@@ -1,4 +1,4 @@
-import { MapPin } from '@keyline-icons/react';
+import { MapPin } from '@keyline-icons/react/fill';
 import { useState } from 'react';
 import { CampoArea, CampoTexto } from '@/components/campo';
 import { Combobox } from '@/components/combobox';
@@ -88,7 +88,7 @@ export default function Sedes({ sedes, filtros }: { sedes: Paginado<Sede>; filtr
                         }}
                         buscar={buscarUbigeos}
                         etiquetaSeleccionada={etiquetaUbigeo}
-                        placeholderBusqueda="Escriba al menos 2 letras…"
+                        placeholderBusqueda="Distrito, provincia o código…"
                         error={formulario.errors.id_ubigeo}
                         requerido
                     />
