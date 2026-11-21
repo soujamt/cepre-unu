@@ -4,15 +4,15 @@ namespace App\Traits\InscripcionCrear;
 
 use App\Models\FotoPostulante;
 use App\Support\ProcesadorFotoPostulante;
+use Illuminate\Http\UploadedFile;
 use Livewire\Attributes\Computed;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 /**
  * Foto del postulante en la revisión del asistente, como "Actualizar foto" del sistema anterior.
  */
 trait GestionaFotoPostulante
 {
-    public ?TemporaryUploadedFile $fotoPostulante = null;
+    public ?UploadedFile $fotoPostulante = null;
 
     #[Computed]
     public function fotoPostulanteActual(): ?FotoPostulante

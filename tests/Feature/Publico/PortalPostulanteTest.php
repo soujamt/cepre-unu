@@ -50,9 +50,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia;
-use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
+use Tests\Support\AsistentePrueba;
 
 uses(RefreshDatabase::class);
 
@@ -123,9 +121,9 @@ function reglaCuotasDelPortal(): ReglaPago
     return ReglaPago::query()->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))->firstOrFail();
 }
 
-function validarPagoEnPortal(string $documento, string $operacion): Testable
+function validarPagoEnPortal(string $documento, string $operacion): AsistentePrueba
 {
-    return Livewire::test('pages::publico.inscripcion')
+    return AsistentePrueba::portal(test())
         ->set('pagoForm.numero_documento', $documento)
         ->set('pagoForm.numero_operacion', $operacion)
         ->call('buscarPagosPasoPago')
@@ -133,7 +131,7 @@ function validarPagoEnPortal(string $documento, string $operacion): Testable
         ->call('confirmarPasoPago');
 }
 
-function completarPortalHastaRegistrar(Testable $componente, Persona $persona): Testable
+function completarPortalHastaRegistrar(AsistentePrueba $componente, Persona $persona): AsistentePrueba
 {
     $procesoCarrera = ProcesoCarrera::query()
         ->whereHas('proceso', fn ($query) => $query->where('codigo_pro', '2026_1'))
@@ -167,7 +165,10 @@ function completarPortalHastaRegistrar(Testable $componente, Persona $persona): 
 
 test('the portal pages are public', function () {
     $this->get(route('publico.portal'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/portal'));
-    $this->get(route('publico.inscripcion'))->assertOk()->assertSee('Validación de pago');
+    $this->followingRedirects()->get(route('publico.inscripcion'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('publico/inscripcion')
+        ->where('asistente.paso', 1)
+        ->where('asistente.modoPublico', true));
     $this->get(route('publico.consulta'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/consulta'));
 });
 
@@ -181,13 +182,14 @@ test('a postulante enrolls online and the inscripcion waits for review', functio
         ->assertSet('personaForm.numero_documento', '46027897')
         ->assertSet('personaId', $persona->id_per);
 
-    completarPortalHastaRegistrar($componente, $persona)
+    $registrada = completarPortalHastaRegistrar($componente, $persona)
         ->assertHasNoErrors()
-        ->assertSee('Inscripción registrada')
-        ->assertSee('EN REVISIÓN')
-        ->assertSee('Descargar ficha')
-        ->assertDontSee('Descargar carnet')
-        ->assertSee('AULA 101');
+        ->vista()['registrada'];
+
+    expect($registrada['estado'])->toBe('EN REVISIÓN')
+        ->and($registrada['documentos']['ficha'])->not->toBeNull()
+        ->and($registrada['documentos']['carnet'] ?? null)->toBeNull()
+        ->and($registrada['aula'])->toBe('AULA 101');
 
     $inscripcion = Inscripcion::query()->sole();
 
@@ -201,16 +203,21 @@ test('the portal does not let the postulante upload a photo', function () {
     personaDelPortal('46027897');
     pagoLibreDelPortal('46027897', 300, '41676');
 
-    validarPagoEnPortal('46027897', '41676')
-        ->set('fotoPostulante', UploadedFile::fake()->image('foto.jpg'))
-        ->assertForbidden();
+    $componente = validarPagoEnPortal('46027897', '41676');
+
+    expect($componente->vista()['foto']['puedeCambiar'])->toBeFalse();
+
+    $componente->intentarCambiar('fotoPostulante', UploadedFile::fake()->image('foto.jpg'))->assertForbidden();
 
     expect(FotoPostulante::query()->count())->toBe(0);
 });
 
 test('the wizard state cannot be changed from the browser', function (string $propiedad, mixed $valor) {
-    expect(fn () => Livewire::test('pages::publico.inscripcion')->set($propiedad, $valor))
-        ->toThrow(CannotUpdateLockedPropertyException::class);
+    $componente = AsistentePrueba::portal(test());
+
+    $componente->intentarCambiar($propiedad, $valor)->assertForbidden();
+
+    $componente->assertSet('pasoActual', 1)->assertSet('pagoValidado', false)->assertSet('personaId', null);
 })->with([
     'paso' => ['pasoActual', 4],
     'pago validado' => ['pagoValidado', true],
@@ -222,7 +229,7 @@ test('a payment of another dni cannot be marked', function () {
     pagoLibreDelPortal('46027897', 10, '41676');
     $ajeno = pagoLibreDelPortal('70000001', 500, '50000');
 
-    Livewire::test('pages::publico.inscripcion')
+    AsistentePrueba::portal(test())
         ->set('pagoForm.numero_documento', '46027897')
         ->set('pagoForm.numero_operacion', '41676')
         ->call('buscarPagosPasoPago')

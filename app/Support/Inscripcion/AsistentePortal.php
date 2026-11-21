@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Support\Inscripcion;
+
 use App\Enums\EstadoInscripcion;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Models\FotoPostulante;
@@ -7,69 +9,41 @@ use App\Models\Inscripcion;
 use App\Support\InscripcionPagoManager;
 use App\Traits\InscripcionCrear\GestionaAsistenteInscripcion;
 use Illuminate\Support\Facades\RateLimiter;
-use Livewire\Attributes\Computed;
-use Livewire\Attributes\Layout;
-use Livewire\Attributes\Locked;
-use Livewire\Attributes\Title;
-use Livewire\Component;
-use Livewire\WithFileUploads;
 
 /**
- * Inscripción en línea del postulante, sin iniciar sesión. Usa el mismo
- * asistente del personal, pero el avance, la persona y los pagos quedan
- * bloqueados en el servidor y todo se ata al DNI del pago validado.
+ * Inscripción en línea del postulante, sin iniciar sesión. Usa el mismo asistente del
+ * personal, pero todo se ata al DNI del pago validado, no se sube foto, no se permite
+ * una segunda inscripción en el proceso y la inscripción queda en revisión.
  */
-new
-#[Layout('layouts.auth')]
-#[Title('Inscripción en línea')]
-class extends Component
+class AsistentePortal extends AsistenteInscripcion
 {
     use GestionaAsistenteInscripcion {
         buscarPagosPasoPago as protected buscarPagosAsistente;
         confirmarPasoPago as protected confirmarPagoAsistente;
         guardarPasoPersonal as protected guardarPersonalAsistente;
-        guardarPasoGeneral as protected guardarGeneralAsistente;
         buscarDatosPersona as protected buscarDatosPersonaAsistente;
+        guardarPasoGeneral as protected guardarGeneralAsistente;
         guardarPasoPostulacion as protected guardarPostulacionAsistente;
         cancelarYReiniciarWizard as protected reiniciarAsistente;
     }
-    use WithFileUploads;
 
     private const INTENTOS_POR_MINUTO = 8;
-
-    #[Locked]
-    public int $pasoActual = 1;
-
-    /**
-     * @var array<int, int>
-     */
-    #[Locked]
-    public array $resultadoPagoDetalleIds = [];
-
-    #[Locked]
-    public bool $busquedaPagoRealizada = false;
-
-    #[Locked]
-    public bool $pagoValidado = false;
-
-    #[Locked]
-    public ?int $personaId = null;
-
-    #[Locked]
-    public ?int $inscripcionId = null;
 
     /**
      * DNI con el que se encontró el pago; el resto del asistente queda atado a él.
      */
-    #[Locked]
     public string $documentoPagado = '';
 
-    #[Locked]
     public ?int $inscripcionRegistradaId = null;
 
-    public function mount(): void
+    /**
+     * El postulante no confirma duplicados: no puede tener dos inscripciones en el proceso.
+     *
+     * @return list<string>
+     */
+    public function accionesPermitidas(): array
     {
-        $this->hidratarCatalogos();
+        return array_values(array_diff(parent::accionesPermitidas(), ['confirmarGuardadoDuplicado', 'cancelarDuplicadoPostulacion']));
     }
 
     public function esModoPublico(): bool
@@ -79,7 +53,7 @@ class extends Component
 
     public function volverListado(): void
     {
-        $this->redirect(route('publico.portal'), navigate: true);
+        $this->redirect(route('publico.portal'));
     }
 
     public function buscarPagosPasoPago(InscripcionPagoManager $manager): void
@@ -154,7 +128,7 @@ class extends Component
             return;
         }
 
-        $proceso = $this->procesoPostulacionActivo;
+        $proceso = $this->procesoPostulacionActivo();
         $existente = $proceso === null ? null : Inscripcion::query()
             ->where('id_persona', $this->personaId)
             ->where('id_proceso', $proceso->id_pro)
@@ -168,11 +142,6 @@ class extends Component
         }
 
         $this->guardarPostulacionAsistente();
-    }
-
-    public function confirmarGuardadoDuplicado(): void
-    {
-        abort(403);
     }
 
     public function cancelarYReiniciarWizard(): void
@@ -196,31 +165,38 @@ class extends Component
     }
 
     /**
-     * @return array{ficha:string,carnet:?string}|null
+     * Datos del portal: la inscripción registrada y los enlaces firmados a sus documentos.
+     *
+     * @return array<string, mixed>
      */
-    #[Computed]
-    public function enlacesDocumentos(): ?array
+    public function vista(): array
     {
-        $inscripcion = $this->inscripcionRegistradaId === null ? null : Inscripcion::query()->find($this->inscripcionRegistradaId);
-
-        return $inscripcion === null ? null : DocumentoInscripcionController::enlacesPublicos($inscripcion);
-    }
-
-    #[Computed]
-    public function inscripcionRegistrada(): ?Inscripcion
-    {
-        return $this->inscripcionRegistradaId === null
+        $inscripcion = $this->inscripcionRegistradaId === null
             ? null
             : Inscripcion::query()->with(['proceso', 'sede', 'carrera', 'turno', 'procesoAula.aula'])->find($this->inscripcionRegistradaId);
+
+        return [
+            ...parent::vista(),
+            'registrada' => $inscripcion === null ? null : [
+                'codigo' => $inscripcion->codigo_ins,
+                'estado' => $inscripcion->enRevision() ? 'EN REVISIÓN' : $inscripcion->estado_ins->value,
+                'proceso' => $inscripcion->proceso?->nombre_pro,
+                'sede' => $inscripcion->sede?->nombre_sed,
+                'carrera' => $inscripcion->carrera?->nombre_car,
+                'turno' => $inscripcion->turno?->nombre_tur,
+                'aula' => $inscripcion->procesoAula?->aula?->nombre_aul,
+                'documentos' => DocumentoInscripcionController::enlacesPublicos($inscripcion),
+            ],
+        ];
     }
 
     protected function autorizarSubidaFoto(): void
     {
-        abort_unless($this->puedeCambiarFoto(), 403);
+        abort(403);
     }
 
     /**
-     * @return array{origen_ins:string,requiere_revision_ins:bool}
+     * @return array{origen_ins: string, requiere_revision_ins: bool}
      */
     protected function atributosInscripcionNueva(): array
     {
@@ -244,4 +220,4 @@ class extends Component
 
         return true;
     }
-};
+}

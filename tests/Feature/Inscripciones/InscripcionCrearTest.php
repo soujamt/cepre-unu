@@ -54,8 +54,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
+use Inertia\Testing\AssertableInertia;
+use Tests\Support\AsistentePrueba;
 
 uses(RefreshDatabase::class);
 
@@ -317,9 +317,10 @@ test('authorized users can access nueva inscripcion page', function () {
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
     $this->actingAs($usuario)
+        ->followingRedirects()
         ->get(route('inscripciones.crear'))
         ->assertOk()
-        ->assertSee('Nueva inscripción');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('inscripciones/asistente')->where('asistente.paso', 1)->has('token'));
 });
 
 test('users can register personal information for a new inscripcion draft', function () {
@@ -343,7 +344,7 @@ test('users can register personal information for a new inscripcion draft', func
 
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '74503321')
         ->set('personaForm.solo_un_apellido', false)
@@ -399,7 +400,7 @@ test('personal information requires valid cellphones and the guardian contact', 
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('pasoActual', 2)
         ->set('personaForm.celular', '812345678')
         ->set('personaForm.celular_apoderado', '9123')
@@ -453,7 +454,7 @@ test('existing person data is loaded from the local system before consulting ren
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
         ->call('buscarDatosPersona')
@@ -509,7 +510,7 @@ test('changing document after autoload resets the previously loaded person conte
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
         ->call('buscarDatosPersona')
@@ -548,7 +549,7 @@ test('dni can be consulted with reniec and autofill personal names when there is
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
         ->call('buscarDatosPersona')
@@ -569,7 +570,7 @@ test('dni lookup shows a friendly warning when reniec is not configured', functi
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
         ->call('buscarDatosPersona')
@@ -628,7 +629,7 @@ test('reniec lookup clears stale complementary data from a previously loaded loc
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $catalogos['tipoDocumento']->id_tdo)
         ->set('personaForm.numero_documento', '46027897')
         ->call('buscarDatosPersona')
@@ -665,7 +666,7 @@ test('non dni documents keep manual flow and warn when there is no local match',
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaForm.id_tipo_documento', (string) $tipoDocumento->id_tdo)
         ->set('personaForm.numero_documento', 'ABC123456')
         ->call('buscarDatosPersona')
@@ -710,7 +711,7 @@ test('users can register general information and receive a warning when there is
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 3)
         ->set('generalForm.anio_graduacion', '2026')
@@ -765,7 +766,7 @@ test('general information validates future graduation year and required postulat
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('inscripcionId', 1)
         ->set('pasoActual', 3)
@@ -821,7 +822,7 @@ test('cannot jump to postulacion step when general information is invalid', func
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('inscripcionId', 1)
         ->set('pasoActual', 3)
@@ -892,7 +893,7 @@ test('users can register postulacion and create an inscripcion draft', function 
 
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
@@ -947,7 +948,7 @@ test('postulacion is blocked when the proceso has no modalidad for the graduatio
 
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
@@ -986,7 +987,7 @@ test('postulacion assigns the first aula with capacity by configured order', fun
     $this->actingAs($usuario);
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
@@ -1043,7 +1044,7 @@ test('postulacion skips full aulas and assigns the next available aula', functio
     $this->actingAs($usuario);
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
@@ -1106,7 +1107,7 @@ test('postulacion only assigns aulas from the selected turno', function () {
     $this->actingAs($usuario);
     Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2026')
@@ -1144,7 +1145,7 @@ test('changing school type clears selected school in general information form', 
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('generalForm.id_tipo_colegio', (string) $catalogos['tipoColegio']->id_tco)
         ->set('generalForm.id_colegio', $catalogos['colegio']->id_col)
         ->assertSet('colegioLabel', '0915389 | AGROPECUARIO PADRE ABAD | UCAYALI / CORONEL PORTILLO / CALLERIA')
@@ -1230,14 +1231,15 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
     ]);
 
     $this->actingAs($usuario)
+        ->followingRedirects()
         ->get(route('inscripciones.continuar', encode($inscripcion->id_ins)))
         ->assertOk()
-        ->assertSee('Nueva inscripción');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('inscripciones/asistente')->where('asistente.editandoInscripcion', true));
 
     $ubigeoLabel = "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}";
     $colegioLabel = "{$colegio->id_col} | {$colegio->nombre_col} | {$colegio->ubigeo->nombre_departamento_ubi} / {$colegio->ubigeo->nombre_provincia_ubi} / {$colegio->ubigeo->nombre_distrito_ubi}";
 
-    Livewire::test('pages::inscripciones.inscripcion-crear', ['inscripcion' => encode($inscripcion->id_ins)])
+    AsistentePrueba::personal(test(), encode($inscripcion->id_ins))
         ->assertSet('inscripcionId', $inscripcion->id_ins)
         ->assertSet('personaId', $persona->id_per)
         ->assertSet('pasoActual', 1)
@@ -1255,8 +1257,7 @@ test('users can continue an existing inscripcion with the wizard preloaded', fun
         ->assertSet('postulacionForm.id_carrera', (string) $procesoOferta->id_carrera)
         ->assertSet('postulacionForm.id_turno', (string) $procesoOferta->id_turno)
         ->assertSet('pagoForm.numero_documento', '46027897')
-        ->assertSet('colegioLabel', $colegioLabel)
-        ->assertDispatched('ui-select-search-filled', name: 'generalForm.id_colegio', value: $colegio->id_col, label: $colegioLabel);
+        ->assertSet('colegioLabel', $colegioLabel);
 });
 
 test('new inscripcion page shows blocked state when there is no active process', function () {
@@ -1264,10 +1265,13 @@ test('new inscripcion page shows blocked state when there is no active process',
     otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
 
     $this->actingAs($usuario)
+        ->followingRedirects()
         ->get(route('inscripciones.crear'))
         ->assertOk()
-        ->assertSee('Registro temporalmente no disponible')
-        ->assertSee('No hay un proceso de inscripcion activo en este momento.');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('asistente.inicioBloqueado', true)
+            ->where('asistente.proceso.disponible', false)
+            ->where('asistente.proceso.mensaje', fn (string $mensaje): bool => str_contains($mensaje, 'No hay un proceso de inscripcion activo en este momento.')));
 });
 
 function crearPagoLibrePrueba(string $dni, float $monto, string $operacion, string $ubicacion = 'RECAUDACIÓN BBVA N° 13248'): ImportacionBancoDetalle
@@ -1312,7 +1316,7 @@ function crearReglaPagoPrueba(string $codigo, float $total, bool $permiteCuotas 
 /**
  * Completa los pasos 2 a 4 con una persona ya registrada y guarda la postulación.
  */
-function completarInscripcionDePrueba(Testable $componente, Persona $persona): Testable
+function completarInscripcionDePrueba(AsistentePrueba $componente, Persona $persona): AsistentePrueba
 {
     $postulacion = postulacionDePrueba(conAula: true);
 
@@ -1342,7 +1346,7 @@ test('the inscripcion starts by validating a payment and ends active with the pa
 
     $this->actingAs($usuario);
 
-    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+    $componente = AsistentePrueba::personal(test())
         ->set('pagoForm.numero_documento', '46027897')
         ->set('pagoForm.numero_operacion', '41676')
         ->call('buscarPagosPasoPago')
@@ -1384,7 +1388,7 @@ test('payments of the same dni are added to reach the minimum', function () {
 
     $this->actingAs($usuario);
 
-    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+    $componente = AsistentePrueba::personal(test())
         ->set('pagoForm.numero_documento', '46027898')
         ->set('pagoForm.numero_operacion', '1001')
         ->call('buscarPagosPasoPago')
@@ -1419,7 +1423,7 @@ test('a payment that does not exist or is already used cannot start an inscripci
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('pagoForm.numero_documento', '46027899')
         ->set('pagoForm.numero_operacion', '7777')
         ->call('buscarPagosPasoPago')
@@ -1442,7 +1446,7 @@ test('a scholarship asks for the resolution number', function () {
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('pagoForm.numero_documento', '46027800')
         ->set('pagoForm.numero_operacion', '5050')
         ->call('buscarPagosPasoPago')
@@ -1469,7 +1473,7 @@ test('parentesco unu inscribes with a zero payment and keeps the constancia numb
 
     $this->actingAs($usuario);
 
-    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+    $componente = AsistentePrueba::personal(test())
         ->set('pagoForm.numero_documento', '46027801')
         ->set('pagoForm.numero_operacion', '452')
         ->call('buscarPagosPasoPago')
@@ -1498,7 +1502,7 @@ test('confirmarPasoPago is blocked when proceso is no longer active', function (
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->call('confirmarPasoPago')
         ->assertDispatched('toast', type: 'warning')
         ->assertSet('pasoActual', 1);
@@ -1517,7 +1521,7 @@ test('the inscripcion is not registered until the data is confirmed', function (
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripcion-crear')
+    AsistentePrueba::personal(test())
         ->set('personaId', $persona->id_per)
         ->set('pasoActual', 4)
         ->set('generalForm.anio_graduacion', '2025')
@@ -1528,8 +1532,7 @@ test('the inscripcion is not registered until the data is confirmed', function (
         ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
         ->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
         ->call('guardarPasoPostulacion')
-        ->assertHasErrors('confirmacionDatos')
-        ->assertSee('Confirmo que los datos son correctos');
+        ->assertHasErrors('confirmacionDatos');
 
     expect(Inscripcion::query()->count())->toBe(0);
 

@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Inertia\Support\SessionKey;
-use Livewire\Livewire;
+use Tests\Support\AsistentePrueba;
 
 uses(RefreshDatabase::class);
 
@@ -246,7 +246,7 @@ test('the revision step shows the postulante photo and lets the operator upload 
 
     $this->actingAs($usuario);
 
-    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+    $componente = AsistentePrueba::personal(test())
         ->set('personaForm.numero_documento', '47940211');
 
     expect($componente->get('fotoPostulanteActual'))->toBeNull();

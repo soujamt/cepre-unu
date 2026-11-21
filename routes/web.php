@@ -12,6 +12,7 @@ use App\Http\Controllers\ConfiguracionAcademica\ReglaPagoController;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\Inscripciones\AsistenteInscripcionController;
 use App\Http\Controllers\Inscripciones\FotoController;
 use App\Http\Controllers\Inscripciones\InscripcionController;
 use App\Http\Controllers\Inscripciones\InscripcionDetalleController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Mantenedores\TurnoController;
 use App\Http\Controllers\Pagos\ImportacionPagoController;
 use App\Http\Controllers\Pagos\PagoController;
 use App\Http\Controllers\Pagos\ValidarPagoController;
+use App\Http\Controllers\Publico\InscripcionPortalController;
 use App\Http\Controllers\Publico\PortalController;
 use App\Http\Controllers\Reportes\ReporteInscripcionController;
 use App\Http\Controllers\Seguridad\PermisoController;
@@ -67,7 +69,11 @@ Route::middleware('throttle:60,1')->group(function (): void {
 });
 
 Route::get('/postulante', [PortalController::class, 'portal'])->name('publico.portal');
-Route::livewire('/postulante/inscripcion', 'pages::publico.inscripcion')->name('publico.inscripcion');
+Route::get('/postulante/inscripcion', [InscripcionPortalController::class, 'crear'])->name('publico.inscripcion');
+Route::get('/postulante/inscripcion/{token}', [InscripcionPortalController::class, 'mostrar'])->name('publico.inscripcion.asistente');
+Route::post('/postulante/inscripcion/{token}', [InscripcionPortalController::class, 'actualizar'])
+    ->middleware('throttle:120,1')
+    ->name('publico.inscripcion.actualizar');
 Route::get('/postulante/consulta', [PortalController::class, 'consulta'])->name('publico.consulta');
 Route::post('/postulante/consulta', [PortalController::class, 'buscar'])->name('publico.consulta.buscar');
 
@@ -166,6 +172,26 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.index');
 
+    Route::get('/inscripciones/nueva', [AsistenteInscripcionController::class, 'crear'])
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.crear');
+
+    Route::get('/inscripciones/asistente/{token}', [AsistenteInscripcionController::class, 'mostrar'])
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.asistente');
+
+    Route::post('/inscripciones/asistente/{token}', [AsistenteInscripcionController::class, 'actualizar'])
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.asistente.actualizar');
+
+    Route::post('/inscripciones/asistente/{token}/foto', [AsistenteInscripcionController::class, 'foto'])
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.asistente.foto');
+
+    Route::get('/inscripciones/{inscripcion}/continuar', [AsistenteInscripcionController::class, 'continuar'])
+        ->middleware('permiso:inscripcion_crear')
+        ->name('inscripciones.continuar');
+
     Route::get('/inscripciones/exportar', [InscripcionController::class, 'exportar'])
         ->middleware('permiso:inscripcion_exportar_excel')
         ->name('inscripciones.exportar');
@@ -189,14 +215,6 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/inscripciones/{inscripcion}/aula', [InscripcionController::class, 'asignarAula'])
         ->middleware('permiso:inscripcion_editar')
         ->name('inscripciones.aula');
-
-    Route::livewire('/inscripciones/nueva', 'pages::inscripciones.inscripcion-crear')
-        ->middleware('permiso:inscripcion_crear')
-        ->name('inscripciones.crear');
-
-    Route::livewire('/inscripciones/{inscripcion}/continuar', 'pages::inscripciones.inscripcion-crear')
-        ->middleware('permiso:inscripcion_crear')
-        ->name('inscripciones.continuar');
 
     Route::get('/inscripciones/{inscripcion}/detalle', InscripcionDetalleController::class)
         ->middleware('permiso:inscripcion_indice')
