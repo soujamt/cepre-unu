@@ -2,11 +2,10 @@ import { useSyncExternalStore } from 'react';
 
 export type Tema = 'light' | 'dark' | 'system';
 
-/**
- * Misma clave que usa Flux en las pantallas Livewire, para que el tema elegido
- * se mantenga al pasar de una pantalla a otra durante la migración.
- */
-const CLAVE = 'flux.appearance';
+const CLAVE = 'tema';
+
+/** Clave que usaba la versión anterior del sistema; se lee una vez y se reemplaza. */
+const CLAVE_ANTERIOR = 'flux.appearance';
 
 const oyentes = new Set<() => void>();
 let temaActual: Tema = 'system';
@@ -14,7 +13,7 @@ let temaActual: Tema = 'system';
 const prefiereOscuro = (): boolean => window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 const leerTema = (): Tema => {
-    const guardado = localStorage.getItem(CLAVE);
+    const guardado = localStorage.getItem(CLAVE) ?? localStorage.getItem(CLAVE_ANTERIOR);
 
     return guardado === 'light' || guardado === 'dark' ? guardado : 'system';
 };
@@ -65,6 +64,7 @@ export function useTema(): { tema: Tema; oscuro: boolean; cambiarTema: (tema: Te
 
     const cambiarTema = (nuevo: Tema): void => {
         temaActual = nuevo;
+        localStorage.removeItem(CLAVE_ANTERIOR);
 
         if (nuevo === 'system') {
             localStorage.removeItem(CLAVE);

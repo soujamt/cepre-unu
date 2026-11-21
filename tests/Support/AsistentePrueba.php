@@ -12,7 +12,7 @@ use Inertia\Support\SessionKey;
 use PHPUnit\Framework\Assert;
 
 /**
- * Maneja el asistente de inscripción por HTTP con la misma forma que Livewire::test():
+ * Maneja el asistente de inscripción por HTTP con una API parecida a la de las pruebas de componentes:
  * set() envía el cambio del campo (y su reacción) como lo haría la pantalla, call() pide
  * una acción y las aserciones leen el estado guardado en la sesión y la última respuesta.
  *

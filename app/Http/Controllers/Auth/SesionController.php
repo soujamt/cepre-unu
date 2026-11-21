@@ -20,8 +20,8 @@ class SesionController extends Controller
     /**
      * Inicia sesión y abre la página que se quería visitar (o el inicio).
      *
-     * Se usa una visita completa (Inertia::location) porque esa página puede ser
-     * una pantalla Livewire y porque así el navegador empieza limpio.
+     * Se usa una visita completa (Inertia::location) para que el navegador empiece
+     * limpio, con las props compartidas del usuario que acaba de entrar.
      */
     public function store(LoginRequest $request): Response
     {

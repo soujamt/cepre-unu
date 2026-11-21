@@ -11,7 +11,6 @@ use App\Models\Ubigeo;
 use App\Services\ReniecService;
 use Closure;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Computed;
 use Throwable;
 
 /**
@@ -82,13 +81,11 @@ trait GestionaPasoPersonal
         }
     }
 
-    #[Computed]
     public function esTipoDocumentoDni(): bool
     {
         return $this->esTipoDocumentoDniSeleccionado();
     }
 
-    #[Computed]
     public function puedeConsultarReniec(): bool
     {
         return $this->esTipoDocumentoDniSeleccionado() && strlen($this->personaForm['numero_documento']) === 8;

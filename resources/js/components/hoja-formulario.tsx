@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 
 /**
- * Formulario en un panel lateral derecho, como el modal "flyout" de las pantallas
- * Livewire: título, campos y el botón Guardar al pie.
+ * Formulario en un panel lateral derecho: título, campos y el botón Guardar al pie.
  */
 export function HojaFormulario({
     abierta,

@@ -21,7 +21,7 @@ use ReflectionNamedType;
 use ReflectionProperty;
 
 /**
- * Asistente de inscripción sin Livewire: reutiliza los mismos traits (pasos, reglas y
+ * Asistente de inscripción: reutiliza los traits de InscripcionCrear (pasos, reglas y
  * protecciones del pago) con su estado guardado en la sesión del servidor.
  *
  * El navegador solo puede cambiar los campos de los formularios (camposEditables) y
@@ -347,7 +347,7 @@ abstract class AsistenteInscripcion
         ];
     }
 
-    // --- Lo que los traits esperan de un componente Livewire ---
+    // --- Lo que los traits esperan de un componente (validar, errores, eventos, redirección) ---
 
     /**
      * @param  array<string, mixed>|null  $reglas
@@ -433,7 +433,7 @@ abstract class AsistenteInscripcion
     }
 
     /**
-     * Las propiedades calculadas de Livewire se leen como atributos: $this->procesoPostulacionActivo.
+     * Las propiedades calculadas de los traits se leen como atributos: $this->procesoPostulacionActivo.
      */
     public function __get(string $nombre): mixed
     {
@@ -452,7 +452,7 @@ abstract class AsistenteInscripcion
     }
 
     /**
-     * Los errores de validación quedan en el asistente, como en un componente Livewire.
+     * Los errores de validación quedan en el asistente y se devuelven con la respuesta.
      */
     private function ejecutandoValidacion(callable $accion): void
     {

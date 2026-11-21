@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Usuario;
-use App\Support\RutasLivewire;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -34,8 +33,6 @@ class HandleInertiaRequests extends Middleware
                 'version' => config('app.version'),
             ],
             'auth' => fn (): array => $this->datosDeSesion($request->user()),
-            // Pantallas que siguen en Livewire: los enlaces hacia ellas hacen una carga completa.
-            'rutasLivewire' => Inertia::once(fn (): array => RutasLivewire::patrones()),
         ];
     }
 

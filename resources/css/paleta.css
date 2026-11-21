@@ -1,6 +1,5 @@
 /**
- * Paleta y tokens de diseño compartidos por las pantallas Livewire (app.css)
- * y las de Inertia/React (inertia.css) mientras dura la migración.
+ * Paleta y tokens de diseño del sistema (colores, radios y sombras).
  **/
 :root {
     /** Color principal: azul #296FF0 (500). La misma escala se usa en modo claro y oscuro. **/

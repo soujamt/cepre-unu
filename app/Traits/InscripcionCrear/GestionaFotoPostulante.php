@@ -5,7 +5,6 @@ namespace App\Traits\InscripcionCrear;
 use App\Models\FotoPostulante;
 use App\Support\ProcesadorFotoPostulante;
 use Illuminate\Http\UploadedFile;
-use Livewire\Attributes\Computed;
 
 /**
  * Foto del postulante en la revisión del asistente, como "Actualizar foto" del sistema anterior.
@@ -14,7 +13,6 @@ trait GestionaFotoPostulante
 {
     public ?UploadedFile $fotoPostulante = null;
 
-    #[Computed]
     public function fotoPostulanteActual(): ?FotoPostulante
     {
         return FotoPostulante::deDocumento($this->documentoParaFoto());

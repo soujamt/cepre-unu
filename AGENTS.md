@@ -119,7 +119,7 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Inertia
 
 - Inertia creates fully client-side rendered SPAs without modern SPA complexity, leveraging existing server-side patterns.
-- Components live in `resources/js/Pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
+- Components live in `resources/js/pages` (unless specified in `vite.config.js`). Use `Inertia::render()` for server-side routing instead of Blade views.
 - ALWAYS use `search-docs` tool for version-specific Inertia documentation and updated code examples.
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia client-side patterns.
 
@@ -168,14 +168,6 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Laravel Wayfinder
 
 Use Wayfinder to generate TypeScript functions for Laravel routes. Import from `@/actions/` (controllers) or `@/routes/` (named routes).
-
-=== livewire/core rules ===
-
-# Livewire
-
-- Livewire allows you to build dynamic, reactive interfaces in PHP without writing JavaScript.
-- You can use Alpine.js for client-side interactions instead of JavaScript frameworks.
-- Keep state server-side so the UI reflects it. Validate and authorize in actions as you would in HTTP requests.
 
 === pint/core rules ===
 

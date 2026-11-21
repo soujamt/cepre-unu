@@ -5,7 +5,7 @@ import type { Icono } from '@/lib/iconos';
 type Variante = 'exito' | 'destructive' | 'aviso' | 'info' | 'secondary' | 'default';
 
 /**
- * Color de cada estado del sistema, igual que las insignias de las pantallas Livewire.
+ * Color de cada estado del sistema.
  */
 const variantes: Record<string, Variante> = {
     HABILITADO: 'exito',

@@ -26,8 +26,8 @@ type Confirmar = (opciones: OpcionesConfirmacion) => Promise<boolean>;
 const ContextoConfirmacion = createContext<Confirmar | null>(null);
 
 /**
- * Diálogo de confirmación único para toda la aplicación. Reemplaza a las alertas
- * de confirmación que las pantallas Livewire abrían con dispatch('alert').
+ * Diálogo de confirmación único para toda la aplicación (eliminar, anular,
+ * cambiar de estado, etc.).
  */
 export function ProveedorConfirmacion({ children }: { children: ReactNode }) {
     const [opciones, setOpciones] = useState<OpcionesConfirmacion | null>(null);

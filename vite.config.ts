@@ -9,10 +9,6 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                // Pantallas Livewire (se retiran al terminar la migración)
-                'resources/css/app.css',
-                'resources/js/app.js',
-                // Pantallas Inertia + React
                 'resources/css/inertia.css',
                 'resources/js/app.tsx',
             ],

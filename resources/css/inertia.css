@@ -7,6 +7,8 @@
 
 @source '../js/**/*.{ts,tsx}';
 @source '../views/app.blade.php';
+@source '../views/errors/*.blade.php';
+@source '../views/verificacion-carnet.blade.php';
 
 /**
  * Variables de shadcn/ui con la paleta del sistema: azul #296FF0 como color

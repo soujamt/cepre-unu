@@ -5,7 +5,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia;
-use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -101,16 +100,6 @@ test('login is locked for a minute after five failed attempts', function () {
     $this->post(route('login.store'), ['correo' => 'admin@cepre.test', 'password' => 'secret123'])
         ->assertSessionHasErrors('lockout')
         ->assertSessionHas(SessionKey::FLASH_DATA.'.segundosBloqueo', fn (int $segundos): bool => $segundos > 0 && $segundos <= 60);
-
-    $this->assertGuest();
-});
-
-test('an authenticated user can log out from the profile component', function () {
-    $this->actingAs(usuarioDeLogin());
-
-    Livewire::test('livewire.navegacion.profile.index')
-        ->call('logout')
-        ->assertRedirect(route('login'));
 
     $this->assertGuest();
 });

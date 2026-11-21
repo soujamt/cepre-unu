@@ -5,7 +5,6 @@ namespace App\Traits\InscripcionCrear;
 use App\Models\Inscripcion;
 use App\Models\Proceso;
 use Illuminate\Validation\ValidationException;
-use Livewire\Attributes\Computed;
 
 /**
  * Estado y pasos del asistente de inscripción, compartidos por la pantalla
@@ -201,7 +200,6 @@ trait GestionaAsistenteInscripcion
      */
     protected ?array $contextoProcesoPostulacionCache = null;
 
-    #[Computed]
     public function inscripcionBorrador(): ?Inscripcion
     {
         if ($this->inscripcionId === null) {
@@ -220,7 +218,6 @@ trait GestionaAsistenteInscripcion
             ->find($this->inscripcionId);
     }
 
-    #[Computed]
     public function pasos(): array
     {
         return [
