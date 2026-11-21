@@ -30,7 +30,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Tests\Support\AsistentePrueba;
 
 uses(RefreshDatabase::class);
 
@@ -199,10 +200,7 @@ test('batch carnets only include active inscripciones of the filtered list', fun
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->call('generarCarnets')
-        ->assertFileDownloaded();
+    $this->get(route('inscripciones.carnets', ['proceso' => 'todos']))->assertDownload();
 
     expect(collect($datos['carnets'])->pluck('documento')->all())->toBe(['DNI N° 47940211']);
 });
@@ -214,11 +212,9 @@ test('batch carnets warn when the filtered list has no active inscripciones', fu
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->call('generarCarnets')
-        ->assertNoFileDownloaded()
-        ->assertDispatched('toast', message: 'No hay inscripciones ACTIVAS con los filtros actuales.', type: 'warning');
+    $this->get(route('inscripciones.carnets', ['proceso' => 'todos']))
+        ->assertRedirect()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No hay inscripciones ACTIVAS con los filtros actuales.']);
 });
 
 test('the public verification page shows a valid carnet with a masked dni', function () {
@@ -250,7 +246,7 @@ test('the revision step shows the postulante photo and lets the operator upload 
 
     $this->actingAs($usuario);
 
-    $componente = Livewire::test('pages::inscripciones.inscripcion-crear')
+    $componente = AsistentePrueba::personal(test())
         ->set('personaForm.numero_documento', '47940211');
 
     expect($componente->get('fotoPostulanteActual'))->toBeNull();

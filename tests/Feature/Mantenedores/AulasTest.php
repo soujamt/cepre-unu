@@ -11,7 +11,8 @@ use App\Models\Turno;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -55,14 +56,33 @@ function otorgarPermisosAula(Usuario $usuario, array $claves): void
     }
 }
 
+function crearAulaPrueba(string $nombre = 'AULA 101', int $orden = 1): Aula
+{
+    return Aula::query()->create([
+        'nombre_aul' => $nombre,
+        'piso_aul' => 'PISO 1',
+        'lugar_aul' => 'UNU',
+        'orden_aul' => $orden,
+        'estado_aul' => 'HABILITADO',
+    ]);
+}
+
 test('authorized users can access aulas page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice']);
+    crearAulaPrueba('AULA 202', 2);
+    crearAulaPrueba('AULA 101', 1);
 
     $this->actingAs($usuario)
         ->get(route('mantenedor-aulas.index'))
         ->assertOk()
-        ->assertSee('Aulas');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/aulas')
+            ->has('aulas.data', 2)
+            ->where('aulas.data.0.nombre', 'AULA 101')
+            ->where('aulas.data.0.lugar', 'UNU')
+            ->has('pisos', 5)
+            ->has('lugares', 2));
 });
 
 test('authenticated users without permiso cannot access aulas page', function () {
@@ -77,15 +97,10 @@ test('authorized users can register an aula', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->set('aulaForm.nombre', 'Aula 101')
-        ->set('aulaForm.piso', 'PISO 1')
-        ->set('aulaForm.lugar', 'UNU')
-        ->set('aulaForm.orden', '1')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('mantenedor-aulas.store'), ['nombre' => 'Aula  101', 'piso' => 'PISO 1', 'lugar' => 'UNU', 'orden' => '1'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Aula registrada correctamente.']);
 
     $this->assertDatabaseHas('tbl_aula', [
         'nombre_aul' => 'AULA 101',
@@ -98,28 +113,28 @@ test('authorized users can register an aula', function () {
     ]);
 });
 
+test('aula requires a valid piso, lugar and orden', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosAula($usuario, ['aula_indice', 'aula_crear']);
+
+    $this->actingAs($usuario)
+        ->post(route('mantenedor-aulas.store'), ['nombre' => 'Aula 101', 'piso' => 'PISO 9', 'lugar' => '', 'orden' => '0'])
+        ->assertSessionHasErrors([
+            'piso' => 'Seleccione un piso válido.',
+            'lugar' => 'El lugar es obligatorio.',
+            'orden' => 'El orden debe ser mayor o igual a 1.',
+        ]);
+});
+
 test('authorized users can update an aula', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_editar']);
+    $aula = crearAulaPrueba();
 
-    $aula = Aula::query()->create([
-        'nombre_aul' => 'AULA 101',
-        'piso_aul' => 'PISO 1',
-        'lugar_aul' => 'UNU',
-        'orden_aul' => 1,
-        'estado_aul' => 'HABILITADO',
-    ]);
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->call('cargarAula', $aula->id_aul)
-        ->set('aulaForm.nombre', 'Aula 201')
-        ->set('aulaForm.piso', 'PISO 2')
-        ->set('aulaForm.lugar', 'UAP')
-        ->set('aulaForm.orden', '2')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('mantenedor-aulas.update', $aula), ['nombre' => 'Aula 201', 'piso' => 'PISO 2', 'lugar' => 'UAP', 'orden' => '2'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Aula actualizada correctamente.');
 
     $this->assertDatabaseHas('tbl_aula', [
         'id_aul' => $aula->id_aul,
@@ -134,20 +149,11 @@ test('authorized users can update an aula', function () {
 test('authorized users can change state of an aula', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_estado']);
+    $aula = crearAulaPrueba();
 
-    $aula = Aula::query()->create([
-        'nombre_aul' => 'AULA 101',
-        'piso_aul' => 'PISO 1',
-        'lugar_aul' => 'UNU',
-        'orden_aul' => 1,
-        'estado_aul' => 'HABILITADO',
-    ]);
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->call('cambiarEstado', $aula->id_aul)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('mantenedor-aulas.estado', $aula))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del aula actualizado.']);
 
     $this->assertDatabaseHas('tbl_aula', [
         'id_aul' => $aula->id_aul,
@@ -159,48 +165,26 @@ test('authorized users can change state of an aula', function () {
 test('authorized users can delete an aula without assignments', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_eliminar']);
+    $aula = crearAulaPrueba();
 
-    $aula = Aula::query()->create([
-        'nombre_aul' => 'AULA 101',
-        'piso_aul' => 'PISO 1',
-        'lugar_aul' => 'UNU',
-        'orden_aul' => 1,
-        'estado_aul' => 'HABILITADO',
-    ]);
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->call('eliminar', $aula->id_aul)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('mantenedor-aulas.destroy', $aula))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Aula eliminada correctamente.']);
 
     $aulaEliminada = Aula::query()->withTrashed()->find($aula->id_aul);
 
-    expect($aulaEliminada)->not->toBeNull();
-    expect($aulaEliminada?->id_usuario_eliminador)->toBe($usuario->id_usu);
+    expect($aulaEliminada?->trashed())->toBeTrue()
+        ->and($aulaEliminada?->id_usuario_eliminador)->toBe($usuario->id_usu);
 });
 
 test('authenticated users cannot register duplicated aulas by name', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosAula($usuario, ['aula_indice', 'aula_crear']);
+    crearAulaPrueba();
 
-    Aula::query()->create([
-        'nombre_aul' => 'AULA 101',
-        'piso_aul' => 'PISO 1',
-        'lugar_aul' => 'UNU',
-        'orden_aul' => 1,
-        'estado_aul' => 'HABILITADO',
-    ]);
-
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->set('aulaForm.nombre', 'aula 101')
-        ->set('aulaForm.piso', 'PISO 2')
-        ->set('aulaForm.lugar', 'UAP')
-        ->set('aulaForm.orden', '2')
-        ->call('guardar')
-        ->assertHasErrors(['aulaForm.nombre']);
+    $this->actingAs($usuario)
+        ->post(route('mantenedor-aulas.store'), ['nombre' => 'aula 101', 'piso' => 'PISO 2', 'lugar' => 'UAP', 'orden' => '2'])
+        ->assertSessionHasErrors(['nombre' => 'Ya existe un aula con ese nombre.']);
 });
 
 test('authenticated users cannot delete an aula with proceso assignments', function () {
@@ -221,13 +205,7 @@ test('authenticated users cannot delete an aula with proceso assignments', funct
         'estado_tur' => 'HABILITADO',
     ]);
 
-    $aula = Aula::query()->create([
-        'nombre_aul' => 'AULA 101',
-        'piso_aul' => 'PISO 1',
-        'lugar_aul' => 'UNU',
-        'orden_aul' => 1,
-        'estado_aul' => 'HABILITADO',
-    ]);
+    $aula = crearAulaPrueba();
 
     ProcesoAula::query()->create([
         'id_proceso' => $proceso->id_pro,
@@ -237,11 +215,9 @@ test('authenticated users cannot delete an aula with proceso assignments', funct
         'estado_pau' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.aulas')
-        ->call('eliminar', $aula->id_aul)
-        ->assertDispatched('toast', message: 'El aula tiene asignaciones por proceso y no puede eliminarse.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('mantenedor-aulas.destroy', $aula))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El aula tiene asignaciones por proceso y no puede eliminarse.']);
 
     expect(Aula::query()->find($aula->id_aul))->not->toBeNull();
 });

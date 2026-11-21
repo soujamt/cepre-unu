@@ -11,7 +11,8 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
@@ -69,9 +70,13 @@ test('authorized users can see the list of payments', function () {
     $this->actingAs($usuario)
         ->get(route('pagos.index'))
         ->assertOk()
-        ->assertSee('Importaciones TXT')
-        ->assertSee('54123')
-        ->assertSee('LIBRE');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('pagos/pagos')
+            ->has('pagos.data', 1)
+            ->where('pagos.data.0.operacion', '54123')
+            ->where('pagos.data.0.estado', 'LIBRE')
+            ->where('pagos.data.0.editable', true)
+            ->where('resumen.libres', 1));
 });
 
 test('users without permiso cannot see the list of payments', function () {
@@ -85,18 +90,17 @@ test('authorized users can register a manual payment from admision', function ()
     $usuario = Usuario::factory()->create();
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-lista')
-        ->call('cargarPago')
-        ->set('pagoForm.dni', '47940211')
-        ->set('pagoForm.referencia', 'rengifo del aguila')
-        ->set('pagoForm.importe', '275')
-        ->set('pagoForm.numero_operacion', '54123')
-        ->set('pagoForm.ubicacion', 'ADMISIÓN')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Pago registrado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('pagos.store'), [
+            'fecha' => '2026-11-13',
+            'dni' => '47940211',
+            'referencia' => 'rengifo del aguila',
+            'importe' => '275',
+            'numero_operacion' => '54123',
+            'ubicacion' => 'ADMISIÓN',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Pago registrado correctamente.']);
 
     $pago = ImportacionBancoDetalle::query()->sole();
 
@@ -112,15 +116,9 @@ test('a zero payment can be registered for parentesco', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-lista')
-        ->set('pagoForm.dni', '61417851')
-        ->set('pagoForm.importe', '0')
-        ->set('pagoForm.numero_operacion', '452')
-        ->set('pagoForm.ubicacion', 'PARENTESCO UNU')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('pagos.store'), ['fecha' => now()->toDateString(), 'dni' => '61417851', 'importe' => '0', 'numero_operacion' => '452', 'ubicacion' => 'PARENTESCO UNU'])
+        ->assertSessionHasNoErrors();
 
     expect((float) ImportacionBancoDetalle::query()->sole()->monto_ibd)->toBe(0.0);
 });
@@ -130,14 +128,9 @@ test('the same operation number cannot be repeated for the same dni', function (
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_crear']);
     crearPagoManualPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-lista')
-        ->set('pagoForm.dni', '47940211')
-        ->set('pagoForm.importe', '275')
-        ->set('pagoForm.numero_operacion', '54123')
-        ->call('guardar')
-        ->assertHasErrors('pagoForm.numero_operacion');
+    $this->actingAs($usuario)
+        ->post(route('pagos.store'), ['fecha' => now()->toDateString(), 'dni' => '47940211', 'importe' => '275', 'numero_operacion' => '54123', 'ubicacion' => 'ADMISIÓN'])
+        ->assertSessionHasErrors(['numero_operacion' => 'Ya existe un pago con ese número de operación para el mismo DNI.']);
 });
 
 test('a free manual payment can be edited and deleted', function () {
@@ -145,18 +138,22 @@ test('a free manual payment can be edited and deleted', function () {
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_editar', 'pago_eliminar']);
     $pago = crearPagoManualPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-lista')
-        ->call('cargarPago', $pago->id_ibd)
-        ->assertSet('soloObservacion', false)
-        ->set('pagoForm.importe', '500')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->call('eliminar', $pago->id_ibd)
-        ->assertDispatched('toast', message: 'Pago eliminado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->put(route('pagos.update', $pago), [
+            'fecha' => $pago->fecha_pago_ibd->toDateString(),
+            'dni' => $pago->numero_documento_ibd,
+            'importe' => '500',
+            'numero_operacion' => $pago->numero_operacion_visible_ibd,
+            'ubicacion' => 'ADMISIÓN',
+        ])
+        ->assertSessionHasNoErrors();
 
     expect((float) $pago->fresh()?->monto_ibd)->toBe(500.0);
+
+    $this->actingAs($usuario)
+        ->delete(route('pagos.destroy', $pago))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Pago eliminado correctamente.']);
+
     $this->assertSoftDeleted('tbl_importacion_banco_detalle', ['id_ibd' => $pago->id_ibd], deletedAtColumn: 'eliminado_en');
 });
 
@@ -165,17 +162,13 @@ test('a registered payment only allows editing its observation', function () {
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_editar', 'pago_eliminar']);
     $pago = crearPagoManualPrueba(['estado_ibd' => EstadoImportacionBancoDetalle::Asociado->value]);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->put(route('pagos.update', $pago), ['importe' => '1', 'observacion' => 'solicitó devolución'])
+        ->assertSessionHasNoErrors();
 
-    Livewire::test('pages::inscripciones.pagos-lista')
-        ->call('cargarPago', $pago->id_ibd)
-        ->assertSet('soloObservacion', true)
-        ->set('pagoForm.importe', '1')
-        ->set('pagoForm.observacion', 'solicitó devolución')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->call('eliminar', $pago->id_ibd)
-        ->assertDispatched('toast', message: 'Solo se pueden eliminar pagos registrados a mano que sigan libres.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('pagos.destroy', $pago))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'Solo se pueden eliminar pagos registrados a mano que sigan libres.']);
 
     $pago->refresh();
 
@@ -191,9 +184,7 @@ test('authorized users can export the payments', function () {
     otorgarPermisosPagosLista($usuario, ['pago_indice', 'pago_exportar_excel']);
     crearPagoManualPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-lista')->call('exportarExcel');
+    $this->actingAs($usuario)->get(route('pagos.exportar'));
 
     Excel::assertDownloaded('pagos-cepre-20261117-100000.xlsx', function (PagosExport $export): bool {
         $fila = $export->collection()->first();

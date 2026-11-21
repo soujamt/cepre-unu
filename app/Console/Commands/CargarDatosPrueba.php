@@ -16,7 +16,6 @@ use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
-use App\Models\LenguaExtranjera;
 use App\Models\LenguaNativa;
 use App\Models\Nacionalidad;
 use App\Models\Pais;
@@ -304,9 +303,9 @@ class CargarDatosPrueba extends Command
             'celular_apoderado_per' => sprintf('9%08d', 72000000 + $indice * 977),
             'discapacidad_per' => false,
             'id_tipo_discapacidad' => null,
-            'tipo_lengua_materna_per' => $esShipibo ? TipoLenguaMaternaPersona::Nativa->value : TipoLenguaMaternaPersona::Extranjera->value,
+            'tipo_lengua_materna_per' => $esShipibo ? TipoLenguaMaternaPersona::Nativa->value : TipoLenguaMaternaPersona::Castellano->value,
             'id_lengua_nativa' => $esShipibo ? LenguaNativa::query()->where('nombre_lna', 'like', 'SHIPIBO%')->value('id_lna') : null,
-            'id_lengua_extranjera' => $esShipibo ? null : LenguaExtranjera::query()->where('nombre_lex', 'like', '%CASTELLANO%')->value('id_lex'),
+            'id_lengua_extranjera' => null,
             'id_identidad_etnica' => IdentidadEtnica::query()->where('nombre_iet', $esShipibo ? 'like' : '=', $esShipibo ? 'NATIVO%' : 'MESTIZO')->value('id_iet'),
             'observacion_per' => 'DATO DE PRUEBA',
             'estado_per' => 'HABILITADO',

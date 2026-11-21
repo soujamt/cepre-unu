@@ -26,7 +26,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -108,9 +109,14 @@ test('authorized users see one lugar row and one row per carrera', function () {
     $this->actingAs($usuario)
         ->get(route('codigos-admision.index'))
         ->assertOk()
-        ->assertSee('LUGAR: PUCALLPA - CALLERÍA / ORDINARIO')
-        ->assertSee('INGENIERÍA DE SISTEMAS')
-        ->assertSee('0 / 3');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('configuracion-academica/codigos-admision')
+            ->has('filas', 3)
+            ->where('filas.0.esLugar', true)
+            ->where('filas.0.sede', 'PUCALLPA - CALLERÍA')
+            ->where('filas.0.modalidad', 'ORDINARIO')
+            ->where('filas', fn ($filas): bool => collect($filas)->contains('carrera', 'INGENIERÍA DE SISTEMAS'))
+            ->where('avance', ['total' => 3, 'conCodigo' => 0]));
 });
 
 test('users without permiso cannot see the codes page', function () {
@@ -124,19 +130,17 @@ test('codes are saved by hand and an empty code removes it', function () {
     $claveLugar = ProcesoCodigoAdmision::clave($sede->id_sed, $ordinario->id_mad);
     $claveSistemas = ProcesoCodigoAdmision::clave($sede->id_sed, $ordinario->id_mad, $sistemas->id_car);
 
-    $this->actingAs($usuario);
+    $proceso = Proceso::query()->firstOrFail();
 
-    $componente = Livewire::test('pages::configuracion-academica.codigos-admision')
-        ->set("codigos.{$claveLugar}", '603')
-        ->set("codigos.{$claveSistemas}", ' 2700 ')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Códigos guardados: 2.', type: 'success');
+    $this->actingAs($usuario)
+        ->put(route('codigos-admision.update', $proceso), ['codigos' => [$claveLugar => '603', $claveSistemas => ' 2700 ']])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Códigos guardados: 2.']);
 
     expect(ProcesoCodigoAdmision::query()->whereNull('id_carrera')->value('codigo_pcd'))->toBe('603')
         ->and(ProcesoCodigoAdmision::query()->where('id_carrera', $sistemas->id_car)->value('codigo_pcd'))->toBe('2700');
 
-    $componente->set("codigos.{$claveSistemas}", '')->call('guardar');
+    $this->actingAs($usuario)->put(route('codigos-admision.update', $proceso), ['codigos' => [$claveLugar => '603', $claveSistemas => '']]);
 
     expect(ProcesoCodigoAdmision::withTrashed()->count())->toBe(1);
 });
@@ -146,9 +150,9 @@ test('users without editar permiso cannot save codes', function () {
     otorgarPermisosCodigos($usuario, ['codigo_admision_indice']);
     crearOfertaParaCodigos();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.codigos-admision')->call('guardar')->assertForbidden();
+    $this->actingAs($usuario)
+        ->put(route('codigos-admision.update', Proceso::query()->firstOrFail()), ['codigos' => []])
+        ->assertForbidden();
 });
 
 test('the template lists every combination of the process with an empty code column', function () {
@@ -157,9 +161,7 @@ test('the template lists every combination of the process with an empty code col
     otorgarPermisosCodigos($usuario, ['codigo_admision_indice']);
     ['sede' => $sede, 'ordinario' => $ordinario] = crearOfertaParaCodigos();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.codigos-admision')->call('descargarPlantilla');
+    $this->actingAs($usuario)->get(route('codigos-admision.plantilla', Proceso::query()->firstOrFail()));
 
     Excel::assertDownloaded('codigos-admision-2027-2.xlsx', function (PlantillaCodigosAdmisionExport $export) use ($sede, $ordinario): bool {
         $filas = $export->array();
@@ -174,16 +176,20 @@ test('the filled template saves its codes and reports unknown rows', function ()
     otorgarPermisosCodigos($usuario, ['codigo_admision_indice', 'codigo_admision_editar']);
     ['sede' => $sede, 'derecho' => $derecho, 'ordinario' => $ordinario] = crearOfertaParaCodigos();
 
-    $this->actingAs($usuario);
+    $proceso = Proceso::query()->firstOrFail();
 
-    Livewire::test('pages::configuracion-academica.codigos-admision')
-        ->set('plantilla', plantillaLlena([
+    $this->actingAs($usuario)
+        ->post(route('codigos-admision.cargar-plantilla', $proceso), ['plantilla' => plantillaLlena([
             [ProcesoCodigoAdmision::clave($sede->id_sed, $ordinario->id_mad), 'LUGAR', null, null, null, '603'],
             [ProcesoCodigoAdmision::clave($sede->id_sed, $ordinario->id_mad, $derecho->id_car), 'OFERTA', null, null, null, '2705'],
             ['99-99', 'LUGAR', null, null, null, '700'],
-        ]))
-        ->assertSet('erroresPlantilla', ['Fila 4: la clave "99-99" no corresponde a la oferta de este proceso.'])
-        ->assertSee('2 / 3');
+        ])])
+        ->assertSessionHas('erroresPlantilla', ['Fila 4: la clave "99-99" no corresponde a la oferta de este proceso.'])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'Plantilla cargada: 2 código(s) guardado(s).']);
+
+    $this->actingAs($usuario)
+        ->get(route('codigos-admision.index', ['proceso' => $proceso->id_pro]))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('avance', ['total' => 3, 'conCodigo' => 2]));
 
     expect(ProcesoCodigoAdmision::query()->pluck('codigo_pcd')->all())->toEqualCanonicalizing(['603', '2705']);
 });

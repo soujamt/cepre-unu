@@ -11,7 +11,8 @@ use App\Models\Turno;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -67,11 +68,33 @@ function crearTurnoPrueba(string $codigo = 'MAN', string $nombre = 'MAÑANA'): T
 test('authorized users can access turnos page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosTurno($usuario, ['turno_indice']);
+    crearTurnoPrueba()->update(['hora_inicio_tur' => '07:00', 'hora_fin_tur' => '12:00']);
 
     $this->actingAs($usuario)
         ->get(route('turnos.index'))
         ->assertOk()
-        ->assertSee('Turnos');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/turnos')
+            ->has('turnos.data', 1)
+            ->where('turnos.data.0.codigo', 'MAN')
+            ->where('turnos.data.0.descripcion', 'MAÑANA (07:00 am - 12:00 pm)')
+            ->where('turnos.data.0.horaInicio', '07:00')
+            ->where('turnos.data.0.horaFin', '12:00'));
+});
+
+test('turnos can be searched and filtered by state', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosTurno($usuario, ['turno_indice']);
+    crearTurnoPrueba('MAN', 'MAÑANA');
+    crearTurnoPrueba('TAR', 'TARDE')->update(['estado_tur' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario)
+        ->get(route('turnos.index', ['buscar' => 'tar']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('turnos.data', 1)->where('turnos.data.0.codigo', 'TAR'));
+
+    $this->actingAs($usuario)
+        ->get(route('turnos.index', ['estado' => ['HABILITADO']]))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('turnos.data', 1)->where('turnos.data.0.codigo', 'MAN'));
 });
 
 test('authenticated users without permiso cannot access turnos page', function () {
@@ -82,23 +105,31 @@ test('authenticated users without permiso cannot access turnos page', function (
         ->assertForbidden();
 });
 
+test('users without crear permiso cannot register a turno', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosTurno($usuario, ['turno_indice']);
+
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'INT', 'nombre' => 'Intermedio'])
+        ->assertForbidden();
+
+    expect(Turno::query()->count())->toBe(0);
+});
+
 test('authorized users can register a turno', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.turnos')
-        ->call('cargarTurno')
-        ->set('turnoForm.codigo', 'int')
-        ->set('turnoForm.nombre', 'Intermedio')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Turno registrado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'int', 'nombre' => 'Intermedio', 'hora_inicio' => '', 'hora_fin' => ''])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Turno registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_turno', [
         'codigo_tur' => 'INT',
         'nombre_tur' => 'INTERMEDIO',
+        'hora_inicio_tur' => null,
+        'hora_fin_tur' => null,
         'estado_tur' => 'HABILITADO',
     ]);
 });
@@ -107,36 +138,35 @@ test('a turno keeps its schedule and shows it with the name', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_crear']);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'VIR', 'nombre' => 'noche virtual', 'hora_inicio' => '17:00', 'hora_fin' => '16:00'])
+        ->assertSessionHasErrors(['hora_fin' => 'La hora de fin debe ser posterior a la de inicio.']);
 
-    Livewire::test('pages::mantenedores.turnos')
-        ->set('turnoForm.codigo', 'VIR')
-        ->set('turnoForm.nombre', 'noche virtual')
-        ->set('turnoForm.hora_inicio', '17:00')
-        ->set('turnoForm.hora_fin', '16:00')
-        ->call('guardar')
-        ->assertHasErrors('turnoForm.hora_fin')
-        ->set('turnoForm.hora_fin', '22:00')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'VIR', 'nombre' => 'noche virtual', 'hora_inicio' => '17:00', 'hora_fin' => ''])
+        ->assertSessionHasErrors(['hora_fin' => 'Indique la hora de fin.']);
+
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'VIR', 'nombre' => 'noche virtual', 'hora_inicio' => '17:00', 'hora_fin' => '22:00'])
+        ->assertSessionHasNoErrors();
 
     $turno = Turno::query()->where('codigo_tur', 'VIR')->sole();
 
     expect($turno->descripcionConHorario())->toBe('NOCHE VIRTUAL (05:00 pm - 10:00 pm)');
 });
 
-test('turno code and name must be unique', function () {
+test('turno code and name must be unique including deleted turnos', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_crear']);
     crearTurnoPrueba('MAN', 'MAÑANA');
+    crearTurnoPrueba('TAR', 'TARDE')->delete();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.turnos')
-        ->set('turnoForm.codigo', 'man')
-        ->set('turnoForm.nombre', 'mañana')
-        ->call('guardar')
-        ->assertHasErrors(['turnoForm.codigo', 'turnoForm.nombre']);
+    $this->actingAs($usuario)
+        ->post(route('turnos.store'), ['codigo' => 'man', 'nombre' => 'tarde'])
+        ->assertSessionHasErrors([
+            'codigo' => 'Ya existe un turno con ese código.',
+            'nombre' => 'Ya existe un turno con ese nombre.',
+        ]);
 });
 
 test('authorized users can update and change state of a turno', function () {
@@ -144,15 +174,14 @@ test('authorized users can update and change state of a turno', function () {
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_editar', 'turno_estado']);
     $turno = crearTurnoPrueba();
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->put(route('turnos.update', $turno), ['codigo' => 'MAN', 'nombre' => 'Mañana temprano'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Turno actualizado correctamente.');
 
-    Livewire::test('pages::mantenedores.turnos')
-        ->call('cargarTurno', $turno->id_tur)
-        ->set('turnoForm.nombre', 'Mañana temprano')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->call('cambiarEstado', $turno->id_tur)
-        ->assertDispatched('toast', message: 'Estado del turno actualizado.', type: 'success');
+    $this->actingAs($usuario)
+        ->patch(route('turnos.estado', $turno))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del turno actualizado.']);
 
     $turno->refresh();
 
@@ -165,11 +194,9 @@ test('authorized users can delete an unused turno', function () {
     otorgarPermisosTurno($usuario, ['turno_indice', 'turno_eliminar']);
     $turno = crearTurnoPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.turnos')
-        ->call('eliminar', $turno->id_tur)
-        ->assertDispatched('toast', message: 'Turno eliminado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->delete(route('turnos.destroy', $turno))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Turno eliminado correctamente.']);
 
     $this->assertSoftDeleted('tbl_turno', ['id_tur' => $turno->id_tur], deletedAtColumn: 'eliminado_en');
 });
@@ -200,11 +227,12 @@ test('turno used in aulas por proceso cannot be deleted', function () {
         'estado_pau' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.turnos')
-        ->call('eliminar', $turno->id_tur)
-        ->assertDispatched('toast', message: 'El turno se usa en aulas por proceso y no puede eliminarse. Puede deshabilitarlo.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('turnos.destroy', $turno))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', [
+            'type' => 'error',
+            'message' => 'El turno se usa en aulas por proceso y no puede eliminarse. Puede deshabilitarlo.',
+        ]);
 
     $this->assertNotSoftDeleted('tbl_turno', ['id_tur' => $turno->id_tur], deletedAtColumn: 'eliminado_en');
 });

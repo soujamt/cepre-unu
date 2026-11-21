@@ -25,3 +25,8 @@ Thumbs.db
 
 # Claude Code: configuración personal
 .claude/settings.local.json
+
+# Wayfinder: funciones TypeScript generadas desde las rutas de Laravel
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder

@@ -10,7 +10,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -45,7 +46,10 @@ test('authorized users can see the carnet configuration and its sample', functio
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarnet($usuario, ['parametro_indice']);
 
-    $this->actingAs($usuario)->get(route('carnet.configuracion'))->assertOk()->assertSee('DIRECTOR GENERAL CEPRE-UNU');
+    $this->actingAs($usuario)
+        ->get(route('carnet.configuracion'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('configuracion-academica/carnet')->where('carnet.director_cargo', 'DIRECTOR GENERAL CEPRE-UNU'));
     $this->actingAs($usuario)->get(route('carnet.muestra'))->assertOk()->assertHeader('content-type', 'application/pdf');
 });
 
@@ -58,16 +62,15 @@ test('the director data and signature image are saved', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarnet($usuario, ['parametro_indice', 'parametro_editar']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.carnet')
-        ->set('carnetForm.director_nombre', 'dr. juan pérez')
-        ->set('carnetForm.director_cargo', 'DIRECTOR GENERAL CEPRE-UNU')
-        ->set('carnetForm.nota', 'Válido para el ingreso al campus.')
-        ->set('firma', UploadedFile::fake()->image('firma.png', 300, 150))
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Configuración del carnet guardada.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('carnet.guardar'), [
+            'director_nombre' => 'dr. juan pérez',
+            'director_cargo' => 'DIRECTOR GENERAL CEPRE-UNU',
+            'nota' => 'Válido para el ingreso al campus.',
+            'firma' => UploadedFile::fake()->image('firma.png', 300, 150),
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Configuración del carnet guardada.']);
 
     expect(Parametro::valor('carnet_director_nombre'))->toBe('DR. JUAN PÉREZ')
         ->and(Parametro::valor('carnet_nota'))->toBe('Válido para el ingreso al campus.');
@@ -79,13 +82,9 @@ test('the signature must be a png image', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarnet($usuario, ['parametro_indice', 'parametro_editar']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.carnet')
-        ->set('carnetForm.director_nombre', 'JUAN PÉREZ')
-        ->set('firma', UploadedFile::fake()->image('firma.jpg'))
-        ->call('guardar')
-        ->assertHasErrors('firma');
+    $this->actingAs($usuario)
+        ->post(route('carnet.guardar'), ['director_nombre' => 'JUAN PÉREZ', 'director_cargo' => 'DIRECTOR', 'firma' => UploadedFile::fake()->image('firma.jpg')])
+        ->assertSessionHasErrors(['firma' => 'La firma debe ser una imagen PNG.']);
 
     expect(Parametro::valor('carnet_firma_sello'))->toBeNull();
 });
@@ -94,10 +93,7 @@ test('users without editar permiso cannot save the carnet configuration', functi
     $usuario = Usuario::factory()->create();
     otorgarPermisosCarnet($usuario, ['parametro_indice']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.carnet')
-        ->set('carnetForm.director_nombre', 'JUAN PÉREZ')
-        ->call('guardar')
+    $this->actingAs($usuario)
+        ->post(route('carnet.guardar'), ['director_nombre' => 'JUAN PÉREZ', 'director_cargo' => 'DIRECTOR'])
         ->assertForbidden();
 });

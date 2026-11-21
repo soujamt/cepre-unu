@@ -18,6 +18,14 @@ class Ubigeo extends LegacyModel
         ]);
     }
 
+    /**
+     * Texto con el que se muestra en los buscadores: "250101 | UCAYALI / CORONEL PORTILLO / CALLERIA".
+     */
+    public function etiqueta(): string
+    {
+        return "{$this->id_ubi} | {$this->nombre_departamento_ubi} / {$this->nombre_provincia_ubi} / {$this->nombre_distrito_ubi}";
+    }
+
     public function sedes(): HasMany
     {
         return $this->hasMany(Sede::class, 'id_ubigeo', 'id_ubi');

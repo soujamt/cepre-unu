@@ -131,10 +131,10 @@ Según la configuración actual del proyecto, se recomienda trabajar con:
 El proyecto utiliza además:
 
 - Laravel 13;
-- Livewire 4;
-- Flux UI 2;
+- Inertia 3 con React 19 y TypeScript;
+- shadcn/ui;
 - Tailwind CSS 4;
-- Vite 7;
+- Vite 8;
 - `maatwebsite/excel`.
 
 ## 6. Instalación local en Windows con Herd y MySQL

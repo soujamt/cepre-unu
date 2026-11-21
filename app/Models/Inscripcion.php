@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EstadoInscripcion;
+use App\Enums\EstadoObligacionPago;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -103,5 +104,37 @@ class Inscripcion extends LegacyModel
     public function procesoAula(): BelongsTo
     {
         return $this->belongsTo(ProcesoAula::class, 'id_proceso_aula', 'id_pau');
+    }
+
+    /**
+     * Estado del pago de la inscripción según sus obligaciones: SIN REGLA, EXONERADO,
+     * PAGADO, PARCIAL o PENDIENTE (requiere las obligaciones cargadas).
+     */
+    public function estadoPagoGeneral(): string
+    {
+        $obligaciones = $this->obligacionesPago;
+
+        return match (true) {
+            $obligaciones->isEmpty() => 'SIN REGLA',
+            $obligaciones->every(fn ($obligacion) => $obligacion->estado_iop === EstadoObligacionPago::Exonerado) => 'EXONERADO',
+            $obligaciones->every(fn ($obligacion) => in_array($obligacion->estado_iop, [EstadoObligacionPago::Pagado, EstadoObligacionPago::Exonerado], true)) => 'PAGADO',
+            $obligaciones->contains(fn ($obligacion) => $obligacion->estado_iop === EstadoObligacionPago::Parcial) => 'PARCIAL',
+            default => 'PENDIENTE',
+        };
+    }
+
+    /**
+     * Apellidos y nombres del postulante.
+     */
+    public function nombrePostulante(): string
+    {
+        $persona = $this->persona;
+
+        return $persona === null ? 'SIN POSTULANTE' : trim(implode(' ', array_filter([
+            $persona->apellido_paterno_per,
+            $persona->apellido_materno_per,
+            $persona->apellido_casada_per,
+            $persona->nombres_per,
+        ])));
     }
 }

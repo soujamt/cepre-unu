@@ -4,17 +4,15 @@ namespace App\Traits\InscripcionCrear;
 
 use App\Models\FotoPostulante;
 use App\Support\ProcesadorFotoPostulante;
-use Livewire\Attributes\Computed;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Illuminate\Http\UploadedFile;
 
 /**
  * Foto del postulante en la revisión del asistente, como "Actualizar foto" del sistema anterior.
  */
 trait GestionaFotoPostulante
 {
-    public ?TemporaryUploadedFile $fotoPostulante = null;
+    public ?UploadedFile $fotoPostulante = null;
 
-    #[Computed]
     public function fotoPostulanteActual(): ?FotoPostulante
     {
         return FotoPostulante::deDocumento($this->documentoParaFoto());
@@ -25,7 +23,7 @@ trait GestionaFotoPostulante
      */
     public function fuenteFotoPostulante(FotoPostulante $foto): string
     {
-        return route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp;
+        return $foto->url();
     }
 
     public function puedeCambiarFoto(): bool

@@ -7,7 +7,8 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -57,7 +58,7 @@ test('authenticated users with permiso can access the permisos page', function (
     $this->actingAs($usuario)
         ->get(route('permisos.index'))
         ->assertOk()
-        ->assertSee('Permisos');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('seguridad/permisos')->has('permisos.data')->has('acciones'));
 });
 
 test('authenticated users without permiso cannot access the permisos page', function () {
@@ -77,13 +78,10 @@ test('authenticated users can register a permiso', function () {
         ->map(fn (int $id): string => (string) $id)
         ->all();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->set('permisoForm.nombre', 'Ver permisos')
-        ->set('permisoForm.acciones', $acciones)
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('permisos.store'), ['nombre' => 'Ver  permisos', 'acciones' => $acciones])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Permiso registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_permiso', [
         'clave_permiso' => 'ver_permisos',
@@ -133,14 +131,10 @@ test('authenticated users can update a permiso', function () {
         ]);
     }
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->call('cargarPermiso', $permiso->id_permiso)
-        ->set('permisoForm.nombre', 'Gestionar permisos')
-        ->set('permisoForm.acciones', $accionesActualizadas)
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('permisos.update', $permiso), ['nombre' => 'Gestionar permisos', 'acciones' => $accionesActualizadas])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Permiso actualizado correctamente.');
 
     $this->assertDatabaseHas('tbl_permiso', [
         'id_permiso' => $permiso->id_permiso,
@@ -189,26 +183,18 @@ test('authenticated users cannot register duplicated permisos by generated code'
         'estado_permiso' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->set('permisoForm.nombre', 'Gestionar   permisos')
-        ->set('permisoForm.acciones', $acciones)
-        ->call('guardar')
-        ->assertHasErrors(['permisoForm.nombre']);
+    $this->actingAs($usuario)
+        ->post(route('permisos.store'), ['nombre' => 'Gestionar   permisos', 'acciones' => $acciones])
+        ->assertSessionHasErrors(['nombre' => 'Ya existe un permiso con ese nombre.']);
 });
 
 test('authenticated users must select at least one action for a permiso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisos($usuario, ['permiso_indice', 'permiso_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->set('permisoForm.nombre', 'Usuarios')
-        ->set('permisoForm.acciones', [])
-        ->call('guardar')
-        ->assertHasErrors(['permisoForm.acciones']);
+    $this->actingAs($usuario)
+        ->post(route('permisos.store'), ['nombre' => 'Usuarios', 'acciones' => []])
+        ->assertSessionHasErrors(['acciones' => 'Debe seleccionar al menos una acción.']);
 });
 
 test('authenticated users can change estado of a permiso', function () {
@@ -220,11 +206,9 @@ test('authenticated users can change estado of a permiso', function () {
         'estado_permiso' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->call('cambiarEstado', $permiso->id_permiso)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('permisos.estado', $permiso))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del permiso actualizado.']);
 
     $this->assertDatabaseHas('tbl_permiso', [
         'id_permiso' => $permiso->id_permiso,
@@ -242,11 +226,9 @@ test('authenticated users can delete a permiso', function () {
         'estado_permiso' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.permisos')
-        ->call('eliminar', $permiso->id_permiso)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('permisos.destroy', $permiso))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Permiso eliminado correctamente.']);
 
     expect(Permiso::query()->find($permiso->id_permiso))->toBeNull();
     $permisoEliminado = Permiso::withTrashed()->find($permiso->id_permiso);
@@ -281,5 +263,5 @@ test('administrador role can access permisos module without explicit permiso ass
     $this->actingAs($usuario)
         ->get(route('permisos.index'))
         ->assertOk()
-        ->assertSee('Permisos');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('seguridad/permisos')->has('permisos.data')->has('acciones'));
 });

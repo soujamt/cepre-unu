@@ -29,13 +29,47 @@ test('authenticated users can search ubigeos by api', function () {
         ]);
 });
 
-test('ubigeo search returns an empty array for short queries', function () {
-    $usuario = Usuario::factory()->create();
+/**
+ * @param  array{0: string, 1: string, 2: string, 3: string}  $datos  Código, departamento, provincia y distrito.
+ */
+function crearUbigeoBusqueda(array $datos): void
+{
+    [$codigo, $departamento, $provincia, $distrito] = $datos;
 
-    $this->actingAs($usuario)
-        ->getJson(route('api.ubigeo.search', ['query' => 'c']))
+    Ubigeo::query()->create([
+        'id_ubi' => $codigo,
+        'codigo_departamento_ubi' => substr($codigo, 0, 2),
+        'codigo_provincia_ubi' => substr($codigo, 2, 2),
+        'codigo_distrito_ubi' => substr($codigo, 4, 2),
+        'nombre_departamento_ubi' => $departamento,
+        'nombre_provincia_ubi' => $provincia,
+        'nombre_distrito_ubi' => $distrito,
+        'estado_ubi' => 'HABILITADO',
+    ]);
+}
+
+test('ubigeo search offers the districts of Ucayali when there is no search text', function () {
+    crearUbigeoBusqueda(['150101', 'LIMA', 'LIMA', 'LIMA']);
+    crearUbigeoBusqueda(['250102', 'UCAYALI', 'CORONEL PORTILLO', 'CAMPOVERDE']);
+    crearUbigeoBusqueda(['250101', 'UCAYALI', 'CORONEL PORTILLO', 'CALLERIA']);
+
+    $this->getJson(route('api.ubigeo.search', ['query' => 'c']))
         ->assertOk()
-        ->assertExactJson([]);
+        ->assertExactJson([
+            ['value' => '250101', 'label' => '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA'],
+            ['value' => '250102', 'label' => '250102 | UCAYALI / CORONEL PORTILLO / CAMPOVERDE'],
+        ]);
+});
+
+test('ubigeo search lists Ucayali before other departments', function () {
+    crearUbigeoBusqueda(['010101', 'AMAZONAS', 'CHACHAPOYAS', 'CHACHAPOYAS']);
+    crearUbigeoBusqueda(['250101', 'UCAYALI', 'CORONEL PORTILLO', 'CALLERIA']);
+    crearUbigeoBusqueda(['250105', 'UCAYALI', 'CORONEL PORTILLO', 'YARINACOCHA']);
+
+    $this->getJson(route('api.ubigeo.search', ['query' => 'cha']))
+        ->assertOk()
+        ->assertJsonPath('0.value', '250105')
+        ->assertJsonPath('1.value', '010101');
 });
 
 test('authenticated users can resolve a ubigeo by value', function () {

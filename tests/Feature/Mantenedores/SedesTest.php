@@ -12,7 +12,8 @@ use App\Models\Ubigeo;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -94,11 +95,18 @@ function crearCarreraSede(string $codigo, string $estado = 'HABILITADO'): Carrer
 test('authorized users can access sedes page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosSede($usuario, ['sede_indice']);
+    crearSedePrueba();
 
     $this->actingAs($usuario)
-        ->get(route('sedes.index'))
+        ->get(route('sedes.index', ['buscar' => 'sedcal']))
         ->assertOk()
-        ->assertSee('Sedes');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/sedes')
+            ->has('sedes.data', 1)
+            ->where('sedes.data.0.codigo', 'SEDCAL')
+            ->where('sedes.data.0.ubigeo.codigo', '250101')
+            ->where('sedes.data.0.ubigeo.etiqueta', '250101 | UCAYALI / CORONEL PORTILLO / CALLERIA')
+            ->where('sedes.data.0.inscritos', 0));
 });
 
 test('authenticated users without permiso cannot access sedes page', function () {
@@ -114,17 +122,15 @@ test('authorized users can register a sede with its ubigeo', function () {
     otorgarPermisosSede($usuario, ['sede_indice', 'sede_crear']);
     crearUbigeoSede();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->call('cargarSede')
-        ->set('sedeForm.codigo', 'filagu')
-        ->set('sedeForm.nombre', 'Filial Aguaytía')
-        ->set('sedeForm.id_ubigeo', '250101')
-        ->set('sedeForm.direccion', 'Jr. Los Pinos 123')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Sede registrada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('sedes.store'), [
+            'codigo' => 'filagu',
+            'nombre' => 'Filial Aguaytía',
+            'id_ubigeo' => '250101',
+            'direccion' => 'Jr. Los Pinos 123',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Sede registrada correctamente.']);
 
     $this->assertDatabaseHas('tbl_sede', [
         'codigo_sed' => 'FILAGU',
@@ -140,34 +146,30 @@ test('sede requires a valid ubigeo and a unique code', function () {
     otorgarPermisosSede($usuario, ['sede_indice', 'sede_crear']);
     crearSedePrueba('SEDCAL', 'SEDE CALLERIA');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->set('sedeForm.codigo', 'sedcal')
-        ->set('sedeForm.nombre', 'Otra sede')
-        ->set('sedeForm.id_ubigeo', '999999')
-        ->call('guardar')
-        ->assertHasErrors(['sedeForm.codigo', 'sedeForm.id_ubigeo' => 'exists']);
+    $this->actingAs($usuario)
+        ->post(route('sedes.store'), ['codigo' => 'sedcal', 'nombre' => 'Otra sede', 'id_ubigeo' => '999999'])
+        ->assertSessionHasErrors([
+            'codigo' => 'Ya existe una sede con ese código.',
+            'id_ubigeo' => 'Seleccione un ubigeo válido.',
+        ]);
 });
 
-test('authorized users can update a sede', function () {
+test('authorized users can update a sede without address', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosSede($usuario, ['sede_indice', 'sede_editar']);
     $sede = crearSedePrueba();
+    $sede->update(['direccion_sed' => 'JR. LOS PINOS 123']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->call('cargarSede', $sede->id_sed)
-        ->assertSet('sedeForm.id_ubigeo', '250101')
-        ->set('sedeForm.nombre', 'Sede central Callería')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('sedes.update', $sede), ['codigo' => 'SEDCAL', 'nombre' => 'Sede central Callería', 'id_ubigeo' => '250101', 'direccion' => '  '])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Sede actualizada correctamente.');
 
     $this->assertDatabaseHas('tbl_sede', [
         'id_sed' => $sede->id_sed,
         'codigo_sed' => 'SEDCAL',
         'nombre_sed' => 'SEDE CENTRAL CALLERÍA',
+        'direccion_sed' => null,
     ]);
 });
 
@@ -176,11 +178,9 @@ test('authorized users can change state of a sede', function () {
     otorgarPermisosSede($usuario, ['sede_indice', 'sede_estado']);
     $sede = crearSedePrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->call('cambiarEstado', $sede->id_sed)
-        ->assertDispatched('toast', message: 'Estado de la sede actualizado.', type: 'success');
+    $this->actingAs($usuario)
+        ->patch(route('sedes.estado', $sede))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado de la sede actualizado.']);
 
     expect($sede->fresh()->estado_sed->value)->toBe('DESHABILITADO');
 });
@@ -190,11 +190,9 @@ test('authorized users can delete a sede without carreras or lugares', function 
     otorgarPermisosSede($usuario, ['sede_indice', 'sede_eliminar']);
     $sede = crearSedePrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->call('eliminar', $sede->id_sed)
-        ->assertDispatched('toast', message: 'Sede eliminada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->delete(route('sedes.destroy', $sede))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Sede eliminada correctamente.']);
 
     $this->assertSoftDeleted('tbl_sede', ['id_sed' => $sede->id_sed], deletedAtColumn: 'eliminado_en');
 });
@@ -217,11 +215,12 @@ test('sede enabled in a proceso cannot be deleted', function () {
         'estado_pca' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.sedes')
-        ->call('eliminar', $sede->id_sed)
-        ->assertDispatched('toast', message: 'La sede se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('sedes.destroy', $sede))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', [
+            'type' => 'error',
+            'message' => 'La sede se usa en la oferta de un proceso o en inscripciones y no puede eliminarse. Puede deshabilitarla.',
+        ]);
 
     $this->assertNotSoftDeleted('tbl_sede', ['id_sed' => $sede->id_sed], deletedAtColumn: 'eliminado_en');
 });

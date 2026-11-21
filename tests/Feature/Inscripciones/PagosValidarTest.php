@@ -34,7 +34,8 @@ use App\Models\Usuario;
 use App\Support\InscripcionPagoManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -277,7 +278,7 @@ test('authorized users can access validar pagos page', function () {
     $this->actingAs($usuario)
         ->get(route('pagos.validar'))
         ->assertOk()
-        ->assertSee('Validar pagos');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('pagos/validar')->where('seleccionada', null));
 });
 
 test('users can search pending obligations and find imported payments', function () {
@@ -286,18 +287,24 @@ test('users can search pending obligations and find imported payments', function
 
     $contexto = crearContextoPagoValidar();
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->get(route('pagos.validar', ['buscar' => $contexto['persona']->numero_documento_per]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('obligaciones.0.codigo', $contexto['inscripcion']->codigo_ins)
+            ->where('obligaciones.0.dni', $contexto['persona']->numero_documento_per));
 
-    Livewire::test('pages::inscripciones.pagos-validar')
-        ->set('buscarObligacion', $contexto['persona']->numero_documento_per)
-        ->assertSee($contexto['inscripcion']->codigo_ins)
-        ->call('seleccionarObligacion', $contexto['obligacion']->id_iop)
-        ->assertSet('dniBusqueda', $contexto['persona']->numero_documento_per)
-        ->set('numeroOperacionBusqueda', '41676')
-        ->set('fechaPagoBusqueda', '2026-03-19')
-        ->call('buscarPagos')
-        ->assertSee('41676')
-        ->assertSee('LUCY BETTY FALCON ROJAS');
+    $this->actingAs($usuario)
+        ->get(route('pagos.validar', [
+            'obligacion' => $contexto['obligacion']->id_iop,
+            'dni' => $contexto['persona']->numero_documento_per,
+            'operacion' => '41676',
+            'fecha' => '2026-03-19',
+        ]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('busquedaRealizada', true)
+            ->where('pagosEncontrados.0.operacion', '41676')
+            ->where('pagosEncontrados.0.depositante', 'LUCY BETTY FALCON ROJAS')
+            ->where('pagosEncontrados.0.disponible', true));
 });
 
 test('users can validate an imported payment from the validation page', function () {
@@ -306,16 +313,9 @@ test('users can validate an imported payment from the validation page', function
 
     $contexto = crearContextoPagoValidar();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-validar')
-        ->call('seleccionarObligacion', $contexto['obligacion']->id_iop)
-        ->set('numeroOperacionBusqueda', '41676')
-        ->set('fechaPagoBusqueda', '2026-03-19')
-        ->call('buscarPagos')
-        ->call('seleccionarDetalle', $contexto['detalle']->id_ibd)
-        ->call('confirmarPago')
-        ->assertDispatched('toast', message: 'Pago validado y asociado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('pagos.validar.confirmar'), ['obligacion' => $contexto['obligacion']->id_iop, 'detalle' => $contexto['detalle']->id_ibd])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Pago validado y asociado correctamente.']);
 
     $this->assertDatabaseHas('tbl_inscripcion_pago', [
         'id_inscripcion_obligacion_pago' => $contexto['obligacion']->id_iop,
@@ -378,9 +378,8 @@ test('users can validate pending payments from a txt import by documento and pen
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
-        ->assertDispatched('toast', message: '1 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.', type: 'success');
+    $this->post(route('pagos.importaciones.validar-pendientes', $contexto['detalle']->id_importacion_banco))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => '1 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.']);
 
     $this->assertDatabaseHas('tbl_inscripcion_pago', [
         'id_inscripcion_obligacion_pago' => $contexto['obligacion']->id_iop,
@@ -401,9 +400,8 @@ test('users can validate pending payments from a txt import by documento and pen
         'estado_iop' => 'PAGADO',
     ]);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
-        ->assertDispatched('toast', message: 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.', type: 'warning');
+    $this->post(route('pagos.importaciones.validar-pendientes', $contexto['detalle']->id_importacion_banco))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.']);
 
     expect($contexto['obligacion']->pagos()->count())->toBe(2);
 });
@@ -423,9 +421,8 @@ test('pending txt payments match inscriptions when the bank document has leading
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
-        ->assertDispatched('toast', message: '1 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.', type: 'success');
+    $this->post(route('pagos.importaciones.validar-pendientes', $contexto['detalle']->id_importacion_banco))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => '1 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.']);
 
     $this->assertDatabaseHas('tbl_inscripcion_pago', [
         'id_inscripcion_obligacion_pago' => $contexto['obligacion']->id_iop,
@@ -504,9 +501,8 @@ test('mass validation associates multiple partial payments until covering the pe
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
-        ->assertDispatched('toast', message: '2 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.', type: 'success');
+    $this->post(route('pagos.importaciones.validar-pendientes', $contexto['detalle']->id_importacion_banco))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => '2 pago(s) pendiente(s) asociado(s). 0 quedan por revisar.']);
 
     $this->assertDatabaseHas('tbl_inscripcion_obligacion_pago', [
         'id_iop' => $contexto['obligacion']->id_iop,
@@ -547,9 +543,8 @@ test('mass validation skips payments when the document has multiple pending obli
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.pagos')
-        ->call('validarPagosPendientes', $contexto['detalle']->id_importacion_banco)
-        ->assertDispatched('toast', message: 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.', type: 'warning');
+    $this->post(route('pagos.importaciones.validar-pendientes', $contexto['detalle']->id_importacion_banco))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'warning', 'message' => 'No se asociaron pagos. Revise que existan pendientes con DNI y saldo coincidente.']);
 
     $this->assertDatabaseHas('tbl_importacion_banco_detalle', [
         'id_ibd' => $contexto['detalle']->id_ibd,
@@ -565,15 +560,14 @@ test('searching imported payments returns no results when the operation does not
 
     $contexto = crearContextoPagoValidar();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.pagos-validar')
-        ->call('seleccionarObligacion', $contexto['obligacion']->id_iop)
-        ->set('numeroOperacionBusqueda', '99999')
-        ->set('fechaPagoBusqueda', '2026-03-19')
-        ->call('buscarPagos')
-        ->assertDontSee('41676')
-        ->assertDontSee('LUCY BETTY FALCON ROJAS');
+    $this->actingAs($usuario)
+        ->get(route('pagos.validar', [
+            'obligacion' => $contexto['obligacion']->id_iop,
+            'dni' => $contexto['persona']->numero_documento_per,
+            'operacion' => '99999',
+            'fecha' => '2026-03-19',
+        ]))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('busquedaRealizada', true)->where('pagosEncontrados', []));
 });
 
 test('users cannot validate an imported payment that was already associated', function () {
@@ -585,11 +579,28 @@ test('users cannot validate an imported payment that was already associated', fu
 
     $manager->asociarDetalleAObligacion($contexto['obligacion'], $contexto['detalle']);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('pagos.validar.confirmar'), ['obligacion' => $contexto['obligacion']->id_iop, 'detalle' => $contexto['detalle']->id_ibd])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El pago bancario seleccionado ya no se encuentra disponible.']);
+});
 
-    Livewire::test('pages::inscripciones.pagos-validar')
-        ->call('seleccionarObligacion', $contexto['obligacion']->fresh()->id_iop)
-        ->set('idDetalleSeleccionado', $contexto['detalle']->id_ibd)
-        ->call('confirmarPago')
-        ->assertDispatched('toast', message: 'El pago bancario seleccionado ya no se encuentra disponible.', type: 'error');
+test('searching imported payments validates the search data on the server', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_crear']);
+
+    $contexto = crearContextoPagoValidar();
+
+    $this->actingAs($usuario)
+        ->get(route('pagos.validar', [
+            'obligacion' => $contexto['obligacion']->id_iop,
+            'dni' => '123',
+            'operacion' => '',
+            'fecha' => now()->addDay()->toDateString(),
+            'buscar_pago' => 1,
+        ]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('busquedaRealizada', false)
+            ->where('erroresBusqueda.dni', 'El DNI debe tener entre 8 y 12 dígitos.')
+            ->where('erroresBusqueda.operacion', 'Ingrese el número de operación del voucher.')
+            ->where('erroresBusqueda.fecha', 'La fecha de pago no puede ser posterior a hoy.'));
 });

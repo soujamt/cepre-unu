@@ -48,9 +48,9 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
-use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
-use Livewire\Features\SupportTesting\Testable;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
+use Tests\Support\AsistentePrueba;
 
 uses(RefreshDatabase::class);
 
@@ -121,9 +121,9 @@ function reglaCuotasDelPortal(): ReglaPago
     return ReglaPago::query()->whereHas('conceptoPago', fn ($query) => $query->where('codigo_cpg', 'INS_CUO'))->firstOrFail();
 }
 
-function validarPagoEnPortal(string $documento, string $operacion): Testable
+function validarPagoEnPortal(string $documento, string $operacion): AsistentePrueba
 {
-    return Livewire::test('pages::publico.inscripcion')
+    return AsistentePrueba::portal(test())
         ->set('pagoForm.numero_documento', $documento)
         ->set('pagoForm.numero_operacion', $operacion)
         ->call('buscarPagosPasoPago')
@@ -131,7 +131,7 @@ function validarPagoEnPortal(string $documento, string $operacion): Testable
         ->call('confirmarPasoPago');
 }
 
-function completarPortalHastaRegistrar(Testable $componente, Persona $persona): Testable
+function completarPortalHastaRegistrar(AsistentePrueba $componente, Persona $persona): AsistentePrueba
 {
     $procesoCarrera = ProcesoCarrera::query()
         ->whereHas('proceso', fn ($query) => $query->where('codigo_pro', '2026_1'))
@@ -164,9 +164,12 @@ function completarPortalHastaRegistrar(Testable $componente, Persona $persona): 
 }
 
 test('the portal pages are public', function () {
-    $this->get(route('publico.portal'))->assertOk()->assertSee('Inscribirme')->assertSee('Consultar mi inscripción');
-    $this->get(route('publico.inscripcion'))->assertOk()->assertSee('Validación de pago');
-    $this->get(route('publico.consulta'))->assertOk()->assertSee('N° de operación');
+    $this->get(route('publico.portal'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/portal'));
+    $this->followingRedirects()->get(route('publico.inscripcion'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page
+        ->component('publico/inscripcion')
+        ->where('asistente.paso', 1)
+        ->where('asistente.modoPublico', true));
+    $this->get(route('publico.consulta'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/consulta'));
 });
 
 test('a postulante enrolls online and the inscripcion waits for review', function () {
@@ -179,13 +182,14 @@ test('a postulante enrolls online and the inscripcion waits for review', functio
         ->assertSet('personaForm.numero_documento', '46027897')
         ->assertSet('personaId', $persona->id_per);
 
-    completarPortalHastaRegistrar($componente, $persona)
+    $registrada = completarPortalHastaRegistrar($componente, $persona)
         ->assertHasNoErrors()
-        ->assertSee('Inscripción registrada')
-        ->assertSee('EN REVISIÓN')
-        ->assertSee('Descargar ficha')
-        ->assertDontSee('Descargar carnet')
-        ->assertSee('AULA 101');
+        ->vista()['registrada'];
+
+    expect($registrada['estado'])->toBe('EN REVISIÓN')
+        ->and($registrada['documentos']['ficha'])->not->toBeNull()
+        ->and($registrada['documentos']['carnet'] ?? null)->toBeNull()
+        ->and($registrada['aula'])->toBe('AULA 101');
 
     $inscripcion = Inscripcion::query()->sole();
 
@@ -199,16 +203,21 @@ test('the portal does not let the postulante upload a photo', function () {
     personaDelPortal('46027897');
     pagoLibreDelPortal('46027897', 300, '41676');
 
-    validarPagoEnPortal('46027897', '41676')
-        ->set('fotoPostulante', UploadedFile::fake()->image('foto.jpg'))
-        ->assertForbidden();
+    $componente = validarPagoEnPortal('46027897', '41676');
+
+    expect($componente->vista()['foto']['puedeCambiar'])->toBeFalse();
+
+    $componente->intentarCambiar('fotoPostulante', UploadedFile::fake()->image('foto.jpg'))->assertForbidden();
 
     expect(FotoPostulante::query()->count())->toBe(0);
 });
 
 test('the wizard state cannot be changed from the browser', function (string $propiedad, mixed $valor) {
-    expect(fn () => Livewire::test('pages::publico.inscripcion')->set($propiedad, $valor))
-        ->toThrow(CannotUpdateLockedPropertyException::class);
+    $componente = AsistentePrueba::portal(test());
+
+    $componente->intentarCambiar($propiedad, $valor)->assertForbidden();
+
+    $componente->assertSet('pasoActual', 1)->assertSet('pagoValidado', false)->assertSet('personaId', null);
 })->with([
     'paso' => ['pasoActual', 4],
     'pago validado' => ['pagoValidado', true],
@@ -220,7 +229,7 @@ test('a payment of another dni cannot be marked', function () {
     pagoLibreDelPortal('46027897', 10, '41676');
     $ajeno = pagoLibreDelPortal('70000001', 500, '50000');
 
-    Livewire::test('pages::publico.inscripcion')
+    AsistentePrueba::portal(test())
         ->set('pagoForm.numero_documento', '46027897')
         ->set('pagoForm.numero_operacion', '41676')
         ->call('buscarPagosPasoPago')
@@ -271,20 +280,45 @@ test('the online lookup shows the aula with dni and operation number', function 
     pagoLibreDelPortal('46027897', 300, '41676');
     completarPortalHastaRegistrar(validarPagoEnPortal('46027897', '41676'), $persona);
 
-    Livewire::test('pages::publico.consulta')
-        ->set('documento', '46027897')
-        ->set('operacion', '00041676')
-        ->call('consultar')
-        ->assertHasNoErrors()
-        ->assertSee('AULA 101')
-        ->assertSee('Descargar ficha');
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '00041676'])
+        ->assertOk()
+        ->assertJsonPath('codigo', Inscripcion::query()->sole()->codigo_ins)
+        ->assertJsonPath('estado', 'EN REVISIÓN')
+        ->assertJsonPath('aula.nombre', 'AULA 101')
+        ->assertJsonPath('enlaces.carnet', null)
+        ->assertJsonPath('enlaces.ficha', fn (string $ficha): bool => str_contains($ficha, 'signature='));
 
-    Livewire::test('pages::publico.consulta')
-        ->set('documento', '46027897')
-        ->set('operacion', '99999')
-        ->call('consultar')
-        ->assertHasErrors('operacion')
-        ->assertDontSee('AULA 101');
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
+});
+
+test('the online lookup tells the applicant when the payment exists but the inscription is missing', function () {
+    pagoLibreDelPortal('46027897', 300, '41676');
+
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '41676'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['pago_sin_inscripcion'])
+        ->assertJsonMissingValidationErrors(['operacion']);
+});
+
+test('the online lookup validates the document and the operation number', function () {
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '123', 'operacion' => 'ABC'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors([
+            'documento' => 'El documento debe tener entre 8 y 12 dígitos.',
+            'operacion' => 'El número de operación solo tiene dígitos.',
+        ]);
+});
+
+test('the online lookup allows eight searches per minute from the same ip', function () {
+    for ($intento = 0; $intento < 8; $intento++) {
+        $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+            ->assertJsonValidationErrors(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
+    }
+
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+        ->assertJsonValidationErrors(['operacion' => 'Demasiados intentos. Espere un minuto e intente de nuevo.']);
 });
 
 test('public documents only open with a valid signed link', function () {
@@ -332,11 +366,11 @@ test('staff approves an online inscripcion and it becomes active when the paymen
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertSee('En revisión (1)')
-        ->call('aprobarRevision', $inscripcion->id_ins)
-        ->assertDispatched('toast', message: "Inscripción {$inscripcion->codigo_ins} aprobada.", type: 'success');
+    $this->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('totalEnRevision', 1));
+
+    $this->post(route('inscripciones.aprobar', encode($inscripcion->id_ins)))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => "Inscripción {$inscripcion->codigo_ins} aprobada."]);
 
     $inscripcion->refresh();
 
@@ -353,9 +387,18 @@ test('users without estado permiso cannot approve online inscripciones', functio
 
     $this->actingAs(personalQueRevisa(['inscripcion_indice']));
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->call('aprobarRevision', $inscripcion->id_ins)
-        ->assertForbidden();
+    $this->post(route('inscripciones.aprobar', encode($inscripcion->id_ins)))->assertForbidden();
 
     expect($inscripcion->refresh()->enRevision())->toBeTrue();
+});
+
+test('the portal chooses DNI as the document type when the paid document has eight digits', function () {
+    pagoLibreDelPortal('46027897', 300, '41676');
+
+    $dni = TipoDocumento::query()->where('codigo_tdo', '1')->value('id_tdo');
+
+    validarPagoEnPortal('46027897', '41676')
+        ->assertSet('pasoActual', 2)
+        ->assertSet('personaForm.numero_documento', '46027897')
+        ->assertSet('personaForm.id_tipo_documento', (string) $dni);
 });

@@ -10,7 +10,8 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -66,11 +67,19 @@ function crearModalidadPrueba(string $codigo = '2', string $nombre = 'EXONERACI�
 test('authorized users can access modalidades page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosModalidad($usuario, ['modalidad_indice']);
+    crearModalidadPrueba();
 
     $this->actingAs($usuario)
-        ->get(route('modalidades.index'))
+        ->get(route('modalidades.index', ['buscar' => 'exoner']))
         ->assertOk()
-        ->assertSee('Modalidades');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/modalidades')
+            ->has('modalidades.data', 1)
+            ->where('modalidades.data.0.codigo', '2')
+            ->where('condiciones', [
+                ['valor' => 'EGRESADO', 'nombre' => 'EGRESADOS'],
+                ['valor' => 'EN_COLEGIO', 'nombre' => 'ESTUDIANTES EN COLEGIO'],
+            ]));
 });
 
 test('authenticated users without permiso cannot access modalidades page', function () {
@@ -85,17 +94,15 @@ test('authorized users can register a modalidad with description', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->call('cargarModalidad')
-        ->set('modalidadForm.codigo', ' 9 ')
-        ->set('modalidadForm.nombre', 'Primera opción - Cepreunu')
-        ->set('modalidadForm.descripcion', '  Para los mejores puestos  ')
-        ->set('modalidadForm.condicion_egreso', 'EGRESADO')
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Modalidad registrada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('modalidades.store'), [
+            'codigo' => ' 9 ',
+            'nombre' => 'Primera opción - Cepreunu',
+            'descripcion' => '  Para los mejores puestos  ',
+            'condicion_egreso' => 'EGRESADO',
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Modalidad registrada correctamente.']);
 
     $this->assertDatabaseHas('tbl_modalidad_admision', [
         'codigo_mad' => '9',
@@ -112,13 +119,13 @@ test('modalidad code and name must be unique including deleted modalidades', fun
     crearModalidadPrueba('2', 'EXONERACIÓN - CEPREUNU');
     crearModalidadPrueba('8', 'RESERVA - CEPREUNU')->delete();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->set('modalidadForm.codigo', '2')
-        ->set('modalidadForm.nombre', 'reserva - cepreunu')
-        ->call('guardar')
-        ->assertHasErrors(['modalidadForm.codigo', 'modalidadForm.nombre']);
+    $this->actingAs($usuario)
+        ->post(route('modalidades.store'), ['codigo' => '2', 'nombre' => 'reserva - cepreunu', 'condicion_egreso' => ''])
+        ->assertSessionHasErrors([
+            'codigo' => 'Ya existe una modalidad con ese código.',
+            'nombre' => 'Ya existe una modalidad con ese nombre.',
+            'condicion_egreso' => 'Indique a quién aplica la modalidad.',
+        ]);
 });
 
 test('authorized users can update a modalidad', function () {
@@ -126,15 +133,10 @@ test('authorized users can update a modalidad', function () {
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_editar']);
     $modalidad = crearModalidadPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->call('cargarModalidad', $modalidad->id_mad)
-        ->assertSet('modalidadForm.codigo', '2')
-        ->set('modalidadForm.nombre', 'Exoneración')
-        ->set('modalidadForm.condicion_egreso', 'EN_COLEGIO')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('modalidades.update', $modalidad), ['codigo' => '2', 'nombre' => 'Exoneración', 'descripcion' => '', 'condicion_egreso' => 'EN_COLEGIO'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Modalidad actualizada correctamente.');
 
     $this->assertDatabaseHas('tbl_modalidad_admision', [
         'id_mad' => $modalidad->id_mad,
@@ -149,11 +151,9 @@ test('authorized users can change state of a modalidad', function () {
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_estado']);
     $modalidad = crearModalidadPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->call('cambiarEstado', $modalidad->id_mad)
-        ->assertDispatched('toast', message: 'Estado de la modalidad actualizado.', type: 'success');
+    $this->actingAs($usuario)
+        ->patch(route('modalidades.estado', $modalidad))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado de la modalidad actualizado.']);
 
     expect($modalidad->fresh()->estado_mad->value)->toBe('DESHABILITADO');
 });
@@ -163,11 +163,9 @@ test('authorized users can delete a modalidad without procesos', function () {
     otorgarPermisosModalidad($usuario, ['modalidad_indice', 'modalidad_eliminar']);
     $modalidad = crearModalidadPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->call('eliminar', $modalidad->id_mad)
-        ->assertDispatched('toast', message: 'Modalidad eliminada correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->delete(route('modalidades.destroy', $modalidad))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Modalidad eliminada correctamente.']);
 
     $this->assertSoftDeleted('tbl_modalidad_admision', ['id_mad' => $modalidad->id_mad], deletedAtColumn: 'eliminado_en');
 });
@@ -190,11 +188,12 @@ test('modalidad enabled in a proceso cannot be deleted', function () {
         'estado_pmo' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.modalidades')
-        ->call('eliminar', $modalidad->id_mad)
-        ->assertDispatched('toast', message: 'La modalidad está usada en procesos o inscripciones y no puede eliminarse. Puede deshabilitarla.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('modalidades.destroy', $modalidad))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', [
+            'type' => 'error',
+            'message' => 'La modalidad está usada en procesos o inscripciones y no puede eliminarse. Puede deshabilitarla.',
+        ]);
 
     $this->assertNotSoftDeleted('tbl_modalidad_admision', ['id_mad' => $modalidad->id_mad], deletedAtColumn: 'eliminado_en');
 });
