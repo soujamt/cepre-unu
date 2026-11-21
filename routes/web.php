@@ -5,13 +5,16 @@ use App\Http\Controllers\Api\UbigeoSearchController;
 use App\Http\Controllers\Auth\SesionController;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
+use App\Http\Controllers\InicioController;
+use App\Http\Controllers\Publico\PortalController;
 use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::redirect('/auth', '/auth/login');
 Route::middleware('guest')->group(function (): void {
-    Route::livewire('/auth/login', 'pages::auth.login')->name('login');
+    Route::get('/auth/login', [SesionController::class, 'create'])->name('login');
+    Route::post('/auth/login', [SesionController::class, 'store'])->name('login.store');
 });
 
 Route::post('/auth/logout', [SesionController::class, 'destroy'])
@@ -39,9 +42,10 @@ Route::middleware('throttle:60,1')->group(function (): void {
         ->name('api.colegio.search');
 });
 
-Route::livewire('/postulante', 'pages::publico.portal')->name('publico.portal');
+Route::get('/postulante', [PortalController::class, 'portal'])->name('publico.portal');
 Route::livewire('/postulante/inscripcion', 'pages::publico.inscripcion')->name('publico.inscripcion');
-Route::livewire('/postulante/consulta', 'pages::publico.consulta')->name('publico.consulta');
+Route::get('/postulante/consulta', [PortalController::class, 'consulta'])->name('publico.consulta');
+Route::post('/postulante/consulta', [PortalController::class, 'buscar'])->name('publico.consulta.buscar');
 
 Route::middleware(['signed', 'throttle:30,1'])->group(function (): void {
     Route::get('/postulante/{inscripcion}/ficha', [DocumentoInscripcionController::class, 'fichaPublica'])
@@ -54,7 +58,7 @@ Route::middleware(['signed', 'throttle:30,1'])->group(function (): void {
 Route::redirect('/', '/inicio');
 Route::middleware('auth')->group(function (): void {
     // Dashboard
-    Route::livewire('/inicio', 'pages::inicio.index')->name('inicio');
+    Route::get('/inicio', InicioController::class)->name('inicio');
 
     // Seguridad
     Route::livewire('/seguridad/usuarios', 'pages::seguridad.usuarios')

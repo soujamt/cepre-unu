@@ -1,7 +1,7 @@
-import { Link } from '@inertiajs/react';
 import { ChevronRight, Menu } from '@keyline-icons/react';
 import { Fragment } from 'react';
 import { BotonTema } from '@/components/boton-tema';
+import { Enlace } from '@/components/enlace';
 import { MenuUsuarioMovil } from '@/components/menu-usuario';
 import { Button } from '@/components/ui/button';
 import { iconosPagina } from '@/lib/iconos';
@@ -28,9 +28,9 @@ export function Migas({ migas }: { migas: Miga[] }) {
                 <Fragment key={`${miga.titulo}-${indice}`}>
                     {indice > 0 && <ChevronRight className="mx-1 size-3 text-zinc-400" />}
                     {miga.href && indice < migas.length - 1 ? (
-                        <Link href={miga.href} className="transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
+                        <Enlace href={miga.href} className="transition-colors hover:text-zinc-900 dark:hover:text-zinc-100">
                             {miga.titulo}
-                        </Link>
+                        </Enlace>
                     ) : (
                         <span className="font-medium text-zinc-700 dark:text-zinc-200">{miga.titulo}</span>
                     )}

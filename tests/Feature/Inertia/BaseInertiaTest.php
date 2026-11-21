@@ -93,3 +93,13 @@ it('sends Inertia visits to the login page with a full page load', function (): 
 
     $this->assertGuest();
 });
+
+it('tells React which screens are still Livewire pages', function (): void {
+    $this->actingAs(usuarioConAcciones([]))
+        ->get(route('dev.componentes'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('rutasLivewire', fn ($rutas): bool => collect($rutas)->contains('^/inscripciones/?$')
+                && collect($rutas)->contains('^/inscripciones/[^/]+/detalle/?$')
+                && ! collect($rutas)->contains('^/inicio/?$')
+                && ! collect($rutas)->contains('^/postulante/consulta/?$')));
+});

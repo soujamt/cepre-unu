@@ -48,6 +48,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -164,9 +165,9 @@ function completarPortalHastaRegistrar(Testable $componente, Persona $persona): 
 }
 
 test('the portal pages are public', function () {
-    $this->get(route('publico.portal'))->assertOk()->assertSee('Inscribirme')->assertSee('Consultar mi inscripción');
+    $this->get(route('publico.portal'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/portal'));
     $this->get(route('publico.inscripcion'))->assertOk()->assertSee('Validación de pago');
-    $this->get(route('publico.consulta'))->assertOk()->assertSee('N° de operación');
+    $this->get(route('publico.consulta'))->assertOk()->assertInertia(fn (AssertableInertia $page) => $page->component('publico/consulta'));
 });
 
 test('a postulante enrolls online and the inscripcion waits for review', function () {
@@ -271,20 +272,36 @@ test('the online lookup shows the aula with dni and operation number', function 
     pagoLibreDelPortal('46027897', 300, '41676');
     completarPortalHastaRegistrar(validarPagoEnPortal('46027897', '41676'), $persona);
 
-    Livewire::test('pages::publico.consulta')
-        ->set('documento', '46027897')
-        ->set('operacion', '00041676')
-        ->call('consultar')
-        ->assertHasNoErrors()
-        ->assertSee('AULA 101')
-        ->assertSee('Descargar ficha');
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '00041676'])
+        ->assertOk()
+        ->assertJsonPath('codigo', Inscripcion::query()->sole()->codigo_ins)
+        ->assertJsonPath('estado', 'EN REVISIÓN')
+        ->assertJsonPath('aula.nombre', 'AULA 101')
+        ->assertJsonPath('enlaces.carnet', null)
+        ->assertJsonPath('enlaces.ficha', fn (string $ficha): bool => str_contains($ficha, 'signature='));
 
-    Livewire::test('pages::publico.consulta')
-        ->set('documento', '46027897')
-        ->set('operacion', '99999')
-        ->call('consultar')
-        ->assertHasErrors('operacion')
-        ->assertDontSee('AULA 101');
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
+});
+
+test('the online lookup validates the document and the operation number', function () {
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '123', 'operacion' => 'ABC'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors([
+            'documento' => 'El documento debe tener entre 8 y 12 dígitos.',
+            'operacion' => 'El número de operación solo tiene dígitos.',
+        ]);
+});
+
+test('the online lookup allows eight searches per minute from the same ip', function () {
+    for ($intento = 0; $intento < 8; $intento++) {
+        $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+            ->assertJsonValidationErrors(['operacion' => 'No encontramos una inscripción con ese documento y número de operación.']);
+    }
+
+    $this->postJson(route('publico.consulta.buscar'), ['documento' => '46027897', 'operacion' => '99999'])
+        ->assertJsonValidationErrors(['operacion' => 'Demasiados intentos. Espere un minuto e intente de nuevo.']);
 });
 
 test('public documents only open with a valid signed link', function () {

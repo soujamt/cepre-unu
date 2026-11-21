@@ -7,7 +7,8 @@ import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { Combobox } from '@/components/combobox';
 import { useConfirmacion } from '@/components/dialogo-confirmacion';
 import { InsigniaEstado } from '@/components/insignia-estado';
-import { EstadoVacio, Panel, TarjetaIndicador } from '@/components/panel';
+import { EstadoVacio, Panel } from '@/components/panel';
+import { Resumen, ResumenItem } from '@/components/resumen';
 import { Buscador, TablaDatos } from '@/components/tabla-datos';
 import { Button } from '@/components/ui/button';
 import { buscarUbigeos } from '@/lib/busquedas';
@@ -39,12 +40,12 @@ export default function Componentes() {
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <TarjetaIndicador etiqueta="Total inscritas" valor={34} detalle="28 activas · 4 pendientes" icono={Users} tono="primario" />
-                <TarjetaIndicador etiqueta="Pago pendiente" valor={6} detalle="Por completar" icono={ClipboardList} tono="aviso" />
-                <TarjetaIndicador etiqueta="Activas" valor={28} detalle="Con pago validado" icono={CircleCheck} tono="exito" activo alPulsar={() => undefined} />
-                <TarjetaIndicador etiqueta="Anuladas" valor={2} detalle="Fuera del flujo activo" icono={CircleX} tono="peligro" />
-            </div>
+            <Resumen>
+                <ResumenItem etiqueta="Total inscritas" valor={34} icono={Users} tono="info" iconoDetalle={CircleCheck} detalle="28 activas · 4 pendientes" destacado />
+                <ResumenItem etiqueta="Activas" valor={28} icono={CircleCheck} tono="exito" detalle="Con pago validado" />
+                <ResumenItem etiqueta="Pago pendiente" valor={6} icono={ClipboardList} tono="aviso" detalle="Con saldo por cobrar" />
+                <ResumenItem etiqueta="Anuladas" valor={2} icono={CircleX} tono="peligro" detalle="Fuera del flujo activo" />
+            </Resumen>
 
             <Panel titulo="Botones" descripcion="Variantes y tamaños. El grande mide 48 px, como los campos.">
                 <div className="flex flex-wrap items-center gap-3">

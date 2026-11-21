@@ -24,3 +24,19 @@ new MutationObserver(() => {
 
     setTimeout(() => raiz.classList.remove('cambiando-tema'), 1);
 }).observe(raiz, { attributes: true, attributeFilter: ['class'] });
+
+/**
+ * Mientras dura la migración a Inertia, wire:navigate solo puede abrir otra pantalla
+ * Livewire. Si el destino ya es una pantalla de React, se abre con una carga completa.
+ */
+document.addEventListener('livewire:navigate', (evento) => {
+    const destino = evento.detail?.url;
+    const rutas = (window.rutasLivewire ?? []).map((patron) => new RegExp(patron));
+
+    if (!destino || rutas.some((ruta) => ruta.test(destino.pathname))) {
+        return;
+    }
+
+    evento.preventDefault();
+    window.location.href = destino.href;
+});

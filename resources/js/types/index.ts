@@ -36,6 +36,8 @@ export interface Miga {
  */
 export interface DatosLayout {
     titulo?: string;
+    /** Texto bajo el título (portal del postulante). */
+    subtitulo?: string;
     icono?: NombreIconoPagina;
     migas?: Miga[];
 }

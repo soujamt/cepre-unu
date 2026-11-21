@@ -26,11 +26,6 @@ export interface ItemMenu {
     href: string;
     /** Acción que debe tener el usuario para ver el ítem. */
     permiso?: string;
-    /**
-     * La pantalla ya es de Inertia. Mientras dura la migración, los enlaces a
-     * pantallas Livewire se abren con una carga completa.
-     */
-    inertia?: boolean;
 }
 
 export interface GrupoMenu {

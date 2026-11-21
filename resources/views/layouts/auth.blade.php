@@ -14,6 +14,8 @@
 
     <link rel="shortcut icon" href="{{ asset('assets/media/logo_unu.png') }}" type="image/x-icon" />
 
+    {{-- Pantallas que siguen en Livewire: wire:navigate solo se usa entre ellas (ver resources/js/app.js). --}}
+    <script>window.rutasLivewire = @json (\App\Support\RutasLivewire::patrones());</script>
     @vite (['resources/css/app.css', 'resources/js/app.js'])
     @fluxAppearance
     @livewireStyles

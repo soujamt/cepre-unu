@@ -1,23 +1,25 @@
 import { Head } from '@inertiajs/react';
 import type { ReactNode } from 'react';
 import { BotonTema } from '@/components/boton-tema';
+import { Enlace } from '@/components/enlace';
 import { Marca } from '@/components/marca';
 import { portal } from '@/routes/publico';
+import type { DatosLayout } from '@/types';
 
 /**
  * Layout del portal del postulante (sin iniciar sesión): cabecera con el logo,
  * título de la página y contenido centrado.
  */
-export default function PublicoLayout({ titulo, subtitulo, children }: { titulo?: string; subtitulo?: string; children: ReactNode }) {
+export default function PublicoLayout({ titulo, subtitulo, children }: DatosLayout & { children: ReactNode }) {
     return (
         <div className="min-h-dvh bg-zinc-50 pb-16 dark:bg-zinc-950">
             {titulo && <Head title={titulo} />}
 
             <header className="border-b border-zinc-200/80 bg-white dark:border-white/10 dark:bg-zinc-900">
                 <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-4">
-                    <a href={portal.url()}>
+                    <Enlace href={portal.url()}>
                         <Marca />
-                    </a>
+                    </Enlace>
                     <BotonTema />
                 </div>
             </header>

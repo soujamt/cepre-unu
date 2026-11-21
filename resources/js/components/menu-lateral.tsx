@@ -1,7 +1,8 @@
-import { Link, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { ChevronDown } from '@keyline-icons/react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { Enlace } from '@/components/enlace';
 import { Marca } from '@/components/marca';
 import { TarjetaUsuario } from '@/components/menu-usuario';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -11,23 +12,11 @@ import { gruposMenu, hrefActivo, itemInicio } from '@/lib/navegacion';
 import type { GrupoMenu, ItemMenu } from '@/lib/navegacion';
 import { cn } from '@/lib/utils';
 
-/**
- * Enlace del menú: navegación de Inertia si la pantalla ya está migrada y carga
- * completa si todavía es de Livewire.
- */
 function EnlaceMenu({ item, className, alNavegar, children }: { item: ItemMenu; className: string; alNavegar?: () => void; children: ReactNode }) {
-    if (item.inertia) {
-        return (
-            <Link href={item.href} prefetch className={className} onClick={alNavegar}>
-                {children}
-            </Link>
-        );
-    }
-
     return (
-        <a href={item.href} className={className}>
+        <Enlace href={item.href} prefetch className={className} onClick={alNavegar}>
             {children}
-        </a>
+        </Enlace>
     );
 }
 

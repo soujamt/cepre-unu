@@ -5,6 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { iniciarTema } from '@/hooks/use-tema';
 import AppLayout from '@/layouts/app-layout';
+import AuthLayout from '@/layouts/auth-layout';
 import PublicoLayout from '@/layouts/publico-layout';
 
 const nombreApp = import.meta.env.VITE_APP_NAME || 'CEPRE UNU';
@@ -23,7 +24,7 @@ void createInertiaApp({
     layout: (nombre) => {
         switch (true) {
             case nombre.startsWith('auth/'):
-                return null;
+                return AuthLayout;
             case nombre.startsWith('publico/'):
                 return PublicoLayout;
             default:
