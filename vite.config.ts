@@ -21,7 +21,7 @@ export default defineConfig({
         inertia({ ssr: false }),
         react(),
         tailwindcss(),
-        wayfinder({ formVariants: true }),
+        wayfinder({ formVariants: true, skipDatabase: true }),
     ],
     server: {
         watch: {

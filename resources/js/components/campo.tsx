@@ -1,6 +1,7 @@
 import { CircleAlert, Eye, EyeOff } from '@keyline-icons/react';
 import { useId, useState } from 'react';
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { Icono } from '@/lib/iconos';
 import { cn } from '@/lib/utils';
 
@@ -205,5 +206,44 @@ export function CampoSelect({ etiqueta, error, ayuda, requerido, className, id, 
                 </span>
             </label>
         </Contenedor>
+    );
+}
+
+interface PropsCampoCasilla {
+    etiqueta: string;
+    descripcion?: string;
+    marcado: boolean;
+    alCambiar: (marcado: boolean) => void;
+    error?: string;
+    className?: string;
+}
+
+/**
+ * Casilla de verificación dentro de una tarjeta, con título y una línea que explica la opción.
+ */
+export function CampoCasilla({ etiqueta, descripcion, marcado, alCambiar, error, className }: PropsCampoCasilla) {
+    const idCampo = useId();
+
+    return (
+        <div className={cn('grid gap-1.5', className)}>
+            <label
+                htmlFor={idCampo}
+                className="flex cursor-pointer items-start gap-3 rounded-md border border-zinc-200/80 bg-zinc-50/80 px-4 py-3 transition-colors hover:bg-zinc-100/80 dark:border-white/6 dark:bg-white/4 dark:hover:bg-white/7"
+            >
+                <Checkbox
+                    id={idCampo}
+                    checked={marcado}
+                    onCheckedChange={(valor) => alCambiar(valor === true)}
+                    aria-invalid={Boolean(error) || undefined}
+                    aria-describedby={error ? `${idCampo}-mensaje` : undefined}
+                    className="mt-0.5"
+                />
+                <span className="space-y-0.5">
+                    <span className="block text-sm font-medium text-zinc-800 dark:text-zinc-100">{etiqueta}</span>
+                    {descripcion && <span className="block text-sm text-zinc-500 dark:text-zinc-400">{descripcion}</span>}
+                </span>
+            </label>
+            <Mensaje id={`${idCampo}-mensaje`} error={error} />
+        </div>
     );
 }

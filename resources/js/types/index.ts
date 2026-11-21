@@ -61,3 +61,26 @@ export interface Paginado<T> {
     to: number | null;
     links: EnlacePaginacion[];
 }
+
+/**
+ * Fecha de creación de un registro, para la columna "Registro".
+ */
+export interface Registro {
+    fecha: string;
+    hora: string;
+}
+
+/**
+ * Filtros de los listados de mantenedores (búsqueda y estados marcados).
+ */
+export interface FiltrosCatalogo {
+    buscar: string;
+    estado: string[];
+    [clave: string]: string | string[];
+}
+
+/** Opción de una lista desplegable que llega del servidor (por ejemplo, los valores de un enum). */
+export interface Opcion {
+    valor: string;
+    nombre: string;
+}

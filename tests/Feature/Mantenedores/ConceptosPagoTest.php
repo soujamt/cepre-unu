@@ -10,7 +10,8 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -91,11 +92,17 @@ function crearReglaPagoDelConcepto(ConceptoPago $concepto, bool $permiteCuotas):
 test('authorized users can access conceptos de pago page', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConceptoPago($usuario, ['concepto_pago_indice']);
+    crearReglaPagoDelConcepto(crearConceptoPagoPrueba(permiteCuotas: true), permiteCuotas: true);
 
     $this->actingAs($usuario)
         ->get(route('conceptos-pago.index'))
         ->assertOk()
-        ->assertSee('Conceptos de pago');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('mantenedores/conceptos-pago')
+            ->has('conceptos.data', 1)
+            ->where('conceptos.data.0.codigo', 'INS_CUO')
+            ->where('conceptos.data.0.permiteCuotas', true)
+            ->where('conceptos.data.0.reglas', 1));
 });
 
 test('authenticated users without permiso cannot access conceptos de pago page', function () {
@@ -110,17 +117,15 @@ test('authorized users can register a concepto de pago that allows cuotas', func
     $usuario = Usuario::factory()->create();
     otorgarPermisosConceptoPago($usuario, ['concepto_pago_indice', 'concepto_pago_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->call('cargarConcepto')
-        ->set('conceptoForm.codigo', 'mat_cuo')
-        ->set('conceptoForm.nombre', 'Matrícula en cuotas')
-        ->set('conceptoForm.descripcion', 'Matrícula pagada en partes')
-        ->set('conceptoForm.permite_cuotas', true)
-        ->call('guardar')
-        ->assertHasNoErrors()
-        ->assertDispatched('toast', message: 'Concepto de pago registrado correctamente.', type: 'success');
+    $this->actingAs($usuario)
+        ->post(route('conceptos-pago.store'), [
+            'codigo' => 'mat_cuo',
+            'nombre' => 'Matrícula en cuotas',
+            'descripcion' => ' Matrícula pagada  en partes ',
+            'permite_cuotas' => true,
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Concepto de pago registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_concepto_pago', [
         'codigo_cpg' => 'MAT_CUO',
@@ -136,13 +141,9 @@ test('concepto code must be unique', function () {
     otorgarPermisosConceptoPago($usuario, ['concepto_pago_indice', 'concepto_pago_crear']);
     crearConceptoPagoPrueba();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->set('conceptoForm.codigo', 'ins_cuo')
-        ->set('conceptoForm.nombre', 'Otro concepto')
-        ->call('guardar')
-        ->assertHasErrors(['conceptoForm.codigo']);
+    $this->actingAs($usuario)
+        ->post(route('conceptos-pago.store'), ['codigo' => 'ins_cuo', 'nombre' => 'Otro concepto'])
+        ->assertSessionHasErrors(['codigo' => 'Ya existe un concepto de pago con ese código.']);
 });
 
 test('cuotas cannot be turned off while reglas de pago in cuotas use the concepto', function () {
@@ -151,14 +152,9 @@ test('cuotas cannot be turned off while reglas de pago in cuotas use the concept
     $concepto = crearConceptoPagoPrueba(permiteCuotas: true);
     crearReglaPagoDelConcepto($concepto, permiteCuotas: true);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->call('cargarConcepto', $concepto->id_cpg)
-        ->assertSet('conceptoForm.permite_cuotas', true)
-        ->set('conceptoForm.permite_cuotas', false)
-        ->call('guardar')
-        ->assertHasErrors(['conceptoForm.permite_cuotas']);
+    $this->actingAs($usuario)
+        ->put(route('conceptos-pago.update', $concepto), ['codigo' => 'INS_CUO', 'nombre' => 'INSCRIPCION MAS CUOTAS', 'permite_cuotas' => false])
+        ->assertSessionHasErrors(['permite_cuotas' => 'No se puede quitar porque hay reglas de pago en cuotas que usan este concepto.']);
 
     expect($concepto->fresh()->permite_cuotas_cpg)->toBeTrue();
 });
@@ -169,13 +165,10 @@ test('cuotas can be turned off when its reglas de pago are single payment', func
     $concepto = crearConceptoPagoPrueba(permiteCuotas: true);
     crearReglaPagoDelConcepto($concepto, permiteCuotas: false);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->call('cargarConcepto', $concepto->id_cpg)
-        ->set('conceptoForm.permite_cuotas', false)
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('conceptos-pago.update', $concepto), ['codigo' => 'INS_CUO', 'nombre' => 'INSCRIPCION MAS CUOTAS', 'permite_cuotas' => false])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Concepto de pago actualizado correctamente.');
 
     expect($concepto->fresh()->permite_cuotas_cpg)->toBeFalse();
 });
@@ -184,13 +177,14 @@ test('concepto with reglas de pago cannot be deleted', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosConceptoPago($usuario, ['concepto_pago_indice', 'concepto_pago_eliminar']);
     $concepto = crearConceptoPagoPrueba();
-    crearReglaPagoDelConcepto($concepto, permiteCuotas: false);
+    crearReglaPagoDelConcepto($concepto, permiteCuotas: false)->delete();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->call('eliminar', $concepto->id_cpg)
-        ->assertDispatched('toast', message: 'El concepto tiene reglas de pago y no puede eliminarse. Puede deshabilitarlo.', type: 'error');
+    $this->actingAs($usuario)
+        ->delete(route('conceptos-pago.destroy', $concepto))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', [
+            'type' => 'error',
+            'message' => 'El concepto tiene reglas de pago y no puede eliminarse. Puede deshabilitarlo.',
+        ]);
 
     $this->assertNotSoftDeleted('tbl_concepto_pago', ['id_cpg' => $concepto->id_cpg], deletedAtColumn: 'eliminado_en');
 });
@@ -200,13 +194,15 @@ test('authorized users can change state and delete an unused concepto', function
     otorgarPermisosConceptoPago($usuario, ['concepto_pago_indice', 'concepto_pago_estado', 'concepto_pago_eliminar']);
     $concepto = crearConceptoPagoPrueba();
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->patch(route('conceptos-pago.estado', $concepto))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del concepto de pago actualizado.']);
 
-    Livewire::test('pages::mantenedores.conceptos-pago')
-        ->call('cambiarEstado', $concepto->id_cpg)
-        ->assertDispatched('toast', message: 'Estado del concepto de pago actualizado.', type: 'success')
-        ->call('eliminar', $concepto->id_cpg)
-        ->assertDispatched('toast', message: 'Concepto de pago eliminado correctamente.', type: 'success');
+    expect($concepto->fresh()->estado_cpg->value)->toBe('DESHABILITADO');
+
+    $this->actingAs($usuario)
+        ->delete(route('conceptos-pago.destroy', $concepto))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Concepto de pago eliminado correctamente.']);
 
     $this->assertSoftDeleted('tbl_concepto_pago', ['id_cpg' => $concepto->id_cpg], deletedAtColumn: 'eliminado_en');
 });

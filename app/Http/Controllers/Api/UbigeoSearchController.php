@@ -28,7 +28,7 @@ class UbigeoSearchController extends Controller
 
             return response()->json([
                 'value' => $ubigeo->id_ubi,
-                'label' => "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}",
+                'label' => $ubigeo->etiqueta(),
             ]);
         }
 
@@ -54,7 +54,7 @@ class UbigeoSearchController extends Controller
             ->get()
             ->map(fn (Ubigeo $ubigeo): array => [
                 'value' => $ubigeo->id_ubi,
-                'label' => "{$ubigeo->id_ubi} | {$ubigeo->nombre_departamento_ubi} / {$ubigeo->nombre_provincia_ubi} / {$ubigeo->nombre_distrito_ubi}",
+                'label' => $ubigeo->etiqueta(),
             ])
             ->values();
 

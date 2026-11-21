@@ -6,6 +6,13 @@ use App\Http\Controllers\Auth\SesionController;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
 use App\Http\Controllers\InicioController;
+use App\Http\Controllers\Mantenedores\AulaController;
+use App\Http\Controllers\Mantenedores\CarreraController;
+use App\Http\Controllers\Mantenedores\ColegioController;
+use App\Http\Controllers\Mantenedores\ConceptoPagoController;
+use App\Http\Controllers\Mantenedores\ModalidadController;
+use App\Http\Controllers\Mantenedores\SedeController;
+use App\Http\Controllers\Mantenedores\TurnoController;
 use App\Http\Controllers\Publico\PortalController;
 use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
@@ -78,33 +85,19 @@ Route::middleware('auth')->group(function (): void {
         ->name('permisos.index');
 
     // Mantenedores
-    Route::livewire('/mantenedores/aulas', 'pages::mantenedores.aulas')
-        ->middleware('permiso:aula_indice')
-        ->name('mantenedor-aulas.index');
+    Route::catalogo('/mantenedores/aulas', 'mantenedor-aulas', 'aula', AulaController::class, 'aula');
 
-    Route::livewire('/mantenedores/carreras', 'pages::mantenedores.carreras')
-        ->middleware('permiso:carrera_indice')
-        ->name('carreras.index');
+    Route::catalogo('/mantenedores/carreras', 'carreras', 'carrera', CarreraController::class, 'carrera');
 
-    Route::livewire('/mantenedores/conceptos-pago', 'pages::mantenedores.conceptos-pago')
-        ->middleware('permiso:concepto_pago_indice')
-        ->name('conceptos-pago.index');
+    Route::catalogo('/mantenedores/conceptos-pago', 'conceptos-pago', 'concepto_pago', ConceptoPagoController::class, 'concepto');
 
-    Route::livewire('/mantenedores/modalidades', 'pages::mantenedores.modalidades')
-        ->middleware('permiso:modalidad_indice')
-        ->name('modalidades.index');
+    Route::catalogo('/mantenedores/modalidades', 'modalidades', 'modalidad', ModalidadController::class, 'modalidad');
 
-    Route::livewire('/mantenedores/sedes', 'pages::mantenedores.sedes')
-        ->middleware('permiso:sede_indice')
-        ->name('sedes.index');
+    Route::catalogo('/mantenedores/sedes', 'sedes', 'sede', SedeController::class, 'sede');
 
-    Route::livewire('/mantenedores/colegios', 'pages::mantenedores.colegios')
-        ->middleware('permiso:colegio_indice')
-        ->name('mantenedor-colegios.index');
+    Route::catalogo('/mantenedores/colegios', 'mantenedor-colegios', 'colegio', ColegioController::class, 'colegio');
 
-    Route::livewire('/mantenedores/turnos', 'pages::mantenedores.turnos')
-        ->middleware('permiso:turno_indice')
-        ->name('turnos.index');
+    Route::catalogo('/mantenedores/turnos', 'turnos', 'turno', TurnoController::class, 'turno');
 
     // Configuración Académica
     Route::livewire('/configuracion-academica/procesos', 'pages::configuracion-academica.procesos')

@@ -10,7 +10,7 @@ import type { Paginado } from '@/types';
 export interface Columna<T> {
     clave: string;
     titulo: ReactNode;
-    celda: (fila: T) => ReactNode;
+    celda: (fila: T, indice: number) => ReactNode;
     className?: string;
 }
 
@@ -50,11 +50,11 @@ export function TablaDatos<T>({ columnas, filas, claveFila, vacio, className }: 
                             </TableCell>
                         </TableRow>
                     ) : (
-                        filas.map((fila) => (
+                        filas.map((fila, indice) => (
                             <TableRow key={claveFila(fila)} className="border-zinc-100 dark:border-white/[0.04]">
                                 {columnas.map((columna) => (
                                     <TableCell key={columna.clave} className={cn('px-4 py-3 text-sm text-zinc-700 dark:text-zinc-300', columna.className)}>
-                                        {columna.celda(fila)}
+                                        {columna.celda(fila, indice)}
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -106,14 +106,29 @@ export function Paginacion<T>({ paginado }: { paginado: Paginado<T> }) {
 function ResumenPaginacion<T>({ paginado }: { paginado: Paginado<T> }) {
     return (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Mostrando <span className="font-medium text-zinc-700 tabular-nums dark:text-zinc-200">{paginado.from ?? 0}</span>–
-            <span className="font-medium text-zinc-700 tabular-nums dark:text-zinc-200">{paginado.to ?? 0}</span> de{' '}
-            <span className="font-medium text-zinc-700 tabular-nums dark:text-zinc-200">{paginado.total}</span>
+            Mostrando <span className="tabular-nums">{paginado.from ?? 0}</span> - <span className="tabular-nums">{paginado.to ?? 0}</span> de{' '}
+            <span className="tabular-nums">{paginado.total}</span> registros
         </p>
     );
 }
 
-type ValorFiltro = string | number | boolean | null | undefined;
+/**
+ * Columna "Registro": fecha y, debajo, la hora en gris.
+ */
+export function CeldaRegistro({ registro }: { registro: { fecha: string; hora: string } | null }) {
+    if (!registro) {
+        return <span className="text-zinc-400 dark:text-zinc-500">—</span>;
+    }
+
+    return (
+        <>
+            <span className="block tabular-nums">{registro.fecha}</span>
+            <span className="block text-xs text-zinc-400 tabular-nums dark:text-zinc-500">{registro.hora}</span>
+        </>
+    );
+}
+
+type ValorFiltro = string | number | boolean | string[] | null | undefined;
 
 /**
  * Filtros de un listado guardados en la URL. Cada cambio vuelve a pedir la página
@@ -137,7 +152,9 @@ export function useFiltros<F extends Record<string, ValorFiltro>>(iniciales: F, 
             clearTimeout(temporizador.current);
         }
 
-        const consulta = Object.fromEntries(Object.entries(nuevos).filter(([, valor]) => valor !== '' && valor !== null && valor !== undefined && valor !== false));
+        const consulta = Object.fromEntries(
+            Object.entries(nuevos).filter(([, valor]) => valor !== '' && valor !== null && valor !== undefined && valor !== false && !(Array.isArray(valor) && valor.length === 0)),
+        );
         const pedir = (): void => router.get(window.location.pathname, consulta as Record<string, string>, { preserveState: true, preserveScroll: true, replace: true });
 
         if (inmediato) {
