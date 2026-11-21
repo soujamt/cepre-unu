@@ -28,6 +28,35 @@ class FotoPostulante extends LegacyModel
     }
 
     /**
+     * Dirección de la foto (ruta fotos.ver), con la fecha de cambio para no usar una copia vieja.
+     */
+    public function url(): string
+    {
+        return route('fotos.ver', $this->numero_documento_fot).'?v='.$this->actualizado_en?->timestamp;
+    }
+
+    /**
+     * Direcciones de las fotos de varios documentos en una sola consulta.
+     *
+     * @param  iterable<int, string|null>  $documentos
+     * @return array<string, string> Documento => dirección; los que no tienen foto no aparecen.
+     */
+    public static function urlsDeDocumentos(iterable $documentos): array
+    {
+        $documentos = collect($documentos)->filter()->map(fn (string $documento): string => trim($documento))->unique()->values();
+
+        if ($documentos->isEmpty()) {
+            return [];
+        }
+
+        return static::query()
+            ->whereIn('numero_documento_fot', $documentos->all())
+            ->get()
+            ->mapWithKeys(fn (self $foto): array => [$foto->numero_documento_fot => $foto->url()])
+            ->all();
+    }
+
+    /**
      * Imagen como data URI, para incrustarla en los PDF.
      */
     public function comoDataUri(): ?string

@@ -3,6 +3,7 @@ import { Ban, BadgeCheck, Building, CircleCheck, CircleDollarSign, CircleX, Clip
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Aviso } from '@/components/aviso';
+import { AvatarPostulante } from '@/components/avatar-postulante';
 import { CampoArea } from '@/components/campo';
 import { Enlace } from '@/components/enlace';
 import { ContadorFiltro, FiltroEstado, claseBotonFiltro } from '@/components/filtro-estado';
@@ -28,6 +29,8 @@ interface Inscripcion {
     id: string;
     codigo: string;
     postulante: string;
+    iniciales: string;
+    foto: string | null;
     dni: string | null;
     proceso: string | null;
     carrera: string | null;
@@ -304,6 +307,7 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                             }
                             opciones={opciones.procesos}
                             textoTodos="Todos los procesos"
+                            resaltar={false}
                             className="sm:w-44"
                         />
                         <FiltroEstado seleccionados={filtro.estado} alCambiar={(estado) => cambiarFiltro({ estado }, true)} valores={['PENDIENTE', 'ACTIVO', 'ANULADO']} />
@@ -377,10 +381,13 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                         titulo: 'Postulante',
                         className: 'whitespace-normal',
                         celda: (inscripcion) => (
-                            <>
-                                <span className="block font-medium text-zinc-900 dark:text-white">{inscripcion.postulante}</span>
-                                <span className="block font-mono text-xs text-zinc-500 dark:text-zinc-400">DNI {inscripcion.dni}</span>
-                            </>
+                            <span className="flex items-center gap-3">
+                                <AvatarPostulante foto={inscripcion.foto} iniciales={inscripcion.iniciales} nombre={inscripcion.postulante} />
+                                <span className="min-w-0">
+                                    <span className="block font-medium text-zinc-900 dark:text-white">{inscripcion.postulante}</span>
+                                    <span className="block font-mono text-xs text-zinc-500 dark:text-zinc-400">DNI {inscripcion.dni}</span>
+                                </span>
+                            </span>
                         ),
                     },
                     {

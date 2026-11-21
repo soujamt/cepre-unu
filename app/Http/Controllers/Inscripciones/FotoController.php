@@ -45,7 +45,7 @@ class FotoController extends CatalogoController
                 'id' => $foto->id_fot,
                 'documento' => $foto->numero_documento_fot,
                 'nombre' => $nombres->get($foto->numero_documento_fot),
-                'url' => route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp,
+                'url' => $foto->url(),
                 'actualizado' => $foto->actualizado_en?->locale('es')->diffForHumans(),
             ]),
             'filtros' => $filtros,

@@ -5,6 +5,7 @@ use App\Models\Accion;
 use App\Models\Aula;
 use App\Models\Carrera;
 use App\Models\EstadoCivil;
+use App\Models\FotoPostulante;
 use App\Models\Inscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\Nacionalidad;
@@ -282,6 +283,22 @@ test('list defaults to the current proceso and can filter by proceso modalidad a
         ->and($codigos(['proceso' => $contextoProcesoActual['proceso']->id_pro, 'sede' => $contextoProcesoActual['sede']->id_sed]))->toBe(['INS-9']);
 
     Carbon::setTestNow();
+});
+
+test('the list shows the applicant photo or the initials when there is none', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice']);
+
+    $conFoto = crearContextoListadoInscripcion(1, 'ACTIVO');
+    crearContextoListadoInscripcion(2, 'ACTIVO');
+    $documento = $conFoto['persona']->numero_documento_per;
+    FotoPostulante::query()->create(['numero_documento_fot' => $documento, 'archivo_fot' => "fotos/{$documento}.jpg"]);
+
+    $filas = collect($this->actingAs($usuario)->get(route('inscripciones.index', ['proceso' => 'todos']))->inertiaProps('inscripciones.data'))->keyBy('codigo');
+
+    expect($filas['INS-1']['foto'])->toStartWith(route('fotos.ver', $documento))
+        ->and($filas['INS-2']['foto'])->toBeNull()
+        ->and($filas['INS-2']['iniciales'])->not->toBe('');
 });
 
 test('inscripciones summary shows counts by state', function () {

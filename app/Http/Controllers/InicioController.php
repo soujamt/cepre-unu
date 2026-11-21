@@ -204,24 +204,18 @@ class InicioController extends Controller
             ->limit(6)
             ->get();
 
-        $fotos = $conFotos
-            ? FotoPostulante::query()
-                ->whereIn('numero_documento_fot', $inscripciones->pluck('persona.numero_documento_per')->filter()->all())
-                ->get()
-                ->keyBy('numero_documento_fot')
-            : collect();
+        $fotos = $conFotos ? FotoPostulante::urlsDeDocumentos($inscripciones->pluck('persona.numero_documento_per')) : [];
 
         return $inscripciones
             ->map(function (Inscripcion $inscripcion) use ($fotos): array {
                 $persona = $inscripcion->persona;
-                $foto = $fotos->get((string) $persona?->numero_documento_per);
 
                 return [
                     'id' => encode($inscripcion->id_ins),
                     'codigo' => (string) $inscripcion->codigo_ins,
                     'nombre' => trim($this->tipoTitulo($persona?->nombres_per).' '.$this->tipoTitulo($persona?->apellido_paterno_per).' '.$this->tipoTitulo($persona?->apellido_materno_per)),
                     'iniciales' => mb_strtoupper(mb_substr((string) $persona?->nombres_per, 0, 1).mb_substr((string) $persona?->apellido_paterno_per, 0, 1), 'UTF-8'),
-                    'foto' => $foto instanceof FotoPostulante ? route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp : null,
+                    'foto' => $fotos[(string) $persona?->numero_documento_per] ?? null,
                     'carrera' => $inscripcion->carrera ? $this->tipoTitulo($inscripcion->carrera->nombre_car) : null,
                     'estado' => $inscripcion->enRevision() ? 'En revisión' : $this->tipoTitulo($inscripcion->estado_ins?->getNombre()),
                     'fecha' => $inscripcion->fecha_inscripcion_ins?->format('d/m/Y h:i a'),

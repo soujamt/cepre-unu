@@ -7,6 +7,7 @@ use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Http\Controllers\Controller;
+use App\Models\FotoPostulante;
 use App\Models\Inscripcion;
 use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
@@ -47,23 +48,27 @@ class InscripcionController extends Controller
             ->with(['persona', 'proceso', 'carrera', 'sede', 'modalidadAdmision', 'turno', 'procesoAula.aula', 'obligacionesPago'])
             ->orderByDesc('id_ins')
             ->paginate($filtros['porPagina'])
-            ->withQueryString()
-            ->through(fn (Inscripcion $inscripcion): array => [
-                'id' => encode($inscripcion->id_ins),
-                'codigo' => $inscripcion->codigo_ins,
-                'postulante' => $inscripcion->nombrePostulante(),
-                'dni' => $inscripcion->persona?->numero_documento_per,
-                'proceso' => $inscripcion->proceso?->nombre_pro,
-                'carrera' => $inscripcion->carrera?->nombre_car,
-                'sede' => $inscripcion->sede?->nombre_sed,
-                'modalidad' => $inscripcion->modalidadAdmision?->nombre_mad,
-                'turno' => $inscripcion->turno?->nombre_tur,
-                'aula' => $inscripcion->procesoAula?->aula?->nombre_aul,
-                'estado' => $inscripcion->estado_ins->value,
-                'enRevision' => $inscripcion->enRevision(),
-                'pago' => $inscripcion->estadoPagoGeneral(),
-                'fecha' => $inscripcion->fecha_inscripcion_ins?->format('d/m/Y h:i a'),
-            ]);
+            ->withQueryString();
+        $fotos = FotoPostulante::urlsDeDocumentos($inscripciones->getCollection()->pluck('persona.numero_documento_per'));
+
+        $inscripciones->through(fn (Inscripcion $inscripcion): array => [
+            'id' => encode($inscripcion->id_ins),
+            'codigo' => $inscripcion->codigo_ins,
+            'postulante' => $inscripcion->nombrePostulante(),
+            'iniciales' => mb_strtoupper(mb_substr((string) $inscripcion->persona?->nombres_per, 0, 1).mb_substr((string) $inscripcion->persona?->apellido_paterno_per, 0, 1), 'UTF-8'),
+            'foto' => $fotos[(string) $inscripcion->persona?->numero_documento_per] ?? null,
+            'dni' => $inscripcion->persona?->numero_documento_per,
+            'proceso' => $inscripcion->proceso?->nombre_pro,
+            'carrera' => $inscripcion->carrera?->nombre_car,
+            'sede' => $inscripcion->sede?->nombre_sed,
+            'modalidad' => $inscripcion->modalidadAdmision?->nombre_mad,
+            'turno' => $inscripcion->turno?->nombre_tur,
+            'aula' => $inscripcion->procesoAula?->aula?->nombre_aul,
+            'estado' => $inscripcion->estado_ins->value,
+            'enRevision' => $inscripcion->enRevision(),
+            'pago' => $inscripcion->estadoPagoGeneral(),
+            'fecha' => $inscripcion->fecha_inscripcion_ins?->format('d/m/Y h:i a'),
+        ]);
 
         return Inertia::render('inscripciones/inscripciones', [
             'inscripciones' => $inscripciones,

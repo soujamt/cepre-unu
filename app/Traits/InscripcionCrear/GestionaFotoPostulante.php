@@ -23,7 +23,7 @@ trait GestionaFotoPostulante
      */
     public function fuenteFotoPostulante(FotoPostulante $foto): string
     {
-        return route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp;
+        return $foto->url();
     }
 
     public function puedeCambiarFoto(): bool

@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/react';
 import { ArrowUpRight, CalendarDays, ChevronRight, CircleCheck, CircleDollarSign, ClipboardList, Clock, ShieldCheck, TrendingUp, Wallet } from '@keyline-icons/react/fill';
-import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
+import { AvatarPostulante } from '@/components/avatar-postulante';
 import { Enlace } from '@/components/enlace';
 import { BarraSegmentada, BarrasApiladas, ColumnasPorDia, Dona, ListaOcupacion, Medidor, TarjetaGrafico, colorEstado, colorGrafico, numero, soles } from '@/components/graficos';
 import type { Parte, SerieApilada } from '@/components/graficos';
@@ -186,34 +186,6 @@ function CabeceraProceso({ proceso, resumen, actividadHoy, nombreUsuario }: { pr
                 </div>
             </div>
         </section>
-    );
-}
-
-/**
- * Foto del postulante en un círculo; si no tiene foto o no carga, sus iniciales.
- */
-function AvatarPostulante({ foto, iniciales, nombre }: { foto: string | null; iniciales: string; nombre: string }) {
-    const [fallo, setFallo] = useState(false);
-
-    if (foto && !fallo) {
-        return (
-            <img
-                src={foto}
-                alt={`Foto de ${nombre}`}
-                loading="lazy"
-                onError={() => setFallo(true)}
-                className="size-10 shrink-0 rounded-full bg-zinc-100 object-cover object-top ring-2 ring-white shadow-[0_0_0_1px_rgba(16,24,40,0.08)] dark:bg-white/[0.06] dark:ring-zinc-900 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
-            />
-        );
-    }
-
-    return (
-        <span
-            title="Sin foto"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-index-50 to-index-100 text-xs font-semibold text-index-700 ring-1 ring-index-200/60 dark:from-index-500/15 dark:to-index-500/5 dark:text-index-200 dark:ring-index-400/20"
-        >
-            {iniciales || '?'}
-        </span>
     );
 }
 
