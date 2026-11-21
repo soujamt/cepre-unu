@@ -10,7 +10,8 @@ export type LlaveCatalogo = string | number;
  * Funciones de Wayfinder de las rutas del mantenedor (por ejemplo, las de @/routes/carreras).
  */
 interface RutasCatalogo {
-    store: { url: () => string };
+    /** Sin ruta de registro, el formulario solo edita (por ejemplo, la capacidad de un aula asignada). */
+    store?: { url: () => string };
     update: { url: (id: LlaveCatalogo) => string };
     estado: { url: (id: LlaveCatalogo) => string };
     destroy: { url: (id: LlaveCatalogo) => string };
@@ -77,7 +78,9 @@ export function useCatalogo<TFila, TFormulario extends FormDataType<TFormulario>
         const opciones = { preserveScroll: true, onSuccess: () => setAbierta(false) };
 
         if (editandoId === null) {
-            formulario.post(rutas.store.url(), opciones);
+            if (rutas.store) {
+                formulario.post(rutas.store.url(), opciones);
+            }
         } else {
             formulario.put(rutas.update.url(editandoId), opciones);
         }

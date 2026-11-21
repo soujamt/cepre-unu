@@ -9,7 +9,8 @@ use App\Models\Usuario;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -68,7 +69,7 @@ test('authorized users can access procesos page', function () {
     $this->actingAs($usuario)
         ->get(route('procesos.index'))
         ->assertOk()
-        ->assertSee('Procesos');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('configuracion-academica/procesos')->has('procesos.data'));
 });
 
 test('authenticated users without permiso cannot access procesos page', function () {
@@ -83,14 +84,10 @@ test('authorized users can register a proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->set('procesoForm.nombre', '2026-2')
-        ->set('procesoForm.fecha_inicio', '2026-01-10T08:00')
-        ->set('procesoForm.fecha_fin', '2026-03-15T18:30')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('procesos.store'), ['nombre' => '2026-2', 'fecha_inicio' => '2026-01-10T08:00', 'fecha_fin' => '2026-03-15T18:30', 'anio_egreso_max_ordinario' => ''])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Proceso registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_proceso', [
         'codigo_pro' => '2026_2',
@@ -115,15 +112,12 @@ test('authorized users can update a proceso', function () {
         'estado_pro' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->put(route('procesos.update', $proceso), ['nombre' => '2026-3', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15', 'anio_egreso_max_ordinario' => '2025'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Proceso actualizado correctamente.');
 
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->call('cargarProceso', $proceso->id_pro)
-        ->set('procesoForm.nombre', '2026-3')
-        ->set('procesoForm.fecha_inicio', '2026-04-10')
-        ->set('procesoForm.fecha_fin', '2026-07-15')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    expect($proceso->fresh()->anio_egreso_max_ordinario_pro)->toBe(2025);
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
@@ -145,11 +139,9 @@ test('authorized users can change state of a proceso', function () {
         'estado_pro' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->call('cambiarEstado', $proceso->id_pro)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('procesos.estado', $proceso))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del proceso actualizado.']);
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
@@ -170,10 +162,13 @@ test('closed procesos are listed for historical queries', function () {
         'estado_pro' => 'CERRADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->assertSee($procesoCerrado->nombre_pro);
+    $this->actingAs($usuario)
+        ->get(route('procesos.index', ['estado' => ['CERRADO']]))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('procesos.data', 1)
+            ->where('procesos.data.0.nombre', $procesoCerrado->nombre_pro)
+            ->where('procesos.data.0.estado', 'CERRADO')
+            ->where('filtros.estado', ['CERRADO']));
 });
 
 test('expired proceso is synchronized as cerrado when listing page is loaded', function () {
@@ -190,10 +185,9 @@ test('expired proceso is synchronized as cerrado when listing page is loaded', f
         'estado_pro' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->get(route('procesos.index'))
+        ->assertOk();
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
@@ -216,11 +210,9 @@ test('expired proceso cannot be reenabled manually', function () {
         'estado_pro' => 'DESHABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->call('cambiarEstado', $proceso->id_pro)
-        ->assertDispatched('toast', message: 'El proceso ya venció por fecha y ahora se encuentra cerrado.', type: 'error');
+    $this->actingAs($usuario)
+        ->patch(route('procesos.estado', $proceso))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El proceso ya venció por fecha y ahora se encuentra cerrado.']);
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
@@ -241,11 +233,9 @@ test('authorized users can delete a proceso without configuraciones relacionadas
         'estado_pro' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->call('eliminar', $proceso->id_pro)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('procesos.destroy', $proceso))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Proceso eliminado correctamente.']);
 
     $procesoEliminado = Proceso::withTrashed()->find($proceso->id_pro);
 
@@ -257,15 +247,27 @@ test('proceso requires the AAAA-N name format and a valid date range', function 
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.procesos')
-        ->set('procesoForm.nombre', 'Proceso 2026-I')
-        ->set('procesoForm.fecha_inicio', '2026-07-31')
-        ->set('procesoForm.fecha_fin', '2026-04-01')
-        ->call('guardar')
-        ->assertHasErrors([
-            'procesoForm.nombre' => 'regex',
-            'procesoForm.fecha_fin',
+    $this->actingAs($usuario)
+        ->post(route('procesos.store'), ['nombre' => 'Proceso 2026-I', 'fecha_inicio' => '2026-07-31', 'fecha_fin' => '2026-04-01', 'anio_egreso_max_ordinario' => '26'])
+        ->assertSessionHasErrors([
+            'nombre' => 'El nombre debe tener el formato AAAA-N, por ejemplo 2026-2.',
+            'fecha_fin' => 'El cierre debe ser posterior a la apertura.',
+            'anio_egreso_max_ordinario' => 'Ingrese un año de cuatro dígitos.',
         ]);
+});
+
+test('proceso name must be unique including deleted procesos', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
+    Proceso::query()->create([
+        'codigo_pro' => '2026_2',
+        'nombre_pro' => '2026-2',
+        'fecha_inicio_pro' => '2026-01-10',
+        'fecha_fin_pro' => '2026-03-15',
+        'estado_pro' => 'HABILITADO',
+    ])->delete();
+
+    $this->actingAs($usuario)
+        ->post(route('procesos.store'), ['nombre' => '2026-2', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15'])
+        ->assertSessionHasErrors(['nombre' => 'Ya existe un proceso con ese nombre.']);
 });

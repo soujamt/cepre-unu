@@ -1,17 +1,21 @@
-import { ChevronDown, Eraser, Filter, SquareCheck, SquareX } from '@keyline-icons/react';
+import { ChevronDown, Eraser, Filter, Lock, SquareCheck, SquareX } from '@keyline-icons/react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
-const estados = [
+const todosLosEstados = [
     { valor: 'HABILITADO', etiqueta: 'Habilitado', icono: SquareCheck, color: 'text-green-500' },
     { valor: 'DESHABILITADO', etiqueta: 'Deshabilitado', icono: SquareX, color: 'text-red-500' },
+    { valor: 'CERRADO', etiqueta: 'Cerrado', icono: Lock, color: 'text-zinc-400' },
 ];
+
+const estadosCatalogo = ['HABILITADO', 'DESHABILITADO'];
 
 /**
  * Filtro por estado de los catálogos: casillas Habilitado / Deshabilitado y la
  * cantidad marcada sobre el botón.
  */
-export function FiltroEstado({ seleccionados, alCambiar }: { seleccionados: string[]; alCambiar: (estados: string[]) => void }) {
+export function FiltroEstado({ seleccionados, alCambiar, valores = estadosCatalogo }: { seleccionados: string[]; alCambiar: (estados: string[]) => void; valores?: string[] }) {
+    const estados = todosLosEstados.filter((estado) => valores.includes(estado.valor));
     const alternar = (valor: string, marcado: boolean): void => {
         alCambiar(marcado ? [...seleccionados, valor] : seleccionados.filter((estado) => estado !== valor));
     };

@@ -40,6 +40,10 @@ interface PropsListadoCatalogo<TFila extends FilaCatalogo> {
     ocultarAccion?: (fila: TFila, accion: 'editar' | 'estado' | 'eliminar') => boolean;
     /** Texto del botón para registrar; por defecto "Nueva". */
     textoNuevo?: string;
+    /** Estados del filtro; por defecto habilitado y deshabilitado. */
+    estadosFiltro?: string[];
+    /** Reemplaza el formulario lateral del botón para registrar (por ejemplo, ir a otra pantalla). */
+    alNuevo?: () => void;
 }
 
 /**
@@ -59,6 +63,8 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
     accionesExtra,
     ocultarAccion,
     textoNuevo = 'Nueva',
+    estadosFiltro,
+    alNuevo,
 }: PropsListadoCatalogo<TFila>) {
     const puede = usePermiso();
     const [filtro, cambiarFiltro] = useFiltros<FiltrosCatalogo>(filtros);
@@ -68,9 +74,9 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
             <div className="flex flex-wrap items-center gap-3">
                 <Buscador valor={String(filtro.buscar)} alCambiar={(buscar) => cambiarFiltro({ buscar })} placeholder={placeholderBusqueda} />
                 {filtrosExtra?.(cambiarFiltro, filtro)}
-                <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estados) => cambiarFiltro({ estado: estados }, true)} />
+                <FiltroEstado seleccionados={filtro.estado as string[]} alCambiar={(estados) => cambiarFiltro({ estado: estados }, true)} valores={estadosFiltro} />
                 {puede(`${permiso}_crear`) && (
-                    <Button className="w-full sm:ms-auto sm:w-auto" onClick={catalogo.abrirNuevo}>
+                    <Button className="w-full sm:ms-auto sm:w-auto" onClick={alNuevo ?? catalogo.abrirNuevo}>
                         <Plus className="size-4.5" />
                         {textoNuevo}
                     </Button>

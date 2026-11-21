@@ -1,4 +1,4 @@
-import { SquareCheck, SquareX } from '@keyline-icons/react';
+import { Lock, SquareCheck, SquareX } from '@keyline-icons/react';
 import { Badge } from '@/components/ui/badge';
 import type { Icono } from '@/lib/iconos';
 
@@ -33,6 +33,7 @@ const variantes: Record<string, Variante> = {
 const iconos: Record<string, Icono> = {
     HABILITADO: SquareCheck,
     DESHABILITADO: SquareX,
+    CERRADO: Lock,
 };
 
 export function InsigniaEstado({ estado, className }: { estado: string; className?: string }) {

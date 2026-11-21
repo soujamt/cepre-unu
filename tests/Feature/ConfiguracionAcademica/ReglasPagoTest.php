@@ -11,7 +11,8 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -93,7 +94,7 @@ test('authorized users can access reglas de pago page', function () {
     $this->actingAs($usuario)
         ->get(route('reglas-pago.index'))
         ->assertOk()
-        ->assertSee('Reglas de pago');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('configuracion-academica/reglas-pago')->has('reglas.data')->has('documentos', 2));
 });
 
 test('authenticated users without permiso cannot access reglas de pago page', function () {
@@ -110,21 +111,20 @@ test('authorized users can register a regla de pago', function () {
 
     $contexto = crearContextoReglaPago(1);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
-        ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
-        ->set('reglaPagoForm.id_modalidad_admision', (string) $contexto['modalidad']->id_mad)
-        ->set('reglaPagoForm.monto_total', '550.00')
-        ->set('reglaPagoForm.permite_cuotas', true)
-        ->set('reglaPagoForm.monto_minimo_primera_cuota', '275.00')
-        ->set('reglaPagoForm.numero_maximo_cuotas', '3')
-        ->set('reglaPagoForm.requiere_pago_completo', false)
-        ->set('reglaPagoForm.vigente_desde', '2026-01-10')
-        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('reglas-pago.store'), [
+            'id_concepto_pago' => (string) $contexto['conceptoPago']->id_cpg,
+            'id_proceso' => (string) $contexto['proceso']->id_pro,
+            'id_modalidad_admision' => (string) $contexto['modalidad']->id_mad,
+            'monto_total' => '550.00',
+            'permite_cuotas' => true,
+            'monto_minimo_primera_cuota' => '275.00',
+            'numero_maximo_cuotas' => '3',
+            'requiere_pago_completo' => false,
+            'vigente_desde' => '2026-01-10',
+            'vigente_hasta' => '2026-03-15',
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->assertDatabaseHas('tbl_regla_pago', [
         'id_concepto_pago' => $contexto['conceptoPago']->id_cpg,
@@ -147,11 +147,10 @@ test('new enabled procesos are available in regla pago form even without reglas 
 
     $contexto = crearContextoReglaPago(9);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->call('cargarReglaPago')
-        ->assertSee($contexto['proceso']->nombre_pro);
+    $this->actingAs($usuario)
+        ->get(route('reglas-pago.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('procesos', fn ($procesos): bool => collect($procesos)
+            ->contains(fn (array $proceso): bool => $proceso['nombre'] === $contexto['proceso']->nombre_pro && $proceso['habilitado'] === true)));
 });
 
 test('regla pago filters include the current enabled proceso and the historical proceso with reglas', function () {
@@ -177,11 +176,10 @@ test('regla pago filters include the current enabled proceso and the historical 
 
     $contextoActual = crearContextoReglaPago(11);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->assertSee($contextoHistorico['proceso']->nombre_pro)
-        ->assertSee($contextoActual['proceso']->nombre_pro);
+    $this->actingAs($usuario)
+        ->get(route('reglas-pago.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('procesosFiltro', fn ($procesos): bool => collect($procesos)->pluck('nombre')->contains($contextoHistorico['proceso']->nombre_pro)
+            && collect($procesos)->pluck('nombre')->contains($contextoActual['proceso']->nombre_pro)));
 });
 
 test('authorized users can update a regla de pago', function () {
@@ -204,22 +202,20 @@ test('authorized users can update a regla de pago', function () {
         'estado_rpa' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->call('cargarReglaPago', $reglaPago->id_rpa)
-        ->set('reglaPagoForm.id_concepto_pago', (string) $contextoB['conceptoPago']->id_cpg)
-        ->set('reglaPagoForm.id_proceso', (string) $contextoB['proceso']->id_pro)
-        ->set('reglaPagoForm.id_modalidad_admision', (string) $contextoB['modalidad']->id_mad)
-        ->set('reglaPagoForm.monto_total', '300.00')
-        ->set('reglaPagoForm.permite_cuotas', false)
-        ->set('reglaPagoForm.numero_maximo_cuotas', '1')
-        ->set('reglaPagoForm.monto_minimo_primera_cuota', '')
-        ->set('reglaPagoForm.requiere_pago_completo', true)
-        ->set('reglaPagoForm.vigente_desde', '2026-02-01')
-        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('reglas-pago.update', $reglaPago), [
+            'id_concepto_pago' => (string) $contextoB['conceptoPago']->id_cpg,
+            'id_proceso' => (string) $contextoB['proceso']->id_pro,
+            'id_modalidad_admision' => (string) $contextoB['modalidad']->id_mad,
+            'monto_total' => '300.00',
+            'permite_cuotas' => false,
+            'numero_maximo_cuotas' => '1',
+            'monto_minimo_primera_cuota' => '',
+            'requiere_pago_completo' => true,
+            'vigente_desde' => '2026-02-01',
+            'vigente_hasta' => '2026-03-15',
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->assertDatabaseHas('tbl_regla_pago', [
         'id_rpa' => $reglaPago->id_rpa,
@@ -252,11 +248,9 @@ test('authorized users can change state of a regla de pago', function () {
         'estado_rpa' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->call('cambiarEstado', $reglaPago->id_rpa)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('reglas-pago.estado', $reglaPago))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado de la regla de pago actualizado.']);
 
     $this->assertDatabaseHas('tbl_regla_pago', [
         'id_rpa' => $reglaPago->id_rpa,
@@ -283,11 +277,9 @@ test('authorized users can delete a regla de pago without obligaciones relaciona
         'estado_rpa' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->call('eliminar', $reglaPago->id_rpa)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('reglas-pago.destroy', $reglaPago))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Regla de pago eliminada correctamente.']);
 
     $reglaPagoEliminada = ReglaPago::withTrashed()->find($reglaPago->id_rpa);
 
@@ -314,23 +306,19 @@ test('regla de pago validates duplicate context and cuotas availability', functi
         'estado_rpa' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
-        ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
-        ->set('reglaPagoForm.id_modalidad_admision', '')
-        ->set('reglaPagoForm.monto_total', '550.00')
-        ->set('reglaPagoForm.permite_cuotas', true)
-        ->set('reglaPagoForm.monto_minimo_primera_cuota', '275.00')
-        ->set('reglaPagoForm.numero_maximo_cuotas', '3')
-        ->set('reglaPagoForm.requiere_pago_completo', false)
-        ->set('reglaPagoForm.vigente_desde', '2026-01-01')
-        ->call('guardar')
-        ->assertHasErrors([
-            'reglaPagoForm.permite_cuotas',
-            'reglaPagoForm.id_proceso',
-        ]);
+    $this->actingAs($usuario)
+        ->post(route('reglas-pago.store'), [
+            'id_concepto_pago' => (string) $contexto['conceptoPago']->id_cpg,
+            'id_proceso' => (string) $contexto['proceso']->id_pro,
+            'id_modalidad_admision' => '',
+            'monto_total' => '550.00',
+            'permite_cuotas' => true,
+            'monto_minimo_primera_cuota' => '275.00',
+            'numero_maximo_cuotas' => '3',
+            'requiere_pago_completo' => false,
+            'vigente_desde' => '2026-01-01',
+        ])
+        ->assertSessionHasErrors(['permite_cuotas', 'id_proceso']);
 });
 
 test('a regla de pago can be free and require a document number', function () {
@@ -339,21 +327,42 @@ test('a regla de pago can be free and require a document number', function () {
 
     $contexto = crearContextoReglaPago(12, false);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::configuracion-academica.reglas-pago')
-        ->set('reglaPagoForm.id_concepto_pago', (string) $contexto['conceptoPago']->id_cpg)
-        ->set('reglaPagoForm.id_proceso', (string) $contexto['proceso']->id_pro)
-        ->set('reglaPagoForm.monto_total', '0')
-        ->set('reglaPagoForm.documento_requerido', 'N° DE CONSTANCIA')
-        ->set('reglaPagoForm.vigente_desde', '2026-01-10')
-        ->set('reglaPagoForm.vigente_hasta', '2026-03-15')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('reglas-pago.store'), [
+            'id_concepto_pago' => (string) $contexto['conceptoPago']->id_cpg,
+            'id_proceso' => (string) $contexto['proceso']->id_pro,
+            'monto_total' => '0',
+            'documento_requerido' => 'N° DE CONSTANCIA',
+            'vigente_desde' => '2026-01-10',
+            'vigente_hasta' => '2026-03-15',
+        ])
+        ->assertSessionHasNoErrors();
 
     $this->assertDatabaseHas('tbl_regla_pago', [
         'id_proceso' => $contexto['proceso']->id_pro,
         'monto_total_rpa' => 0,
         'documento_requerido_rpa' => 'N° DE CONSTANCIA',
     ]);
+});
+
+test('a regla de pago in cuotas needs at least two cuotas and a first cuota within the total', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosReglaPago($usuario, ['regla_pago_indice', 'regla_pago_crear']);
+    $contexto = crearContextoReglaPago(13);
+
+    $this->actingAs($usuario)
+        ->post(route('reglas-pago.store'), [
+            'id_concepto_pago' => $contexto['conceptoPago']->id_cpg,
+            'id_proceso' => $contexto['proceso']->id_pro,
+            'monto_total' => '300',
+            'permite_cuotas' => true,
+            'monto_minimo_primera_cuota' => '400',
+            'numero_maximo_cuotas' => '1',
+            'vigente_desde' => '2025-12-01',
+        ])
+        ->assertSessionHasErrors([
+            'monto_minimo_primera_cuota' => 'El monto mínimo de la primera cuota no puede ser mayor al monto total.',
+            'numero_maximo_cuotas' => 'Debe indicar al menos 2 cuotas cuando la regla permite cuotas.',
+            'vigente_desde' => 'La vigencia inicial no puede ser menor que la fecha de inicio del proceso.',
+        ]);
 });

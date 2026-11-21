@@ -22,12 +22,14 @@ abstract class CatalogoController extends Controller
 
     /**
      * Filtros del listado leídos de la URL: texto de búsqueda y estados marcados.
+     * Por defecto los estados válidos son los de los catálogos (habilitado y deshabilitado).
      *
+     * @param  list<string>|null  $estadosValidos
      * @return array{buscar: string, estado: list<string>}
      */
-    protected function filtros(Request $request): array
+    protected function filtros(Request $request, ?array $estadosValidos = null): array
     {
-        $estados = collect(EstadoCatalogo::cases())->pluck('value')->all();
+        $estados = $estadosValidos ?? collect(EstadoCatalogo::cases())->pluck('value')->all();
 
         return [
             'buscar' => (string) preg_replace('/\s+/u', ' ', trim((string) $request->query('buscar', ''))),
