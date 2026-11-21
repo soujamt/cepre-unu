@@ -2,15 +2,28 @@
 
 use App\Http\Controllers\Api\ColegioSearchController;
 use App\Http\Controllers\Api\UbigeoSearchController;
+use App\Http\Controllers\Auth\SesionController;
 use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
 use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::redirect('/auth', '/auth/login');
 Route::middleware('guest')->group(function (): void {
     Route::livewire('/auth/login', 'pages::auth.login')->name('login');
 });
+
+Route::post('/auth/logout', [SesionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
+
+// Catálogo de componentes de la interfaz React, solo para desarrollo.
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/dev/componentes', fn () => Inertia::render('dev/componentes'))
+        ->middleware('auth')
+        ->name('dev.componentes');
+}
 
 Route::get('/verificar/{token}', VerificacionCarnetController::class)
     ->middleware('throttle:30,1')

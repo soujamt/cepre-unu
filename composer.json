@@ -13,8 +13,10 @@
         "bacon/bacon-qr-code": "^3.1",
         "barryvdh/laravel-dompdf": "^3.1",
         "hashids/hashids": "^5.0.2",
+        "inertiajs/inertia-laravel": "^3.7",
         "laravel/framework": "^13.40",
         "laravel/tinker": "^3.0.2",
+        "laravel/wayfinder": "^0.1.23",
         "livewire/flux": "^2.21",
         "livewire/livewire": "^4.4.8",
         "maatwebsite/excel": "^4.0.6"
