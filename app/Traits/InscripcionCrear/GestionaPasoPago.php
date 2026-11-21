@@ -226,6 +226,7 @@ trait GestionaPasoPago
 
         if ($this->personaId === null) {
             $this->personaForm['numero_documento'] = trim($this->pagoForm['numero_documento']);
+            $this->preseleccionarTipoDocumento();
             $this->autocompletarPersonaRegistrada();
         }
 

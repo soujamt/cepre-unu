@@ -24,14 +24,13 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
 
     return (
         <div className="space-y-6">
-            <Seccion titulo="Identificación" descripcion="Seleccione el documento, registre el número y busque los datos cuando aplique.">
+            <Seccion titulo="Identificación" descripcion={asistente.modoPublico ? 'El número es el del pago validado. Con 8 dígitos se elige DNI; si es otro documento, cámbielo.' : 'Seleccione el documento, registre el número y busque los datos cuando aplique.'}>
                 <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
                     <CampoSelect
                         etiqueta="Tipo documento"
                         value={texto('id_tipo_documento')}
                         onChange={(evento) => cambiar('personaForm', 'id_tipo_documento', evento.target.value, true)}
                         error={errores['personaForm.id_tipo_documento']}
-                        disabled={asistente.modoPublico}
                         requerido
                     >
                         <Opciones opciones={catalogos.tiposDocumento} vacio="Seleccionar tipo" />
@@ -134,10 +133,10 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
                             <Opciones opciones={catalogos.tiposDiscapacidad} vacio="Seleccionar tipo" />
                         </CampoSelect>
                     )}
-                    <CampoSelect etiqueta="Identidad étnica" value={texto('id_identidad_etnica')} onChange={(evento) => cambiar('personaForm', 'id_identidad_etnica', evento.target.value)} error={errores['personaForm.id_identidad_etnica']}>
+                    <CampoSelect etiqueta="Identidad étnica" value={texto('id_identidad_etnica')} onChange={(evento) => cambiar('personaForm', 'id_identidad_etnica', evento.target.value)} error={errores['personaForm.id_identidad_etnica']} requerido>
                         <Opciones opciones={catalogos.identidadesEtnicas} vacio="Seleccionar identidad" />
                     </CampoSelect>
-                    <CampoSelect etiqueta="Lengua materna" value={texto('tipo_lengua_materna')} onChange={(evento) => cambiar('personaForm', 'tipo_lengua_materna', evento.target.value, true)} error={errores['personaForm.tipo_lengua_materna']}>
+                    <CampoSelect etiqueta="Lengua materna" value={texto('tipo_lengua_materna')} onChange={(evento) => cambiar('personaForm', 'tipo_lengua_materna', evento.target.value, true)} error={errores['personaForm.tipo_lengua_materna']} requerido>
                         <Opciones opciones={catalogos.lenguasMaternas} vacio="Seleccionar tipo" />
                     </CampoSelect>
                     {texto('tipo_lengua_materna') === 'NATIVA' && (

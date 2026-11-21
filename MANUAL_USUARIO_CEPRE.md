@@ -811,13 +811,14 @@ Registrar o recuperar los datos del postulante.
 
 1. si el DNI ya está registrado, el sistema carga sus datos automáticamente; si no, se pueden buscar en RENIEC (cuando el servicio está configurado) o escribirlos;
 2. completar o verificar:
-   - tipo y número de documento;
+   - tipo y número de documento (si el número tiene 8 dígitos, el tipo DNI se elige solo);
    - apellidos y nombres (con las opciones `Solo un apellido` y `Tiene apellido de casado(a)`);
    - fecha de nacimiento, sexo y estado civil;
    - país de nacimiento, nacionalidad, ubigeo de nacimiento y de domicilio, y dirección;
    - celular, teléfono y correo electrónico;
    - nombre completo y celular del apoderado (ambos celulares con 9 dígitos y empezando en 9);
-   - lengua materna, lengua extranjera, identidad étnica y discapacidad;
+   - identidad étnica y lengua materna: `CASTELLANO`, `NATIVA` (se elige la lengua nativa) o `EXTRANJERA` (se elige la lengua extranjera); por ejemplo, un postulante mestizo cuya lengua materna es el castellano marca `MESTIZO` y `CASTELLANO`;
+   - discapacidad, si corresponde;
 3. guardar el paso.
 
 #### 16.4.3. Resultado esperado

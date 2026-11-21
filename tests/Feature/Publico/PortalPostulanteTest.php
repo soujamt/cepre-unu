@@ -391,3 +391,14 @@ test('users without estado permiso cannot approve online inscripciones', functio
 
     expect($inscripcion->refresh()->enRevision())->toBeTrue();
 });
+
+test('the portal chooses DNI as the document type when the paid document has eight digits', function () {
+    pagoLibreDelPortal('46027897', 300, '41676');
+
+    $dni = TipoDocumento::query()->where('codigo_tdo', '1')->value('id_tdo');
+
+    validarPagoEnPortal('46027897', '41676')
+        ->assertSet('pasoActual', 2)
+        ->assertSet('personaForm.numero_documento', '46027897')
+        ->assertSet('personaForm.id_tipo_documento', (string) $dni);
+});

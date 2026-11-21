@@ -3,6 +3,7 @@
 use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
+use App\Enums\TipoLenguaMaternaPersona;
 use App\Models\Accion;
 use App\Models\Aula;
 use App\Models\Colegio;
@@ -1551,4 +1552,53 @@ test('clearing a select in the wizard keeps an empty value instead of failing', 
 
     $asistente->respuesta()->assertRedirect();
     $asistente->assertSet('personaForm.tipo_lengua_materna', '');
+});
+
+test('an applicant whose mother tongue is spanish is saved without a native or foreign language', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $ubigeo = Ubigeo::query()->where('id_ubi', '250101')->firstOrFail();
+    $mestizo = IdentidadEtnica::query()->where('nombre_iet', 'MESTIZO')->first() ?? IdentidadEtnica::query()->orderBy('id_iet')->firstOrFail();
+
+    $this->actingAs($usuario);
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    AsistentePrueba::personal(test())
+        ->set('personaForm.id_tipo_documento', (string) TipoDocumento::query()->where('codigo_tdo', '1')->firstOrFail()->id_tdo)
+        ->set('personaForm.numero_documento', '74503322')
+        ->set('personaForm.apellido_paterno', 'Rengifo')
+        ->set('personaForm.apellido_materno', 'Del Aguila')
+        ->set('personaForm.nombres', 'Wendy')
+        ->set('personaForm.fecha_nacimiento', '2002-04-15')
+        ->set('personaForm.sexo', 'FEMENINO')
+        ->set('personaForm.id_estado_civil', (string) EstadoCivil::query()->orderBy('id_eci')->firstOrFail()->id_eci)
+        ->set('personaForm.id_pais_nacimiento', (string) Pais::query()->orderBy('id_pai')->firstOrFail()->id_pai)
+        ->set('personaForm.id_nacionalidad', (string) Nacionalidad::query()->orderBy('id_nac')->firstOrFail()->id_nac)
+        ->set('personaForm.id_ubigeo_nacimiento', $ubigeo->id_ubi)
+        ->set('personaForm.id_ubigeo_domicilio', $ubigeo->id_ubi)
+        ->set('personaForm.direccion', 'Jr. Principal 123')
+        ->set('personaForm.celular', '987654321')
+        ->set('personaForm.correo_electronico', 'wendy@test.com')
+        ->set('personaForm.nombre_apoderado', 'maria del aguila')
+        ->set('personaForm.celular_apoderado', '944477117')
+        ->set('personaForm.id_identidad_etnica', (string) $mestizo->id_iet)
+        ->set('personaForm.tipo_lengua_materna', 'NATIVA')
+        ->set('personaForm.id_lengua_nativa', (string) LenguaNativa::query()->orderBy('id_lna')->firstOrFail()->id_lna)
+        ->set('personaForm.tipo_lengua_materna', 'CASTELLANO')
+        ->assertSet('personaForm.id_lengua_nativa', '')
+        ->call('guardarPasoPersonal')
+        ->assertHasNoErrors()
+        ->assertSet('pasoActual', 3);
+
+    $persona = Persona::query()->where('numero_documento_per', '74503322')->firstOrFail();
+
+    expect($persona->tipo_lengua_materna_per)->toBe(TipoLenguaMaternaPersona::Castellano)
+        ->and($persona->id_lengua_nativa)->toBeNull()
+        ->and($persona->id_lengua_extranjera)->toBeNull();
+
+    Carbon\Carbon::setTestNow();
 });
