@@ -8,7 +8,7 @@
       1. verifica que php y npm esten disponibles (Laravel Herd los instala);
       2. verifica que la IP pertenezca a este equipo y avisa si es dinamica (DHCP);
       3. escribe APP_URL en el .env;
-      4. compila los assets si faltan y elimina public/hot;
+      4. compila los assets si faltan o estan desactualizados y elimina public/hot;
       5. crea el enlace public/storage si falta;
       6. regenera las caches de Laravel;
       7. crea la regla de firewall para el puerto (requiere administrador);
@@ -91,6 +91,37 @@ function Set-ValorEnv {
     [System.IO.File]::WriteAllLines($ruta, $lineas, (New-Object System.Text.UTF8Encoding $false))
 }
 
+function Assert-NodeCompatible {
+    # Vite 8 requiere Node.js 20.19 o superior dentro de la serie 20, o 22.12 o superior.
+    if (-not (Get-Command 'node' -ErrorAction SilentlyContinue)) {
+        throw "No se encontro 'node' en el PATH. Instale Node.js 22 LTS (o use el de Laravel Herd) y vuelva a abrir la consola."
+    }
+    $version = ((& node -v) -replace '^v', '').Trim()
+    $partes = $version.Split('.')
+    $mayor = [int]$partes[0]
+    $menor = [int]$partes[1]
+    $compatible = ($mayor -eq 20 -and $menor -ge 19) -or ($mayor -eq 22 -and $menor -ge 12) -or ($mayor -ge 23)
+    if (-not $compatible) {
+        throw "Se requiere Node.js 20.19+ o 22.12+ y se encontro $version. Instale Node.js 22 LTS y vuelva a abrir la consola."
+    }
+    Write-Host "Node.js:        $version"
+}
+
+function Test-AssetsDesactualizados {
+    # Los assets se recompilan si falta el manifest o si algun archivo del frontend
+    # es mas nuevo que el (por ejemplo, despues de un git pull).
+    $manifest = 'public\build\manifest.json'
+    if (-not (Test-Path $manifest)) {
+        return $true
+    }
+    $fechaBuild = (Get-Item $manifest).LastWriteTime
+    # Wayfinder genera las rutas del frontend desde routes y los controladores.
+    $fuentes = @(Get-ChildItem -Path 'resources', 'routes', 'app\Http\Controllers' -Recurse -File -ErrorAction SilentlyContinue)
+    $fuentes += @(Get-Item -Path 'package.json', 'package-lock.json', 'vite.config.ts' -ErrorAction SilentlyContinue)
+    $masNuevo = $fuentes | Where-Object { $_.LastWriteTime -gt $fechaBuild } | Select-Object -First 1
+    return ($null -ne $masNuevo)
+}
+
 # 1. Requisitos ---------------------------------------------------------------
 Write-Paso 'Verificando requisitos'
 foreach ($programa in 'php', 'npm') {
@@ -98,6 +129,7 @@ foreach ($programa in 'php', 'npm') {
         throw "No se encontro '$programa' en el PATH. Instale Laravel Herd o agregue '$programa' al PATH."
     }
 }
+Assert-NodeCompatible
 if (-not (Test-Path '.env')) {
     throw 'No existe el archivo .env. Ejecute primero instalar-entorno.ps1.'
 }
@@ -147,9 +179,10 @@ if (Test-Path 'public\hot') {
     Remove-Item 'public\hot' -Force
     Write-Host 'Eliminado public\hot (servidor de desarrollo de Vite).'
 }
-if ($Compilar -or -not (Test-Path 'public\build\manifest.json')) {
+if ($Compilar -or (Test-AssetsDesactualizados)) {
     # npm ci instala las versiones exactas de package-lock.json, que pueden
-    # haber cambiado al actualizar el codigo.
+    # haber cambiado al actualizar el codigo. Tambien se recompila si los
+    # archivos del frontend son mas nuevos que el build (por ejemplo tras un git pull).
     Invoke-Comando 'npm' @('ci')
     Invoke-Comando 'npm' @('run', 'build')
 }

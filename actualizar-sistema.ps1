@@ -54,8 +54,25 @@ function Get-ValorEnv {
     return ''
 }
 
+function Assert-NodeCompatible {
+    # Vite 8 requiere Node.js 20.19 o superior dentro de la serie 20, o 22.12 o superior.
+    if (-not (Get-Command 'node' -ErrorAction SilentlyContinue)) {
+        throw "No se encontro 'node' en el PATH. Instale Node.js 22 LTS (o use el de Laravel Herd) y vuelva a abrir la consola."
+    }
+    $version = ((& node -v) -replace '^v', '').Trim()
+    $partes = $version.Split('.')
+    $mayor = [int]$partes[0]
+    $menor = [int]$partes[1]
+    $compatible = ($mayor -eq 20 -and $menor -ge 19) -or ($mayor -eq 22 -and $menor -ge 12) -or ($mayor -ge 23)
+    if (-not $compatible) {
+        throw "Se requiere Node.js 20.19+ o 22.12+ y se encontro $version. Instale Node.js 22 LTS y vuelva a abrir la consola."
+    }
+    Write-Host "Node.js:        $version"
+}
+
 # 1. Requisitos ---------------------------------------------------------------
 Write-Paso 'Verificando requisitos'
+Assert-NodeCompatible
 foreach ($programa in 'php', 'composer', 'npm') {
     if (-not (Get-Command $programa -ErrorAction SilentlyContinue)) {
         throw "No se encontro '$programa' en el PATH. Instale Laravel Herd o agregue '$programa' al PATH."
