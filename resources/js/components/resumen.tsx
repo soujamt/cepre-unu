@@ -59,13 +59,15 @@ interface PropsResumenItem {
     /** Convierte la tarjeta en un botón, por ejemplo para filtrar un listado. */
     alPulsar?: () => void;
     activo?: boolean;
+    /** Contenido extra entre el número y el detalle, por ejemplo un medidor. */
+    children?: ReactNode;
 }
 
 /**
  * Indicador numérico: encabezado con el recuadro del ícono y la etiqueta, y debajo
  * el número grande con una línea de detalle en el color del tono.
  */
-export function ResumenItem({ etiqueta, valor, icono: IconoItem, tono = 'neutro', detalle, iconoDetalle: IconoDetalle, destacado = false, title, alPulsar, activo = false }: PropsResumenItem) {
+export function ResumenItem({ etiqueta, valor, icono: IconoItem, tono = 'neutro', detalle, iconoDetalle: IconoDetalle, destacado = false, title, alPulsar, activo = false, children }: PropsResumenItem) {
     const contenido = (
         <>
             <div className="flex items-center gap-3 px-4 pt-4 pb-3.5">
@@ -74,6 +76,7 @@ export function ResumenItem({ etiqueta, valor, icono: IconoItem, tono = 'neutro'
             </div>
             <div className="flex flex-1 flex-col justify-end gap-1.5 border-t border-zinc-100 px-4 pt-3.5 pb-4 dark:border-white/[0.05]">
                 <p className="text-[28px] leading-none font-semibold tracking-tight text-zinc-900 tabular-nums dark:text-white">{valor}</p>
+                {children}
                 {detalle && (
                     <p className={cn('flex min-h-5 items-center gap-1 text-[13px] font-medium', clasesDetalle[tono])}>
                         {IconoDetalle && <IconoDetalle className="size-3.5 shrink-0" />}

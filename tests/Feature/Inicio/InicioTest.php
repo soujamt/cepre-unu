@@ -27,7 +27,19 @@ test('the dashboard summarizes the enabled process', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('inicio')
             ->where('proceso.nombre', '2026-1')
-            ->where('estadisticas', ['total' => 50, 'activas' => 49, 'pendientes' => 0, 'anuladas' => 1, 'pagoPendiente' => 1])
+            ->where('resumen.total', 50)
+            ->where('resumen.activas', 49)
+            ->where('resumen.anuladas', 1)
+            ->where('resumen.enRevision', 0)
+            ->where('resumen.conSaldo', 1)
+            ->where('resumen.pagoParcial', 1)
+            ->where('graficos.porEstado.0', ['clave' => 'ACTIVO', 'nombre' => 'ACTIVO', 'total' => 49])
+            ->has('graficos.porDia', 14)
+            ->where('graficos.porDia.13.fecha', now()->toDateString())
+            ->where('graficos.porDia.13.total', 1)
+            ->where('graficos.porEstadoPago', fn ($estados): bool => collect($estados)->firstWhere('clave', 'PARCIAL')['total'] === 1)
+            ->has('graficos.recaudacion', fn (AssertableInertia $recaudacion) => $recaudacion->hasAll(['esperado', 'recaudado', 'porcentaje']))
+            ->where('graficos.porCarrera', fn ($carreras): bool => collect($carreras)->sum('total') === 50)
             ->where('actividadHoy.inscripciones', 1)
             ->where('alertas.0.detalle', '1 inscripción con saldo pendiente o pago parcial.')
             ->has('recientes', 6)
@@ -42,7 +54,8 @@ test('the dashboard explains when there is no enabled process', function () {
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('inicio')
             ->where('proceso', null)
-            ->where('estadisticas', null)
+            ->where('resumen', null)
+            ->where('graficos', null)
             ->where('alertas', [])
             ->where('recientes', []));
 });

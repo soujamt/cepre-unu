@@ -267,7 +267,13 @@ test('reportes de inscripciones defaults to current semester and filters data', 
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->where('filtros.proceso', (string) $contextoActual['proceso']->id_pro)
             ->where('porModalidad.0.nombre', 'MODALIDAD REPORTE 2')
-            ->where('resumen.pagoParcial', 1));
+            ->where('resumen.pagoParcial', 1)
+            ->where('porEstadoPago', fn ($estados): bool => collect($estados)->firstWhere('clave', 'PARCIAL')['total'] === 1)
+            ->where('porDia', fn ($dias): bool => collect($dias)->sum('total') === 1)
+            ->where('porSede', fn ($sedes): bool => collect($sedes)->sum('total') === 1)
+            ->has('porSexo')
+            ->has('porOrigen')
+            ->has('recaudacion.esperado'));
 
     expect($carreras([]))->toBe(['CARRERA REPORTE 2'])
         ->and($carreras(['proceso' => 'todos']))->toBe(['CARRERA REPORTE 2', 'CARRERA REPORTE 3'])

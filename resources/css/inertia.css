@@ -41,6 +41,19 @@
     /** Menú lateral y marco del panel principal: oscuro en los dos temas **/
     --menu: #0c0c0f;
 
+    /**
+     * Gráficos: colores validados para el fondo blanco (scripts de la guía de visualización).
+     * Estados: activo / pendiente / anulado. Series: azul, naranja, aqua (en ese orden).
+     */
+    --grafico-activo: #1baf7a;
+    --grafico-pendiente: #eda100;
+    --grafico-anulado: #e34948;
+    --grafico-serie-1: #2a78d6;
+    --grafico-serie-2: #eb6834;
+    --grafico-serie-3: #1baf7a;
+    --grafico-neutro: #a1a1aa;
+    --grafico-grilla: #ececee;
+
     /** Superficie de controles (inputs, selects, botones de filtro) **/
     --control: #ffffff;
     --control-hover: #fafafa;
@@ -69,6 +82,15 @@
 
     --surface: #070708;
     --menu: #060608;
+
+    --grafico-activo: #199e70;
+    --grafico-pendiente: #c98500;
+    --grafico-anulado: #d03b3b;
+    --grafico-serie-1: #3987e5;
+    --grafico-serie-2: #d95926;
+    --grafico-serie-3: #199e70;
+    --grafico-neutro: #71717a;
+    --grafico-grilla: rgb(255 255 255 / 0.06);
 
     --control: rgb(255 255 255 / 0.035);
     --control-hover: rgb(255 255 255 / 0.06);

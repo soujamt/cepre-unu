@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Reportes;
 
 use App\Enums\EstadoInscripcion;
-use App\Enums\EstadoObligacionPago;
 use App\Exports\InscripcionesFormatoCepreExport;
 use App\Http\Controllers\Controller;
 use App\Models\Inscripcion;
@@ -11,16 +10,17 @@ use App\Models\ModalidadAdmision;
 use App\Models\Proceso;
 use App\Models\Sede;
 use App\Models\Turno;
+use App\Support\Reportes\EstadisticasInscripciones;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Reporte de inscripciones: totales por estado y pago, y cuadros por carrera, modalidad y turno.
+ * Reporte de inscripciones: cifras clave, recaudación y gráficos por día, estado, pago,
+ * sexo, origen, carrera, modalidad, turno y sede, con los mismos filtros que el Excel.
  */
 class ReporteInscripcionController extends Controller
 {
@@ -29,33 +29,24 @@ class ReporteInscripcionController extends Controller
     public function index(Request $request): Response
     {
         $filtros = $this->filtros($request);
-        $inscripciones = $this->consulta($filtros)->with(['carrera', 'modalidadAdmision', 'turno', 'obligacionesPago'])->get();
+        $inscripciones = $this->consulta($filtros)->with(EstadisticasInscripciones::relaciones())->get();
+        $estadisticas = new EstadisticasInscripciones($inscripciones);
         $porProceso = fn (Builder $query) => $query->when($filtros['proceso'] !== '', fn (Builder $q) => $q->where('id_proceso', (int) $filtros['proceso']));
-        $estado = fn (Collection $grupo, EstadoInscripcion $valor): int => $grupo->where('estado_ins', $valor)->count();
+        $rango = $estadisticas->rangoDeDias();
 
         return Inertia::render('reportes/inscripciones', [
             'filtros' => $filtros,
-            'resumen' => [
-                'total' => $inscripciones->count(),
-                'activas' => $estado($inscripciones, EstadoInscripcion::Activo),
-                'pendientes' => $estado($inscripciones, EstadoInscripcion::Pendiente),
-                'anuladas' => $estado($inscripciones, EstadoInscripcion::Anulado),
-                'pagoPendiente' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $this->conSaldo($inscripcion))->count(),
-                'pagoParcial' => $inscripciones->filter(fn (Inscripcion $inscripcion): bool => $inscripcion->obligacionesPago->contains('estado_iop', EstadoObligacionPago::Parcial))->count(),
-            ],
-            'porCarrera' => $this->agrupar($inscripciones, fn (Inscripcion $inscripcion): string => $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA', fn (Collection $grupo): array => [
-                'activas' => $estado($grupo, EstadoInscripcion::Activo),
-                'pendientes' => $estado($grupo, EstadoInscripcion::Pendiente),
-                'anuladas' => $estado($grupo, EstadoInscripcion::Anulado),
-            ]),
-            'porModalidad' => $this->agrupar($inscripciones, fn (Inscripcion $inscripcion): string => $inscripcion->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD', fn (Collection $grupo): array => [
-                'activas' => $estado($grupo, EstadoInscripcion::Activo),
-                'pagoPendiente' => $grupo->filter(fn (Inscripcion $inscripcion): bool => $this->conSaldo($inscripcion))->count(),
-            ]),
-            'porTurno' => $this->agrupar($inscripciones, fn (Inscripcion $inscripcion): string => $inscripcion->turno?->nombre_tur ?? 'SIN TURNO', fn (Collection $grupo): array => [
-                'activas' => $estado($grupo, EstadoInscripcion::Activo),
-                'pendientes' => $estado($grupo, EstadoInscripcion::Pendiente),
-            ]),
+            'resumen' => $estadisticas->resumen(),
+            'recaudacion' => $estadisticas->recaudacion(),
+            'porDia' => $rango === null ? [] : $estadisticas->porDia(...$rango),
+            'porEstado' => $estadisticas->porEstado(),
+            'porEstadoPago' => $estadisticas->porEstadoPago(),
+            'porSexo' => $estadisticas->porSexo(),
+            'porOrigen' => $estadisticas->porOrigen(),
+            'porCarrera' => $estadisticas->agrupar(fn (Inscripcion $inscripcion): string => $inscripcion->carrera?->nombre_car ?? 'SIN CARRERA'),
+            'porModalidad' => $estadisticas->agrupar(fn (Inscripcion $inscripcion): string => $inscripcion->modalidadAdmision?->nombre_mad ?? 'SIN MODALIDAD'),
+            'porTurno' => $estadisticas->agrupar(fn (Inscripcion $inscripcion): string => $inscripcion->turno?->nombre_tur ?? 'SIN TURNO'),
+            'porSede' => $estadisticas->agrupar(fn (Inscripcion $inscripcion): string => $inscripcion->sede?->nombre_sed ?? 'SIN SEDE'),
             'opciones' => [
                 'procesos' => Proceso::query()->whereHas('inscripciones')->orderByDesc('id_pro')->get()
                     ->map(fn (Proceso $proceso): array => ['valor' => (string) $proceso->id_pro, 'nombre' => $proceso->nombre_pro]),
@@ -119,27 +110,6 @@ class ReporteInscripcionController extends Controller
             ->when($filtros['sede'] !== '', fn (Builder $query) => $query->where('id_sede', (int) $filtros['sede']))
             ->when($filtros['turno'] !== '', fn (Builder $query) => $query->where('id_turno', (int) $filtros['turno']))
             ->when($filtros['estado'] !== '', fn (Builder $query) => $query->where('estado_ins', $filtros['estado']));
-    }
-
-    /**
-     * Agrupa las inscripciones y ordena los grupos de mayor a menor.
-     *
-     * @param  Collection<int, Inscripcion>  $inscripciones
-     * @return list<array<string, mixed>>
-     */
-    private function agrupar(Collection $inscripciones, callable $clave, callable $columnas): array
-    {
-        return $inscripciones
-            ->groupBy($clave)
-            ->map(fn (Collection $grupo, string $nombre): array => ['nombre' => $nombre, 'total' => $grupo->count(), ...$columnas($grupo)])
-            ->sortByDesc('total')
-            ->values()
-            ->all();
-    }
-
-    private function conSaldo(Inscripcion $inscripcion): bool
-    {
-        return $inscripcion->obligacionesPago->contains(fn ($obligacion) => in_array($obligacion->estado_iop, [EstadoObligacionPago::Pendiente, EstadoObligacionPago::Parcial], true));
     }
 
     private function procesoPorDefecto(): string
