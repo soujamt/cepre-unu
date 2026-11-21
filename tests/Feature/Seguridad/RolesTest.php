@@ -7,8 +7,10 @@ use App\Models\PermisoAccion;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -58,20 +60,17 @@ test('authorized users can access the roles page', function () {
     $this->actingAs($usuario)
         ->get(route('roles.index'))
         ->assertOk()
-        ->assertSee('Roles');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('seguridad/roles')->has('roles.data'));
 });
 
 test('authorized users can register a role', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosRol($usuario, ['rol_indice', 'rol_crear']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.roles')
-        ->set('rolForm.nombre', 'Coordinador')
-        ->set('rolForm.descripcion', 'Gestiona procesos internos')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('roles.store'), ['nombre' => 'Coordinador', 'descripcion' => 'Gestiona procesos internos'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Rol registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_rol', [
         'nombre_rol' => 'COORDINADOR',
@@ -89,14 +88,10 @@ test('authorized users can update a role', function () {
         'estado_rol' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.roles')
-        ->call('cargarRol', $rol->id_rol)
-        ->set('rolForm.nombre', 'Supervisor')
-        ->set('rolForm.descripcion', 'Supervisa operaciones')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('roles.update', $rol), ['nombre' => 'Supervisor', 'descripcion' => 'Supervisa operaciones'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Rol actualizado correctamente.');
 
     $this->assertDatabaseHas('tbl_rol', [
         'id_rol' => $rol->id_rol,
@@ -115,14 +110,9 @@ test('administrator role name cannot be changed', function () {
         'estado_rol' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.roles')
-        ->call('cargarRol', $rol->id_rol)
-        ->set('rolForm.nombre', 'SUPER ADMIN')
-        ->set('rolForm.descripcion', 'Rol principal actualizado')
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('roles.update', $rol), ['nombre' => 'SUPER ADMIN', 'descripcion' => 'Rol principal actualizado'])
+        ->assertSessionHasNoErrors();
 
     $this->assertDatabaseHas('tbl_rol', [
         'id_rol' => $rol->id_rol,
@@ -140,11 +130,9 @@ test('authorized users can change state of a role', function () {
         'estado_rol' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.roles')
-        ->call('cambiarEstado', $rol->id_rol)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('roles.estado', $rol))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del rol actualizado.']);
 
     $this->assertDatabaseHas('tbl_rol', [
         'id_rol' => $rol->id_rol,
@@ -176,12 +164,21 @@ test('authorized users can assign permisos to a role', function () {
         ]);
     });
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->get(route('roles.permisos', $rol))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('seguridad/roles-permisos')
+            ->where('rol.nombre', 'COORDINADOR')
+            ->where('seleccionadas', [])
+            ->where('permisos', fn (Collection $permisos): bool => $permisos->contains(
+                fn (array $modulo): bool => $modulo['clave'] === 'usuarios' && count($modulo['acciones']) === 2,
+            )));
 
-    Livewire::test('pages::seguridad.roles-permisos', ['rol' => $rol->id_rol])
-        ->set('seleccionadas', $permisoAcciones->pluck('id_peracc')->map(fn (int $id): string => (string) $id)->all())
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('roles.permisos.update', $rol), ['seleccionadas' => $permisoAcciones->pluck('id_peracc')->all()])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Permisos del rol actualizados correctamente.']);
 
     foreach ($permisoAcciones as $permisoAccion) {
         $this->assertDatabaseHas('tbl_rol_permiso_accion', [
@@ -226,12 +223,11 @@ test('roles index counts only active assigned actions', function () {
         'id_peracc' => $permisoAcciones[1]->id_peracc,
     ])->delete();
 
-    $this->actingAs($usuario);
-
-    $component = Livewire::test('pages::seguridad.roles');
-    $roles = $component->instance()->roles;
-
-    expect($roles->firstWhere('id_rol', $rol->id_rol)?->acciones_asignadas_count)->toBe(1);
+    $this->actingAs($usuario)
+        ->get(route('roles.index', ['buscar' => 'EDITOR']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('roles.data', 1)
+            ->where('roles.data.0.acciones', 1));
 });
 
 test('soft deleted role assignments no longer grant access', function () {
@@ -299,4 +295,46 @@ test('disabled actions no longer grant access to non administrator roles', funct
     ]);
 
     expect($usuario->hasPermisoAccion('inscripciones_indice'))->toBeFalse();
+});
+
+test('removing permisos from a role soft deletes the unchecked actions', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_permisos']);
+    $rol = Rol::query()->create(['nombre_rol' => 'COORDINADOR', 'estado_rol' => 'HABILITADO']);
+    $permiso = Permiso::query()->create(['nombre_permiso' => 'USUARIOS', 'clave_permiso' => 'usuarios', 'estado_permiso' => 'HABILITADO']);
+    $accion = Accion::query()->where('clave_accion', 'indice')->firstOrFail();
+    $permisoAccion = PermisoAccion::query()->create([
+        'id_permiso' => $permiso->id_permiso,
+        'id_accion' => $accion->id_acc,
+        'clave_peracc' => 'usuarios_indice',
+        'estado_peracc' => 'HABILITADO',
+    ]);
+    $rol->rolPermisoAcciones()->create(['id_peracc' => $permisoAccion->id_peracc]);
+
+    $this->actingAs($usuario)
+        ->put(route('roles.permisos.update', $rol), ['seleccionadas' => []])
+        ->assertSessionHasNoErrors();
+
+    $this->assertSoftDeleted('tbl_rol_permiso_accion', ['id_rol' => $rol->id_rol, 'id_peracc' => $permisoAccion->id_peracc], deletedAtColumn: 'eliminado_en');
+});
+
+test('administrator role cannot be disabled, deleted or reassigned', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosRol($usuario, ['rol_indice', 'rol_estado', 'rol_eliminar', 'rol_permisos']);
+    $rol = Rol::query()->firstOrCreate(['nombre_rol' => 'ADMINISTRADOR'], ['estado_rol' => 'HABILITADO']);
+
+    $this->actingAs($usuario)
+        ->patch(route('roles.estado', $rol))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El rol ADMINISTRADOR no puede cambiar de estado.']);
+
+    $this->actingAs($usuario)
+        ->delete(route('roles.destroy', $rol))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El rol ADMINISTRADOR no puede eliminarse.']);
+
+    $this->actingAs($usuario)
+        ->put(route('roles.permisos.update', $rol), ['seleccionadas' => []])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'info', 'message' => 'El rol ADMINISTRADOR ya cuenta con acceso total.']);
+
+    expect($rol->fresh()->estado_rol->value)->toBe('HABILITADO')
+        ->and($rol->fresh()->trashed())->toBeFalse();
 });

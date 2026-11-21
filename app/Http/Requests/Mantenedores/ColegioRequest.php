@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Mantenedores;
 
+use App\Http\Requests\CatalogoRequest;
 use App\Models\Colegio;
 use Illuminate\Validation\Rule;
 

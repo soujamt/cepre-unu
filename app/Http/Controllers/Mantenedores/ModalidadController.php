@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mantenedores;
 
 use App\Enums\CondicionEgresoModalidad;
 use App\Enums\EstadoCatalogo;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Requests\Mantenedores\ModalidadRequest;
 use App\Models\ModalidadAdmision;
 use Illuminate\Database\Eloquent\Builder;

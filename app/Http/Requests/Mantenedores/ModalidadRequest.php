@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Mantenedores;
 
 use App\Enums\CondicionEgresoModalidad;
+use App\Http\Requests\CatalogoRequest;
 use App\Models\ModalidadAdmision;
 use Illuminate\Validation\Rule;
 

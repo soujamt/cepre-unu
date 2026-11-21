@@ -247,3 +247,71 @@ export function CampoCasilla({ etiqueta, descripcion, marcado, alCambiar, error,
         </div>
     );
 }
+
+interface PropsCampoOpciones {
+    etiqueta: string;
+    opciones: { valor: string; nombre: string; detalle?: string }[];
+    seleccionadas: string[];
+    alCambiar: (seleccionadas: string[]) => void;
+    error?: string;
+    ayuda?: string;
+    requerido?: boolean;
+    /** Columnas de la lista en pantallas medianas. */
+    columnas?: 1 | 2;
+    className?: string;
+}
+
+/**
+ * Lista de casillas para elegir varias opciones (roles de un usuario, acciones de un permiso).
+ */
+export function CampoOpciones({ etiqueta, opciones, seleccionadas, alCambiar, error, ayuda, requerido, columnas = 1, className }: PropsCampoOpciones) {
+    const idCampo = useId();
+    const alternar = (valor: string, marcado: boolean): void => {
+        alCambiar(marcado ? [...seleccionadas, valor] : seleccionadas.filter((actual) => actual !== valor));
+    };
+
+    return (
+        <fieldset className={cn('grid gap-1.5', className)} aria-describedby={error || ayuda ? `${idCampo}-mensaje` : undefined}>
+            <legend className="mb-1.5 flex w-full items-center justify-between text-[13px] font-medium text-zinc-700 dark:text-zinc-200">
+                <span className="inline-flex items-center gap-1">
+                    {etiqueta}
+                    {requerido && <span className="text-red-500">*</span>}
+                </span>
+                <span className="text-xs font-normal text-zinc-400 tabular-nums">
+                    {seleccionadas.length} de {opciones.length}
+                </span>
+            </legend>
+            <div
+                className={cn(
+                    'grid gap-px overflow-hidden rounded-xl border bg-zinc-100 dark:bg-white/[0.06]',
+                    columnas === 2 && 'sm:grid-cols-2',
+                    error ? 'border-red-400' : 'border-zinc-200 dark:border-white/10',
+                )}
+            >
+                {opciones.length === 0 && <p className="bg-white px-4 py-3 text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">No hay opciones disponibles.</p>}
+                {opciones.map((opcion) => {
+                    const id = `${idCampo}-${opcion.valor}`;
+                    const marcado = seleccionadas.includes(opcion.valor);
+
+                    return (
+                        <label
+                            key={opcion.valor}
+                            htmlFor={id}
+                            className={cn(
+                                'flex cursor-pointer items-center gap-3 bg-white px-3.5 py-2.5 text-sm transition-colors hover:bg-zinc-50 dark:bg-zinc-900 dark:hover:bg-white/[0.03]',
+                                marcado && 'bg-index-50/40 dark:bg-index-500/[0.06]',
+                            )}
+                        >
+                            <Checkbox id={id} checked={marcado} onCheckedChange={(valor) => alternar(opcion.valor, valor === true)} />
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate text-zinc-800 dark:text-zinc-100">{opcion.nombre}</span>
+                                {opcion.detalle && <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">{opcion.detalle}</span>}
+                            </span>
+                        </label>
+                    );
+                })}
+            </div>
+            <Mensaje id={`${idCampo}-mensaje`} error={error} ayuda={ayuda} />
+        </fieldset>
+    );
+}

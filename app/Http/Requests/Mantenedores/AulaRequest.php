@@ -4,6 +4,7 @@ namespace App\Http\Requests\Mantenedores;
 
 use App\Enums\LugarAula;
 use App\Enums\PisoAula;
+use App\Http\Requests\CatalogoRequest;
 use App\Models\Aula;
 use Illuminate\Validation\Rule;
 

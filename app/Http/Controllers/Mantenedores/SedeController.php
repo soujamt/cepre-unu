@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mantenedores;
 
 use App\Enums\EstadoCatalogo;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Requests\Mantenedores\SedeRequest;
 use App\Models\Sede;
 use Illuminate\Database\Eloquent\Builder;

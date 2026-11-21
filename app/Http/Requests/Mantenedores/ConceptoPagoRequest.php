@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Mantenedores;
 
+use App\Http\Requests\CatalogoRequest;
 use App\Models\ConceptoPago;
 use Closure;
 use Illuminate\Validation\Rule;

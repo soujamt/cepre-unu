@@ -14,6 +14,10 @@ use App\Http\Controllers\Mantenedores\ModalidadController;
 use App\Http\Controllers\Mantenedores\SedeController;
 use App\Http\Controllers\Mantenedores\TurnoController;
 use App\Http\Controllers\Publico\PortalController;
+use App\Http\Controllers\Seguridad\PermisoController;
+use App\Http\Controllers\Seguridad\RolController;
+use App\Http\Controllers\Seguridad\RolPermisosController;
+use App\Http\Controllers\Seguridad\UsuarioController;
 use App\Http\Controllers\VerificacionCarnetController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -68,21 +72,19 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/inicio', InicioController::class)->name('inicio');
 
     // Seguridad
-    Route::livewire('/seguridad/usuarios', 'pages::seguridad.usuarios')
-        ->middleware('permiso:usuario_indice')
-        ->name('usuarios.index');
+    Route::catalogo('/seguridad/usuarios', 'usuarios', 'usuario', UsuarioController::class, 'usuario');
 
-    Route::livewire('/seguridad/roles', 'pages::seguridad.roles')
-        ->middleware('permiso:rol_indice')
-        ->name('roles.index');
+    Route::catalogo('/seguridad/roles', 'roles', 'rol', RolController::class, 'rol');
 
-    Route::livewire('/seguridad/roles/{rol}/permisos', 'pages::seguridad.roles-permisos')
+    Route::get('/seguridad/roles/{rol}/permisos', [RolPermisosController::class, 'edit'])
         ->middleware('permiso:rol_permisos')
         ->name('roles.permisos');
 
-    Route::livewire('/seguridad/permisos', 'pages::seguridad.permisos')
-        ->middleware('permiso:permiso_indice')
-        ->name('permisos.index');
+    Route::put('/seguridad/roles/{rol}/permisos', [RolPermisosController::class, 'update'])
+        ->middleware('permiso:rol_permisos')
+        ->name('roles.permisos.update');
+
+    Route::catalogo('/seguridad/permisos', 'permisos', 'permiso', PermisoController::class, 'permiso');
 
     // Mantenedores
     Route::catalogo('/mantenedores/aulas', 'mantenedor-aulas', 'aula', AulaController::class, 'aula');

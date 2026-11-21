@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Mantenedores;
+namespace App\Http\Controllers;
 
 use App\Enums\EstadoCatalogo;
-use App\Http\Controllers\Controller;
+use BackedEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -67,9 +67,10 @@ abstract class CatalogoController extends Controller
     protected function alternarEstado(Model $modelo, string $columna, string $mensaje): RedirectResponse
     {
         $actual = $modelo->getAttribute($columna);
+        $valorActual = $actual instanceof BackedEnum ? $actual->value : $actual;
 
         $modelo->update([
-            $columna => $actual === EstadoCatalogo::Habilitado ? EstadoCatalogo::Deshabilitado->value : EstadoCatalogo::Habilitado->value,
+            $columna => $valorActual === EstadoCatalogo::Habilitado->value ? EstadoCatalogo::Deshabilitado->value : EstadoCatalogo::Habilitado->value,
         ]);
 
         return $this->volverCon($mensaje);

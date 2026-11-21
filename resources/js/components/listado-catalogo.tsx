@@ -4,6 +4,7 @@ import { FiltroEstado } from '@/components/filtro-estado';
 import { HojaFormulario } from '@/components/hoja-formulario';
 import { InsigniaEstado } from '@/components/insignia-estado';
 import { MenuAcciones } from '@/components/menu-acciones';
+import type { AccionFila } from '@/components/menu-acciones';
 import { EstadoVacio } from '@/components/panel';
 import { Buscador, CeldaRegistro, Paginacion, TablaDatos, useFiltros } from '@/components/tabla-datos';
 import type { Columna } from '@/components/tabla-datos';
@@ -33,6 +34,12 @@ interface PropsListadoCatalogo<TFila extends FilaCatalogo> {
     filtrosExtra?: (cambiar: (cambios: Partial<FiltrosCatalogo>, inmediato?: boolean) => void, filtro: FiltrosCatalogo) => ReactNode;
     /** Campos del formulario lateral. */
     campos: ReactNode;
+    /** Acciones propias del catálogo, entre Estado y Eliminar (por ejemplo, "Permisos" en roles). */
+    accionesExtra?: (fila: TFila) => AccionFila[];
+    /** Oculta una acción estándar en una fila (por ejemplo, el estado del propio usuario). */
+    ocultarAccion?: (fila: TFila, accion: 'editar' | 'estado' | 'eliminar') => boolean;
+    /** Texto del botón para registrar; por defecto "Nueva". */
+    textoNuevo?: string;
 }
 
 /**
@@ -49,6 +56,9 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
     vacio,
     filtrosExtra,
     campos,
+    accionesExtra,
+    ocultarAccion,
+    textoNuevo = 'Nueva',
 }: PropsListadoCatalogo<TFila>) {
     const puede = usePermiso();
     const [filtro, cambiarFiltro] = useFiltros<FiltrosCatalogo>(filtros);
@@ -62,7 +72,7 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
                 {puede(`${permiso}_crear`) && (
                     <Button className="w-full sm:ms-auto sm:w-auto" onClick={catalogo.abrirNuevo}>
                         <Plus className="size-4.5" />
-                        Nueva
+                        {textoNuevo}
                     </Button>
                 )}
             </div>
@@ -80,9 +90,10 @@ export function ListadoCatalogo<TFila extends FilaCatalogo>({
                         celda: (fila) => (
                             <MenuAcciones
                                 acciones={[
-                                    { etiqueta: 'Editar', icono: PenLine, alSeleccionar: () => catalogo.abrirEdicion(fila), visible: puede(`${permiso}_editar`) },
-                                    { etiqueta: 'Estado', icono: RefreshCw, alSeleccionar: () => void catalogo.cambiarEstado(fila), visible: puede(`${permiso}_estado`) },
-                                    { etiqueta: 'Eliminar', icono: Bin, alSeleccionar: () => void catalogo.eliminar(fila), peligro: true, visible: puede(`${permiso}_eliminar`) },
+                                    { etiqueta: 'Editar', icono: PenLine, alSeleccionar: () => catalogo.abrirEdicion(fila), visible: puede(`${permiso}_editar`) && !ocultarAccion?.(fila, 'editar') },
+                                    { etiqueta: 'Estado', icono: RefreshCw, alSeleccionar: () => void catalogo.cambiarEstado(fila), visible: puede(`${permiso}_estado`) && !ocultarAccion?.(fila, 'estado') },
+                                    ...(accionesExtra?.(fila) ?? []),
+                                    { etiqueta: 'Eliminar', icono: Bin, alSeleccionar: () => void catalogo.eliminar(fila), peligro: true, visible: puede(`${permiso}_eliminar`) && !ocultarAccion?.(fila, 'eliminar') },
                                 ]}
                             />
                         ),

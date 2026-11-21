@@ -6,7 +6,8 @@ use App\Models\PermisoAccion;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -60,7 +61,11 @@ test('authorized users can access the users page', function () {
     $this->actingAs($usuario)
         ->get(route('usuarios.index'))
         ->assertOk()
-        ->assertSee('Usuarios');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('seguridad/usuarios')
+            ->has('usuarios.data', 1)
+            ->where('usuarios.data.0.esUsted', true)
+            ->has('roles'));
 });
 
 test('authorized users can register a user with roles from the modal', function () {
@@ -80,15 +85,15 @@ test('authorized users can register a user with roles from the modal', function 
         ]),
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->set('usuarioForm.correo', 'analista@unu.edu.pe')
-        ->set('usuarioForm.nombres', 'Usuario Analista')
-        ->set('usuarioForm.password', 'secret123')
-        ->set('usuarioForm.roles', $roles->pluck('id_rol')->map(fn (int $id): string => (string) $id)->all())
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('usuarios.store'), [
+            'correo' => ' Analista@UNU.edu.pe ',
+            'nombres' => 'Usuario Analista',
+            'password' => 'secret123',
+            'roles' => $roles->pluck('id_rol')->map(fn (int $id): string => (string) $id)->all(),
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Usuario registrado correctamente.']);
 
     $usuarioRegistrado = Usuario::query()->where('correo_usu', 'analista@unu.edu.pe')->first();
 
@@ -130,16 +135,19 @@ test('authorized users can update a user and sync roles', function () {
         'id_rol' => $rolAnterior->id_rol,
     ]);
 
-    $this->actingAs($usuario);
+    $claveAnterior = $objetivo->clave_usu;
 
-    Livewire::test('pages::seguridad.usuarios')
-        ->call('cargarUsuario', $objetivo->id_usu)
-        ->set('usuarioForm.correo', 'supervisor@unu.edu.pe')
-        ->set('usuarioForm.nombres', 'Usuario Supervisor')
-        ->set('usuarioForm.password', '')
-        ->set('usuarioForm.roles', [(string) $rolNuevo->id_rol])
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->put(route('usuarios.update', $objetivo), [
+            'correo' => 'supervisor@unu.edu.pe',
+            'nombres' => 'Usuario Supervisor',
+            'password' => '',
+            'roles' => [(string) $rolNuevo->id_rol],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Usuario actualizado correctamente.');
+
+    expect($objetivo->fresh()->clave_usu)->toBe($claveAnterior);
 
     $this->assertDatabaseHas('tbl_usuario', [
         'id_usu' => $objetivo->id_usu,
@@ -153,10 +161,10 @@ test('authorized users can update a user and sync roles', function () {
         'eliminado_en' => null,
     ]);
 
-    $this->assertDatabaseHas('tbl_usuario_rol', [
+    $this->assertSoftDeleted('tbl_usuario_rol', [
         'id_usuario' => $objetivo->id_usu,
         'id_rol' => $rolAnterior->id_rol,
-    ]);
+    ], deletedAtColumn: 'eliminado_en');
 });
 
 test('authorized users can change state of a user', function () {
@@ -167,11 +175,9 @@ test('authorized users can change state of a user', function () {
         'estado_usu' => 'HABILITADO',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->call('cambiarEstado', $objetivo->id_usu)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->patch(route('usuarios.estado', $objetivo))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Estado del usuario actualizado.']);
 
     $this->assertDatabaseHas('tbl_usuario', [
         'id_usu' => $objetivo->id_usu,
@@ -185,11 +191,9 @@ test('authorized users can delete a user', function () {
 
     $objetivo = Usuario::factory()->create();
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->call('eliminar', $objetivo->id_usu)
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->delete(route('usuarios.destroy', $objetivo))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Usuario eliminado correctamente.']);
 
     $this->assertSoftDeleted($objetivo->fresh());
 });
@@ -198,10 +202,9 @@ test('users cannot disable their own account from the module', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosUsuario($usuario, ['usuario_indice', 'usuario_estado']);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->call('cambiarEstado', $usuario->id_usu);
+    $this->actingAs($usuario)
+        ->patch(route('usuarios.estado', $usuario))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'No puedes cambiar el estado de tu propio usuario.']);
 
     $this->assertDatabaseHas('tbl_usuario', [
         'id_usu' => $usuario->id_usu,
@@ -218,15 +221,9 @@ test('generated username falls back to a unique value when email prefix already 
         'correo_usu' => 'analista.existente@unu.edu.pe',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->set('usuarioForm.correo', 'analista@unu.edu.pe')
-        ->set('usuarioForm.nombres', 'Analista Nuevo')
-        ->set('usuarioForm.password', 'secret123')
-        ->set('usuarioForm.roles', [])
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('usuarios.store'), ['correo' => 'analista@unu.edu.pe', 'nombres' => 'Analista Nuevo', 'password' => 'secret123', 'roles' => []])
+        ->assertSessionHasNoErrors();
 
     $this->assertDatabaseHas('tbl_usuario', [
         'correo_usu' => 'analista@unu.edu.pe',
@@ -270,17 +267,34 @@ test('user assigned a role inherits sidebar permission access', function () {
         'id_peracc' => $permisoAccion->id_peracc,
     ]);
 
-    $this->actingAs($administrador);
-
-    Livewire::test('pages::seguridad.usuarios')
-        ->set('usuarioForm.correo', 'permisos@unu.edu.pe')
-        ->set('usuarioForm.nombres', 'Usuario Permisos')
-        ->set('usuarioForm.password', 'secret123')
-        ->set('usuarioForm.roles', [(string) $rol->id_rol])
-        ->call('guardar')
-        ->assertHasNoErrors();
+    $this->actingAs($administrador)
+        ->post(route('usuarios.store'), ['correo' => 'permisos@unu.edu.pe', 'nombres' => 'Usuario Permisos', 'password' => 'secret123', 'roles' => [(string) $rol->id_rol]])
+        ->assertSessionHasNoErrors();
 
     $usuario = Usuario::query()->where('correo_usu', 'permisos@unu.edu.pe')->firstOrFail();
 
     expect($usuario->hasPermisoAccion('permiso_indice'))->toBeTrue();
+});
+
+test('user requires a unique email and a password of at least 8 characters', function () {
+    $usuario = Usuario::factory()->create(['correo_usu' => 'existente@unu.edu.pe']);
+    otorgarPermisosUsuario($usuario, ['usuario_indice', 'usuario_crear']);
+
+    $this->actingAs($usuario)
+        ->post(route('usuarios.store'), ['correo' => 'EXISTENTE@unu.edu.pe', 'nombres' => 'Otro', 'password' => 'corta'])
+        ->assertSessionHasErrors([
+            'correo' => 'Ya existe un usuario con ese correo.',
+            'password' => 'La contraseña debe tener al menos 8 caracteres.',
+        ]);
+});
+
+test('users cannot delete their own account', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosUsuario($usuario, ['usuario_indice', 'usuario_eliminar']);
+
+    $this->actingAs($usuario)
+        ->delete(route('usuarios.destroy', $usuario))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'No puedes eliminar tu propio usuario.']);
+
+    expect($usuario->fresh()->trashed())->toBeFalse();
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mantenedores;
 use App\Enums\EstadoCatalogo;
 use App\Enums\LugarAula;
 use App\Enums\PisoAula;
+use App\Http\Controllers\CatalogoController;
 use App\Http\Requests\Mantenedores\AulaRequest;
 use App\Models\Aula;
 use Illuminate\Http\RedirectResponse;
