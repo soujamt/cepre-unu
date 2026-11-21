@@ -2,7 +2,7 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE USUARIO DEL SISTEMA DE INSCRIPCIONES
 
-**Versión:** 1.3  
+**Versión:** 1.4  
 **Documento:** Manual de usuario funcional  
 **Dirigido a:** SuperAdministrador y Gestor de Inscripciones CEPRE  
 **Fecha:** Noviembre 2026
@@ -10,6 +10,8 @@
 > **Cambios en la versión 1.2:** el pago se valida primero y el asistente pasa a tener 4 pasos; la modalidad se asigna sola según el año de egreso; cada proceso define su propia oferta (modalidades y carreras por sede); se agregaron los pagos manuales, el portal del postulante con revisión de las inscripciones en línea, las fotos, la ficha de matrícula, el carnet con QR y los códigos de Admisión. Se retiraron los expedientes, los convenios, los requisitos, los lugares de inscripción y las ofertas base. Los diagramas del flujo completo están en `FLUJO_PROCESOS_CEPRE.md`.
 
 > **Cambios en la versión 1.3:** se renovó la interfaz. Las pantallas cambian sin recargar la página, los formularios se abren en un panel lateral a la derecha, las acciones delicadas (eliminar, anular, cambiar de estado) piden confirmación en un diálogo y los mensajes aparecen abajo a la derecha. El menú lateral agrupa los módulos en secciones que se pueden plegar, y el tema claro u oscuro se elige con el botón de la barra superior. Los módulos, permisos y procedimientos no cambian.
+
+> **Cambios en la versión 1.4:** se actualizaron los nombres de botones y menús de la nueva interfaz. El inicio y el reporte de inscripciones muestran gráficos (con vista de tabla), la recaudación y la ocupación de aulas. Las validaciones las hace el servidor y marcan en rojo el campo con error. En el paso 1, si no hay un pago libre con los datos ingresados aparece un aviso; con 8 dígitos el tipo de documento DNI se elige solo; la lengua materna incluye `CASTELLANO`; el buscador de ubigeo ofrece primero Ucayali; el listado de inscripciones muestra la foto del postulante; y la consulta del portal avisa cuando el pago existe pero falta inscribirse.
 
 ---
 
@@ -196,21 +198,31 @@ Si no se cumplen, el sistema impide avanzar:
 
 ## 9. Panel principal o inicio
 
-El panel principal se muestra después de iniciar sesión. Ofrece una visión general de las inscripciones y acceso a los módulos autorizados desde el menú lateral.
+El panel principal se muestra después de iniciar sesión. Resume cómo va el proceso vigente y da acceso a los módulos autorizados desde el menú lateral. El menú lateral muestra abierta solo la sección de la pantalla actual; las demás se despliegan con un clic.
 
 ### 9.1. Información que muestra
 
-- `Total inscritas`;
-- `Activas`;
-- `Pago pendiente`;
-- `Anuladas`.
+- **cabecera del proceso:** nombre, fechas de apertura y cierre, avance del periodo de inscripción y días que faltan, total de inscritos, inscripciones de hoy y pagos validados hoy;
+- **indicadores:** `Activas` (con su porcentaje), `En revisión` (inscripciones del portal), `Con saldo pendiente` y `Recaudado`, con una barra de lo recaudado frente a lo esperado;
+- **gráficos:**
+  - `Inscripciones por día` de los últimos 14 días (la columna resaltada es hoy);
+  - `Estado de las inscripciones` (activas, pendientes y anuladas);
+  - `Carreras con más inscritos` (las 8 primeras, por estado);
+  - `Estado del pago` y `Por turno y sede`;
+- `Para atender`: inscripciones en línea por aprobar, pagos por regularizar, inscripciones activas sin aula y pagos del banco sin usar, cada una con su cantidad y un enlace a la pantalla donde se resuelve;
+- `Ocupación de aulas`: inscripciones con aula frente a las vacantes de cada turno; la barra cambia de color al llegar al 80 % y al pasarse;
+- `Últimas inscripciones`, con la foto del postulante (o sus iniciales si no tiene foto);
+- `Accesos rápidos` a las pantallas más usadas.
+
+Al pasar el mouse sobre un gráfico se ve el detalle de cada barra o sector, y el botón `Tabla` muestra las cifras exactas.
 
 ### 9.2. Procedimiento de revisión
 
 1. ingresar al sistema;
-2. revisar los indicadores;
-3. identificar pendientes, por ejemplo inscripciones con pago pendiente;
-4. ingresar al módulo requerido desde el menú lateral.
+2. revisar la cabecera del proceso y los indicadores;
+3. atender los pendientes de `Para atender`, entrando con su enlace;
+4. revisar la ocupación de aulas antes de que un turno se llene;
+5. ingresar al módulo requerido desde el menú lateral o desde `Accesos rápidos`.
 
 ### 9.3. Resultado esperado
 
@@ -496,7 +508,7 @@ Definir el proceso, el periodo en que estará abierto y el corte de año de egre
 
 #### 13.1.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Procesos`;
+1. ingresar a `Configuración académica > Procesos`;
 2. seleccionar `Nuevo`;
 3. registrar:
    - nombre, con el formato `AAAA-N` (por ejemplo `2027-1`); de él salen los primeros dígitos del código de inscripción;
@@ -526,7 +538,7 @@ Definir qué modalidades y qué carreras de cada sede se abren en el proceso.
 
 #### 13.2.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Oferta del proceso`;
+1. ingresar a `Configuración académica > Oferta del proceso`;
 2. seleccionar el proceso;
 3. marcar las modalidades habilitadas: al menos una para egresados y una para estudiantes en colegio;
 4. en cada sede, marcar las carreras que se ofrecen; `Marcar todas` y `Quitar todas` ayudan a hacerlo por sede;
@@ -549,11 +561,11 @@ Definir las aulas disponibles en cada turno del proceso y su capacidad.
 
 #### 13.3.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Aulas`;
+1. ingresar a `Configuración académica > Aulas por proceso`;
 2. seleccionar `Asignar aulas`;
 3. elegir el proceso y el turno;
-4. marcar las aulas que se usarán y registrar la capacidad de cada una;
-5. seleccionar `Registrar seleccionadas`.
+4. marcar las aulas que se usarán (`Seleccionar todas` y `Limpiar selección` ayudan) y registrar la capacidad de cada una;
+5. seleccionar `Asignar aulas`.
 
 La capacidad de un aula ya asignada se cambia desde el listado (`Editar aula asignada`).
 
@@ -572,7 +584,7 @@ Definir las modalidades de pago del proceso: cuánto se paga, en cuántas cuotas
 
 #### 13.4.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Reglas de pago`;
+1. ingresar a `Configuración académica > Reglas de pago`;
 2. seleccionar `Nuevo` o editar una regla;
 3. registrar:
    - proceso;
@@ -614,12 +626,12 @@ Registrar los datos fijos que aparecen en todos los carnets.
 
 #### 13.5.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Carnet`;
+1. ingresar a `Configuración académica > Carnet`;
 2. registrar el nombre del director y su cargo;
 3. registrar la nota al pie del carnet (opcional), por ejemplo "Este carnet es válido exclusivamente para el ingreso al campus universitario.";
 4. subir la imagen de la firma y el sello: PNG de hasta 1 MB, de preferencia con fondo transparente;
 5. revisar la vista previa de la firma;
-6. seleccionar `Guardar configuración`;
+6. seleccionar `Guardar`;
 7. seleccionar `Ver carnet de muestra (PDF)` para revisar el resultado.
 
 #### 13.5.3. Resultado esperado
@@ -637,11 +649,11 @@ Registrar los códigos que entrega la Oficina de Admisión para cada sede, modal
 
 #### 13.6.2. Procedimiento
 
-1. ingresar a `Configuración Académica > Códigos de Admisión`;
+1. ingresar a `Configuración académica > Códigos de Admisión`;
 2. seleccionar el proceso; aparecen las combinaciones de su oferta;
 3. registrar los códigos de una de estas dos formas:
    - escribirlos en la tabla y seleccionar `Guardar códigos`;
-   - seleccionar `Descargar plantilla`, enviarla a Admisión para que llene solo la columna `CODIGO_ADMISION` sin tocar la columna `CLAVE`, y cargarla con `Subir plantilla llena`;
+   - seleccionar `Descargar plantilla`, enviarla a Admisión para que llene solo la columna `CODIGO_ADMISION` sin tocar la columna `CLAVE`, y cargarla con `Cargar plantilla`;
 4. si la plantilla tiene filas con errores, el sistema las lista en `Filas de la plantilla que no se cargaron`.
 
 Un código vacío borra el código de esa combinación.
@@ -678,14 +690,14 @@ Esta tarea debe hacerse antes de inscribir: si el pago no está en el sistema, n
 
 ### 15.2. Importar el TXT del banco
 
-1. ingresar a `Inscripciones > Pagos` y abrir la pestaña `Importaciones TXT`;
-2. seleccionar el archivo TXT del banco (máximo 5 MB) e `Importar archivo`;
-3. revisar la previsualización (`Revisión del TXT bancario`):
+1. ingresar a `Inscripciones > Pagos` y seleccionar `Importaciones TXT`;
+2. seleccionar `Importar TXT` y elegir el archivo del banco (máximo 5 MB);
+3. revisar la `Revisión del TXT bancario`:
    - datos de la cabecera;
-   - cantidad de pagos y monto total;
-   - si cuadran los registros y los montos con el cierre del archivo;
-   - observaciones por línea, si las hay;
-4. si todo es correcto, `Confirmar importación`; si no, `Quitar archivo`.
+   - registros y monto leídos frente a los que reporta el banco;
+   - `Pagos duplicados`, si los hay, con su motivo;
+   - `Primeras operaciones` del archivo;
+4. si todo es correcto, `Confirmar importación`; si no, `Cancelar` (o `Entendido` cuando el archivo tiene errores).
 
 El sistema valida que:
 
@@ -694,14 +706,14 @@ El sistema valida que:
 - el archivo no se haya importado antes;
 - el archivo no tenga observaciones.
 
-Las importaciones se consultan en la misma pestaña; `Ver detalle` muestra los pagos de cada una.
+La lista de importaciones se busca por archivo y se filtra por estado (`Pendiente`, `Procesado`, `Observado`). En el menú de cada importación, `Ver pagos del lote` muestra sus pagos.
 
 ### 15.3. Registrar un pago manual
 
 Se usa para pagos que no llegan en el TXT: los hechos en la caja de Admisión, en Posgrado, en otra cuenta de la UNU o los casos de parentesco UNU.
 
-1. ingresar a `Inscripciones > Pagos`, pestaña `Pagos`;
-2. seleccionar `Nuevo pago`;
+1. ingresar a `Inscripciones > Pagos`;
+2. seleccionar `Registrar pago`; el formulario se abre en un panel a la derecha;
 3. registrar:
    - DNI del postulante;
    - N° de operación o de recibo;
@@ -709,13 +721,13 @@ Se usa para pagos que no llegan en el TXT: los hechos en la caja de Admisión, e
    - importe (S/);
    - ubicación: `ADMISIÓN`, `POSGRADO`, `PARENTESCO UNU` u `OTRA CUENTA UNU`;
    - referencia y observación, si corresponde;
-4. seleccionar `Guardar pago`.
+4. seleccionar `Guardar`. Si falta un dato, el campo se marca en rojo con su mensaje.
 
-En la lista se pueden filtrar los pagos `Libres` y `Registrados`, buscar por DNI u operación y exportarlos con `Exportar`.
+En la lista se busca por DNI, operación o referencia, se filtra por estado (`LIBRE`, `REGISTRADO`, `OBSERVADO`) y se descarga con `Excel`.
 
-### 15.4. Validar pagos pendientes
+### 15.4. Asociar pagos pendientes
 
-Después de importar un TXT, la opción `Validar pagos pendientes` de la importación (pestaña `Importaciones TXT`) asocia automáticamente los pagos libres a las inscripciones que ya tienen saldo por pagar (cuotas siguientes). Para cada pago busca, por DNI, una obligación con saldo. Al terminar, el sistema informa cuántos pagos se asociaron y cuántos se omitieron.
+Después de importar un TXT, la acción `Asociar pendientes` del menú de la importación asocia automáticamente los pagos libres a las inscripciones que ya tienen saldo por pagar (cuotas siguientes). Para cada pago busca, por DNI, una obligación con saldo. El sistema pide confirmar y, al terminar, informa cuántos pagos se asociaron y cuántos se omitieron.
 
 ### 15.5. Resultado esperado
 
@@ -739,24 +751,27 @@ Consultar y gestionar las inscripciones registradas.
 #### 16.1.2. Procedimiento
 
 1. ingresar a `Inscripciones > Inscripciones`;
-2. revisar los indicadores: total inscritas, pago pendiente, activas y anuladas;
-3. buscar por código, DNI o nombre, o filtrar por proceso, modalidad, sede, pago y turno;
-4. usar el botón `En revisión (N)` para ver solo las inscripciones del portal pendientes de aprobar;
-5. en el menú de cada fila, elegir la acción:
+2. revisar los indicadores: `Total`, `Activas`, `Pago pendiente` y `Anuladas`;
+3. buscar por código, DNI, apellidos o carrera (la tecla `/` lleva al buscador y `Esc` lo limpia);
+4. filtrar por proceso y por `Estado`; `Más filtros` agrega modalidad, sede, turno, aula y estado del pago. Los filtros aplicados se resaltan en azul;
+5. si hay inscripciones del portal por aprobar, el aviso `En revisión (N)` tiene el botón `Ver solo en revisión`;
+6. en el menú de cada fila (los tres puntos), elegir la acción:
    - `Ver detalle`;
-   - `Ver ficha` (no aparece en las anuladas);
-   - `Ver carnet` (solo en las activas);
    - `Continuar registro`, en las que quedaron a medio registrar;
-   - `Validar pago`, cuando tiene un pago por validar;
-   - `Aprobar inscripción`, en las que están en revisión;
-   - `Anular inscripción`, en las activas o en revisión;
-   - `Asignar aula`.
+   - `Aprobar revisión`, en las que están en revisión;
+   - `Validar pago`, cuando tiene saldo por pagar;
+   - `Asignar aula`;
+   - `Ficha (PDF)` (no aparece en las anuladas);
+   - `Carnet (PDF)` (solo en las activas);
+   - `Anular`, en las activas o en revisión.
+
+Cada fila muestra la foto del postulante; si no tiene foto, sus iniciales. Al pie de la tabla se elige cuántas filas ver por página y se cambia de página.
 
 Desde el listado también se puede:
 
 - `Nueva inscripción`;
-- `Exportar Excel`, con los filtros aplicados;
-- `Generar carnets`: un PDF con el carnet de todas las inscripciones activas que cumplen los filtros, uno por página.
+- `Excel`, con los filtros aplicados;
+- `Carnets`: un PDF con el carnet de todas las inscripciones activas que cumplen los filtros, uno por página.
 
 #### 16.1.3. Resultado esperado
 
@@ -781,7 +796,9 @@ Encontrar los pagos libres del postulante y elegir la modalidad de pago.
 #### 16.3.2. Procedimiento
 
 1. registrar el DNI o CE del postulante y el N° de operación;
-2. seleccionar `Verificar pago`; el sistema lista los pagos libres de ese DNI;
+2. seleccionar `Verificar pago`:
+   - si no hay un pago libre con esos datos, aparece el aviso `No encontramos un pago libre con esos datos` con lo que hay que revisar;
+   - si lo hay, se listan en `Pagos libres del postulante` todos los pagos libres de ese DNI, con el buscado ya marcado;
 3. marcar los pagos que se usan para esta inscripción (se suman);
 4. seleccionar la modalidad de pago;
 5. si la modalidad pide un documento (por ejemplo, N° de resolución), registrarlo;
@@ -792,7 +809,7 @@ Encontrar los pagos libres del postulante y elegir la modalidad de pago.
 
 Si lo marcado alcanza el mínimo, el asistente pasa al paso 2. Los pagos quedan `REGISTRADOS` recién al terminar la inscripción.
 
-Si el pago no aparece:
+Si el pago no aparece (aviso `No encontramos un pago libre con esos datos`):
 
 - verificar que el TXT del día esté importado o que el pago manual esté registrado;
 - verificar que el DNI del pago sea el del postulante;
@@ -809,17 +826,17 @@ Registrar o recuperar los datos del postulante.
 
 #### 16.4.2. Procedimiento
 
-1. si el DNI ya está registrado, el sistema carga sus datos automáticamente; si no, se pueden buscar en RENIEC (cuando el servicio está configurado) o escribirlos;
+1. si el DNI ya está registrado, el sistema carga sus datos automáticamente; si no, se pueden buscar con `Buscar datos` en RENIEC (cuando el servicio está configurado) o escribirlos;
 2. completar o verificar:
    - tipo y número de documento (si el número tiene 8 dígitos, el tipo DNI se elige solo);
    - apellidos y nombres (con las opciones `Solo un apellido` y `Tiene apellido de casado(a)`);
    - fecha de nacimiento, sexo y estado civil;
-   - país de nacimiento, nacionalidad, ubigeo de nacimiento y de domicilio, y dirección;
+   - país de nacimiento, nacionalidad, ubigeo de nacimiento y de domicilio (al abrir el buscador se ofrecen los distritos de Ucayali; se puede escribir el distrito, la provincia o el código), y dirección;
    - celular, teléfono y correo electrónico;
    - nombre completo y celular del apoderado (ambos celulares con 9 dígitos y empezando en 9);
    - identidad étnica y lengua materna: `CASTELLANO`, `NATIVA` (se elige la lengua nativa) o `EXTRANJERA` (se elige la lengua extranjera); por ejemplo, un postulante mestizo cuya lengua materna es el castellano marca `MESTIZO` y `CASTELLANO`;
    - discapacidad, si corresponde;
-3. guardar el paso.
+3. seleccionar `Guardar y continuar`.
 
 #### 16.4.3. Resultado esperado
 
@@ -841,7 +858,7 @@ Registrar el colegio y el año de egreso, del que depende la modalidad.
 3. buscar y seleccionar el colegio (si es del extranjero, escribir su nombre);
 4. registrar las veces que postuló a la UNU y a otras universidades;
 5. añadir una observación si corresponde;
-6. guardar el paso.
+6. seleccionar `Guardar y continuar`.
 
 #### 16.5.3. Resultado esperado
 
@@ -860,9 +877,9 @@ Elegir sede, carrera y turno, revisar el resumen y registrar la inscripción.
 
 1. revisar la modalidad asignada automáticamente;
 2. seleccionar la sede, la carrera profesional y el turno;
-3. revisar la foto del postulante; si no tiene, se puede subir en este paso;
-4. revisar el resumen de todos los datos y marcar la confirmación;
-5. registrar la inscripción.
+3. revisar la foto del postulante; si no tiene, se puede subir con `Subir foto` (o reemplazar con `Cambiar foto`);
+4. revisar el resumen de todos los datos y marcar `Confirmo que los datos son correctos`;
+5. seleccionar `Registrar inscripción`.
 
 Si el postulante ya tiene una inscripción en el mismo proceso, el sistema avisa y permite decidir si continuar.
 
@@ -888,14 +905,14 @@ Revisar en una sola pantalla toda la información del postulante.
 
 #### 16.7.2. Procedimiento
 
-1. en el listado, seleccionar `Ver detalle`;
+1. en el listado, seleccionar `Ver detalle` (o hacer clic en el código de la inscripción);
 2. revisar:
-   - registro, proceso y estado;
-   - datos personales y generales;
-   - postulación y aula asignada;
-   - pagos;
-3. usar `Ver ficha` y `Ver carnet` para abrir los documentos;
-4. si la inscripción está en revisión, usar `Aprobar inscripción`.
+   - código, estado, origen, proceso y fecha;
+   - `Datos del postulante` y `Postulación`, con el aula asignada;
+   - `Pago`: lo pagado frente al total, las obligaciones y sus pagos;
+3. usar `Ficha` y `Carnet` para abrir los documentos;
+4. si la inscripción está en revisión, usar `Aprobar revisión`;
+5. si tiene saldo, `Validar un pago` lleva a la pantalla de validación con la inscripción ya buscada.
 
 #### 16.7.3. Resultado esperado
 
@@ -912,10 +929,10 @@ Aprobar las inscripciones que los postulantes registraron en el portal (ver secc
 
 #### 16.8.2. Procedimiento
 
-1. en el listado, seleccionar `En revisión (N)`;
+1. en el listado, en el aviso `En revisión (N)`, seleccionar `Ver solo en revisión` (también se llega desde `Para atender` en el inicio);
 2. abrir cada inscripción con `Ver detalle` y verificar los datos y el pago;
-3. si todo está bien, seleccionar `Aprobar inscripción`;
-4. si no corresponde, seleccionar `Anular inscripción` y registrar el motivo.
+3. si todo está bien, seleccionar `Aprobar revisión`;
+4. si no corresponde, seleccionar `Anular` y registrar el motivo.
 
 #### 16.8.3. Resultado esperado
 
@@ -926,17 +943,17 @@ Referencia de imagen:
 
 ### 16.9. Anular una inscripción
 
-1. en el menú de la fila, seleccionar `Anular inscripción`;
-2. registrar el motivo (mínimo 10 caracteres);
-3. seleccionar `Confirmar anulación`.
+1. en el menú de la fila, seleccionar `Anular`;
+2. registrar el `Motivo de anulación` (mínimo 10 caracteres);
+3. seleccionar `Anular` para confirmar.
 
 Solo se anulan inscripciones activas o en revisión. Al anular, el cupo del aula se libera y el carnet pasa a figurar como `NO VÁLIDO` en la verificación del QR.
 
 ### 16.10. Asignar o cambiar el aula
 
 1. en el menú de la fila, seleccionar `Asignar aula`;
-2. elegir un aula habilitada del mismo proceso y turno; el sistema muestra cuántos inscritos tiene cada una;
-3. guardar.
+2. elegir un aula habilitada del mismo proceso y turno; el sistema muestra cuántos inscritos tiene cada una y marca en rojo las llenas;
+3. seleccionar `Asignar aula`.
 
 ## 17. Módulo Fotos
 
@@ -949,8 +966,8 @@ Registrar las fotos de los postulantes para la ficha y el carnet. La foto se gua
 1. ingresar a `Inscripciones > Fotos`;
 2. seleccionar `Subir fotos`;
 3. elegir los archivos: JPG o PNG, hasta 2 MB cada uno y hasta 50 por vez, nombrados con el DNI (por ejemplo `47940211.jpg`);
-4. revisar el DNI que el sistema leyó de cada nombre y corregirlo si hace falta;
-5. seleccionar `Guardar fotos`.
+4. revisar el DNI que el sistema leyó de cada nombre y corregirlo si hace falta (cada archivo se puede quitar de la lista);
+5. seleccionar `Guardar N foto(s)`.
 
 Si una foto ya existe, se reemplaza. El sistema recorta y ajusta cada foto al tamaño del carnet (300 × 400 px).
 
@@ -958,10 +975,12 @@ También se puede subir la foto de un postulante en el paso 4 del asistente.
 
 ### 17.3. Consultar, eliminar y exportar
 
-- `Filtrar por proceso` muestra las fotos de los inscritos en ese proceso;
-- `Buscar foto por DNI` ubica una foto;
-- cada foto puede eliminarse;
-- `Exportar fotos` descarga un ZIP con las fotos del proceso, nombradas `DNI.jpg`, para la imprenta.
+- el filtro de proceso muestra las fotos de los inscritos en ese proceso (`Todos los procesos` muestra todas);
+- `Buscar por DNI` ubica una foto;
+- cada foto puede eliminarse; el sistema pide confirmar;
+- `Descargar ZIP` descarga las fotos del proceso, nombradas `DNI.jpg`, para la imprenta.
+
+La foto también se muestra en el listado de inscripciones y en las últimas inscripciones del inicio.
 
 ### 17.4. Resultado esperado
 
@@ -982,7 +1001,7 @@ Es un PDF A4 con:
 - el parentesco, la observación y la declaración jurada;
 - las líneas de firma del postulante y del apoderado.
 
-Se abre con `Ver ficha` desde el listado o el detalle. No se genera para inscripciones anuladas.
+Se abre con `Ficha (PDF)` desde el menú de la fila o con `Ficha` desde el detalle. No se genera para inscripciones anuladas.
 
 ### 18.2. Carnet
 
@@ -991,7 +1010,7 @@ Es un PDF con:
 - en la mitad izquierda, los datos del postulante (turno, modalidad, carrera, documento, apellidos y nombres), la foto, la sede y el proceso;
 - en la mitad derecha, la firma y el sello, el nombre y cargo del director, el código QR y la nota.
 
-Se genera solo para inscripciones `ACTIVAS`, una por una (`Ver carnet`) o en lote (`Generar carnets` en el listado).
+Se genera solo para inscripciones `ACTIVAS`, una por una (`Carnet (PDF)` en el menú de la fila o `Carnet` en el detalle) o en lote (`Carnets` en el listado).
 
 ### 18.3. Verificación del carnet
 
@@ -1009,18 +1028,19 @@ Referencias de imagen:
 
 ### 19.1. Objetivo
 
-Asociar un pago libre a una inscripción que ya tiene saldo por pagar. Se usa para las cuotas siguientes o cuando `Validar pagos pendientes` omitió un pago.
+Asociar un pago libre a una inscripción que ya tiene saldo por pagar. Se usa para las cuotas siguientes o cuando `Asociar pendientes` omitió un pago.
 
 ### 19.2. Procedimiento
 
-1. ingresar a `Inscripciones > Validar pagos` (o usar `Validar pago` en el menú de la inscripción);
-2. buscar la inscripción por código o postulante y seleccionarla;
-3. revisar el resumen de la obligación: monto total, pagado y saldo;
-4. buscar el pago por DNI y, si se conocen, operación y fecha de pago, con `Buscar pago`;
-5. seleccionar el pago correcto;
-6. seleccionar `Confirmar pago`.
+La pantalla tiene dos partes: a la izquierda `1 Obligación de pago` y a la derecha `2 Pago del banco`.
 
-`Cambiar obligación` permite elegir otra inscripción sin salir de la pantalla.
+1. ingresar a `Inscripciones > Validar pagos` (o usar `Validar pago` en el menú de la inscripción, que ya la trae buscada);
+2. en `Obligación de pago`, buscar por código de inscripción, DNI o apellidos y seleccionar la obligación; cada una muestra el total, lo pagado y el saldo;
+3. en `Pago del banco`, registrar el DNI, el N° de operación y la fecha de pago, y seleccionar `Buscar pago`. El sistema valida los datos: el DNI debe tener entre 8 y 12 dígitos, el número de operación solo dígitos y la fecha no puede ser posterior a hoy; si algo falta, el campo se marca en rojo;
+4. elegir el pago correcto en la lista (los que ya se usaron aparecen como `Ya usado` y no se pueden elegir);
+5. seleccionar `Validar y asociar pago`.
+
+Para cambiar de inscripción basta con elegir otra obligación en la lista de la izquierda. `Pagos ya asociados` muestra los pagos que ya tiene la obligación.
 
 ### 19.3. Resultado esperado
 
@@ -1033,15 +1053,21 @@ Referencia de imagen:
 
 ### 20.1. Objetivo
 
-Consultar y exportar las inscripciones del proceso.
+Analizar las inscripciones del proceso con indicadores y gráficos, y exportarlas.
 
 ### 20.2. Procedimiento
 
-1. ingresar a `Reportes > Rep. Inscripciones`;
-2. aplicar filtros por modalidad, sede y turno si corresponde;
-3. revisar los indicadores (total inscritos, activas, pagos pendientes y anuladas) y el detalle por turno y aula;
-4. seleccionar `Exportar Excel`;
-5. verificar el archivo generado.
+1. ingresar a `Inscripciones > Reporte de inscripciones`;
+2. elegir el proceso (o `Todos los procesos`) y, si corresponde, la modalidad, la sede, el turno y el estado;
+3. revisar los indicadores: `Inscritos` (y cuántos desde el portal), `Activas`, `Pendientes` (con saldo y pago parcial) y `Recaudado` frente a lo esperado;
+4. revisar los gráficos:
+   - `Inscripciones por día`, hasta los últimos 31 días con inscripciones;
+   - `Estado de las inscripciones`;
+   - `Estado del pago`, `Sexo` y `Origen` (personal o portal en línea);
+   - `Por carrera`, `Por modalidad`, `Por turno` y `Por sede`, con barras divididas en activas, pendientes y anuladas;
+5. al pasar el mouse sobre un gráfico se ve su detalle; el botón `Tabla` de cada gráfico muestra las cifras exactas;
+6. seleccionar `Exportar Excel` para descargar el listado con los mismos filtros;
+7. verificar el archivo generado.
 
 La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6).
 
@@ -1059,10 +1085,12 @@ El portal es la parte pública del sistema; el postulante no necesita usuario. S
 ### 21.1. Inscripción en línea
 
 1. el postulante entra a `/postulante` y elige inscribirse;
-2. ingresa su DNI y el N° de operación de su pago;
-3. el sistema muestra sus pagos libres; marca los que usa y elige la modalidad de pago;
-4. completa los mismos datos de los pasos 2 a 4 del asistente;
-5. al terminar recibe su código de inscripción y puede descargar su ficha.
+2. ingresa su DNI y el N° de operación de su pago y selecciona `Verificar pago`:
+   - si no hay un pago libre con esos datos, ve un aviso que le pide revisar el voucher; si pagó hoy, el pago puede tardar en aparecer;
+   - si lo hay, ve sus pagos libres; marca los que usa y elige la modalidad de pago;
+3. el panel `Tenga a la mano` le recuerda lo que necesita: documento, número de operación, colegio y año de egreso, y la sede, carrera y turno;
+4. completa los mismos datos de los pasos 2 a 4 del asistente; el número de documento es el del pago y no se puede cambiar, y con 8 dígitos el tipo DNI se elige solo (si es otro documento, lo cambia);
+5. al terminar recibe su código de inscripción y puede usar `Descargar ficha`.
 
 Diferencias con el asistente del personal:
 
@@ -1077,7 +1105,9 @@ Diferencias con el asistente del personal:
 1. el postulante entra a `/postulante` y elige consultar;
 2. ingresa su DNI y el N° de operación de cualquiera de sus pagos;
 3. el sistema muestra el estado de la inscripción y su aula;
-4. puede descargar la ficha y, si la inscripción está activa, el carnet.
+4. puede usar `Descargar ficha` y, si la inscripción está activa, `Descargar carnet`.
+
+Si el postulante pagó pero no terminó de inscribirse, la consulta muestra el aviso `Aún no completa su inscripción` con el botón `Inscribirme`, que lo lleva a la inscripción en línea. Si no hay pago ni inscripción con esos datos, indica que no se encontró la inscripción.
 
 Los enlaces de descarga vencen a los 60 minutos; si vencen, basta con volver a consultar.
 
@@ -1122,7 +1152,9 @@ Para una operación ordenada, se recomienda seguir este flujo:
 6. dejar un turno sin aulas con capacidad en el proceso;
 7. olvidar aprobar las inscripciones del portal;
 8. entregar carnets sin haber configurado la firma y el director;
-9. asignar permisos excesivos a usuarios operativos.
+9. asignar permisos excesivos a usuarios operativos;
+10. confundir la lengua materna: quien habla castellano desde niño marca `CASTELLANO`, no `NATIVA`;
+11. ignorar los pendientes de `Para atender` en el inicio, sobre todo las inscripciones activas sin aula.
 
 ## 25. Datos demo cargados para el manual
 

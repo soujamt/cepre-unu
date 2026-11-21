@@ -2,12 +2,14 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE INSTALACION DEL SISTEMA
 
-**Versión:** 1.1  
+**Versión:** 1.2  
 **Sistema:** CEPRE UNU  
 **Dirigido a:** personal técnico, soporte, desarrollo e implementación  
 **Fecha:** Noviembre 2026
 
 > **Cambios en la versión 1.1:** se agregó la sección 6.16, sobre la instalación automatizada con scripts y el uso del sistema en una red local con IP estática.
+
+> **Cambios en la versión 1.2:** el frontend pasó a Inertia 3 con React 19 y TypeScript (antes Livewire y Flux). Ahora se requiere **Node.js 20.19+ o 22.12+**; los scripts de Windows lo verifican y `iniciar-red-local` recompila los assets cuando el código cambió. Se agregaron la actualización a esta versión (6.16.10) y el despliegue automático en DOM Cloud (15.3).
 
 ---
 
@@ -27,7 +29,7 @@
 12. Configuración de base de datos en producción
 13. Configuración final de Laravel en producción
 14. Cola, cron y tareas recomendadas
-15. Despliegue inicial y actualización del sistema
+15. Despliegue inicial, actualización y despliegue automático
 16. Checklist de validación final
 17. Solución de problemas frecuentes
 18. Recomendaciones de seguridad
@@ -85,7 +87,7 @@ Componentes recomendados:
 - Windows 10 o superior;
 - Laravel Herd;
 - Herd Pro para MySQL local integrado;
-- Node.js incluido por Herd;
+- Node.js 22 LTS (el que incluye Herd, si su versión es 20.19+ o 22.12+);
 - PHP incluido por Herd;
 - Composer incluido por Herd;
 - proyecto Laravel servido en dominio `.test`.
@@ -98,7 +100,7 @@ Componentes recomendados:
 - Nginx;
 - PHP 8.4 y PHP-FPM;
 - Composer;
-- Node.js 20;
+- Node.js 22 LTS;
 - MySQL 8;
 - Laravel en modo producción;
 - SSL mediante Let’s Encrypt;
@@ -111,7 +113,7 @@ Según la configuración actual del proyecto, se recomienda trabajar con:
 
 - PHP 8.4 o superior;
 - Composer;
-- Node.js 20 o superior;
+- Node.js 20.19+ o 22.12+ (lo exige Vite 8; se recomienda Node.js 22 LTS);
 - NPM;
 - MySQL o MariaDB;
 - extensiones comunes de PHP para Laravel:
@@ -135,6 +137,7 @@ El proyecto utiliza además:
 - shadcn/ui;
 - Tailwind CSS 4;
 - Vite 8;
+- Laravel Wayfinder, que genera las rutas tipadas del frontend durante `npm run build` (por eso la compilación necesita PHP en el PATH);
 - `maatwebsite/excel`.
 
 ## 6. Instalación local en Windows con Herd y MySQL
@@ -273,8 +276,10 @@ Dentro de la carpeta del proyecto:
 
 ```powershell
 composer install
-npm install
+npm ci
 ```
+
+`npm ci` instala las versiones exactas de `package-lock.json`. Antes, verificar la versión de Node con `node -v` (20.19+ o 22.12+).
 
 Resultado esperado:
 
@@ -420,7 +425,7 @@ El repositorio incluye scripts para Windows que automatizan los pasos 6.9 a 6.14
 
 ### 6.16.1. Requisitos previos
 
-1. Laravel Herd instalado (provee PHP, Composer y Node.js), con **PHP 8.4 o superior** seleccionado y las extensiones `gd`, `zip`, `mbstring`, `dom`, `fileinfo` y `pdo_mysql` activas. Los scripts lo verifican.
+1. Laravel Herd instalado (provee PHP, Composer y Node.js), con **PHP 8.4 o superior** seleccionado y las extensiones `gd`, `zip`, `mbstring`, `dom`, `fileinfo` y `pdo_mysql` activas, y **Node.js 20.19+ o 22.12+** (si el de Herd es más antiguo, instalar Node.js 22 LTS). Los scripts verifican PHP, las extensiones y Node.
 2. MySQL en funcionamiento: Herd Pro, una instalación aparte o el contenedor Docker del proyecto (ver 6.16.9).
 3. Git instalado.
 
@@ -451,7 +456,7 @@ El script:
 La base queda con:
 
 - seguridad: permisos, rol `ADMINISTRADOR` y usuario `superadmin`;
-- mantenedores: carreras, sedes con sus carreras, modalidades, lugares de inscripción con sus modalidades, ofertas base, turnos y conceptos de pago;
+- mantenedores: carreras, sedes, modalidades, turnos y conceptos de pago;
 - catálogos generales: ubigeo, países, nacionalidades, colegios, tipos de documento, estados civiles, lenguas, identidades étnicas y discapacidades.
 
 La base queda **sin** procesos, ofertas por proceso, aulas por proceso, reglas de pago, inscripciones ni importaciones del banco. Esa configuración se realiza desde el sistema, siguiendo el orden de `FLUJO_PROCESOS_CEPRE.md`.
@@ -489,7 +494,7 @@ El script:
 
 - verifica que la IP pertenezca al equipo y avisa si es asignada por DHCP o si la red es Pública;
 - escribe `APP_URL=http://IP:PUERTO` en el `.env` (necesario para que funcionen el QR del carnet y los enlaces de la ficha y el carnet del portal del postulante);
-- compila los assets si faltan y elimina `public/hot`;
+- compila los assets si faltan o si algún archivo del frontend, de las rutas o de los controladores es más nuevo que la última compilación (por ejemplo, después de un `git pull`), y elimina `public/hot`;
 - regenera las cachés de Laravel;
 - crea la regla de firewall `CEPRE UNU (TCP PUERTO)` para redes Privadas y de Dominio;
 - inicia el servidor.
@@ -514,11 +519,12 @@ Para actualizar **sin perder datos** no se usa `instalar-entorno`, que borra la 
    ```
 
 3. Hacer doble clic en `actualizar-sistema.bat`. El script:
-   - verifica PHP 8.4 o superior y sus extensiones;
+   - verifica PHP 8.4 o superior, sus extensiones y la versión de Node.js;
    - respalda la base en `storage\app\respaldos` si `mysqldump` está en el PATH; si no, pide confirmar que ya se respaldó;
    - instala las dependencias PHP;
    - aplica solo las migraciones nuevas (`migrate --force`);
-   - reinstala las dependencias JS y compila los assets.
+   - reinstala las dependencias JS y compila los assets;
+   - limpia las cachés de Laravel.
 4. Iniciar el sistema con `iniciar-red-local.bat`.
 
 Si `git pull` avisa de cambios locales en `iniciar-red-local.bat` (por la IP y el puerto), guardarlos con `git stash`, hacer `git pull origin main` y recuperarlos con `git stash pop`.
@@ -531,7 +537,9 @@ Si `git pull` avisa de cambios locales en `iniciar-red-local.bat` (por la IP y e
 |---|---|---|
 | Los otros equipos no cargan la página | Firewall o red Pública | Ejecutar el `.bat` como administrador una vez y marcar la red como Privada. |
 | El script avisa que la IP no pertenece al equipo | La IP del `.bat` no coincide con la del adaptador | Corregir `IP` en el `.bat` o fijar la IP del equipo (6.16.4). |
-| La página carga sin estilos | Assets no compilados o existe `public/hot` | Ejecutar `.\iniciar-red-local.bat -Compilar`. |
+| La página carga sin estilos o en blanco | Assets no compilados, compilados con una versión anterior o existe `public/hot` | Ejecutar `.\iniciar-red-local.bat -Compilar`. |
+| `Unable to locate file in Vite manifest` | La compilación es de una versión anterior | Ejecutar `actualizar-sistema.bat` o `.\iniciar-red-local.bat -Compilar`. |
+| `Se requiere Node.js 20.19+ o 22.12+` | Node.js antiguo | Instalar Node.js 22 LTS, cerrar y volver a abrir la consola, y repetir. |
 | Error 500 al ingresar | MySQL detenido o datos `DB_*` incorrectos | Iniciar MySQL y revisar el `.env`. Ver `storage/logs`. |
 | El QR del carnet o los enlaces de la ficha no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
 | Los scripts no se ejecutan | Política de ejecución de PowerShell | Usar siempre los `.bat`, que ya la omiten para estos scripts. |
@@ -573,6 +581,17 @@ Notas:
 - MySQL solo escucha en `127.0.0.1`: los demás equipos acceden al sistema web, no a la base de datos.
 - El contenedor se reinicia solo al encender el equipo, siempre que Docker Desktop esté configurado para iniciar con Windows.
 - Los datos se guardan en el volumen `cepre-unu-mysql-data`. `docker compose down` los conserva; **`docker compose down -v` los elimina**.
+
+### 6.16.10. Actualizar a la versión con React (noviembre 2026)
+
+Esta versión cambia el frontend completo (de Livewire a React) y agrega una migración (`CASTELLANO` como lengua materna). Los pasos son los de 6.16.7, con estos cuidados:
+
+1. Verificar Node.js antes de empezar: `node -v` debe mostrar 20.19+ o 22.12+. Si no, instalar Node.js 22 LTS y volver a abrir la consola.
+2. **Respaldar la base** (lo hace `actualizar-sistema.bat` si encuentra `mysqldump`); la migración modifica una columna de `tbl_persona`.
+3. Cerrar `iniciar-red-local`, ejecutar `git pull origin main` y luego `actualizar-sistema.bat`. La primera vez tarda más, porque reinstala todas las dependencias JS y compila React.
+4. Si el paso anterior falla, **no** iniciar el sistema: revisar el mensaje (ver la tabla de 6.16.8).
+5. Iniciar con `iniciar-red-local.bat` y, en los equipos de la red, recargar la página con `Ctrl + F5` la primera vez.
+6. Hacer una inscripción de prueba completa: pago, asistente, ficha y carnet.
 
 ## 7. Verificación de la instalación local
 
@@ -696,10 +715,10 @@ sudo mv composer.phar /usr/local/bin/composer
 composer --version
 ```
 
-## 9.6. Instalar Node.js 20
+## 9.6. Instalar Node.js 22 LTS
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 node -v
 npm -v
@@ -739,7 +758,7 @@ cd /var/www/cepre-unu
 
 ```bash
 composer install --no-dev --optimize-autoloader
-npm install
+npm ci
 npm run build
 ```
 
@@ -989,20 +1008,20 @@ Agregar:
 * * * * * cd /var/www/cepre-unu && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-## 15. Despliegue inicial y actualización del sistema
+## 15. Despliegue inicial, actualización y despliegue automático
 
 ## 15.1. Despliegue inicial resumido
 
 ```bash
 cd /var/www/cepre-unu
 composer install --no-dev --optimize-autoloader
-npm install
-npm run build
+npm ci
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --force
 php artisan db:seed --no-interaction --force
 php artisan storage:link
+npm run build
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
@@ -1016,9 +1035,10 @@ sudo systemctl reload nginx
 cd /var/www/cepre-unu
 git pull origin <rama-o-tag>
 composer install --no-dev --optimize-autoloader
-npm install
-npm run build
 php artisan migrate --force
+npm ci
+npm run build
+rm -f public/hot
 php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
@@ -1026,6 +1046,35 @@ php artisan view:cache
 php artisan queue:restart
 sudo systemctl reload nginx
 ```
+
+> `npm run build` se ejecuta después de `composer install` porque Wayfinder usa PHP para generar las rutas del frontend.
+
+## 15.3. Despliegue automático en DOM Cloud
+
+El servidor de producción actual está en DOM Cloud y se actualiza solo. El flujo de trabajo es:
+
+1. los cambios se hacen en la rama `develop`;
+2. al subir a `develop`, GitHub Actions (`.github/workflows/ci.yml`) revisa el estilo con Pint, los tipos de TypeScript, compila los assets y ejecuta los tests; **no despliega**;
+3. al unir `develop` en `main` y subir, se repite la revisión y, si pasa, el trabajo `Desplegar en DOM Cloud` llama al webhook de DOM Cloud, que en el servidor ejecuta:
+
+   ```bash
+   git reset --hard && git pull --ff-only origin main
+   composer install --no-dev --optimize-autoloader --no-interaction
+   php artisan migrate --force
+   npm ci
+   npm run build
+   rm -f public/hot
+   php artisan optimize:clear
+   php artisan optimize
+   chmod 0750 -R storage bootstrap/cache || true
+   ```
+
+Requisitos:
+
+- los secretos `WEBHOOK_SECRET` y `WEBHOOK_AUTH` configurados en el repositorio de GitHub;
+- Node.js 20.19+ o 22.12+ y PHP 8.4 en el servidor de DOM Cloud.
+
+Que el trabajo de despliegue termine en verde solo indica que DOM Cloud recibió la orden; después hay que abrir el sitio y revisar el registro del despliegue en DOM Cloud.
 
 ## 16. Checklist de validación final
 
@@ -1055,6 +1104,8 @@ Solución:
 ```bash
 npm run build
 ```
+
+En Windows con los scripts, ejecutar `actualizar-sistema.bat` o `.\iniciar-red-local.bat -Compilar`. Si existe `public/hot` sin que esté corriendo `npm run dev`, eliminarlo.
 
 En local, si se trabaja con servidor Vite:
 
