@@ -27,6 +27,7 @@ use Database\Seeders\UbigeoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia;
 
 uses(RefreshDatabase::class);
 
@@ -150,7 +151,7 @@ test('detail page shows assigned aula information', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($inscripcion->id_ins)))
         ->assertOk()
-        ->assertSee('Aula asignada')
-        ->assertSee('AULA DETALLE 2')
-        ->assertSee('PISO 2');
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('inscripciones/detalle')
+            ->where('postulacion.aula', fn (string $aula): bool => str_contains($aula, 'AULA DETALLE 2') && str_contains($aula, 'PISO 2')));
 });

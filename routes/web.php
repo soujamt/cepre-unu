@@ -13,6 +13,8 @@ use App\Http\Controllers\DocumentoInscripcionController;
 use App\Http\Controllers\FotoPostulanteController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\Inscripciones\FotoController;
+use App\Http\Controllers\Inscripciones\InscripcionController;
+use App\Http\Controllers\Inscripciones\InscripcionDetalleController;
 use App\Http\Controllers\Mantenedores\AulaController;
 use App\Http\Controllers\Mantenedores\CarreraController;
 use App\Http\Controllers\Mantenedores\ColegioController;
@@ -24,6 +26,7 @@ use App\Http\Controllers\Pagos\ImportacionPagoController;
 use App\Http\Controllers\Pagos\PagoController;
 use App\Http\Controllers\Pagos\ValidarPagoController;
 use App\Http\Controllers\Publico\PortalController;
+use App\Http\Controllers\Reportes\ReporteInscripcionController;
 use App\Http\Controllers\Seguridad\PermisoController;
 use App\Http\Controllers\Seguridad\RolController;
 use App\Http\Controllers\Seguridad\RolPermisosController;
@@ -159,9 +162,33 @@ Route::middleware('auth')->group(function (): void {
     Route::catalogo('/configuracion-academica/reglas-pago', 'reglas-pago', 'regla_pago', ReglaPagoController::class, 'regla');
 
     // Inscripciones
-    Route::livewire('/inscripciones', 'pages::inscripciones.inscripciones')
+    Route::get('/inscripciones', [InscripcionController::class, 'index'])
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.index');
+
+    Route::get('/inscripciones/exportar', [InscripcionController::class, 'exportar'])
+        ->middleware('permiso:inscripcion_exportar_excel')
+        ->name('inscripciones.exportar');
+
+    Route::get('/inscripciones/carnets', [InscripcionController::class, 'carnets'])
+        ->middleware('permiso:inscripcion_indice')
+        ->name('inscripciones.carnets');
+
+    Route::post('/inscripciones/{inscripcion}/aprobar', [InscripcionController::class, 'aprobar'])
+        ->middleware('permiso:inscripcion_estado')
+        ->name('inscripciones.aprobar');
+
+    Route::post('/inscripciones/{inscripcion}/anular', [InscripcionController::class, 'anular'])
+        ->middleware('permiso:inscripcion_estado')
+        ->name('inscripciones.anular');
+
+    Route::get('/inscripciones/{inscripcion}/aulas', [InscripcionController::class, 'aulasDisponibles'])
+        ->middleware('permiso:inscripcion_editar')
+        ->name('inscripciones.aulas');
+
+    Route::put('/inscripciones/{inscripcion}/aula', [InscripcionController::class, 'asignarAula'])
+        ->middleware('permiso:inscripcion_editar')
+        ->name('inscripciones.aula');
 
     Route::livewire('/inscripciones/nueva', 'pages::inscripciones.inscripcion-crear')
         ->middleware('permiso:inscripcion_crear')
@@ -171,7 +198,7 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:inscripcion_crear')
         ->name('inscripciones.continuar');
 
-    Route::livewire('/inscripciones/{inscripcion}/detalle', 'pages::inscripciones.inscripcion-detalle')
+    Route::get('/inscripciones/{inscripcion}/detalle', InscripcionDetalleController::class)
         ->middleware('permiso:inscripcion_indice')
         ->name('inscripciones.detalle');
 
@@ -252,7 +279,11 @@ Route::middleware('auth')->group(function (): void {
         ->name('pagos.validar.confirmar');
 
     // Reportes
-    Route::livewire('/reportes/inscripciones', 'pages::reportes.inscripciones')
+    Route::get('/reportes/inscripciones', [ReporteInscripcionController::class, 'index'])
         ->middleware('permiso:reporte_inscripcion_indice')
         ->name('reportes.inscripciones.index');
+
+    Route::get('/reportes/inscripciones/exportar', [ReporteInscripcionController::class, 'exportar'])
+        ->middleware('permiso:reporte_inscripcion_exportar_excel')
+        ->name('reportes.inscripciones.exportar');
 });

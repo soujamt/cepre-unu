@@ -1,4 +1,4 @@
-import { Alert, ChevronDown, CircleCheck, Clock, Eraser, Filter, Lock, SquareCheck, SquareX } from '@keyline-icons/react';
+import { Alert, Ban, ChevronDown, CircleCheck, Clock, Eraser, Filter, Lock, SquareCheck, SquareX } from '@keyline-icons/react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -9,6 +9,8 @@ const todosLosEstados = [
     { valor: 'PENDIENTE', etiqueta: 'Pendiente', icono: Clock, color: 'text-amber-500' },
     { valor: 'PROCESADO', etiqueta: 'Procesado', icono: CircleCheck, color: 'text-green-500' },
     { valor: 'OBSERVADO', etiqueta: 'Observado', icono: Alert, color: 'text-red-500' },
+    { valor: 'ACTIVO', etiqueta: 'Activo', icono: CircleCheck, color: 'text-green-500' },
+    { valor: 'ANULADO', etiqueta: 'Anulado', icono: Ban, color: 'text-red-500' },
 ];
 
 const estadosCatalogo = ['HABILITADO', 'DESHABILITADO'];

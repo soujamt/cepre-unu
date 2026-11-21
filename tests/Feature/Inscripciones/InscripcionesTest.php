@@ -23,7 +23,8 @@ use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Support\SessionKey;
+use Inertia\Testing\AssertableInertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
@@ -214,7 +215,7 @@ test('authorized users can access inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.index'))
         ->assertOk()
-        ->assertSee('Inscripciones');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('inscripciones/inscripciones')->has('inscripciones.data')->has('opciones.estados', 3));
 });
 
 test('authenticated users without permiso cannot access inscripciones page', function () {
@@ -232,25 +233,22 @@ test('users can filter inscripciones by search process and state', function () {
     $contextoPendiente = crearContextoListadoInscripcion(1, 'PENDIENTE');
     $contextoActivo = crearContextoListadoInscripcion(2, 'ACTIVO');
 
-    $this->actingAs($usuario);
+    $codigos = fn (array $consulta): array => collect($this->actingAs($usuario)->get(route('inscripciones.index', $consulta))->inertiaProps('inscripciones.data'))
+        ->pluck('codigo')
+        ->sort()
+        ->values()
+        ->all();
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertSee('INS-1')
-        ->assertSee('INS-2')
-        ->assertSee($contextoPendiente['aula']->nombre_aul)
-        ->assertSee($contextoActivo['aula']->nombre_aul)
-        ->set('buscar', $contextoPendiente['persona']->numero_documento_per)
-        ->assertSee('INS-1')
-        ->assertDontSee('INS-2')
-        ->set('buscar', '')
-        ->set('idProceso', (string) $contextoActivo['proceso']->id_pro)
-        ->assertSee('INS-2')
-        ->assertDontSee('INS-1')
-        ->set('idProceso', '')
-        ->set('filtroEstado.ACTIVO', true)
-        ->assertSee('INS-2')
-        ->assertDontSee('INS-1');
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('inscripciones.data', fn ($filas): bool => collect($filas)->pluck('aula')->contains($contextoPendiente['aula']->nombre_aul)
+                && collect($filas)->pluck('aula')->contains($contextoActivo['aula']->nombre_aul)));
+
+    expect($codigos(['proceso' => 'todos']))->toBe(['INS-1', 'INS-2'])
+        ->and($codigos(['proceso' => 'todos', 'buscar' => $contextoPendiente['persona']->numero_documento_per]))->toBe(['INS-1'])
+        ->and($codigos(['proceso' => $contextoActivo['proceso']->id_pro]))->toBe(['INS-2'])
+        ->and($codigos(['proceso' => 'todos', 'estado' => ['ACTIVO']]))->toBe(['INS-2']);
 });
 
 test('list defaults to the current proceso and can filter by proceso modalidad and sede', function () {
@@ -272,22 +270,16 @@ test('list defaults to the current proceso and can filter by proceso modalidad a
         'fecha_fin_pro' => '2026-02-28',
     ]);
 
-    $this->actingAs($usuario);
+    $codigos = fn (array $consulta): array => collect($this->actingAs($usuario)->get(route('inscripciones.index', $consulta))->inertiaProps('inscripciones.data'))->pluck('codigo')->all();
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->assertSet('idProceso', (string) $contextoProcesoActual['proceso']->id_pro)
-        ->assertSee('INS-9')
-        ->assertDontSee('INS-10')
-        ->set('idProceso', (string) $contextoOtroProceso['proceso']->id_pro)
-        ->assertSee('INS-10')
-        ->assertDontSee('INS-9')
-        ->set('idProceso', (string) $contextoProcesoActual['proceso']->id_pro)
-        ->set('idModalidad', (string) $contextoProcesoActual['modalidad']->id_mad)
-        ->assertSee('INS-9')
-        ->assertDontSee('INS-10')
-        ->set('idSede', (string) $contextoProcesoActual['sede']->id_sed)
-        ->assertSee('INS-9')
-        ->assertDontSee('INS-10');
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('filtros.proceso', (string) $contextoProcesoActual['proceso']->id_pro));
+
+    expect($codigos([]))->toBe(['INS-9'])
+        ->and($codigos(['proceso' => $contextoOtroProceso['proceso']->id_pro]))->toBe(['INS-10'])
+        ->and($codigos(['proceso' => $contextoProcesoActual['proceso']->id_pro, 'modalidad' => $contextoProcesoActual['modalidad']->id_mad]))->toBe(['INS-9'])
+        ->and($codigos(['proceso' => $contextoProcesoActual['proceso']->id_pro, 'sede' => $contextoProcesoActual['sede']->id_sed]))->toBe(['INS-9']);
 
     Carbon::setTestNow();
 });
@@ -300,12 +292,13 @@ test('inscripciones summary shows counts by state', function () {
     crearContextoListadoInscripcion(2, 'ACTIVO');
     crearContextoListadoInscripcion(3, 'ANULADO');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertSee('3')
-        ->assertSee('1');
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('resumen.total', 3)
+            ->where('resumen.activas', 1)
+            ->where('resumen.pendientes', 1)
+            ->where('resumen.anuladas', 1));
 });
 
 test('authorized users can access inscripcion detail page', function () {
@@ -317,11 +310,12 @@ test('authorized users can access inscripcion detail page', function () {
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($contextoActivo['inscripcion']->id_ins)))
         ->assertOk()
-        ->assertSee('Detalle de inscripción')
-        ->assertSee($contextoActivo['inscripcion']->codigo_ins)
-        ->assertSee($contextoActivo['persona']->numero_documento_per)
-        ->assertSee($contextoActivo['proceso']->nombre_pro)
-        ->assertSee($contextoActivo['aula']->nombre_aul);
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('inscripciones/detalle')
+            ->where('inscripcion.codigo', $contextoActivo['inscripcion']->codigo_ins)
+            ->where('persona.documento', $contextoActivo['persona']->numero_documento_per)
+            ->where('inscripcion.proceso', $contextoActivo['proceso']->nombre_pro)
+            ->where('postulacion.aula', fn (string $aula): bool => str_contains($aula, $contextoActivo['aula']->nombre_aul)));
 });
 
 test('authorized users can access inscripcion detail page even when the inscripcion is pending or annulled', function () {
@@ -334,14 +328,12 @@ test('authorized users can access inscripcion detail page even when the inscripc
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($contextoPendiente['inscripcion']->id_ins)))
         ->assertOk()
-        ->assertSee($contextoPendiente['inscripcion']->codigo_ins)
-        ->assertSee($contextoPendiente['persona']->numero_documento_per);
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('inscripcion.codigo', $contextoPendiente['inscripcion']->codigo_ins)->where('persona.documento', $contextoPendiente['persona']->numero_documento_per));
 
     $this->actingAs($usuario)
         ->get(route('inscripciones.detalle', encode($contextoAnulado['inscripcion']->id_ins)))
         ->assertOk()
-        ->assertSee($contextoAnulado['inscripcion']->codigo_ins)
-        ->assertSee($contextoAnulado['persona']->numero_documento_per);
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('inscripcion.estado', 'ANULADO')->where('persona.documento', $contextoAnulado['persona']->numero_documento_per));
 });
 
 test('list shows detail action for active and pending inscripciones and continue action for pending ones', function () {
@@ -351,12 +343,11 @@ test('list shows detail action for active and pending inscripciones and continue
     crearContextoListadoInscripcion(5, 'ACTIVO');
     crearContextoListadoInscripcion(6, 'PENDIENTE');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertSee('Ver detalle')
-        ->assertSee('Continuar registro');
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('inscripciones.data', fn ($filas): bool => collect($filas)->pluck('estado')->sort()->values()->all() === ['ACTIVO', 'PENDIENTE'])
+            ->where('auth.permisos.claves', fn ($claves): bool => collect($claves)->contains('inscripcion_crear')));
 });
 
 test('report list does not show continue action when user lacks inscripcion crear permiso', function () {
@@ -365,11 +356,9 @@ test('report list does not show continue action when user lacks inscripcion crea
 
     crearContextoListadoInscripcion(61, 'PENDIENTE');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertDontSee('Continuar registro');
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('auth.permisos.claves', fn ($claves): bool => ! collect($claves)->contains('inscripcion_crear')));
 });
 
 test('users can export inscripciones to excel preserving current filters', function () {
@@ -400,12 +389,7 @@ test('users can export inscripciones to excel preserving current filters', funct
         'observacion_ins' => 'Registro exportable',
     ]);
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->set('filtroEstado.PENDIENTE', true)
-        ->call('exportarExcel');
+    $this->actingAs($usuario)->get(route('inscripciones.exportar', ['proceso' => 'todos', 'estado' => ['PENDIENTE']]));
 
     Excel::assertDownloaded('inscripciones-cepre-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export): bool {
         $rows = $export->collection();
@@ -433,11 +417,8 @@ test('users without export permiso cannot export inscripciones to excel', functi
 
     crearContextoListadoInscripcion(11, 'ACTIVO');
 
-    $this->actingAs($usuario);
-
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->call('exportarExcel')
+    $this->actingAs($usuario)
+        ->get(route('inscripciones.exportar', ['proceso' => 'todos']))
         ->assertForbidden();
 });
 
@@ -447,13 +428,14 @@ test('anular inscripcion libera el aula asignada', function () {
 
     $contextoActivo = crearContextoListadoInscripcion(90, 'ACTIVO');
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->post(route('inscripciones.anular', encode($contextoActivo['inscripcion']->id_ins)), ['motivo' => 'corto'])
+        ->assertSessionHasErrors(['motivo' => 'El motivo debe tener al menos 10 caracteres.']);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idInscripcionAnular', $contextoActivo['inscripcion']->id_ins)
-        ->set('motivoAnulacion', 'Anulación por desistimiento del postulante.')
-        ->call('anularInscripcion')
-        ->assertHasNoErrors();
+    $this->actingAs($usuario)
+        ->post(route('inscripciones.anular', encode($contextoActivo['inscripcion']->id_ins)), ['motivo' => 'Anulación por desistimiento del postulante.'])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Inscripción anulada correctamente.']);
 
     expect($contextoActivo['inscripcion']->fresh()->estado_ins->value)->toBe('ANULADO')
         ->and($contextoActivo['inscripcion']->fresh()->id_proceso_aula)->toBeNull();
@@ -465,15 +447,32 @@ test('no se puede asignar aula a una inscripcion anulada', function () {
 
     $contextoAnulado = crearContextoListadoInscripcion(91, 'ANULADO');
 
-    $this->actingAs($usuario);
+    $this->actingAs($usuario)
+        ->getJson(route('inscripciones.aulas', encode($contextoAnulado['inscripcion']->id_ins)))
+        ->assertUnprocessable()
+        ->assertJson(['message' => 'No se puede asignar aula a una inscripción anulada.']);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->call('abrirModalAsignarAula', $contextoAnulado['inscripcion']->id_ins)
-        ->assertDispatched('toast', message: 'No se puede asignar aula a una inscripción anulada.', type: 'error');
+    $this->actingAs($usuario)
+        ->put(route('inscripciones.aula', encode($contextoAnulado['inscripcion']->id_ins)), ['aula' => $contextoAnulado['procesoAula']->id_pau])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'No se puede asignar aula a una inscripción anulada.']);
+});
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idInscripcionAula', $contextoAnulado['inscripcion']->id_ins)
-        ->set('idProcesoAulaSeleccionada', (string) $contextoAnulado['procesoAula']->id_pau)
-        ->call('guardarAulaInscripcion')
-        ->assertDispatched('toast', message: 'No se puede asignar aula a una inscripción anulada.', type: 'error');
+test('an aula with free capacity of the same proceso and turno can be assigned', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_editar']);
+    $contexto = crearContextoListadoInscripcion(92, 'ACTIVO');
+
+    $this->actingAs($usuario)
+        ->getJson(route('inscripciones.aulas', encode($contexto['inscripcion']->id_ins)))
+        ->assertOk()
+        ->assertJsonPath('actual', $contexto['procesoAula']->id_pau)
+        ->assertJsonPath('aulas.0.id', $contexto['procesoAula']->id_pau);
+
+    $contexto['inscripcion']->update(['id_proceso_aula' => null]);
+
+    $this->actingAs($usuario)
+        ->put(route('inscripciones.aula', encode($contexto['inscripcion']->id_ins)), ['aula' => $contexto['procesoAula']->id_pau])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Aula asignada correctamente.']);
+
+    expect($contexto['inscripcion']->fresh()->id_proceso_aula)->toBe($contexto['procesoAula']->id_pau);
 });

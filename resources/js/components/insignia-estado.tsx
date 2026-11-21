@@ -23,6 +23,8 @@ const variantes: Record<string, Variante> = {
     PARCIAL: 'aviso',
     'EN REVISIÓN': 'aviso',
     LIBRE: 'info',
+    EXONERADO: 'info',
+    'SIN REGLA': 'secondary',
     REGISTRADO: 'default',
     CERRADO: 'secondary',
 };

@@ -48,6 +48,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Features\SupportTesting\Testable;
@@ -349,11 +350,11 @@ test('staff approves an online inscripcion and it becomes active when the paymen
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->set('idProceso', '')
-        ->assertSee('En revisión (1)')
-        ->call('aprobarRevision', $inscripcion->id_ins)
-        ->assertDispatched('toast', message: "Inscripción {$inscripcion->codigo_ins} aprobada.", type: 'success');
+    $this->get(route('inscripciones.index', ['proceso' => 'todos']))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('totalEnRevision', 1));
+
+    $this->post(route('inscripciones.aprobar', encode($inscripcion->id_ins)))
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => "Inscripción {$inscripcion->codigo_ins} aprobada."]);
 
     $inscripcion->refresh();
 
@@ -370,9 +371,7 @@ test('users without estado permiso cannot approve online inscripciones', functio
 
     $this->actingAs(personalQueRevisa(['inscripcion_indice']));
 
-    Livewire::test('pages::inscripciones.inscripciones')
-        ->call('aprobarRevision', $inscripcion->id_ins)
-        ->assertForbidden();
+    $this->post(route('inscripciones.aprobar', encode($inscripcion->id_ins)))->assertForbidden();
 
     expect($inscripcion->refresh()->enRevision())->toBeTrue();
 });

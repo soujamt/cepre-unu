@@ -24,7 +24,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Livewire\Livewire;
+use Inertia\Testing\AssertableInertia;
 use Maatwebsite\Excel\Facades\Excel;
 
 uses(RefreshDatabase::class);
@@ -201,7 +201,7 @@ test('authorized users can access reportes de inscripciones page', function () {
     $this->actingAs($usuario)
         ->get(route('reportes.inscripciones.index'))
         ->assertOk()
-        ->assertSee('Reportes de inscripciones');
+        ->assertInertia(fn (AssertableInertia $page) => $page->component('reportes/inscripciones')->has('resumen')->has('porCarrera'));
 });
 
 test('users without reporte permiso cannot access reportes de inscripciones page', function () {
@@ -261,16 +261,17 @@ test('reportes de inscripciones defaults to current semester and filters data', 
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::reportes.inscripciones')
-        ->assertSet('idProceso', (string) $contextoActual['proceso']->id_pro)
-        ->assertSee('CARRERA REPORTE 2')
-        ->assertSee('MODALIDAD REPORTE 2')
-        ->assertDontSee('CARRERA REPORTE 3')
-        ->set('idProceso', '')
-        ->assertSee('CARRERA REPORTE 2')
-        ->assertSee('CARRERA REPORTE 3')
-        ->set('idProceso', (string) $contextoActual['proceso']->id_pro)
-        ->assertDontSee('CARRERA REPORTE 3');
+    $carreras = fn (array $consulta): array => collect($this->get(route('reportes.inscripciones.index', $consulta))->inertiaProps('porCarrera'))->pluck('nombre')->sort()->values()->all();
+
+    $this->get(route('reportes.inscripciones.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('filtros.proceso', (string) $contextoActual['proceso']->id_pro)
+            ->where('porModalidad.0.nombre', 'MODALIDAD REPORTE 2')
+            ->where('resumen.pagoParcial', 1));
+
+    expect($carreras([]))->toBe(['CARRERA REPORTE 2'])
+        ->and($carreras(['proceso' => 'todos']))->toBe(['CARRERA REPORTE 2', 'CARRERA REPORTE 3'])
+        ->and($carreras(['proceso' => $contextoActual['proceso']->id_pro]))->toBe(['CARRERA REPORTE 2']);
 });
 
 test('authorized users can export reporte inscripciones with names instead of admission codes', function () {
@@ -285,10 +286,7 @@ test('authorized users can export reporte inscripciones with names instead of ad
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::reportes.inscripciones')
-        ->set('idProceso', '')
-        ->set('idProceso', (string) $contextoA['proceso']->id_pro)
-        ->call('exportarExcel');
+    $this->get(route('reportes.inscripciones.exportar', ['proceso' => $contextoA['proceso']->id_pro]));
 
     Excel::assertDownloaded('reporte-inscripciones-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export) use ($contextoA): bool {
         $rows = $export->collection();
@@ -317,10 +315,7 @@ test('users without exportar_excel permiso cannot export reporte inscripciones',
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::reportes.inscripciones')
-        ->set('idProceso', '')
-        ->call('exportarExcel')
-        ->assertForbidden();
+    $this->get(route('reportes.inscripciones.exportar', ['proceso' => 'todos']))->assertForbidden();
 });
 
 test('reportes page hides export button when user lacks exportar_excel permiso', function () {
@@ -333,8 +328,8 @@ test('reportes page hides export button when user lacks exportar_excel permiso',
 
     $this->actingAs($usuario);
 
-    Livewire::test('pages::reportes.inscripciones')
-        ->assertDontSee('Exportar Excel');
+    $this->get(route('reportes.inscripciones.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->where('auth.permisos.claves', fn ($claves): bool => ! collect($claves)->contains('reporte_inscripcion_exportar_excel')));
 
     Carbon::setTestNow();
 });
