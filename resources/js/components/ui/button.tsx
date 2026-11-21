@@ -8,7 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Botón principal del sistema: color institucional con borde y brillo interior.
+        // Botón principal: #296FF0 con borde degradado, sombra, brillo interior y anillo del mismo color.
         default: "btn-primario",
         destructive:
           "bg-red-500 text-white shadow-xs hover:bg-red-600 focus-visible:ring-red-500/30",

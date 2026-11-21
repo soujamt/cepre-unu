@@ -201,7 +201,7 @@ export default function Inicio({ proceso, estadisticas, actividadHoy, alertas, r
                                         <p className="text-xs font-semibold tracking-[0.18em] text-emerald-600 uppercase dark:text-emerald-400">Proceso vigente</p>
                                         <h3 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-white">{proceso.nombre}</h3>
                                     </div>
-                                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                    <span className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300">
                                         En curso
                                     </span>
                                 </div>
@@ -350,12 +350,12 @@ export default function Inicio({ proceso, estadisticas, actividadHoy, alertas, r
                                     <>
                                         <div className="mb-4 flex flex-wrap gap-2">
                                             {(alertasPorTono.warning ?? 0) > 0 && (
-                                                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+                                                <span className="rounded-md border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
                                                     {alertasPorTono.warning} por atender
                                                 </span>
                                             )}
                                             {(alertasPorTono.danger ?? 0) > 0 && (
-                                                <span className="rounded-full border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
+                                                <span className="rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs font-semibold text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300">
                                                     {alertasPorTono.danger} urgente{alertasPorTono.danger > 1 ? 's' : ''}
                                                 </span>
                                             )}
@@ -377,7 +377,7 @@ export default function Inicio({ proceso, estadisticas, actividadHoy, alertas, r
                                                                     <p className="mt-1 text-xs opacity-90">{alerta.detalle}</p>
                                                                 </div>
                                                             </div>
-                                                            <span className={cn('rounded-full border px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap', estilo.insignia)}>{estilo.etiqueta}</span>
+                                                            <span className={cn('rounded-md border px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap', estilo.insignia)}>{estilo.etiqueta}</span>
                                                         </div>
                                                     </div>
                                                 );

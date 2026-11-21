@@ -9,7 +9,7 @@
 @source '../views/app.blade.php';
 
 /**
- * Variables de shadcn/ui con la paleta del sistema: Abyss Blue como color
+ * Variables de shadcn/ui con la paleta del sistema: azul #296FF0 como color
  * principal y los neutros de la escala zinc.
  */
 :root {
@@ -112,6 +112,11 @@
         font-variant-numeric: tabular-nums;
     }
 
+    /** Los íconos mantienen su tamaño aunque el texto de al lado ocupe poco espacio. **/
+    svg {
+        flex-shrink: 0;
+    }
+
     button,
     [role='button'] {
         cursor: pointer;
@@ -119,8 +124,9 @@
 }
 
 /**
- * Botón primario: relleno del color principal, borde interno degradado blanco al 40 %,
- * sombra exterior suave, brillo interior y anillo del color principal.
+ * Botón primario: relleno #296FF0, borde interno de 1 px degradado blanco al 40 %,
+ * sombra negra al 20 % (Y 3, desenfoque 6), brillo interior blanco al 24 %
+ * (desenfoque 6, expansión 2) y anillo de 1 px del mismo color.
  */
 @utility btn-primario {
     color: var(--color-white);

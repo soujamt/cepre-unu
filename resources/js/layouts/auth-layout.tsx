@@ -32,7 +32,7 @@ const modulos = [
 function PanelIlustrativo() {
     return (
         <section className="relative hidden p-3 lg:block" aria-hidden="true">
-            <div className="relative h-full overflow-hidden rounded-[1.75rem] bg-[linear-gradient(160deg,var(--color-index-400)_0%,var(--color-index-500)_45%,var(--color-index-700)_100%)] dark:bg-[linear-gradient(160deg,var(--color-index-800)_0%,var(--color-index-900)_50%,var(--color-index-950)_100%)]">
+            <div className="relative h-full overflow-hidden rounded-xl bg-[linear-gradient(160deg,var(--color-index-400)_0%,var(--color-index-500)_45%,var(--color-index-700)_100%)] dark:bg-[linear-gradient(160deg,var(--color-index-800)_0%,var(--color-index-900)_50%,var(--color-index-950)_100%)]">
                 <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:40px_40px] [mask-image:radial-gradient(ellipse_at_center,black_35%,transparent_80%)]" />
                 <div className="absolute -top-24 -right-24 size-96 rounded-full bg-white/20 blur-3xl dark:bg-index-500/20" />
                 <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-index-300/30 blur-3xl dark:bg-index-600/20" />
@@ -46,7 +46,7 @@ function PanelIlustrativo() {
                                 <span className="size-2.5 rounded-full bg-green-400" />
                                 <span className="ms-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">Panel CEPRE · Inscripciones</span>
                             </div>
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-green-50 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:bg-green-500/10 dark:text-green-400">
                                 <span className="size-1.5 rounded-full bg-green-500" />
                                 Proceso activo
                             </span>
@@ -86,7 +86,7 @@ function PanelIlustrativo() {
                                     <div key={fila.estado} className="flex items-center gap-2">
                                         <span className="size-5 shrink-0 rounded-full bg-zinc-100 dark:bg-white/10" />
                                         <span className={`h-1.5 ${fila.ancho} rounded-full bg-zinc-200 dark:bg-white/15`} />
-                                        <span className={`ms-auto rounded-full px-1.5 py-0.5 text-[9px] font-medium ${fila.color}`}>{fila.estado}</span>
+                                        <span className={`ms-auto rounded-md px-1.5 py-0.5 text-[9px] font-medium ${fila.color}`}>{fila.estado}</span>
                                     </div>
                                 ))}
                             </div>
@@ -124,7 +124,7 @@ function PanelIlustrativo() {
                         <p className="mt-2 max-w-md text-2xl leading-snug font-semibold tracking-tight">Gestión académica del proceso de admisión, en un solo lugar.</p>
                         <div className="mt-5 flex flex-wrap gap-2">
                             {modulos.map(({ icono: Icono, texto }) => (
-                                <span key={texto} className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium">
+                                <span key={texto} className="inline-flex items-center gap-1.5 rounded-md border border-white/25 bg-white/10 px-3 py-1 text-xs font-medium">
                                     <Icono className="size-4" />
                                     {texto}
                                 </span>

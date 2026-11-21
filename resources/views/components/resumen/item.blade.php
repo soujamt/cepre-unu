@@ -30,7 +30,7 @@
 <div
     {{
         $attributes->class([
-            'flex min-w-0 flex-col justify-between gap-3 rounded-[0.55rem] border p-4 transition-shadow',
+            'flex min-w-0 flex-col justify-between gap-3 rounded-md border p-4 transition-shadow',
             'border-index-200 bg-index-50/70 shadow-card dark:border-index-500/25 dark:bg-index-500/10' => $destacado,
             'border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900 dark:shadow-none' => ! $destacado,
         ])

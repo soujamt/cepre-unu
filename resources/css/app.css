@@ -129,7 +129,7 @@ select:focus[data-flux-control] {
 }
 
 /**
- * Botón primario: relleno del color principal (Abyss Blue), borde interno degradado blanco al 40 %,
+ * Botón primario: relleno del color principal (#296FF0), borde interno degradado blanco al 40 %,
  * sombra exterior negra (y 3, blur 6, 20 %), sombra interior blanca
  * (blur 6, spread 2, 24 %) y anillo exterior del color principal.
  */

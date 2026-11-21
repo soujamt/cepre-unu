@@ -61,13 +61,13 @@ export function ResumenItem({ etiqueta, valor, icono: IconoItem, tono = 'neutro'
         <>
             <div className="flex items-start justify-between gap-3">
                 <p className={cn('text-sm font-medium', destacado ? 'text-index-600 dark:text-index-300' : 'text-zinc-600 dark:text-zinc-400')}>{etiqueta}</p>
-                {IconoItem && <IconoItem className={cn('size-5', destacado ? 'text-index-500 dark:text-index-300' : clasesIcono[tono])} />}
+                {IconoItem && <IconoItem className={cn('size-5 shrink-0', destacado ? 'text-index-500 dark:text-index-300' : clasesIcono[tono])} />}
             </div>
             <p className={cn('text-3xl leading-none font-semibold tracking-tight tabular-nums', destacado ? 'text-index-600 dark:text-index-300' : 'text-zinc-900 dark:text-white')}>{valor}</p>
             {detalle && (
                 <div className="flex min-h-5 flex-wrap items-center gap-1.5">
                     <span className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset', clasesDetalle[tono])}>
-                        {IconoDetalle && <IconoDetalle className="size-3.5" />}
+                        {IconoDetalle && <IconoDetalle className="size-3.5 shrink-0" />}
                         {detalle}
                     </span>
                 </div>
@@ -76,7 +76,7 @@ export function ResumenItem({ etiqueta, valor, icono: IconoItem, tono = 'neutro'
     );
 
     const clases = cn(
-        'flex min-w-0 flex-col justify-between gap-3 rounded-[0.55rem] border p-4 text-start transition-shadow',
+        'flex min-w-0 flex-col justify-between gap-3 rounded-md border p-4 text-start transition-shadow',
         destacado || activo
             ? 'border-index-200 bg-index-50/70 shadow-card dark:border-index-500/25 dark:bg-index-500/10'
             : 'border-zinc-200/80 bg-white shadow-card dark:border-white/[0.06] dark:bg-zinc-900 dark:shadow-none',
