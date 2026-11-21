@@ -6,6 +6,7 @@ use App\Enums\EstadoImportacionBancoDetalle;
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoProceso;
 use App\Enums\EstadoValidacionPago;
+use App\Models\FotoPostulante;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
 use App\Models\InscripcionPago;
@@ -67,7 +68,7 @@ class InicioController extends Controller
             ],
             'actividadHoy' => $this->actividadHoy($proceso),
             'alertas' => $this->alertas($proceso, $resumen),
-            'recientes' => $this->recientes($proceso),
+            'recientes' => $this->recientes($proceso, $this->puedeVerFotos()),
         ]);
     }
 
@@ -190,24 +191,37 @@ class InicioController extends Controller
     }
 
     /**
-     * @return list<array{id: string, codigo: string, nombre: string, iniciales: string, carrera: ?string, estado: string, fecha: ?string, hace: ?string}>
+     * Últimas inscripciones con la foto del postulante (solo si el usuario puede ver fotos).
+     *
+     * @return list<array{id: string, codigo: string, nombre: string, iniciales: string, foto: ?string, carrera: ?string, estado: string, fecha: ?string, hace: ?string}>
      */
-    private function recientes(Proceso $proceso): array
+    private function recientes(Proceso $proceso, bool $conFotos): array
     {
-        return Inscripcion::query()
+        $inscripciones = Inscripcion::query()
             ->with(['persona', 'carrera'])
             ->where('id_proceso', $proceso->id_pro)
             ->latest('fecha_inscripcion_ins')
             ->limit(6)
-            ->get()
-            ->map(function (Inscripcion $inscripcion): array {
+            ->get();
+
+        $fotos = $conFotos
+            ? FotoPostulante::query()
+                ->whereIn('numero_documento_fot', $inscripciones->pluck('persona.numero_documento_per')->filter()->all())
+                ->get()
+                ->keyBy('numero_documento_fot')
+            : collect();
+
+        return $inscripciones
+            ->map(function (Inscripcion $inscripcion) use ($fotos): array {
                 $persona = $inscripcion->persona;
+                $foto = $fotos->get((string) $persona?->numero_documento_per);
 
                 return [
                     'id' => encode($inscripcion->id_ins),
                     'codigo' => (string) $inscripcion->codigo_ins,
                     'nombre' => trim($this->tipoTitulo($persona?->nombres_per).' '.$this->tipoTitulo($persona?->apellido_paterno_per).' '.$this->tipoTitulo($persona?->apellido_materno_per)),
                     'iniciales' => mb_strtoupper(mb_substr((string) $persona?->nombres_per, 0, 1).mb_substr((string) $persona?->apellido_paterno_per, 0, 1), 'UTF-8'),
+                    'foto' => $foto instanceof FotoPostulante ? route('fotos.ver', $foto->numero_documento_fot).'?v='.$foto->actualizado_en?->timestamp : null,
                     'carrera' => $inscripcion->carrera ? $this->tipoTitulo($inscripcion->carrera->nombre_car) : null,
                     'estado' => $inscripcion->enRevision() ? 'En revisión' : $this->tipoTitulo($inscripcion->estado_ins?->getNombre()),
                     'fecha' => $inscripcion->fecha_inscripcion_ins?->format('d/m/Y h:i a'),
@@ -215,6 +229,17 @@ class InicioController extends Controller
                 ];
             })
             ->all();
+    }
+
+    /**
+     * Mismos permisos que exige la ruta fotos.ver.
+     */
+    private function puedeVerFotos(): bool
+    {
+        $usuario = request()->user();
+
+        return $usuario !== null && collect(['foto_indice', 'inscripcion_indice', 'inscripcion_crear'])
+            ->contains(fn (string $permiso): bool => $usuario->hasPermisoAccion($permiso));
     }
 
     /**

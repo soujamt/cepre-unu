@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { ArrowUpRight, CalendarDays, ChevronRight, CircleCheck, CircleDollarSign, ClipboardList, Clock, ShieldCheck, TrendingUp, Wallet } from '@keyline-icons/react/fill';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';
@@ -69,6 +70,7 @@ interface InscripcionReciente {
     codigo: string;
     nombre: string;
     iniciales: string;
+    foto: string | null;
     carrera: string | null;
     estado: string;
     fecha: string | null;
@@ -187,6 +189,34 @@ function CabeceraProceso({ proceso, resumen, actividadHoy, nombreUsuario }: { pr
     );
 }
 
+/**
+ * Foto del postulante en un círculo; si no tiene foto o no carga, sus iniciales.
+ */
+function AvatarPostulante({ foto, iniciales, nombre }: { foto: string | null; iniciales: string; nombre: string }) {
+    const [fallo, setFallo] = useState(false);
+
+    if (foto && !fallo) {
+        return (
+            <img
+                src={foto}
+                alt={`Foto de ${nombre}`}
+                loading="lazy"
+                onError={() => setFallo(true)}
+                className="size-10 shrink-0 rounded-full bg-zinc-100 object-cover object-top ring-2 ring-white shadow-[0_0_0_1px_rgba(16,24,40,0.08)] dark:bg-white/[0.06] dark:ring-zinc-900 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
+            />
+        );
+    }
+
+    return (
+        <span
+            title="Sin foto"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-index-50 to-index-100 text-xs font-semibold text-index-700 ring-1 ring-index-200/60 dark:from-index-500/15 dark:to-index-500/5 dark:text-index-200 dark:ring-index-400/20"
+        >
+            {iniciales || '?'}
+        </span>
+    );
+}
+
 function UltimasInscripciones({ recientes, puedeVer }: { recientes: InscripcionReciente[]; puedeVer: boolean }) {
     if (recientes.length === 0) {
         return <EstadoVacio icono={ClipboardList} titulo="Aún no hay inscripciones en este proceso." />;
@@ -197,9 +227,7 @@ function UltimasInscripciones({ recientes, puedeVer }: { recientes: InscripcionR
             {recientes.map((inscripcion) => {
                 const contenido = (
                     <>
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-index-50 to-index-100 text-xs font-semibold text-index-700 ring-1 ring-index-200/60 dark:from-index-500/15 dark:to-index-500/5 dark:text-index-200 dark:ring-index-400/20">
-                            {inscripcion.iniciales || '?'}
-                        </span>
+                        <AvatarPostulante foto={inscripcion.foto} iniciales={inscripcion.iniciales} nombre={inscripcion.nombre} />
                         <span className="min-w-0 flex-1">
                             <span className="block truncate text-sm font-medium text-zinc-900 dark:text-white">{inscripcion.nombre || 'Sin datos del postulante'}</span>
                             <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">

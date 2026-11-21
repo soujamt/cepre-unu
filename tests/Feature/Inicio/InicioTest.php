@@ -2,6 +2,7 @@
 
 use App\Enums\EstadoInscripcion;
 use App\Enums\EstadoObligacionPago;
+use App\Models\FotoPostulante;
 use App\Models\Inscripcion;
 use App\Models\InscripcionObligacionPago;
 use App\Models\Usuario;
@@ -20,6 +21,9 @@ test('the dashboard summarizes the enabled process', function () {
     InscripcionObligacionPago::query()
         ->where('id_inscripcion', $inscripciones->get(1)->id_ins)
         ->update(['estado_iop' => EstadoObligacionPago::Parcial->value]);
+
+    $documentoConFoto = $inscripciones->last()->persona->numero_documento_per;
+    FotoPostulante::query()->create(['numero_documento_fot' => $documentoConFoto, 'archivo_fot' => "fotos/{$documentoConFoto}.jpg"]);
 
     $this->actingAs(Usuario::query()->where('usuario_usu', 'superadmin')->sole())
         ->get(route('inicio'))
@@ -44,7 +48,9 @@ test('the dashboard summarizes the enabled process', function () {
             ->where('alertas.0.detalle', '1 inscripción con saldo pendiente o pago parcial.')
             ->has('recientes', 6)
             ->where('recientes.0.id', encode($inscripciones->last()->id_ins))
-            ->where('recientes.0.estado', 'Activo'));
+            ->where('recientes.0.estado', 'Activo')
+            ->where('recientes.0.foto', fn (string $foto): bool => str_starts_with($foto, route('fotos.ver', $documentoConFoto)))
+            ->where('recientes.1.foto', null));
 });
 
 test('the dashboard explains when there is no enabled process', function () {
