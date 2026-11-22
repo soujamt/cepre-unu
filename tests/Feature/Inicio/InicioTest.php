@@ -30,7 +30,7 @@ test('the dashboard summarizes the enabled process', function () {
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->component('inicio')
-            ->where('proceso.nombre', '2026-1')
+            ->where('proceso.nombre', '2026-I')
             ->where('resumen.total', 50)
             ->where('resumen.activas', 49)
             ->where('resumen.anuladas', 1)

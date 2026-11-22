@@ -511,7 +511,7 @@ Definir el proceso, el periodo en que estará abierto y el corte de año de egre
 1. ingresar a `Configuración académica > Procesos`;
 2. seleccionar `Nuevo`;
 3. registrar:
-   - nombre, con el formato `AAAA-N` (por ejemplo `2027-1`); de él salen los primeros dígitos del código de inscripción;
+   - nombre, con el año y el periodo en romanos: `2027-I`, `2027-II` o `2027-III` (si se escribe `2027-2`, el sistema lo guarda como `2027-II`). De él salen los primeros dígitos del código de inscripción;
    - apertura (fecha y hora);
    - cierre (fecha y hora);
    - año de egreso máximo para Ordinario;
@@ -760,6 +760,7 @@ Consultar y gestionar las inscripciones registradas.
    - `Continuar registro`, en las que quedaron a medio registrar;
    - `Aprobar revisión`, en las que están en revisión;
    - `Validar pago`, cuando tiene saldo por pagar;
+   - `Editar postulación`, en las activas o pendientes (ver 16.11);
    - `Asignar aula`;
    - `Ficha (PDF)` (no aparece en las anuladas);
    - `Carnet (PDF)` (solo en las activas);
@@ -771,6 +772,7 @@ Desde el listado también se puede:
 
 - `Nueva inscripción`;
 - `Excel`, con los filtros aplicados;
+- `Drive`: actualiza al momento las hojas `DATA` y `PAGOS` del proceso en el Drive de CEPRE UNU virtual, que usa el buscador de estudiantes. El sistema también lo hace solo cada 10 minutos. Al pasar el mouse muestra la última sincronización. El botón aparece solo cuando soporte técnico la configuró (manual de instalación, 6.16.11);
 - `Carnets`: un PDF con el carnet de todas las inscripciones activas que cumplen los filtros, uno por página.
 
 #### 16.1.3. Resultado esperado
@@ -912,7 +914,8 @@ Revisar en una sola pantalla toda la información del postulante.
    - `Pago`: lo pagado frente al total, las obligaciones y sus pagos;
 3. usar `Ficha` y `Carnet` para abrir los documentos;
 4. si la inscripción está en revisión, usar `Aprobar revisión`;
-5. si tiene saldo, `Validar un pago` lleva a la pantalla de validación con la inscripción ya buscada.
+5. si tiene saldo, `Validar un pago` lleva a la pantalla de validación con la inscripción ya buscada;
+6. `Editar postulación` cambia la sede, la carrera o el turno (ver 16.11). Los cambios hechos aparecen en `Historial de cambios`.
 
 #### 16.7.3. Resultado esperado
 
@@ -954,6 +957,18 @@ Solo se anulan inscripciones activas o en revisión. Al anular, el cupo del aula
 1. en el menú de la fila, seleccionar `Asignar aula`;
 2. elegir un aula habilitada del mismo proceso y turno; el sistema muestra cuántos inscritos tiene cada una y marca en rojo las llenas;
 3. seleccionar `Asignar aula`.
+
+### 16.11. Editar la postulación (sede, carrera o turno)
+
+Sirve para cambios puntuales que pide el postulante después de inscribirse, por ejemplo pasar al turno tarde o cambiar de carrera. Requiere el permiso de editar inscripciones.
+
+1. en el menú de la fila o en el detalle, seleccionar `Editar postulación`;
+2. elegir la nueva sede, carrera o turno. Solo se ofrecen las carreras habilitadas en esa sede del proceso, y cada turno muestra sus cupos libres (los turnos sin cupo no se pueden elegir);
+3. seleccionar `Revisar y confirmar`;
+4. revisar el cambio (antes → después), escribir el `Motivo del cambio` (mínimo 10 caracteres) y seleccionar `Confirmar cambio`;
+5. volver a imprimir la ficha y el carnet.
+
+Si cambia el turno, se libera el aula y se asigna una con cupo del nuevo turno; si ninguna tiene cupo, no se guarda nada. La modalidad no se cambia aquí, porque depende del año de egreso, y los pagos registrados se mantienen. Cada cambio queda en el `Historial de cambios` del detalle, con la fecha, el usuario y el motivo. Las inscripciones anuladas no se pueden editar.
 
 ## 17. Módulo Fotos
 
@@ -1069,7 +1084,7 @@ Analizar las inscripciones del proceso con indicadores y gráficos, y exportarla
 6. seleccionar `Exportar Excel` para descargar el listado con los mismos filtros;
 7. verificar el archivo generado.
 
-La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6).
+La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6). Sus dos primeras columnas son `NRO_REG` (el código de inscripción, el mismo `N° REG.` de la exportación de pagos) y `FECHA_Y_HORA`, y las filas salen en orden de registro. Así se puede pegar directamente en la hoja `DATA CEPRE-UNU` del Drive, igual que la exportación de pagos en la hoja `PAGOS`.
 
 ### 20.3. Resultado esperado
 
@@ -1160,7 +1175,7 @@ Para una operación ordenada, se recomienda seguir este flujo:
 
 Para elaborar capturas y demostraciones, los datos de prueba incluyen:
 
-- el proceso `2026-1`;
+- el proceso `2026-I`;
 - `50` inscripciones activas en la modalidad `ORDINARIO` y el turno `MAÑANA`;
 - personas con ubigeo de `UCAYALI / CORONEL PORTILLO`;
 - pagos registrados y aulas asignadas;

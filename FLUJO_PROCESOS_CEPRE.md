@@ -131,7 +131,7 @@ flowchart TD
 
 | # | Menú | Qué registrar | Depende de |
 |---|---|---|---|
-| 1 | Configuración académica › Procesos | Nombre (por ejemplo `2027-1`), fecha y hora de inicio y fin, y el **año de egreso máximo para ORDINARIO** | — |
+| 1 | Configuración académica › Procesos | Nombre con el periodo en romanos (por ejemplo `2027-I`), fecha y hora de inicio y fin, y el **año de egreso máximo para ORDINARIO** | — |
 | 2 | Configuración académica › Oferta del proceso | Modalidades CEPRE habilitadas y carreras habilitadas en cada sede | Proceso, Sedes, Carreras, Modalidades |
 | 3 | Configuración académica › Aulas por proceso › Asignar aulas | Turno, aula y capacidad | Proceso, Turnos, Aulas |
 | 4 | Configuración académica › Reglas de pago | Concepto, monto total, cuotas y monto mínimo de la primera, documento requerido (por ejemplo, N° de resolución de beca), vigencia y, si aplica, modalidad | Proceso, Conceptos de pago |
@@ -370,12 +370,14 @@ stateDiagram-v2
 
 1. **Cierre de procesos:** los procesos cuya fecha de fin ya pasó se marcan como `CERRADO` automáticamente.
 2. **Modalidad por año de egreso:** si el proceso no define el año máximo para ORDINARIO, se usa el año anterior al de inicio del proceso.
-3. **Código de inscripción:** dos últimos dígitos del año + número de periodo (tomados del nombre del proceso) + correlativo de 4 dígitos. Por ejemplo, la primera del proceso `2026-2` es `2620001`. Las inscripciones eliminadas cuentan, para no reutilizar códigos.
+3. **Código de inscripción:** dos últimos dígitos del año + número de periodo (tomados del nombre del proceso) + correlativo de 4 dígitos. Por ejemplo, la primera del proceso `2026-II` es `2620001`. Las inscripciones eliminadas cuentan, para no reutilizar códigos.
 4. **Capacidad de aulas:** se cuentan todas las inscripciones no anuladas del aula; al anular, el cupo se libera.
 5. **Vigencias:** las reglas de pago se validan contra la fecha del día.
 6. **Recaudación:** lo esperado es la suma de las obligaciones de las inscripciones no anuladas; lo recaudado, la suma de sus pagos verificados.
 7. **Ubigeo:** al abrir el buscador de ubigeo sin escribir se ofrecen los distritos de Ucayali, y al buscar, Ucayali aparece primero.
-8. **Exportación para Admisión:** el Excel con el formato CEPRE usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
+8. **Exportación para Admisión y el Drive:** el Excel con el formato CEPRE empieza con `NRO_REG` (código de inscripción) y `FECHA_Y_HORA`, en orden de registro, como la hoja `DATA CEPRE-UNU` del Drive. Usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
+9. **Sincronización con el Drive:** cada 10 minutos (y con el botón `Drive` del listado) el sistema reescribe las hojas `DATA CEPRE-UNU {periodo}` y `PAGOS {periodo}` del Drive de CEPRE UNU virtual mediante un Apps Script. Así el buscador de estudiantes muestra el aula al día aunque el sistema solo funcione en la red local.
+10. **Edición de la postulación:** sede, carrera o turno se cambian con confirmación y motivo; si cambia el turno se reasigna el aula. Cada cambio queda en el historial de la inscripción.
 
 ---
 

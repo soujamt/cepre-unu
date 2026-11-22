@@ -21,7 +21,7 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
         $proceso = Proceso::query()->updateOrCreate(
             ['codigo_pro' => '2026_1'],
             [
-                'nombre_pro' => '2026-1',
+                'nombre_pro' => '2026-I',
                 'fecha_inicio_pro' => '2026-04-01 00:00:00',
                 'fecha_fin_pro' => '2026-04-30 23:59:59',
                 'estado_pro' => EstadoProceso::Habilitado->value,

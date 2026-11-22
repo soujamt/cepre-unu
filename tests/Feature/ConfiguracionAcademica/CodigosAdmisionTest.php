@@ -227,6 +227,6 @@ test('the inscritos export uses the admision codes and falls back to names', fun
 
     $filas = (new InscripcionesFormatoCepreExport($inscripciones))->collection();
 
-    expect([$filas[0][31], $filas[0][32]])->toBe(['603', '2700'])
-        ->and([$filas[1][31], $filas[1][32]])->toBe(['603', 'DERECHO']);
+    expect([$filas[0][33], $filas[0][34]])->toBe(['603', '2700'])
+        ->and([$filas[1][33], $filas[1][34]])->toBe(['603', 'DERECHO']);
 });

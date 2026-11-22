@@ -35,6 +35,15 @@ return [
         ],
     ],
 
+    /*
+     * Aplicación web de Apps Script que recibe las hojas DATA y PAGOS del proceso
+     * (ver resources/drive/SincronizarCepre.gs y el manual de instalación).
+     */
+    'drive' => [
+        'url' => env('DRIVE_SYNC_URL'),
+        'token' => env('DRIVE_SYNC_TOKEN'),
+    ],
+
     'reniec' => [
         'url' => env('URL_API_RENIEC'),
         'token' => env('TOKEN_API_RENIEC', env('API_RENIEC_KEY')),

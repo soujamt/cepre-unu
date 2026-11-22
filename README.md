@@ -182,7 +182,7 @@ php artisan db:seed --class=AcademicBootstrapSeeder --no-interaction
 
 No ejecutar en producción si no deseas datos genéricos.
 
-Actualmente incluye el proceso `2026-1` con 50 inscripciones de demostración, sus pagos, aulas y el usuario `gestor.cepre`.
+Actualmente incluye el proceso `2026-I` con 50 inscripciones de demostración, sus pagos, aulas y el usuario `gestor.cepre`.
 
 Comando:
 

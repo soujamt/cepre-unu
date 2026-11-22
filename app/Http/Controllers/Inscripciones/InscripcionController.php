@@ -16,6 +16,7 @@ use App\Models\Sede;
 use App\Models\Turno;
 use App\Support\AsignadorAulaInscripcion;
 use App\Support\DocumentosInscripcion;
+use App\Support\Drive\SincronizadorDrive;
 use App\Support\InscripcionPagoManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -38,7 +39,7 @@ class InscripcionController extends Controller
     /** Valor del filtro de proceso para ver todos los procesos. */
     public const TODOS_LOS_PROCESOS = 'todos';
 
-    public function index(Request $request): Response
+    public function index(Request $request, SincronizadorDrive $drive): Response
     {
         $filtros = $this->filtros($request);
         $consulta = $this->consulta($filtros);
@@ -74,6 +75,10 @@ class InscripcionController extends Controller
             'inscripciones' => $inscripciones,
             'filtros' => $filtros,
             'resumen' => $this->resumen($consulta),
+            'drive' => [
+                'configurado' => $drive->configurado(),
+                'ultima' => $drive->ultimaSincronizacion()?->format('d/m/Y h:i a'),
+            ],
             'totalEnRevision' => Inscripcion::query()
                 ->where('requiere_revision_ins', true)
                 ->where('estado_ins', '!=', EstadoInscripcion::Anulado->value)
@@ -105,13 +110,8 @@ class InscripcionController extends Controller
     public function exportar(Request $request): BinaryFileResponse
     {
         $inscripciones = $this->consulta($this->filtros($request))
-            ->with([
-                'persona.tipoDocumento', 'persona.estadoCivil', 'persona.paisNacimiento', 'persona.nacionalidad',
-                'persona.ubigeoNacimiento', 'persona.ubigeoDomicilio', 'persona.tipoDiscapacidad', 'persona.identidadEtnica',
-                'persona.lenguaNativa', 'persona.lenguaExtranjera', 'paisColegio', 'colegio', 'tipoColegio', 'sede',
-                'modalidadAdmision', 'carrera',
-            ])
-            ->orderByDesc('id_ins')
+            ->with(InscripcionesFormatoCepreExport::RELACIONES)
+            ->orderBy('id_ins')
             ->get();
 
         return Excel::download(new InscripcionesFormatoCepreExport($inscripciones), 'inscripciones-cepre-'.now()->format('Ymd-His').'.xlsx');
@@ -332,14 +332,7 @@ class InscripcionController extends Controller
      */
     private function procesoPorDefecto(): string
     {
-        $vigente = Proceso::query()
-            ->where('fecha_inicio_pro', '<=', now())
-            ->where('fecha_fin_pro', '>=', now())
-            ->orderByDesc('fecha_inicio_pro')
-            ->orderByDesc('id_pro')
-            ->value('id_pro');
-
-        return (string) ($vigente ?? Proceso::query()->whereHas('inscripciones')->orderByDesc('fecha_inicio_pro')->orderByDesc('id_pro')->value('id_pro') ?? '');
+        return (string) (Proceso::actual()?->id_pro ?? '');
     }
 
     private function inscripcion(string $codificado): Inscripcion

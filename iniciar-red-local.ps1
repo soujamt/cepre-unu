@@ -12,7 +12,10 @@
       5. crea el enlace public/storage si falta;
       6. regenera las caches de Laravel;
       7. crea la regla de firewall para el puerto (requiere administrador);
-      8. inicia el servidor escuchando en todas las interfaces.
+      8. abre minimizada la ventana de tareas programadas (schedule:work), que
+         sincroniza las hojas DATA y PAGOS con el Drive cada 10 minutos si
+         DRIVE_SYNC_URL y DRIVE_SYNC_TOKEN estan en el .env;
+      9. inicia el servidor escuchando en todas las interfaces.
 
     Requisitos previos: haber ejecutado instalar-entorno.ps1 (o tener .env,
     vendor y la base de datos listos).
@@ -225,11 +228,25 @@ else {
     }
 }
 
-# 8. Servidor -----------------------------------------------------------------
+# 8. Tareas programadas -------------------------------------------------------
+# cmd.exe resuelve php aunque sea un .bat (como el de Laravel Herd).
+Write-Paso 'Iniciando tareas programadas (sincronizacion con el Drive)'
+$tareas = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', 'php artisan schedule:work' `
+    -WorkingDirectory $PSScriptRoot -WindowStyle Minimized -PassThru
+Write-Host "Ventana minimizada 'schedule:work' abierta. Se cierra al detener el servidor."
+
+# 9. Servidor -----------------------------------------------------------------
 Write-Paso 'Iniciando servidor'
 Write-Host ''
 Write-Host "  Acceso desde la red local: $url" -ForegroundColor Green
 Write-Host "  Acceso desde este equipo:  http://127.0.0.1:$Puerto" -ForegroundColor Green
 Write-Host '  Presione Ctrl+C para detener.' -ForegroundColor Yellow
 Write-Host ''
-Invoke-Comando 'php' @('artisan', 'serve', '--host=0.0.0.0', "--port=$Puerto", '--no-reload')
+try {
+    Invoke-Comando 'php' @('artisan', 'serve', '--host=0.0.0.0', "--port=$Puerto", '--no-reload')
+}
+finally {
+    if ($tareas -and -not $tareas.HasExited) {
+        & taskkill.exe /PID $tareas.Id /T /F | Out-Null
+    }
+}

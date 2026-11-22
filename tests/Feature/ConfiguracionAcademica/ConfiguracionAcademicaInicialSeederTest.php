@@ -31,7 +31,7 @@ test('academic initial seeder creates a usable base configuration', function () 
         ->first();
 
     expect($proceso)->not->toBeNull();
-    expect($proceso->nombre_pro)->toBe('2026-1');
+    expect($proceso->nombre_pro)->toBe('2026-I');
     expect((string) $proceso->fecha_inicio_pro)->toStartWith('2026-04-01');
     expect((string) $proceso->fecha_fin_pro)->toStartWith('2026-04-30');
 

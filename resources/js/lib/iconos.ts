@@ -19,6 +19,7 @@ import {
     Layers,
     ListChecks,
     MapPin,
+    Repeat,
     School,
     ShieldKey,
     ShieldUser,
@@ -59,8 +60,8 @@ export const iconos = {
     validarPagos: BadgeCheck,
     reportes: ChartBar,
     detalle: FileText,
+    editarInscripcion: Repeat,
     componentes: LayoutDashboard,
 } satisfies Record<string, Icono>;
 
 export type NombreIcono = keyof typeof iconos;
-

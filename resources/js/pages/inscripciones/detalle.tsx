@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, BadgeCheck, FileText, IdCard, ShieldCheck } from '@keyline-icons/react/fill';
+import { ArrowLeft, ArrowRight, BadgeCheck, FileText, IdCard, Repeat, ShieldCheck } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Aviso } from '@/components/aviso';
 import { Enlace } from '@/components/enlace';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePermiso } from '@/hooks/use-permiso';
 import { inicio } from '@/routes';
-import { aprobar, carnet, ficha, index } from '@/routes/inscripciones';
+import { aprobar, carnet, editar, ficha, index } from '@/routes/inscripciones';
 import { validar } from '@/routes/pagos';
 
 interface PropsDetalle {
@@ -36,6 +36,13 @@ interface PropsDetalle {
         estado: string;
         pagos: { id: number; operacion: string | null; documento: string | null; fecha: string | null; monto: number; estado: string; validador: string | null }[];
     }[];
+    cambios: {
+        id: number;
+        fecha: string | null;
+        usuario: string | null;
+        motivo: string;
+        cambios: { campo: string; antes: string | null; despues: string | null }[];
+    }[];
 }
 
 const soles = (monto: number): string => `S/ ${monto.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -49,14 +56,14 @@ function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode })
     );
 }
 
-export default function Detalle({ inscripcion, persona, postulacion, obligaciones }: PropsDetalle) {
+export default function Detalle({ inscripcion, persona, postulacion, obligaciones, cambios }: PropsDetalle) {
     const puede = usePermiso();
     const conSaldo = inscripcion.pago.estado === 'PENDIENTE' || inscripcion.pago.estado === 'PARCIAL';
     const porcentaje = inscripcion.pago.total === 0 ? 100 : Math.min(100, Math.round((inscripcion.pago.pagado / inscripcion.pago.total) * 100));
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-5 rounded-2xl border border-zinc-200/80 bg-linear-to-br from-white to-index-50/50 p-5 shadow-card sm:p-6 lg:flex-row lg:items-center lg:justify-between dark:border-white/[0.07] dark:from-white/[0.03] dark:to-index-500/[0.05] dark:shadow-none">
+            <div className="to-index-50/50 shadow-card dark:to-index-500/[0.05] flex flex-col gap-5 rounded-2xl border border-zinc-200/80 bg-linear-to-br from-white p-5 sm:p-6 lg:flex-row lg:items-center lg:justify-between dark:border-white/[0.07] dark:from-white/[0.03] dark:shadow-none">
                 <div className="min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="default" className="font-mono text-[13px]">
@@ -90,6 +97,14 @@ export default function Detalle({ inscripcion, persona, postulacion, obligacione
                                 <IdCard className="size-4.5" />
                                 Carnet
                             </a>
+                        </Button>
+                    )}
+                    {inscripcion.estado !== 'ANULADO' && puede('inscripcion_editar') && (
+                        <Button variant="outline" asChild>
+                            <Enlace href={editar.url(inscripcion.id)}>
+                                <Repeat className="size-4.5" />
+                                Editar postulación
+                            </Enlace>
                         </Button>
                     )}
                     {inscripcion.enRevision && puede('inscripcion_estado') && (
@@ -143,6 +158,32 @@ export default function Detalle({ inscripcion, persona, postulacion, obligacione
                             <Dato etiqueta="Tipo de colegio">{postulacion.tipoColegio ?? postulacion.paisColegio}</Dato>
                         </dl>
                     </Panel>
+
+                    {cambios.length > 0 && (
+                        <Panel titulo="Historial de cambios" descripcion="Cambios de sede, carrera o turno hechos después de registrar la inscripción.">
+                            <ol className="space-y-4">
+                                {cambios.map((registro) => (
+                                    <li key={registro.id} className="border-index-200 dark:border-index-500/30 relative border-s-2 ps-4">
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                                            {registro.fecha}
+                                            {registro.usuario && ` · ${registro.usuario}`}
+                                        </p>
+                                        <ul className="mt-1.5 space-y-1 text-sm">
+                                            {registro.cambios.map((cambio) => (
+                                                <li key={cambio.campo} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                    <span className="text-zinc-500 dark:text-zinc-400">{cambio.campo}:</span>
+                                                    <span className="text-zinc-500 line-through decoration-zinc-300 dark:text-zinc-400 dark:decoration-zinc-600">{cambio.antes ?? '—'}</span>
+                                                    <ArrowRight className="size-3.5 shrink-0 text-zinc-400" />
+                                                    <span className="font-medium text-zinc-900 dark:text-white">{cambio.despues ?? '—'}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <p className="mt-1.5 text-sm text-pretty text-zinc-600 italic dark:text-zinc-300">“{registro.motivo}”</p>
+                                    </li>
+                                ))}
+                            </ol>
+                        </Panel>
+                    )}
                 </div>
 
                 <div className="space-y-5 xl:sticky xl:top-0">

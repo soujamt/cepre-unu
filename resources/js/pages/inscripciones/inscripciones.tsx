@@ -1,5 +1,24 @@
 import { router, useForm } from '@inertiajs/react';
-import { Ban, BadgeCheck, Building, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Download, Eye, FileText, SlidersHorizontal, IdCard, PenLine, Plus, ShieldCheck, Users } from '@keyline-icons/react/fill';
+import {
+    Ban,
+    BadgeCheck,
+    Building,
+    CircleCheck,
+    CircleDollarSign,
+    CircleX,
+    ClipboardList,
+    CloudUpload,
+    Download,
+    Eye,
+    FileText,
+    SlidersHorizontal,
+    IdCard,
+    PenLine,
+    Plus,
+    Repeat,
+    ShieldCheck,
+    Users,
+} from '@keyline-icons/react/fill';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Aviso } from '@/components/aviso';
@@ -17,10 +36,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePermiso } from '@/hooks/use-permiso';
 import { cn } from '@/lib/utils';
 import { inicio } from '@/routes';
-import { anular, aprobar, aula, aulas as aulasDisponibles, carnet, carnets, crear, continuar, detalle, exportar, ficha, index } from '@/routes/inscripciones';
+import { anular, aprobar, aula, aulas as aulasDisponibles, carnet, carnets, crear, continuar, detalle, drive as sincronizarDrive, editar, exportar, ficha, index } from '@/routes/inscripciones';
 import { validar } from '@/routes/pagos';
 import type { Opcion, Paginado } from '@/types';
 
@@ -63,6 +83,8 @@ interface PropsInscripciones {
     filtros: Filtros;
     resumen: { total: number; activas: number; pendientes: number; pagoPendiente: number; anuladas: number };
     totalEnRevision: number;
+    /** Sincronización de las hojas DATA y PAGOS con el Drive. */
+    drive: { configurado: boolean; ultima: string | null };
     opciones: {
         procesos: Opcion[];
         modalidades: Opcion[];
@@ -231,7 +253,13 @@ function DialogoAula({ inscripcion, alCerrar }: { inscripcion: Inscripcion | nul
     );
 }
 
-export default function Inscripciones({ inscripciones, filtros, resumen, totalEnRevision, opciones }: PropsInscripciones) {
+export default function Inscripciones({ inscripciones, filtros, resumen, totalEnRevision, drive, opciones }: PropsInscripciones) {
+    const [sincronizando, setSincronizando] = useState(false);
+
+    const sincronizar = (): void => {
+        router.post(sincronizarDrive.url(), filtros.proceso ? { proceso: filtros.proceso } : {}, { preserveScroll: true, onStart: () => setSincronizando(true), onFinish: () => setSincronizando(false) });
+    };
+
     const puede = usePermiso();
     const [filtro, cambiarFiltro] = useFiltros<Filtros>(filtros);
     const [anulando, setAnulando] = useState<Inscripcion | null>(null);
@@ -344,6 +372,19 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                                         Excel
                                     </a>
                                 </Button>
+                            )}
+                            {drive.configurado && puede('inscripcion_exportar_excel') && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button variant="outline" onClick={sincronizar} disabled={sincronizando}>
+                                            <CloudUpload className="size-4.5" />
+                                            {sincronizando ? 'Sincronizando…' : 'Drive'}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {drive.ultima ? `Actualiza las hojas DATA y PAGOS del Drive. Última vez: ${drive.ultima}` : 'Actualiza las hojas DATA y PAGOS del Drive. Aún no se ha sincronizado.'}
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                             <Button variant="outline" asChild>
                                 <a href={conConsulta(carnets.url())}>
@@ -461,6 +502,12 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                                             icono: BadgeCheck,
                                             alSeleccionar: () => router.visit(validar.url({ query: { buscar: inscripcion.codigo } })),
                                             visible: conSaldo && vigente && puede('pago_crear'),
+                                        },
+                                        {
+                                            etiqueta: 'Editar postulación',
+                                            icono: Repeat,
+                                            alSeleccionar: () => router.visit(editar.url(inscripcion.id)),
+                                            visible: vigente && puede('inscripcion_editar'),
                                         },
                                         {
                                             etiqueta: 'Asignar aula',

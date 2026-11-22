@@ -101,6 +101,14 @@ class Inscripcion extends LegacyModel
         return $this->hasMany(InscripcionObligacionPago::class, 'id_inscripcion', 'id_ins');
     }
 
+    /**
+     * Cambios de sede, carrera o turno hechos después de registrarla.
+     */
+    public function cambios(): HasMany
+    {
+        return $this->hasMany(InscripcionCambio::class, 'id_inscripcion', 'id_ins');
+    }
+
     public function procesoAula(): BelongsTo
     {
         return $this->belongsTo(ProcesoAula::class, 'id_proceso_aula', 'id_pau');
