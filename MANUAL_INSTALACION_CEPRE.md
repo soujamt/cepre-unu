@@ -598,14 +598,16 @@ Esta versión cambia el frontend completo (de Livewire a React) y agrega una mig
 
 ### 6.16.11. Sincronización con el Drive (hojas DATA y PAGOS)
 
-Como el sistema funciona solo en la red local, los alumnos consultan su aula desde el Drive de **CEPRE UNU virtual** con el buscador de estudiantes. El sistema mantiene al día dos hojas de Google por proceso, con la misma estructura de siempre:
+> La guía completa, paso a paso y con la solución de problemas, está en **`CONFIGURACION_DRIVE_CEPRE.md`**. Esta sección es el resumen.
+
+Como el sistema funciona solo en la red local, los alumnos consultan su aula desde el Drive de **CEPRE UNU virtual** con el buscador de estudiantes. El sistema mantiene al día dos hojas de Google por proceso, con la misma estructura de siempre, dentro de una **subcarpeta con el nombre del proceso** (por ejemplo `DATA/2027-II/`), que se crea sola:
 
 | Hoja | Pestaña | Contenido |
 |---|---|---|
 | `DATA CEPRE-UNU 2027-II` | `DATA` | Inscripciones no anuladas en el formato CEPRE (`NRO_REG`, `FECHA_Y_HORA`, columnas codificadas) y al final `AULA`, `TURNO` y `ESTADO` |
 | `PAGOS 2027-II` | `PAGOS` | Pagos usados en el proceso y pagos libres posteriores al proceso anterior |
 
-El nombre del periodo es el del proceso (por ejemplo `2027-II`). Si la hoja ya existe en la carpeta, se reescribe su pestaña y conserva su enlace; si no existe, se crea.
+El nombre del periodo es el del proceso (por ejemplo `2027-II`). Si la hoja ya existe, se reescribe su pestaña y conserva su enlace. Si estaba suelta en la carpeta principal, se mueve a la subcarpeta del proceso sin cambiar su enlace. Si no existe, se crea.
 
 **Configuración (una sola vez):**
 
@@ -613,7 +615,7 @@ El nombre del periodo es el del proceso (por ejemplo `2027-II`). Si la hoja ya e
 2. Pegar el contenido de `resources/drive/SincronizarCepre.gs` (está en la carpeta del proyecto).
 3. En el script, completar:
    - `TOKEN`: una clave larga inventada para este fin (por ejemplo, 40 letras y números al azar);
-   - `CARPETA_ID`: el identificador de la carpeta `DATA` del Drive. Es la parte de su dirección que va después de `/folders/`.
+   - `CARPETA_ID`: el identificador de la carpeta principal (por ejemplo `DATA`). Es la parte de su dirección que va después de `/folders/`. Dentro de ella se crea una subcarpeta por proceso (`CARPETA_POR_PROCESO = true`).
 4. `Implementar` → `Nueva implementación` → tipo **Aplicación web**. *Ejecutar como:* **Yo**. *Quién tiene acceso:* **Cualquier usuario**. Autorizar los permisos que pide Google.
 5. Copiar la **URL de la aplicación web** (termina en `/exec`). Al abrirla en el navegador debe mostrar `{"ok":true,...}`.
 6. En el `.env` de la PC servidor agregar:

@@ -2,14 +2,20 @@
  * CEPRE UNU · Receptor de la sincronización con el Drive.
  *
  * El sistema (php artisan cepre:sincronizar-drive o el botón "Drive" del listado de
- * inscripciones) envía las hojas del proceso y este script las escribe en la carpeta
- * indicada:
- *   - "DATA CEPRE-UNU 2027-II", pestaña DATA (inscritos + AULA, TURNO y ESTADO al final);
- *   - "PAGOS 2027-II", pestaña PAGOS.
- * Si la hoja ya existe se reescribe su pestaña (mismo archivo y mismo enlace, así el
- * buscador de estudiantes sigue funcionando). Si no existe, se crea en la carpeta.
+ * inscripciones) envía las hojas del proceso y este script las escribe en una
+ * subcarpeta con el nombre del proceso, dentro de la carpeta principal (CARPETA_ID):
  *
- * Instalación (ver el manual de instalación, sección "Sincronización con el Drive"):
+ *   DATA/
+ *   └── 2027-II/
+ *       ├── DATA CEPRE-UNU 2027-II   pestaña DATA (inscritos + AULA, TURNO y ESTADO al final)
+ *       └── PAGOS 2027-II            pestaña PAGOS
+ *
+ * La subcarpeta se crea sola la primera vez. Si la hoja ya existe se reescribe su
+ * pestaña (mismo archivo y mismo enlace, así el buscador de estudiantes sigue
+ * funcionando). Si la hoja estaba suelta en la carpeta principal, se mueve a la
+ * subcarpeta del proceso sin cambiar su enlace. Si no existe, se crea.
+ *
+ * Instalación paso a paso: CONFIGURACION_DRIVE_CEPRE.md (en la carpeta del sistema).
  *   1. En https://script.google.com cree un proyecto con la cuenta de CEPRE UNU virtual
  *      y pegue este archivo completo.
  *   2. Complete TOKEN (la misma clave que DRIVE_SYNC_TOKEN del .env) y CARPETA_ID
@@ -24,8 +30,11 @@
 /** Clave compartida con el sistema (DRIVE_SYNC_TOKEN). Use una larga y difícil de adivinar. */
 const TOKEN = 'CAMBIE-ESTA-CLAVE';
 
-/** Carpeta del Drive donde están (o se crearán) las hojas. Vacío = Mi unidad. */
+/** Carpeta principal del Drive (por ejemplo DATA). Vacío = Mi unidad. */
 const CARPETA_ID = '';
+
+/** true = una subcarpeta por proceso (DATA/2027-II/...); false = todo suelto en la carpeta principal. */
+const CARPETA_POR_PROCESO = true;
 
 function doPost(e) {
   let datos;
@@ -47,7 +56,11 @@ function doPost(e) {
   }
 
   try {
-    const hojas = (datos.hojas || []).map(escribirHoja);
+    const raiz = CARPETA_ID ? DriveApp.getFolderById(CARPETA_ID) : DriveApp.getRootFolder();
+    const carpeta = CARPETA_POR_PROCESO && datos.proceso ? subcarpeta(raiz, String(datos.proceso)) : raiz;
+    const hojas = (datos.hojas || []).map(function (hoja) {
+      return escribirHoja(hoja, carpeta, raiz);
+    });
 
     return responder({ ok: true, proceso: datos.proceso, hojas: hojas });
   } catch (error) {
@@ -62,8 +75,8 @@ function doGet() {
   return responder({ ok: true, mensaje: 'Receptor CEPRE UNU activo' });
 }
 
-function escribirHoja(hoja) {
-  const libro = buscarOCrearLibro(hoja.archivo);
+function escribirHoja(hoja, carpeta, raiz) {
+  const libro = buscarOCrearLibro(hoja.archivo, carpeta, raiz);
   const pestana = libro.getSheetByName(hoja.pestana) || libro.insertSheet(hoja.pestana);
   const columnas = hoja.encabezados.length;
   const valores = [hoja.encabezados].concat(hoja.filas.map(function (fila) {
@@ -89,25 +102,53 @@ function escribirHoja(hoja) {
     pestana.deleteRows(ultimaFila + 1, pestana.getMaxRows() - ultimaFila);
   }
 
-  return { archivo: hoja.archivo, filas: hoja.filas.length, url: libro.getUrl() };
+  return { archivo: hoja.archivo, carpeta: carpeta.getName(), filas: hoja.filas.length, url: libro.getUrl() };
 }
 
-function buscarOCrearLibro(nombre) {
-  const carpeta = CARPETA_ID ? DriveApp.getFolderById(CARPETA_ID) : DriveApp.getRootFolder();
-  const archivos = carpeta.getFilesByName(nombre);
+/** Subcarpeta del proceso (por ejemplo "2027-II") dentro de la principal; la crea si falta. */
+function subcarpeta(raiz, nombre) {
+  const existentes = raiz.getFoldersByName(nombre);
 
-  while (archivos.hasNext()) {
-    const archivo = archivos.next();
+  return existentes.hasNext() ? existentes.next() : raiz.createFolder(nombre);
+}
 
-    if (archivo.getMimeType() === MimeType.GOOGLE_SHEETS) {
-      return SpreadsheetApp.openById(archivo.getId());
-    }
+/**
+ * Busca la hoja en la carpeta del proceso; si estaba suelta en la carpeta principal la
+ * mueve (conserva su enlace); si no existe, la crea.
+ */
+function buscarOCrearLibro(nombre, carpeta, raiz) {
+  const enCarpeta = hojaDeCalculo(carpeta, nombre);
+
+  if (enCarpeta) {
+    return SpreadsheetApp.openById(enCarpeta.getId());
+  }
+
+  const suelta = carpeta.getId() !== raiz.getId() ? hojaDeCalculo(raiz, nombre) : null;
+
+  if (suelta) {
+    suelta.moveTo(carpeta);
+
+    return SpreadsheetApp.openById(suelta.getId());
   }
 
   const libro = SpreadsheetApp.create(nombre);
   DriveApp.getFileById(libro.getId()).moveTo(carpeta);
 
   return libro;
+}
+
+function hojaDeCalculo(carpeta, nombre) {
+  const archivos = carpeta.getFilesByName(nombre);
+
+  while (archivos.hasNext()) {
+    const archivo = archivos.next();
+
+    if (archivo.getMimeType() === MimeType.GOOGLE_SHEETS) {
+      return archivo;
+    }
+  }
+
+  return null;
 }
 
 function completar(fila, columnas) {
