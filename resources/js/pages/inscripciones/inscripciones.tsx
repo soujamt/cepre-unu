@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Ban, BadgeCheck, Building, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Download, Eye, FileText, SlidersHorizontal, IdCard, PenLine, Plus, ShieldCheck, Users } from '@keyline-icons/react/fill';
+import { Ban, BadgeCheck, Building, CircleCheck, CircleDollarSign, CircleX, ClipboardList, Download, Eye, FileText, SlidersHorizontal, IdCard, PenLine, Plus, Repeat, ShieldCheck, Users } from '@keyline-icons/react/fill';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Aviso } from '@/components/aviso';
@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { usePermiso } from '@/hooks/use-permiso';
 import { cn } from '@/lib/utils';
 import { inicio } from '@/routes';
-import { anular, aprobar, aula, aulas as aulasDisponibles, carnet, carnets, crear, continuar, detalle, exportar, ficha, index } from '@/routes/inscripciones';
+import { anular, aprobar, aula, aulas as aulasDisponibles, carnet, carnets, crear, continuar, detalle, editar, exportar, ficha, index } from '@/routes/inscripciones';
 import { validar } from '@/routes/pagos';
 import type { Opcion, Paginado } from '@/types';
 
@@ -461,6 +461,12 @@ export default function Inscripciones({ inscripciones, filtros, resumen, totalEn
                                             icono: BadgeCheck,
                                             alSeleccionar: () => router.visit(validar.url({ query: { buscar: inscripcion.codigo } })),
                                             visible: conSaldo && vigente && puede('pago_crear'),
+                                        },
+                                        {
+                                            etiqueta: 'Editar postulación',
+                                            icono: Repeat,
+                                            alSeleccionar: () => router.visit(editar.url(inscripcion.id)),
+                                            visible: vigente && puede('inscripcion_editar'),
                                         },
                                         {
                                             etiqueta: 'Asignar aula',

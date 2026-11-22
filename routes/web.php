@@ -16,6 +16,7 @@ use App\Http\Controllers\Inscripciones\AsistenteInscripcionController;
 use App\Http\Controllers\Inscripciones\FotoController;
 use App\Http\Controllers\Inscripciones\InscripcionController;
 use App\Http\Controllers\Inscripciones\InscripcionDetalleController;
+use App\Http\Controllers\Inscripciones\InscripcionEdicionController;
 use App\Http\Controllers\Mantenedores\AulaController;
 use App\Http\Controllers\Mantenedores\CarreraController;
 use App\Http\Controllers\Mantenedores\ColegioController;
@@ -215,6 +216,14 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/inscripciones/{inscripcion}/aula', [InscripcionController::class, 'asignarAula'])
         ->middleware('permiso:inscripcion_editar')
         ->name('inscripciones.aula');
+
+    Route::get('/inscripciones/{inscripcion}/editar', [InscripcionEdicionController::class, 'edit'])
+        ->middleware('permiso:inscripcion_editar')
+        ->name('inscripciones.editar');
+
+    Route::put('/inscripciones/{inscripcion}/postulacion', [InscripcionEdicionController::class, 'update'])
+        ->middleware('permiso:inscripcion_editar')
+        ->name('inscripciones.postulacion');
 
     Route::get('/inscripciones/{inscripcion}/detalle', InscripcionDetalleController::class)
         ->middleware('permiso:inscripcion_indice')

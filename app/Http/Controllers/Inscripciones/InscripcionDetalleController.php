@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Inscripciones;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inscripcion;
+use App\Models\InscripcionCambio;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Models\Ubigeo;
@@ -26,6 +27,7 @@ class InscripcionDetalleController extends Controller
                 'proceso', 'sede', 'modalidadAdmision', 'carrera', 'turno', 'procesoAula.aula',
                 'paisColegio', 'colegio.tipoColegio', 'tipoColegio',
                 'obligacionesPago.reglaPago.conceptoPago', 'obligacionesPago.pagos.importacionBancoDetalle', 'obligacionesPago.pagos.usuarioValidador',
+                'cambios' => fn ($query) => $query->with('usuarioCreador')->latest('id_ica'),
             ])
             ->findOrFail($id);
 
@@ -91,6 +93,13 @@ class InscripcionDetalleController extends Controller
                     'estado' => $pago->estado_validacion_ipa?->value ?? (string) $pago->estado_validacion_ipa,
                     'validador' => $pago->usuarioValidador?->nombres_usu,
                 ])->values(),
+            ])->values(),
+            'cambios' => $registro->cambios->map(fn (InscripcionCambio $cambio): array => [
+                'id' => $cambio->id_ica,
+                'fecha' => $cambio->creado_en?->format('d/m/Y h:i a'),
+                'usuario' => $cambio->usuarioCreador?->nombres_usu,
+                'motivo' => $cambio->motivo_ica,
+                'cambios' => $cambio->cambios_ica,
             ])->values(),
         ]);
     }
