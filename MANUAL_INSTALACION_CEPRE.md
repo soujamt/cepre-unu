@@ -539,6 +539,7 @@ Si `git pull` avisa de cambios locales en `iniciar-red-local.bat` (por la IP y e
 | El script avisa que la IP no pertenece al equipo | La IP del `.bat` no coincide con la del adaptador | Corregir `IP` en el `.bat` o fijar la IP del equipo (6.16.4). |
 | La página carga sin estilos o en blanco | Assets no compilados, compilados con una versión anterior o existe `public/hot` | Ejecutar `.\iniciar-red-local.bat -Compilar`. |
 | `Unable to locate file in Vite manifest` | La compilación es de una versión anterior | Ejecutar `actualizar-sistema.bat` o `.\iniciar-red-local.bat -Compilar`. |
+| La compilación falla con `Could not load resources/js/routes/...` | Caché de rutas de una versión anterior | Los scripts ya limpian las cachés antes de compilar; si se compila a mano, ejecutar antes `php artisan optimize:clear`. |
 | `Se requiere Node.js 20.19+ o 22.12+` | Node.js antiguo | Instalar Node.js 22 LTS, cerrar y volver a abrir la consola, y repetir. |
 | Error 500 al ingresar | MySQL detenido o datos `DB_*` incorrectos | Iniciar MySQL y revisar el `.env`. Ver `storage/logs`. |
 | El QR del carnet o los enlaces de la ficha no abren | `APP_URL` con otra IP | Volver a ejecutar `iniciar-red-local.bat` con la IP correcta. |
@@ -1035,6 +1036,7 @@ sudo systemctl reload nginx
 cd /var/www/cepre-unu
 git pull origin <rama-o-tag>
 composer install --no-dev --optimize-autoloader
+php artisan optimize:clear
 php artisan migrate --force
 npm ci
 npm run build
@@ -1047,7 +1049,7 @@ php artisan queue:restart
 sudo systemctl reload nginx
 ```
 
-> `npm run build` se ejecuta después de `composer install` porque Wayfinder usa PHP para generar las rutas del frontend.
+> `npm run build` se ejecuta después de `composer install` y de `php artisan optimize:clear` porque Wayfinder usa PHP para generar las rutas del frontend a partir de las rutas de Laravel. Si queda una caché de rutas de una versión anterior (de un `php artisan optimize` previo), Wayfinder genera las rutas viejas y la compilación falla con `Could not load resources/js/routes/...`.
 
 ## 15.3. Despliegue automático en DOM Cloud
 
@@ -1060,6 +1062,7 @@ El servidor de producción actual está en DOM Cloud y se actualiza solo. El flu
    ```bash
    git reset --hard && git pull --ff-only origin main
    composer install --no-dev --optimize-autoloader --no-interaction
+   php artisan optimize:clear
    php artisan migrate --force
    npm ci
    npm run build
@@ -1074,7 +1077,7 @@ Requisitos:
 - los secretos `WEBHOOK_SECRET` y `WEBHOOK_AUTH` configurados en el repositorio de GitHub;
 - Node.js 20.19+ o 22.12+ y PHP 8.4 en el servidor de DOM Cloud.
 
-Que el trabajo de despliegue termine en verde solo indica que DOM Cloud recibió la orden; después hay que abrir el sitio y revisar el registro del despliegue en DOM Cloud.
+Que el trabajo de despliegue termine en verde solo indica que DOM Cloud recibió la orden; después hay que abrir el sitio y revisar el registro del despliegue en DOM Cloud (`Sitio web > cepre-unu > Despliegue`), donde se ve la salida de cada comando y el primero que falló.
 
 ## 16. Checklist de validación final
 
@@ -1104,6 +1107,8 @@ Solución:
 ```bash
 npm run build
 ```
+
+Si la compilación falla con `Could not load resources/js/routes/...`, la caché de rutas es de una versión anterior: ejecutar `php artisan optimize:clear` y volver a compilar.
 
 En Windows con los scripts, ejecutar `actualizar-sistema.bat` o `.\iniciar-red-local.bat -Compilar`. Si existe `public/hot` sin que esté corriendo `npm run dev`, eliminarlo.
 
