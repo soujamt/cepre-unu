@@ -54,6 +54,20 @@ class Proceso extends LegacyModel
             ?? ((int) ($this->fecha_inicio_pro?->format('Y') ?? now()->format('Y'))) - 1;
     }
 
+    /**
+     * Proceso vigente según sus fechas o, si no hay, el más reciente con inscripciones.
+     */
+    public static function actual(): ?self
+    {
+        return static::query()
+            ->where('fecha_inicio_pro', '<=', now())
+            ->where('fecha_fin_pro', '>=', now())
+            ->orderByDesc('fecha_inicio_pro')
+            ->orderByDesc('id_pro')
+            ->first()
+            ?? static::query()->whereHas('inscripciones')->orderByDesc('fecha_inicio_pro')->orderByDesc('id_pro')->first();
+    }
+
     public function inscripciones(): HasMany
     {
         return $this->hasMany(Inscripcion::class, 'id_proceso', 'id_pro');

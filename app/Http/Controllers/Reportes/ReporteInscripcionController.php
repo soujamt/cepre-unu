@@ -64,12 +64,7 @@ class ReporteInscripcionController extends Controller
     public function exportar(Request $request): BinaryFileResponse
     {
         $inscripciones = $this->consulta($this->filtros($request))
-            ->with([
-                'persona.tipoDocumento', 'persona.estadoCivil', 'persona.paisNacimiento', 'persona.nacionalidad',
-                'persona.ubigeoNacimiento', 'persona.ubigeoDomicilio', 'persona.tipoDiscapacidad', 'persona.identidadEtnica',
-                'persona.lenguaNativa', 'persona.lenguaExtranjera', 'paisColegio', 'colegio', 'tipoColegio', 'sede',
-                'modalidadAdmision', 'carrera',
-            ])
+            ->with(InscripcionesFormatoCepreExport::RELACIONES)
             ->orderBy('id_ins')
             ->get();
 
@@ -114,13 +109,6 @@ class ReporteInscripcionController extends Controller
 
     private function procesoPorDefecto(): string
     {
-        $vigente = Proceso::query()
-            ->where('fecha_inicio_pro', '<=', now())
-            ->where('fecha_fin_pro', '>=', now())
-            ->orderByDesc('fecha_inicio_pro')
-            ->orderByDesc('id_pro')
-            ->value('id_pro');
-
-        return (string) ($vigente ?? Proceso::query()->whereHas('inscripciones')->orderByDesc('fecha_inicio_pro')->orderByDesc('id_pro')->value('id_pro') ?? '');
+        return (string) (Proceso::actual()?->id_pro ?? '');
     }
 }

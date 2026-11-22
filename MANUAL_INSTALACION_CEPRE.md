@@ -2,7 +2,7 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE INSTALACION DEL SISTEMA
 
-**Versión:** 1.2  
+**Versión:** 1.3  
 **Sistema:** CEPRE UNU  
 **Dirigido a:** personal técnico, soporte, desarrollo e implementación  
 **Fecha:** Noviembre 2026
@@ -10,6 +10,8 @@
 > **Cambios en la versión 1.1:** se agregó la sección 6.16, sobre la instalación automatizada con scripts y el uso del sistema en una red local con IP estática.
 
 > **Cambios en la versión 1.2:** el frontend pasó a Inertia 3 con React 19 y TypeScript (antes Livewire y Flux). Ahora se requiere **Node.js 20.19+ o 22.12+**; los scripts de Windows lo verifican y `iniciar-red-local` recompila los assets cuando el código cambió. Se agregaron la actualización a esta versión (6.16.10) y el despliegue automático en DOM Cloud (15.3).
+
+> **Cambios en la versión 1.3:** sincronización automática de las hojas DATA y PAGOS con el Drive de CEPRE UNU virtual (6.16.11).
 
 ---
 
@@ -593,6 +595,55 @@ Esta versión cambia el frontend completo (de Livewire a React) y agrega una mig
 4. Si el paso anterior falla, **no** iniciar el sistema: revisar el mensaje (ver la tabla de 6.16.8).
 5. Iniciar con `iniciar-red-local.bat` y, en los equipos de la red, recargar la página con `Ctrl + F5` la primera vez.
 6. Hacer una inscripción de prueba completa: pago, asistente, ficha y carnet.
+
+### 6.16.11. Sincronización con el Drive (hojas DATA y PAGOS)
+
+Como el sistema funciona solo en la red local, los alumnos consultan su aula desde el Drive de **CEPRE UNU virtual** con el buscador de estudiantes. El sistema mantiene al día dos hojas de Google por proceso, con la misma estructura de siempre:
+
+| Hoja | Pestaña | Contenido |
+|---|---|---|
+| `DATA CEPRE-UNU 2027-II` | `DATA` | Inscripciones no anuladas en el formato CEPRE (`NRO_REG`, `FECHA_Y_HORA`, columnas codificadas) y al final `AULA`, `TURNO` y `ESTADO` |
+| `PAGOS 2027-II` | `PAGOS` | Pagos usados en el proceso y pagos libres posteriores al proceso anterior |
+
+El nombre del periodo se toma del proceso: `2027-2` se escribe `2027-II`. Si la hoja ya existe en la carpeta, se reescribe su pestaña y conserva su enlace; si no existe, se crea.
+
+**Configuración (una sola vez):**
+
+1. Entrar a <https://script.google.com> con la cuenta de CEPRE UNU virtual y crear un proyecto nuevo, por ejemplo *Sincronización CEPRE*.
+2. Pegar el contenido de `resources/drive/SincronizarCepre.gs` (está en la carpeta del proyecto).
+3. En el script, completar:
+   - `TOKEN`: una clave larga inventada para este fin (por ejemplo, 40 letras y números al azar);
+   - `CARPETA_ID`: el identificador de la carpeta `DATA` del Drive. Es la parte de su dirección que va después de `/folders/`.
+4. `Implementar` → `Nueva implementación` → tipo **Aplicación web**. *Ejecutar como:* **Yo**. *Quién tiene acceso:* **Cualquier usuario**. Autorizar los permisos que pide Google.
+5. Copiar la **URL de la aplicación web** (termina en `/exec`). Al abrirla en el navegador debe mostrar `{"ok":true,...}`.
+6. En el `.env` de la PC servidor agregar:
+
+   ```env
+   DRIVE_SYNC_URL=https://script.google.com/macros/s/.../exec
+   DRIVE_SYNC_TOKEN=la-misma-clave-del-script
+   ```
+
+7. Probar en una consola dentro de la carpeta del proyecto:
+
+   ```bat
+   php artisan config:clear
+   php artisan cepre:sincronizar-drive
+   ```
+
+   Debe mostrar cuántas filas se enviaron a cada hoja. Con `--proceso=ID` se sincroniza otro proceso.
+
+**Funcionamiento diario:**
+
+- `iniciar-red-local.bat` abre una ventana minimizada con `php artisan schedule:work`. Mientras esté abierta, la sincronización se hace sola **cada 10 minutos**. Se cierra al detener el servidor con `Ctrl + C`; si se cierra la ventana principal con la X, cierre también esa ventana.
+- En **Inscripciones**, el botón **Drive** sincroniza al momento el proceso filtrado. Al pasar el mouse muestra la última sincronización. Solo aparece si el `.env` tiene las dos variables y el usuario tiene el permiso de exportar.
+- La PC servidor necesita internet. Sin conexión, el botón avisa del error y el sistema sigue funcionando en la red local con normalidad.
+
+**Precauciones:**
+
+- La pestaña se reescribe completa en cada sincronización: no escriba a mano en `DATA` ni en `PAGOS`. Si necesita cálculos o notas, hágalos en otra pestaña del mismo archivo.
+- Si el buscador de estudiantes lee columnas por posición, revise que siga leyendo las correctas: `AULA`, `TURNO` y `ESTADO` están al final.
+- Si cambia el código del script, publíquelo con `Implementar` → `Gestionar implementaciones` → editar → **Nueva versión**, para que la URL no cambie.
+- Guarde el `TOKEN` como una contraseña: quien lo tenga puede escribir en esas hojas.
 
 ## 7. Verificación de la instalación local
 

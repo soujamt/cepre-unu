@@ -376,6 +376,8 @@ stateDiagram-v2
 6. **Recaudación:** lo esperado es la suma de las obligaciones de las inscripciones no anuladas; lo recaudado, la suma de sus pagos verificados.
 7. **Ubigeo:** al abrir el buscador de ubigeo sin escribir se ofrecen los distritos de Ucayali, y al buscar, Ucayali aparece primero.
 8. **Exportación para Admisión y el Drive:** el Excel con el formato CEPRE empieza con `NRO_REG` (código de inscripción) y `FECHA_Y_HORA`, en orden de registro, como la hoja `DATA CEPRE-UNU` del Drive. Usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
+9. **Sincronización con el Drive:** cada 10 minutos (y con el botón `Drive` del listado) el sistema reescribe las hojas `DATA CEPRE-UNU {periodo}` y `PAGOS {periodo}` del Drive de CEPRE UNU virtual mediante un Apps Script. Así el buscador de estudiantes muestra el aula al día aunque el sistema solo funcione en la red local.
+10. **Edición de la postulación:** sede, carrera o turno se cambian con confirmación y motivo; si cambia el turno se reasigna el aula. Cada cambio queda en el historial de la inscripción.
 
 ---
 

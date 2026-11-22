@@ -25,6 +25,16 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithStrictNullComparison
 {
     /**
+     * Relaciones que hay que cargar en las inscripciones antes de exportarlas.
+     */
+    public const RELACIONES = [
+        'persona.tipoDocumento', 'persona.estadoCivil', 'persona.paisNacimiento', 'persona.nacionalidad',
+        'persona.ubigeoNacimiento', 'persona.ubigeoDomicilio', 'persona.tipoDiscapacidad', 'persona.identidadEtnica',
+        'persona.lenguaNativa', 'persona.lenguaExtranjera', 'paisColegio', 'colegio', 'tipoColegio', 'sede',
+        'modalidadAdmision', 'carrera',
+    ];
+
+    /**
      * Códigos de Admisión por "id_proceso|clave"; se cargan al exportar.
      *
      * @var array<string, string>|null

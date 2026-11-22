@@ -17,6 +17,7 @@ use App\Http\Controllers\Inscripciones\FotoController;
 use App\Http\Controllers\Inscripciones\InscripcionController;
 use App\Http\Controllers\Inscripciones\InscripcionDetalleController;
 use App\Http\Controllers\Inscripciones\InscripcionEdicionController;
+use App\Http\Controllers\Inscripciones\SincronizarDriveController;
 use App\Http\Controllers\Mantenedores\AulaController;
 use App\Http\Controllers\Mantenedores\CarreraController;
 use App\Http\Controllers\Mantenedores\ColegioController;
@@ -196,6 +197,10 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/inscripciones/exportar', [InscripcionController::class, 'exportar'])
         ->middleware('permiso:inscripcion_exportar_excel')
         ->name('inscripciones.exportar');
+
+    Route::post('/inscripciones/drive', SincronizarDriveController::class)
+        ->middleware('permiso:inscripcion_exportar_excel')
+        ->name('inscripciones.drive');
 
     Route::get('/inscripciones/carnets', [InscripcionController::class, 'carnets'])
         ->middleware('permiso:inscripcion_indice')
