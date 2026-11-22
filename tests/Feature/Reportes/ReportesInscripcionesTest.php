@@ -301,7 +301,7 @@ test('authorized users can export reporte inscripciones with names instead of ad
         $headings = $export->headings();
 
         expect($rows)->toHaveCount(1)
-            ->and($fila[1])->toBe($contextoA['inscripcion']->persona->numero_documento_per)
+            ->and($fila[array_search('NUMERO_DOCUMENTO', $headings, true)])->toBe($contextoA['inscripcion']->persona->numero_documento_per)
             ->and($fila[array_search('CODIGO_LUGAR_INSCRIPCION', $headings, true)])->toBe('SEDE REPORTE 10 / MODALIDAD REPORTE 10')
             ->and($fila[array_search('CODIGO_CARRERA', $headings, true)])->toBe('CARRERA REPORTE 10');
 

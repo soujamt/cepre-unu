@@ -375,7 +375,7 @@ stateDiagram-v2
 5. **Vigencias:** las reglas de pago se validan contra la fecha del día.
 6. **Recaudación:** lo esperado es la suma de las obligaciones de las inscripciones no anuladas; lo recaudado, la suma de sus pagos verificados.
 7. **Ubigeo:** al abrir el buscador de ubigeo sin escribir se ofrecen los distritos de Ucayali, y al buscar, Ucayali aparece primero.
-8. **Exportación para Admisión:** el Excel con el formato CEPRE usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
+8. **Exportación para Admisión y el Drive:** el Excel con el formato CEPRE empieza con `NRO_REG` (código de inscripción) y `FECHA_Y_HORA`, en orden de registro, como la hoja `DATA CEPRE-UNU` del Drive. Usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
 
 ---
 

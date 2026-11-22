@@ -412,13 +412,36 @@ test('users can export inscripciones to excel preserving current filters', funct
         $rows = $export->collection();
 
         expect($rows)->toHaveCount(1)
-            ->and($rows->first()[1])->toBe('7450007')
-            ->and($rows->first()[2])->toBe(1)
-            ->and($rows->first()[8])->toBe('F')
-            ->and($rows->first()[20])->toBe(2024)
-            ->and($rows->first()[25])->toBe(1)
-            ->and($rows->first()[26])->toBe(2)
-            ->and($rows->first()[33])->toBe('Registro exportable');
+            ->and(array_slice($export->headings(), 0, 3))->toBe(['NRO_REG', 'FECHA_Y_HORA', 'CODIGO_TIPO_DOCUMENTO'])
+            ->and($rows->first()[0])->toBe('INS-7')
+            ->and($rows->first()[1])->toBe('20/03/2026 08:00:00')
+            ->and($rows->first()[3])->toBe('7450007')
+            ->and($rows->first()[4])->toBe(1)
+            ->and($rows->first()[10])->toBe('F')
+            ->and($rows->first()[22])->toBe(2024)
+            ->and($rows->first()[27])->toBe(1)
+            ->and($rows->first()[28])->toBe(2)
+            ->and($rows->first()[35])->toBe('Registro exportable');
+
+        return true;
+    });
+
+    Carbon::setTestNow();
+});
+
+test('the excel export lists inscripciones in registration order like the drive sheet', function () {
+    Carbon::setTestNow('2026-04-17 09:30:00');
+    Excel::fake();
+
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcion($usuario, ['inscripcion_indice', 'inscripcion_exportar_excel']);
+    crearContextoListadoInscripcion(20);
+    crearContextoListadoInscripcion(21);
+
+    $this->actingAs($usuario)->get(route('inscripciones.exportar', ['proceso' => 'todos']));
+
+    Excel::assertDownloaded('inscripciones-cepre-20260417-093000.xlsx', function (InscripcionesFormatoCepreExport $export): bool {
+        expect($export->collection()->pluck(0)->all())->toBe(['INS-20', 'INS-21']);
 
         return true;
     });

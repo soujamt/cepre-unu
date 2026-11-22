@@ -17,6 +17,11 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 
+/**
+ * Inscripciones con las columnas de la hoja "DATA CEPRE-UNU" del Drive: NRO_REG
+ * (el código de inscripción, el mismo "N° REG." de la hoja de pagos), la fecha y
+ * hora de inscripción y luego las columnas codificadas que pide Admisión.
+ */
 class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithStrictNullComparison
 {
     /**
@@ -41,6 +46,8 @@ class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize,
     public function headings(): array
     {
         return [
+            'NRO_REG',
+            'FECHA_Y_HORA',
             'CODIGO_TIPO_DOCUMENTO',
             'NUMERO_DOCUMENTO',
             'CODIGO_SOLO_UN_APELLIDO',
@@ -83,7 +90,7 @@ class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize,
         return [
             AfterSheet::class => function (AfterSheet $event): void {
                 $highestRow = max(1, $event->sheet->getHighestRow());
-                $range = "A1:AH{$highestRow}";
+                $range = "A1:AJ{$highestRow}";
 
                 $event->sheet->getStyle($range)->applyFromArray([
                     'font' => [
@@ -117,6 +124,8 @@ class InscripcionesFormatoCepreExport implements FromCollection, ShouldAutoSize,
         $lenguaMaterna = $this->codigoLenguaMaterna($persona?->tipo_lengua_materna_per);
 
         return [
+            $this->stringOrNull($inscripcion->codigo_ins),
+            $inscripcion->fecha_inscripcion_ins?->format('d/m/Y H:i:s'),
             $this->stringOrNull($tipoDocumento?->codigo_tdo),
             $this->stringOrNull($persona?->numero_documento_per),
             $this->codigoBooleano($persona?->solo_un_apellido_per),

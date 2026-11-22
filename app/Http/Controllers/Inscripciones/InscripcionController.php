@@ -111,7 +111,7 @@ class InscripcionController extends Controller
                 'persona.lenguaNativa', 'persona.lenguaExtranjera', 'paisColegio', 'colegio', 'tipoColegio', 'sede',
                 'modalidadAdmision', 'carrera',
             ])
-            ->orderByDesc('id_ins')
+            ->orderBy('id_ins')
             ->get();
 
         return Excel::download(new InscripcionesFormatoCepreExport($inscripciones), 'inscripciones-cepre-'.now()->format('Ymd-His').'.xlsx');

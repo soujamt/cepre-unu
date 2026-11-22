@@ -1069,7 +1069,7 @@ Analizar las inscripciones del proceso con indicadores y gráficos, y exportarla
 6. seleccionar `Exportar Excel` para descargar el listado con los mismos filtros;
 7. verificar el archivo generado.
 
-La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6).
+La exportación con el formato CEPRE incluye los códigos de Admisión cuando están registrados (ver 13.6). Sus dos primeras columnas son `NRO_REG` (el código de inscripción, el mismo `N° REG.` de la exportación de pagos) y `FECHA_Y_HORA`, y las filas salen en orden de registro. Así se puede pegar directamente en la hoja `DATA CEPRE-UNU` del Drive, igual que la exportación de pagos en la hoja `PAGOS`.
 
 ### 20.3. Resultado esperado
 
