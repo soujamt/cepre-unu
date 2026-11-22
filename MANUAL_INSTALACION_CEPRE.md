@@ -605,7 +605,7 @@ Como el sistema funciona solo en la red local, los alumnos consultan su aula des
 | `DATA CEPRE-UNU 2027-II` | `DATA` | Inscripciones no anuladas en el formato CEPRE (`NRO_REG`, `FECHA_Y_HORA`, columnas codificadas) y al final `AULA`, `TURNO` y `ESTADO` |
 | `PAGOS 2027-II` | `PAGOS` | Pagos usados en el proceso y pagos libres posteriores al proceso anterior |
 
-El nombre del periodo se toma del proceso: `2027-2` se escribe `2027-II`. Si la hoja ya existe en la carpeta, se reescribe su pestaña y conserva su enlace; si no existe, se crea.
+El nombre del periodo es el del proceso (por ejemplo `2027-II`). Si la hoja ya existe en la carpeta, se reescribe su pestaña y conserva su enlace; si no existe, se crea.
 
 **Configuración (una sola vez):**
 

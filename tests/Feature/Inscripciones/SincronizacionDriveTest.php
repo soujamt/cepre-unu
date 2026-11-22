@@ -73,7 +73,7 @@ function pagoDrive(string $operacion, string $fecha, string $estado = 'PENDIENTE
 }
 
 /**
- * Proceso 2027-2 (el anterior terminó el 31/08/2026) con una inscripción activa en el
+ * Proceso 2027-II (el anterior terminó el 31/08/2026) con una inscripción activa en el
  * aula A-101 del turno MAÑANA, otra anulada y cuatro pagos: el de la inscripción (anterior
  * al proceso), uno libre del periodo, uno libre antiguo y uno asociado a otro proceso.
  *
@@ -81,8 +81,8 @@ function pagoDrive(string $operacion, string $fecha, string $estado = 'PENDIENTE
  */
 function contextoDrive(): array
 {
-    Proceso::query()->create(['codigo_pro' => 'p_2027_1', 'nombre_pro' => '2027-1', 'fecha_inicio_pro' => '2026-05-01', 'fecha_fin_pro' => '2026-08-31 23:59:00', 'estado_pro' => 'HABILITADO']);
-    $proceso = Proceso::query()->create(['codigo_pro' => 'p_2027_2', 'nombre_pro' => '2027-2', 'fecha_inicio_pro' => '2026-10-01', 'fecha_fin_pro' => '2027-03-31', 'estado_pro' => 'HABILITADO']);
+    Proceso::query()->create(['codigo_pro' => 'p_2027_1', 'nombre_pro' => '2027-I', 'fecha_inicio_pro' => '2026-05-01', 'fecha_fin_pro' => '2026-08-31 23:59:00', 'estado_pro' => 'HABILITADO']);
+    $proceso = Proceso::query()->create(['codigo_pro' => 'p_2027_2', 'nombre_pro' => '2027-II', 'fecha_inicio_pro' => '2026-10-01', 'fecha_fin_pro' => '2027-03-31', 'estado_pro' => 'HABILITADO']);
 
     $ubigeo = Ubigeo::query()->firstOrCreate(['id_ubi' => '250101'], [
         'codigo_departamento_ubi' => '25', 'codigo_provincia_ubi' => '01', 'codigo_distrito_ubi' => '01',

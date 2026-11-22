@@ -17,15 +17,33 @@ class ProcesoRequest extends CatalogoRequest
     }
 
     /**
-     * Código del proceso a partir del nombre: "2026-2" → "2026_2".
+     * Código interno del proceso a partir del nombre: "2026-II" → "2026_2". Usa el
+     * número del periodo para que coincida con el de los procesos ya registrados.
      */
     public static function codigoDesdeNombre(string $nombre): string
     {
-        return str_replace('-', '_', (string) str($nombre)->slug('_'));
+        $proceso = new Proceso(['nombre_pro' => $nombre]);
+
+        return $proceso->numeroPeriodo() !== null
+            ? $proceso->anioPeriodo().'_'.$proceso->numeroPeriodo()
+            : str_replace('-', '_', (string) str($nombre)->slug('_'));
     }
 
     /**
-     * El nombre sigue el formato AAAA-N y ni el nombre ni el código que genera pueden
+     * Además de pasar el nombre a mayúsculas, acepta el periodo escrito con número
+     * ("2026-2") y lo convierte a romanos ("2026-II").
+     */
+    protected function prepareForValidation(): void
+    {
+        parent::prepareForValidation();
+
+        if (is_string($this->input('nombre')) && preg_match('/^(\d{4})\s*-\s*([1-3])$/', $this->input('nombre'), $partes)) {
+            $this->merge(['nombre' => Proceso::nombreDePeriodo((int) $partes[1], (int) $partes[2])]);
+        }
+    }
+
+    /**
+     * El nombre sigue el formato AAAA-I, AAAA-II o AAAA-III y ni el nombre ni el código que genera pueden
      * repetirse, tampoco frente a procesos eliminados.
      *
      * @return array<string, list<mixed>>
@@ -64,7 +82,7 @@ class ProcesoRequest extends CatalogoRequest
     {
         return [
             'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.regex' => 'El nombre debe tener el formato AAAA-N, por ejemplo 2026-2.',
+            'nombre.regex' => 'El nombre debe tener el año y el periodo en romanos: 2026-I, 2026-II o 2026-III.',
             'fecha_inicio.required' => 'La fecha y hora de apertura es obligatoria.',
             'fecha_inicio.date' => 'Ingrese una fecha y hora de apertura válida.',
             'fecha_fin.required' => 'La fecha y hora de cierre es obligatoria.',

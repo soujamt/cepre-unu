@@ -8,15 +8,30 @@ use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Proceso de admisión. Su nombre identifica el periodo con el formato
- * AAAA-N (por ejemplo 2026-2). La inscripción se abre en la fecha y hora de
+ * Proceso de admisión. Su nombre identifica el periodo con el año y el número
+ * del periodo en romanos (2026-I, 2026-II o 2026-III). La inscripción se abre en la fecha y hora de
  * inicio y se cierra en la fecha y hora de fin (hora de America/Lima).
  */
 #[Fillable(['codigo_pro', 'nombre_pro', 'fecha_inicio_pro', 'fecha_fin_pro', 'anio_egreso_max_ordinario_pro', 'estado_pro'])]
 #[Table('tbl_proceso', key: 'id_pro')]
 class Proceso extends LegacyModel
 {
-    public const FORMATO_NOMBRE = '/^(\d{4})-(\d{1,2})$/';
+    public const FORMATO_NOMBRE = '/^(\d{4})-(I|II|III)$/';
+
+    /**
+     * Número de cada periodo en romanos, como se escribe en el nombre.
+     *
+     * @var array<int, string>
+     */
+    public const PERIODOS = [1 => 'I', 2 => 'II', 3 => 'III'];
+
+    /**
+     * Nombre a partir del año y el número del periodo: (2026, 2) → "2026-II".
+     */
+    public static function nombreDePeriodo(int $anio, int $numero): ?string
+    {
+        return isset(self::PERIODOS[$numero]) ? $anio.'-'.self::PERIODOS[$numero] : null;
+    }
 
     protected function casts(): array
     {
@@ -29,7 +44,7 @@ class Proceso extends LegacyModel
     }
 
     /**
-     * Año del periodo según el nombre (2026 en "2026-2").
+     * Año del periodo según el nombre (2026 en "2026-II").
      */
     public function anioPeriodo(): ?int
     {
@@ -37,11 +52,17 @@ class Proceso extends LegacyModel
     }
 
     /**
-     * Número del periodo según el nombre (2 en "2026-2").
+     * Número del periodo según el nombre (2 en "2026-II").
      */
     public function numeroPeriodo(): ?int
     {
-        return preg_match(self::FORMATO_NOMBRE, (string) $this->nombre_pro, $partes) ? (int) $partes[2] : null;
+        if (! preg_match(self::FORMATO_NOMBRE, (string) $this->nombre_pro, $partes)) {
+            return null;
+        }
+
+        $numero = array_search($partes[2], self::PERIODOS, true);
+
+        return $numero === false ? null : $numero;
     }
 
     /**

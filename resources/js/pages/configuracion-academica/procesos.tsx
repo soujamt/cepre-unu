@@ -72,7 +72,7 @@ export default function Procesos({ procesos, filtros }: { procesos: Paginado<Pro
                         value={formulario.data.nombre}
                         onChange={(evento) => formulario.setData('nombre', evento.target.value)}
                         error={formulario.errors.nombre}
-                        ayuda="Formato AAAA-N, por ejemplo 2026-2."
+                        ayuda="Año y periodo en romanos: 2026-I, 2026-II o 2026-III."
                         maxLength={20}
                         requerido
                     />

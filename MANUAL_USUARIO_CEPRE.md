@@ -511,7 +511,7 @@ Definir el proceso, el periodo en que estará abierto y el corte de año de egre
 1. ingresar a `Configuración académica > Procesos`;
 2. seleccionar `Nuevo`;
 3. registrar:
-   - nombre, con el formato `AAAA-N` (por ejemplo `2027-1`); de él salen los primeros dígitos del código de inscripción;
+   - nombre, con el año y el periodo en romanos: `2027-I`, `2027-II` o `2027-III` (si se escribe `2027-2`, el sistema lo guarda como `2027-II`). De él salen los primeros dígitos del código de inscripción;
    - apertura (fecha y hora);
    - cierre (fecha y hora);
    - año de egreso máximo para Ordinario;
@@ -1175,7 +1175,7 @@ Para una operación ordenada, se recomienda seguir este flujo:
 
 Para elaborar capturas y demostraciones, los datos de prueba incluyen:
 
-- el proceso `2026-1`;
+- el proceso `2026-I`;
 - `50` inscripciones activas en la modalidad `ORDINARIO` y el turno `MAÑANA`;
 - personas con ubigeo de `UCAYALI / CORONEL PORTILLO`;
 - pagos registrados y aulas asignadas;

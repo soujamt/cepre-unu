@@ -96,15 +96,11 @@ class SincronizadorDrive
     }
 
     /**
-     * Nombre del periodo como en el Drive: "2027-2" pasa a "2027-II".
+     * Nombre del periodo en las hojas del Drive: el del proceso (por ejemplo 2027-II).
      */
     public function periodo(Proceso $proceso): string
     {
-        $anio = $proceso->anioPeriodo();
-        $numero = $proceso->numeroPeriodo();
-        $romanos = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
-
-        return $anio !== null && isset($romanos[$numero]) ? "{$anio}-{$romanos[$numero]}" : (string) $proceso->nombre_pro;
+        return (string) $proceso->nombre_pro;
     }
 
     /**

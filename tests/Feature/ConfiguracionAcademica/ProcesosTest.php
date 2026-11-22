@@ -85,13 +85,13 @@ test('authorized users can register a proceso', function () {
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
     $this->actingAs($usuario)
-        ->post(route('procesos.store'), ['nombre' => '2026-2', 'fecha_inicio' => '2026-01-10T08:00', 'fecha_fin' => '2026-03-15T18:30', 'anio_egreso_max_ordinario' => ''])
+        ->post(route('procesos.store'), ['nombre' => '2026-II', 'fecha_inicio' => '2026-01-10T08:00', 'fecha_fin' => '2026-03-15T18:30', 'anio_egreso_max_ordinario' => ''])
         ->assertSessionHasNoErrors()
         ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Proceso registrado correctamente.']);
 
     $this->assertDatabaseHas('tbl_proceso', [
         'codigo_pro' => '2026_2',
-        'nombre_pro' => '2026-2',
+        'nombre_pro' => '2026-II',
         'fecha_inicio_pro' => '2026-01-10 08:00:00',
         'fecha_fin_pro' => '2026-03-15 18:30:00',
         'estado_pro' => 'HABILITADO',
@@ -100,7 +100,7 @@ test('authorized users can register a proceso', function () {
     ]);
 });
 
-test('authorized users can update a proceso', function () {
+test('authorized users can update a proceso and a period written with a number is saved in roman numerals', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_editar']);
 
@@ -122,7 +122,7 @@ test('authorized users can update a proceso', function () {
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
         'codigo_pro' => '2026_3',
-        'nombre_pro' => '2026-3',
+        'nombre_pro' => '2026-III',
         'id_usuario_actualizador' => $usuario->id_usu,
     ]);
 });
@@ -243,14 +243,14 @@ test('authorized users can delete a proceso without configuraciones relacionadas
     expect($procesoEliminado?->id_usuario_eliminador)->toBe($usuario->id_usu);
 });
 
-test('proceso requires the AAAA-N name format and a valid date range', function () {
+test('proceso requires the year and roman period name format and a valid date range', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
     $this->actingAs($usuario)
         ->post(route('procesos.store'), ['nombre' => 'Proceso 2026-I', 'fecha_inicio' => '2026-07-31', 'fecha_fin' => '2026-04-01', 'anio_egreso_max_ordinario' => '26'])
         ->assertSessionHasErrors([
-            'nombre' => 'El nombre debe tener el formato AAAA-N, por ejemplo 2026-2.',
+            'nombre' => 'El nombre debe tener el año y el periodo en romanos: 2026-I, 2026-II o 2026-III.',
             'fecha_fin' => 'El cierre debe ser posterior a la apertura.',
             'anio_egreso_max_ordinario' => 'Ingrese un año de cuatro dígitos.',
         ]);
@@ -261,13 +261,22 @@ test('proceso name must be unique including deleted procesos', function () {
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
     Proceso::query()->create([
         'codigo_pro' => '2026_2',
-        'nombre_pro' => '2026-2',
+        'nombre_pro' => '2026-II',
         'fecha_inicio_pro' => '2026-01-10',
         'fecha_fin_pro' => '2026-03-15',
         'estado_pro' => 'HABILITADO',
     ])->delete();
 
     $this->actingAs($usuario)
-        ->post(route('procesos.store'), ['nombre' => '2026-2', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15'])
+        ->post(route('procesos.store'), ['nombre' => '2026-ii', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15'])
         ->assertSessionHasErrors(['nombre' => 'Ya existe un proceso con ese nombre.']);
 });
+
+test('only the periods I, II and III are accepted in the proceso name', function (string $nombre) {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
+
+    $this->actingAs($usuario)
+        ->post(route('procesos.store'), ['nombre' => $nombre, 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15'])
+        ->assertSessionHasErrors(['nombre' => 'El nombre debe tener el año y el periodo en romanos: 2026-I, 2026-II o 2026-III.']);
+})->with(['2026-IV', '2026-4', '2026-0']);
