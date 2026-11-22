@@ -183,6 +183,9 @@ if ($Compilar -or (Test-AssetsDesactualizados)) {
     # npm ci instala las versiones exactas de package-lock.json, que pueden
     # haber cambiado al actualizar el codigo. Tambien se recompila si los
     # archivos del frontend son mas nuevos que el build (por ejemplo tras un git pull).
+    # Antes se limpian las caches: Wayfinder genera las rutas del frontend leyendo las
+    # rutas de Laravel, y una cache de rutas vieja romperia la compilacion.
+    Invoke-Comando 'php' @('artisan', 'optimize:clear', '--no-interaction')
     Invoke-Comando 'npm' @('ci')
     Invoke-Comando 'npm' @('run', 'build')
 }
