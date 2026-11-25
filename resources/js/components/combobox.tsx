@@ -28,8 +28,30 @@ interface PropsCombobox {
     className?: string;
 }
 
+/** Texto en minúsculas y sin tildes, para buscar "peru" y encontrar "PERÚ". */
+const normalizar = (texto: string): string =>
+    texto
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+/**
+ * Coincide si cada palabra buscada aparece en la opción, sin importar tildes ni mayúsculas.
+ */
+const filtrarSinTildes = (valor: string, busqueda: string): number => {
+    const opcion = normalizar(valor);
+
+    return normalizar(busqueda)
+        .split(/\s+/)
+        .filter(Boolean)
+        .every((palabra) => opcion.includes(palabra))
+        ? 1
+        : 0;
+};
+
 /**
  * Selector con búsqueda y etiqueta flotante, de la misma altura que los demás campos (48 px).
+ * Con opciones fijas filtra en el navegador sin importar tildes; con `buscar`, en el servidor.
  */
 export function Combobox({
     etiqueta,
@@ -94,8 +116,8 @@ export function Combobox({
                         aria-expanded={abierto}
                         aria-invalid={invalido || undefined}
                         className={cn(
-                            'relative flex h-12 w-full min-w-0 items-end rounded-lg border bg-control ps-3.5 pe-10 pb-1.5 text-start text-base text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-[border-color,box-shadow] sm:text-sm dark:text-zinc-200 dark:shadow-none',
-                            'focus-visible:border-index-400 focus-visible:ring-3 focus-visible:ring-index-500/15 focus-visible:outline-hidden data-[state=open]:border-index-400 data-[state=open]:ring-3 data-[state=open]:ring-index-500/15',
+                            'bg-control relative flex h-12 w-full min-w-0 items-end rounded-lg border ps-3.5 pe-10 pb-1.5 text-start text-base text-zinc-700 shadow-[0_1px_2px_rgba(16,24,40,0.05)] transition-[border-color,box-shadow] sm:text-sm dark:text-zinc-200 dark:shadow-none',
+                            'focus-visible:border-index-400 focus-visible:ring-index-500/15 data-[state=open]:border-index-400 data-[state=open]:ring-index-500/15 focus-visible:ring-3 focus-visible:outline-hidden data-[state=open]:ring-3',
                             'disabled:cursor-not-allowed disabled:bg-zinc-50 disabled:text-zinc-500 dark:disabled:bg-white/5',
                             invalido ? 'border-red-400' : 'border-zinc-200 dark:border-white/10',
                         )}
@@ -115,7 +137,7 @@ export function Combobox({
                     </button>
                 </PopoverTrigger>
                 <PopoverContent className="w-(--radix-popover-trigger-width) min-w-80 p-0" align="start">
-                    <Command shouldFilter={!buscar}>
+                    <Command shouldFilter={!buscar} filter={filtrarSinTildes}>
                         <CommandInput placeholder={placeholderBusqueda} value={texto} onValueChange={setTexto} />
                         <CommandList>
                             {buscando ? (

@@ -71,7 +71,7 @@ class ProcesoRequest extends CatalogoRequest
             ],
             'fecha_inicio' => ['required', 'date'],
             'fecha_fin' => ['required', 'date', 'after:fecha_inicio'],
-            'anio_egreso_max_ordinario' => ['nullable', 'integer', 'digits:4', 'min:1950', 'max:2100'],
+            'anio_extraordinario_desde' => ['nullable', 'integer', 'digits:4', 'min:1950', 'max:2100'],
         ];
     }
 
@@ -88,10 +88,10 @@ class ProcesoRequest extends CatalogoRequest
             'fecha_fin.required' => 'La fecha y hora de cierre es obligatoria.',
             'fecha_fin.date' => 'Ingrese una fecha y hora de cierre válida.',
             'fecha_fin.after' => 'El cierre debe ser posterior a la apertura.',
-            'anio_egreso_max_ordinario.integer' => 'Ingrese un año de cuatro dígitos.',
-            'anio_egreso_max_ordinario.digits' => 'Ingrese un año de cuatro dígitos.',
-            'anio_egreso_max_ordinario.min' => 'Ingrese un año desde 1950.',
-            'anio_egreso_max_ordinario.max' => 'Ingrese un año hasta 2100.',
+            'anio_extraordinario_desde.integer' => 'Ingrese un año de cuatro dígitos.',
+            'anio_extraordinario_desde.digits' => 'Ingrese un año de cuatro dígitos.',
+            'anio_extraordinario_desde.min' => 'Ingrese un año desde 1950.',
+            'anio_extraordinario_desde.max' => 'Ingrese un año hasta 2100.',
         ];
     }
 }

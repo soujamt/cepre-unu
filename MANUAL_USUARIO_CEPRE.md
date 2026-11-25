@@ -183,7 +183,7 @@ Referencias de imagen:
 Antes de abrir las inscripciones, se debe verificar:
 
 1. que exista un proceso `HABILITADO` cuya fecha y hora de apertura ya pasó y cuya fecha y hora de cierre aún no llega;
-2. que el proceso tenga el año de egreso máximo para Ordinario correcto;
+2. que el proceso tenga correcto el año desde el que es Extraordinario;
 3. que la oferta del proceso tenga habilitada una modalidad para egresados, otra para estudiantes en colegio, y las carreras de cada sede;
 4. que cada turno tenga aulas habilitadas con capacidad suficiente;
 5. que existan reglas de pago habilitadas y vigentes en la fecha actual;
@@ -516,12 +516,12 @@ Definir el proceso, el periodo en que estará abierto y el corte de año de egre
    - nombre, con el año y el periodo en romanos: `2027-I`, `2027-II` o `2027-III` (si se escribe `2027-2`, el sistema lo guarda como `2027-II`). De él salen los primeros dígitos del código de inscripción;
    - apertura (fecha y hora);
    - cierre (fecha y hora);
-   - año de egreso máximo para Ordinario;
+   - `Extraordinario desde el año de egreso`;
 4. guardar.
 
 El proceso se crea en estado `HABILITADO`.
 
-**Año de egreso máximo para Ordinario.** Quien egresó hasta ese año inclusive es egresado y postula en la modalidad para `EGRESADOS` (ORDINARIO). Quien egresa después está en el colegio y postula en la modalidad para `ESTUDIANTES EN COLEGIO` (EXTRAORDINARIO O RESERVA). Por ejemplo, en un proceso que inscribe en 2026: hasta 2025 es ORDINARIO y desde 2026 es RESERVA. El corte sube un año en el proceso siguiente. Si se deja vacío, se usa el año anterior al de apertura.
+**Extraordinario desde el año de egreso.** Es el primer año de egreso que postula en la modalidad para `ESTUDIANTES EN COLEGIO` (EXTRAORDINARIO O RESERVA); quien egresó antes es egresado y postula en la modalidad para `EGRESADOS` (ORDINARIO). Por ejemplo, con `2026`: hasta 2025 es ORDINARIO y desde 2026 es EXTRAORDINARIO. El corte sube un año en el proceso siguiente. Si se deja vacío, se usa el año de apertura del proceso; la ayuda del campo muestra el corte que quedará. La lista de procesos lo muestra en la columna `Extraordinario desde` (con `Automático` cuando se dejó vacío). Este año solo **sugiere** la modalidad: en el asistente el personal puede elegir otra (ver 16.6).
 
 #### 13.1.3. Resultado esperado
 
@@ -1157,7 +1157,7 @@ Para una operación ordenada, se recomienda seguir este flujo:
 
 1. el `SuperAdministrador` crea o verifica usuarios y roles;
 2. el `SuperAdministrador` verifica los catálogos base (sección 12);
-3. el `SuperAdministrador` crea el proceso con sus fechas y el año de egreso máximo para Ordinario;
+3. el `SuperAdministrador` crea el proceso con sus fechas y el año desde el que es Extraordinario;
 4. el `SuperAdministrador` configura la oferta del proceso, las aulas, las reglas de pago y el carnet;
 5. el `Gestor de Inscripciones CEPRE` carga el TXT del banco del día y registra los pagos manuales;
 6. el `Gestor de Inscripciones CEPRE` inscribe a los postulantes que acuden al CEPRE-UNU y aprueba las inscripciones del portal;
@@ -1182,7 +1182,7 @@ Para una operación ordenada, se recomienda seguir este flujo:
 1. inscribir antes de cargar el TXT del banco del día;
 2. registrar un pago manual con un DNI equivocado;
 3. registrar mal el año de egreso, lo que asigna otra modalidad;
-4. dejar el proceso sin el año de egreso máximo correcto al pasar de un proceso a otro;
+4. no actualizar el año desde el que es Extraordinario al pasar de un proceso a otro;
 5. no habilitar en la oferta del proceso una modalidad para egresados o para estudiantes en colegio;
 6. dejar un turno sin aulas con capacidad en el proceso;
 7. olvidar aprobar las inscripciones del portal;

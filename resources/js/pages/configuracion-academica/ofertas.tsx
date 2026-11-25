@@ -91,7 +91,7 @@ export default function Ofertas({ procesos, proceso, modalidades, sedes, carrera
                     <div className="space-y-5">
                         <Panel
                             titulo="Modalidades"
-                            descripcion={`Se asigna sola según el año de egreso: hasta ${proceso.anioEgresoOrdinario} es egresado; desde ${proceso.anioEgresoOrdinario + 1}, estudiante en colegio.`}
+                            descripcion={`Se sugiere según el año de egreso: hasta ${proceso.anioEgresoOrdinario}, egresado (ORDINARIO); desde ${proceso.anioEgresoOrdinario + 1}, estudiante en colegio (EXTRAORDINARIO). El año se cambia en Procesos.`}
                         >
                             {modalidades.length === 0 ? (
                                 <Aviso tono="aviso">No hay modalidades habilitadas con «Aplica a» definido. Regístrelas en Mantenedores › Modalidades.</Aviso>

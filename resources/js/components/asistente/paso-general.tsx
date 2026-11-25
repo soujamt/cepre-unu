@@ -1,7 +1,7 @@
 import { Aviso } from '@/components/aviso';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { Combobox } from '@/components/combobox';
-import { Opciones, PiePaso, Seccion } from '@/components/asistente/comunes';
+import { Opciones, PiePaso, Seccion, opcionesBuscables } from '@/components/asistente/comunes';
 import type { ControlAsistente } from '@/components/asistente/use-asistente';
 import type { DatosAsistente } from '@/components/asistente/tipos';
 import { Badge } from '@/components/ui/badge';
@@ -38,9 +38,16 @@ export function PasoGeneral({ asistente, control }: { asistente: DatosAsistente;
                             </p>
                         )}
                     </div>
-                    <CampoSelect etiqueta="País del colegio" value={pais} onChange={(evento) => cambiar('generalForm', 'id_pais_colegio', evento.target.value, true)} error={errores['generalForm.id_pais_colegio']} requerido>
-                        <Opciones opciones={asistente.catalogos.paises} vacio="Seleccionar país" />
-                    </CampoSelect>
+                    <Combobox
+                        etiqueta="País del colegio"
+                        valor={pais}
+                        alCambiar={(valor) => cambiar('generalForm', 'id_pais_colegio', valor, true)}
+                        opciones={opcionesBuscables(asistente.catalogos.paises, (opcion) => opcion.valor === asistente.catalogos.paisPeru)}
+                        placeholderBusqueda="Buscar país…"
+                        textoVacio="No hay países con ese nombre."
+                        error={errores['generalForm.id_pais_colegio']}
+                        requerido
+                    />
                     <CampoSelect etiqueta="Tipo de colegio" value={tipoColegio} onChange={(evento) => cambiar('generalForm', 'id_tipo_colegio', evento.target.value, true)} error={errores['generalForm.id_tipo_colegio']} requerido>
                         <Opciones opciones={asistente.catalogos.tiposColegio} vacio="Seleccionar tipo" />
                     </CampoSelect>
