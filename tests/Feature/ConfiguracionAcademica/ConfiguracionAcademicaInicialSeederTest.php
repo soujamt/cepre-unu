@@ -45,7 +45,7 @@ test('academic initial seeder creates a usable base configuration', function () 
     expect(DB::table('tbl_proceso_carrera')
         ->where('id_proceso', $procesoId)
         ->where('estado_pca', 'HABILITADO')
-        ->count())->toBe(DB::table('tbl_carrera')->where('estado_car', 'HABILITADO')->count());
+        ->count())->toBe(DB::table('tbl_carrera')->where('estado_car', 'HABILITADO')->count() * 2);
 
     expect(DB::table('tbl_regla_pago')
         ->where('id_proceso', $procesoId)

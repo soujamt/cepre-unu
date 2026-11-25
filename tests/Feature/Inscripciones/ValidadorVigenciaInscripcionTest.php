@@ -35,8 +35,8 @@ beforeEach(function () {
     }
 
     $this->proceso = Proceso::query()->where('codigo_pro', '2026_1')->firstOrFail();
-    $this->procesoCarrera = ProcesoCarrera::query()->where('id_proceso', $this->proceso->id_pro)->firstOrFail();
     $this->modalidad = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
+    $this->procesoCarrera = ProcesoCarrera::query()->where('id_proceso', $this->proceso->id_pro)->where('id_modalidad_admision', $this->modalidad->id_mad)->firstOrFail();
     $this->validador = app(ValidadorVigenciaInscripcion::class);
 });
 
@@ -64,7 +64,23 @@ test('a disabled carrera is rejected', function () {
         $this->modalidad->id_mad,
         $this->proceso,
     );
-})->throws(RuntimeException::class, 'La carrera seleccionada ya no se encuentra habilitada en esa sede para el proceso activo.');
+})->throws(RuntimeException::class, 'La carrera seleccionada ya no se encuentra habilitada en esa sede y modalidad para el proceso activo.');
+
+test('a carrera enabled only in another modalidad is rejected', function () {
+    $reserva = ModalidadAdmision::query()->where('codigo_mad', 'EXT')->firstOrFail();
+    ProcesoCarrera::query()
+        ->where('id_proceso', $this->proceso->id_pro)
+        ->where('id_carrera', $this->procesoCarrera->id_carrera)
+        ->where('id_modalidad_admision', $reserva->id_mad)
+        ->update(['estado_pca' => EstadoCatalogo::Deshabilitado->value]);
+
+    $this->validador->postulacionVigente(
+        $this->procesoCarrera->id_sede,
+        $this->procesoCarrera->id_carrera,
+        $reserva->id_mad,
+        $this->proceso,
+    );
+})->throws(RuntimeException::class, 'La carrera seleccionada ya no se encuentra habilitada en esa sede y modalidad para el proceso activo.');
 
 test('a disabled modalidad is rejected', function () {
     ProcesoModalidad::query()

@@ -7,12 +7,16 @@ use App\Enums\EstadoImportacionBancoDetalle;
 use App\Http\Controllers\CatalogoController;
 use App\Models\ImportacionBanco;
 use App\Models\ImportacionBancoDetalle;
+use App\Models\InscripcionObligacionPago;
 use App\Support\ImportacionBancoTxt;
 use App\Support\InscripcionPagoManager;
+use DomainException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -144,6 +148,51 @@ class ImportacionPagoController extends CatalogoController
     }
 
     /**
+     * Inscripciones con saldo para asociarles a mano un pago que quedó libre.
+     */
+    public function obligaciones(Request $request, InscripcionPagoManager $pagos): JsonResponse
+    {
+        return response()->json([
+            'obligaciones' => $pagos->buscarObligacionesConSaldo((string) $request->query('buscar', ''))
+                ->map(fn (InscripcionObligacionPago $obligacion): array => $pagos->resumenObligacion($obligacion))
+                ->values(),
+        ]);
+    }
+
+    /**
+     * Asocia a mano un pago libre del lote a una inscripción. Si el DNI del pago no es el
+     * del postulante (pagó un familiar, por ejemplo), pide el motivo y lo guarda.
+     */
+    public function asociar(Request $request, ImportacionBancoDetalle $detalle, InscripcionPagoManager $pagos): RedirectResponse
+    {
+        $datos = $request->validate([
+            'obligacion' => ['required', 'integer', 'exists:tbl_inscripcion_obligacion_pago,id_iop'],
+            'motivo' => ['nullable', 'string', 'max:200'],
+        ], [
+            'obligacion.required' => 'Seleccione la inscripción a la que corresponde el pago.',
+            'motivo.max' => 'El motivo no puede exceder 200 caracteres.',
+        ]);
+
+        $obligacion = InscripcionObligacionPago::query()->with('inscripcion.persona')->findOrFail((int) $datos['obligacion']);
+        $motivo = trim((string) ($datos['motivo'] ?? ''));
+        $otroDocumento = ! $pagos->documentoCoincide($obligacion, $detalle);
+
+        if ($otroDocumento && mb_strlen($motivo) < 10) {
+            throw ValidationException::withMessages(['motivo' => 'El DNI del pago no es el del postulante: indique el motivo (mínimo 10 caracteres).']);
+        }
+
+        try {
+            $pagos->asociarDetalleAObligacion($obligacion, $detalle, $otroDocumento ? $motivo : null);
+        } catch (DomainException $error) {
+            return $this->volverCon($error->getMessage(), 'error');
+        }
+
+        $operacion = $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd;
+
+        return $this->volverCon("Pago {$operacion} asociado a la inscripción {$obligacion->inscripcion?->codigo_ins}.");
+    }
+
+    /**
      * Pagos de la importación indicada en ?importacion=ID.
      *
      * @return array<string, mixed>|null
@@ -170,6 +219,7 @@ class ImportacionPagoController extends CatalogoController
                 'fecha' => $pago->fecha_pago_ibd?->format('d/m/Y'),
                 'monto' => (float) $pago->monto_ibd,
                 'estado' => $pago->estado_ibd->getNombre(),
+                'libre' => $pago->estado_ibd === EstadoImportacionBancoDetalle::Pendiente,
             ])->values()->all(),
         ];
     }

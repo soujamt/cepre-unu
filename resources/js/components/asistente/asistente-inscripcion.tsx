@@ -2,6 +2,7 @@ import { Check, CircleCheck, FileText, GraduationCap, IdCard, Receipt, RotateCcw
 import { useEffect } from 'react';
 import { Aviso } from '@/components/aviso';
 import { useConfirmacion } from '@/components/dialogo-confirmacion';
+import { FichaPostulante } from '@/components/asistente/ficha-postulante';
 import { PasoGeneral } from '@/components/asistente/paso-general';
 import { PasoPago } from '@/components/asistente/paso-pago';
 import { PasoPersonal } from '@/components/asistente/paso-personal';
@@ -26,7 +27,7 @@ interface PropsAsistente {
  */
 function Pasos({ asistente, alElegir }: { asistente: DatosAsistente; alElegir: (paso: number) => void }) {
     return (
-        <ol className="grid gap-2 sm:grid-cols-4 lg:grid-cols-1 lg:gap-1 lg:rounded-2xl lg:border lg:border-zinc-200/80 lg:bg-white lg:p-2 lg:shadow-card dark:lg:border-white/[0.07] dark:lg:bg-white/[0.02] dark:lg:shadow-none">
+        <ol className="lg:shadow-card grid gap-2 sm:grid-cols-4 lg:grid-cols-1 lg:gap-1 lg:rounded-2xl lg:border lg:border-zinc-200/80 lg:bg-white lg:p-2 dark:lg:border-white/[0.07] dark:lg:bg-white/[0.02] dark:lg:shadow-none">
             {asistente.pasos.map((paso, indice) => {
                 const actual = paso.numero === asistente.paso;
                 const hecho = paso.numero < asistente.paso;
@@ -35,10 +36,7 @@ function Pasos({ asistente, alElegir }: { asistente: DatosAsistente; alElegir: (
                 return (
                     <li key={paso.numero} className="relative">
                         {!ultimo && (
-                            <span
-                                aria-hidden
-                                className={cn('absolute start-[27px] top-[50px] -bottom-[10px] hidden w-0.5 rounded-full lg:block', hecho ? 'bg-green-500/50' : 'bg-zinc-200 dark:bg-white/[0.08]')}
-                            />
+                            <span aria-hidden className={cn('absolute start-[27px] top-[50px] -bottom-[10px] hidden w-0.5 rounded-full lg:block', hecho ? 'bg-green-500/50' : 'bg-zinc-200 dark:bg-white/[0.08]')} />
                         )}
                         <button
                             type="button"
@@ -47,14 +45,14 @@ function Pasos({ asistente, alElegir }: { asistente: DatosAsistente; alElegir: (
                             className={cn(
                                 'flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-start transition-colors lg:border-transparent lg:px-2.5',
                                 actual
-                                    ? 'border-index-300 bg-white shadow-card ring-3 ring-index-500/10 lg:bg-index-50/70 lg:shadow-none lg:ring-0 dark:border-index-500/40 dark:bg-white/[0.04] dark:lg:bg-index-500/10'
+                                    ? 'border-index-300 shadow-card ring-index-500/10 lg:bg-index-50/70 dark:border-index-500/40 dark:lg:bg-index-500/10 bg-white ring-3 lg:shadow-none lg:ring-0 dark:bg-white/[0.04]'
                                     : 'border-zinc-200/80 bg-white/60 hover:bg-white lg:bg-transparent lg:hover:bg-zinc-50 dark:border-white/[0.07] dark:bg-white/[0.02] dark:lg:bg-transparent dark:lg:hover:bg-white/[0.03]',
                             )}
                         >
                             <span
                                 className={cn(
                                     'relative z-10 flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold',
-                                    actual && 'bg-linear-to-b from-index-400 to-index-600 text-white shadow-[0_4px_10px_-2px_rgba(41,111,240,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]',
+                                    actual && 'from-index-400 to-index-600 bg-linear-to-b text-white shadow-[0_4px_10px_-2px_rgba(41,111,240,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]',
                                     hecho && 'bg-green-500 text-white',
                                     !actual && !hecho && 'bg-zinc-100 text-zinc-500 ring-4 ring-white dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-900',
                                 )}
@@ -85,12 +83,12 @@ function TengaALaMano() {
     ];
 
     return (
-        <div className="hidden rounded-2xl border border-zinc-200/80 bg-white p-4 shadow-card lg:block dark:border-white/[0.07] dark:bg-white/[0.02] dark:shadow-none">
+        <div className="shadow-card hidden rounded-2xl border border-zinc-200/80 bg-white p-4 lg:block dark:border-white/[0.07] dark:bg-white/[0.02] dark:shadow-none">
             <p className="text-sm font-semibold text-zinc-900 dark:text-white">Tenga a la mano</p>
             <ul className="mt-3 space-y-2.5">
                 {requisitos.map(({ icono: Icono, texto }) => (
                     <li key={texto} className="flex items-start gap-2.5 text-[13px] text-zinc-600 dark:text-zinc-300">
-                        <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-index-50 text-index-500 dark:bg-index-500/10 dark:text-index-300">
+                        <span className="bg-index-50 text-index-500 dark:bg-index-500/10 dark:text-index-300 flex size-7 shrink-0 items-center justify-center rounded-lg">
                             <Icono className="size-4" />
                         </span>
                         <span className="pt-1">{texto}</span>
@@ -110,7 +108,7 @@ function TengaALaMano() {
  */
 function InscripcionRegistrada({ registrada, alSalir }: { registrada: NonNullable<DatosAsistente['registrada']>; alSalir: () => void }) {
     return (
-        <div className="mx-auto max-w-2xl space-y-5 rounded-3xl border border-zinc-200/80 bg-white p-6 text-center shadow-card sm:p-10 dark:border-white/[0.07] dark:bg-zinc-900 dark:shadow-none">
+        <div className="shadow-card mx-auto max-w-2xl space-y-5 rounded-3xl border border-zinc-200/80 bg-white p-6 text-center sm:p-10 dark:border-white/[0.07] dark:bg-zinc-900 dark:shadow-none">
             <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-b from-[#34d399] to-[#10b981] text-white shadow-[0_6px_14px_-4px_rgba(16,185,129,0.5),inset_0_1px_0_rgba(255,255,255,0.35)]">
                 <CircleCheck className="size-7" />
             </span>
@@ -198,7 +196,8 @@ export function AsistenteInscripcion({ asistente, pregunta, rutaActualizar, ruta
         <div className="grid items-start gap-6 lg:grid-cols-[272px_minmax(0,1fr)]">
             <aside className="space-y-4 lg:sticky lg:top-6">
                 <Pasos asistente={asistente} alElegir={(paso) => paso !== asistente.paso && control.accion('irPaso', paso)} />
-                {asistente.modoPublico && <TengaALaMano />}
+                <FichaPostulante asistente={asistente} control={control} />
+                {asistente.modoPublico && asistente.paso < 2 && <TengaALaMano />}
             </aside>
 
             <div className="min-w-0 space-y-5">
@@ -208,14 +207,14 @@ export function AsistenteInscripcion({ asistente, pregunta, rutaActualizar, ruta
                     </Aviso>
                 )}
 
-                <section className="overflow-hidden rounded-2xl border border-zinc-200/80 bg-white shadow-card dark:border-white/[0.07] dark:bg-zinc-900 dark:shadow-none">
+                <section className="shadow-card overflow-hidden rounded-2xl border border-zinc-200/80 bg-white dark:border-white/[0.07] dark:bg-zinc-900 dark:shadow-none">
                     <div className="h-1 bg-zinc-100 dark:bg-white/[0.05]">
-                        <div className="h-full rounded-e-full bg-linear-to-r from-index-400 to-index-600 transition-[width] duration-500" style={{ width: `${Math.max(avance, 4)}%` }} />
+                        <div className="from-index-400 to-index-600 h-full rounded-e-full bg-linear-to-r transition-[width] duration-500" style={{ width: `${Math.max(avance, 4)}%` }} />
                     </div>
                     <div className="p-5 sm:p-7">
                         <header className="mb-7 flex flex-wrap items-start justify-between gap-3">
                             <div>
-                                <p className="text-xs font-semibold tracking-wide text-index-600 uppercase dark:text-index-300">
+                                <p className="text-index-600 dark:text-index-300 text-xs font-semibold tracking-wide uppercase">
                                     Paso {asistente.paso} de {asistente.pasos.length}
                                 </p>
                                 <h2 className="mt-1 text-xl font-semibold tracking-tight text-zinc-900 dark:text-white">{pasoActual?.titulo}</h2>

@@ -302,6 +302,14 @@ Route::middleware('auth')->group(function (): void {
         ->middleware('permiso:pago_crear')
         ->name('pagos.importaciones.validar-pendientes');
 
+    Route::get('/inscripciones/pagos/importaciones/obligaciones', [ImportacionPagoController::class, 'obligaciones'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.obligaciones');
+
+    Route::post('/inscripciones/pagos/importaciones/pagos/{detalle}/asociar', [ImportacionPagoController::class, 'asociar'])
+        ->middleware('permiso:pago_crear')
+        ->name('pagos.importaciones.asociar');
+
     Route::get('/inscripciones/pagos/validar', [ValidarPagoController::class, 'index'])
         ->middleware('permiso:pago_crear')
         ->name('pagos.validar');

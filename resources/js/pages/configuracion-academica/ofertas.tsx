@@ -31,7 +31,8 @@ interface PropsOfertas {
     modalidades: { id: number; nombre: string; condicion: string | null; condicionValor: string | null }[];
     sedes: { id: number; nombre: string }[];
     carreras: { id: number; codigo: string; nombre: string }[];
-    seleccion: { modalidades: number[]; carreras: Record<string, number[]> };
+    /** Carreras marcadas por sede y modalidad: carreras[sede][modalidad] = ids. */
+    seleccion: { modalidades: number[]; carreras: Record<string, Record<string, number[]>> };
     turnos: { nombre: string; aulas: number; capacidad: number }[];
 }
 
@@ -55,12 +56,20 @@ export default function Ofertas({ procesos, proceso, modalidades, sedes, carrera
     const puedeEditar = puede('oferta_editar') && proceso !== null && !proceso.cerrado;
     const formulario = useForm({
         modalidades: seleccion.modalidades,
-        carreras: Object.fromEntries(sedes.map((sede) => [String(sede.id), seleccion.carreras[String(sede.id)] ?? []])) as Record<string, number[]>,
+        carreras: Object.fromEntries(
+            sedes.map((sede) => [String(sede.id), Object.fromEntries(modalidades.map((modalidad) => [String(modalidad.id), seleccion.carreras[String(sede.id)]?.[String(modalidad.id)] ?? []]))]),
+        ) as Record<string, Record<string, number[]>>,
     });
 
     const alternar = (lista: number[], id: number, marcar: boolean): number[] => (marcar ? [...new Set([...lista, id])] : lista.filter((actual) => actual !== id));
-    const carrerasDe = (sede: number): number[] => formulario.data.carreras[String(sede)] ?? [];
-    const cambiarCarreras = (sede: number, ids: number[]): void => formulario.setData('carreras', { ...formulario.data.carreras, [String(sede)]: ids });
+    const carrerasDe = (sede: number, modalidad: number): number[] => formulario.data.carreras[String(sede)]?.[String(modalidad)] ?? [];
+    const cambiarCarreras = (sede: number, modalidad: number, ids: number[]): void =>
+        formulario.setData('carreras', {
+            ...formulario.data.carreras,
+            [String(sede)]: { ...formulario.data.carreras[String(sede)], [String(modalidad)]: ids },
+        });
+    const habilitadas = modalidades.filter((modalidad) => formulario.data.modalidades.includes(modalidad.id));
+    const todas = carreras.map((carrera) => carrera.id);
 
     const guardar = (): void => {
         if (proceso) {
@@ -110,43 +119,83 @@ export default function Ofertas({ procesos, proceso, modalidades, sedes, carrera
 
                         {sedes.length === 0 && <Aviso tono="aviso">No hay sedes habilitadas. Regístrelas en Mantenedores › Sedes.</Aviso>}
 
-                        {sedes.map((sede) => {
-                            const marcadas = carrerasDe(sede.id);
+                        {sedes.length > 0 && habilitadas.length === 0 && <Aviso tono="aviso">Habilite al menos una modalidad para elegir sus carreras en cada sede.</Aviso>}
 
-                            return (
+                        {habilitadas.length > 0 &&
+                            sedes.map((sede) => (
                                 <Panel
                                     key={sede.id}
                                     titulo={sede.nombre}
-                                    descripcion={`${marcadas.length} de ${carreras.length} carreras ofrecidas en esta sede`}
+                                    descripcion={habilitadas.map((modalidad) => `${modalidad.nombre}: ${carrerasDe(sede.id, modalidad.id).length}`).join(' · ') + ' carreras'}
                                     acciones={
                                         puedeEditar && (
                                             <>
-                                                <Button variant="ghost" size="sm" onClick={() => cambiarCarreras(sede.id, carreras.map((carrera) => carrera.id))}>
+                                                <Button variant="ghost" size="sm" onClick={() => habilitadas.forEach((modalidad) => cambiarCarreras(sede.id, modalidad.id, todas))}>
                                                     Marcar todas
                                                 </Button>
-                                                <Button variant="ghost" size="sm" onClick={() => cambiarCarreras(sede.id, [])}>
+                                                <Button variant="ghost" size="sm" onClick={() => habilitadas.forEach((modalidad) => cambiarCarreras(sede.id, modalidad.id, []))}>
                                                     Quitar todas
                                                 </Button>
                                             </>
                                         )
                                     }
                                 >
-                                    <div className="grid gap-2.5 sm:grid-cols-2 2xl:grid-cols-3">
-                                        {carreras.map((carrera) => (
-                                            <Opcion
-                                                key={carrera.id}
-                                                marcado={marcadas.includes(carrera.id)}
-                                                deshabilitado={!puedeEditar}
-                                                alCambiar={(marcado) => cambiarCarreras(sede.id, alternar(marcadas, carrera.id, marcado))}
-                                            >
-                                                <span className="block text-sm text-zinc-800 dark:text-zinc-100">{carrera.nombre}</span>
-                                                <span className="block font-mono text-xs text-zinc-500 dark:text-zinc-400">{carrera.codigo}</span>
-                                            </Opcion>
-                                        ))}
+                                    <div className="-mx-1 overflow-x-auto">
+                                        <table className="w-full min-w-[28rem] border-separate border-spacing-0 text-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th className="border-b border-zinc-200/80 px-3 py-2 text-start text-xs font-medium text-zinc-500 dark:border-white/[0.08] dark:text-zinc-400">Carrera</th>
+                                                    {habilitadas.map((modalidad) => {
+                                                        const marcadas = carrerasDe(sede.id, modalidad.id);
+                                                        const completa = marcadas.length === carreras.length && carreras.length > 0;
+
+                                                        return (
+                                                            <th
+                                                                key={modalidad.id}
+                                                                className="w-40 border-b border-zinc-200/80 px-3 py-2 text-center text-xs font-medium text-zinc-600 dark:border-white/[0.08] dark:text-zinc-300"
+                                                            >
+                                                                <label className={cn('inline-flex flex-col items-center gap-1.5', puedeEditar && 'cursor-pointer')}>
+                                                                    <span className="leading-tight">{modalidad.nombre}</span>
+                                                                    <Checkbox
+                                                                        aria-label={`Todas las carreras en ${modalidad.nombre} · ${sede.nombre}`}
+                                                                        checked={completa ? true : marcadas.length > 0 ? 'indeterminate' : false}
+                                                                        disabled={!puedeEditar}
+                                                                        onCheckedChange={(valor) => cambiarCarreras(sede.id, modalidad.id, valor === true ? todas : [])}
+                                                                    />
+                                                                </label>
+                                                            </th>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {carreras.map((carrera) => (
+                                                    <tr key={carrera.id} className="hover:bg-zinc-50/70 dark:hover:bg-white/[0.02]">
+                                                        <td className="border-b border-zinc-100 px-3 py-2 dark:border-white/[0.05]">
+                                                            <span className="block text-zinc-800 dark:text-zinc-100">{carrera.nombre}</span>
+                                                            <span className="block font-mono text-xs text-zinc-500 dark:text-zinc-400">{carrera.codigo}</span>
+                                                        </td>
+                                                        {habilitadas.map((modalidad) => {
+                                                            const marcadas = carrerasDe(sede.id, modalidad.id);
+
+                                                            return (
+                                                                <td key={modalidad.id} className="border-b border-zinc-100 px-3 py-2 text-center dark:border-white/[0.05]">
+                                                                    <Checkbox
+                                                                        aria-label={`${carrera.nombre} en ${modalidad.nombre} · ${sede.nombre}`}
+                                                                        checked={marcadas.includes(carrera.id)}
+                                                                        disabled={!puedeEditar}
+                                                                        onCheckedChange={(valor) => cambiarCarreras(sede.id, modalidad.id, alternar(marcadas, carrera.id, valor === true))}
+                                                                    />
+                                                                </td>
+                                                            );
+                                                        })}
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </Panel>
-                            );
-                        })}
+                            ))}
                     </div>
 
                     <aside className="space-y-4 xl:sticky xl:top-0">
@@ -193,7 +242,7 @@ export default function Ofertas({ procesos, proceso, modalidades, sedes, carrera
 
 Ofertas.layout = {
     titulo: 'Oferta del proceso',
-    subtitulo: 'Modalidades habilitadas y carreras que se ofrecen en cada sede del proceso.',
+    subtitulo: 'Modalidades habilitadas y carreras que se ofrecen en cada sede y modalidad del proceso.',
     icono: 'oferta',
     migas: [{ titulo: 'Inicio', href: inicio.url() }, { titulo: 'Configuración académica' }, { titulo: 'Oferta del proceso', href: index.url() }],
 };

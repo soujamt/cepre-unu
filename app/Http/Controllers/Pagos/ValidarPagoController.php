@@ -3,16 +3,12 @@
 namespace App\Http\Controllers\Pagos;
 
 use App\Enums\EstadoImportacionBancoDetalle;
-use App\Enums\EstadoInscripcion;
-use App\Enums\EstadoObligacionPago;
 use App\Http\Controllers\Controller;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\InscripcionObligacionPago;
 use App\Models\InscripcionPago;
 use App\Support\InscripcionPagoManager;
 use DomainException;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -48,9 +44,9 @@ class ValidarPagoController extends Controller
 
         return Inertia::render('pagos/validar', [
             'filtros' => $filtros,
-            'obligaciones' => $this->obligaciones($filtros['buscar'])->map(fn (InscripcionObligacionPago $obligacion): array => $this->resumen($obligacion))->values(),
+            'obligaciones' => $this->pagos->buscarObligacionesConSaldo($filtros['buscar'])->map(fn (InscripcionObligacionPago $obligacion): array => $this->pagos->resumenObligacion($obligacion))->values(),
             'seleccionada' => $seleccionada === null ? null : [
-                ...$this->resumen($seleccionada),
+                ...$this->pagos->resumenObligacion($seleccionada),
                 'pagos' => $seleccionada->pagos->map(fn (InscripcionPago $pago): array => [
                     'id' => $pago->id_ipa,
                     'operacion' => $pago->importacionBancoDetalle?->numero_operacion_visible_ibd ?? $pago->numero_operacion_ipa,
@@ -126,50 +122,5 @@ class ValidarPagoController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Pago validado y asociado correctamente.']);
 
         return back();
-    }
-
-    /**
-     * Obligaciones pendientes o parciales de inscripciones no anuladas (las 12 más recientes).
-     *
-     * @return Collection<int, InscripcionObligacionPago>
-     */
-    private function obligaciones(string $buscar)
-    {
-        $texto = preg_replace('/\s+/u', ' ', $buscar) ?: '';
-
-        return InscripcionObligacionPago::query()
-            ->with(['inscripcion.persona', 'reglaPago.conceptoPago'])
-            ->whereIn('estado_iop', [EstadoObligacionPago::Pendiente->value, EstadoObligacionPago::Parcial->value])
-            ->whereHas('inscripcion', fn (Builder $query) => $query->where('estado_ins', '!=', EstadoInscripcion::Anulado->value))
-            ->when($texto !== '', fn (Builder $query) => $query->whereHas('inscripcion', fn (Builder $inscripcion) => $inscripcion
-                ->where('codigo_ins', 'like', "%{$texto}%")
-                ->orWhereHas('persona', fn (Builder $persona) => $persona
-                    ->where('numero_documento_per', 'like', "%{$texto}%")
-                    ->orWhere('apellido_paterno_per', 'like', "%{$texto}%")
-                    ->orWhere('apellido_materno_per', 'like', "%{$texto}%")
-                    ->orWhere('nombres_per', 'like', "%{$texto}%"))))
-            ->orderByDesc('id_iop')
-            ->limit(12)
-            ->get();
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function resumen(InscripcionObligacionPago $obligacion): array
-    {
-        $persona = $obligacion->inscripcion?->persona;
-
-        return [
-            'id' => $obligacion->id_iop,
-            'codigo' => $obligacion->inscripcion?->codigo_ins,
-            'dni' => $persona?->numero_documento_per,
-            'postulante' => trim(implode(' ', array_filter([$persona?->apellido_paterno_per, $persona?->apellido_materno_per, $persona?->nombres_per]))),
-            'concepto' => $obligacion->reglaPago?->conceptoPago?->nombre_cpg,
-            'total' => (float) $obligacion->monto_total_iop,
-            'pagado' => (float) $obligacion->monto_pagado_iop,
-            'saldo' => (float) $obligacion->saldo_iop,
-            'estado' => $obligacion->estado_iop->value,
-        ];
     }
 }

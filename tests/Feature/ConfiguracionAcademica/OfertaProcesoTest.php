@@ -112,7 +112,7 @@ test('users without permiso cannot access oferta del proceso page', function () 
         ->assertForbidden();
 });
 
-test('authorized users can enable modalidades and carreras per sede for a proceso', function () {
+test('authorized users can enable modalidades and carreras per sede and modalidad for a proceso', function () {
     $usuario = Usuario::factory()->create();
     otorgarPermisosOfertaProceso($usuario, ['oferta_indice', 'oferta_editar']);
     $contexto = crearContextoOfertaProceso();
@@ -125,14 +125,21 @@ test('authorized users can enable modalidades and carreras per sede for a proces
     $this->actingAs($usuario)
         ->put(route('ofertas.update', $contexto['proceso']), [
             'modalidades' => [$contexto['ordinario']->id_mad, $contexto['reserva']->id_mad],
-            'carreras' => [$contexto['sede']->id_sed => [$sistemas->id_car]],
+            'carreras' => [$contexto['sede']->id_sed => [$contexto['ordinario']->id_mad => [$sistemas->id_car, $derecho->id_car], $contexto['reserva']->id_mad => [$sistemas->id_car]]],
         ])
         ->assertSessionHasNoErrors()
         ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Oferta del proceso guardada correctamente.']);
 
     expect(ProcesoModalidad::query()->where('id_proceso', $contexto['proceso']->id_pro)->where('estado_pmo', 'HABILITADO')->count())->toBe(2)
-        ->and(ProcesoCarrera::query()->where('id_proceso', $contexto['proceso']->id_pro)->where('id_carrera', $sistemas->id_car)->value('estado_pca')?->value)->toBe('HABILITADO')
-        ->and(ProcesoCarrera::query()->where('id_carrera', $derecho->id_car)->exists())->toBeFalse();
+        ->and(ProcesoCarrera::query()->where('id_carrera', $sistemas->id_car)->where('estado_pca', 'HABILITADO')->pluck('id_modalidad_admision')->sort()->values()->all())
+        ->toBe(collect([$contexto['ordinario']->id_mad, $contexto['reserva']->id_mad])->sort()->values()->all())
+        ->and(ProcesoCarrera::query()->where('id_carrera', $derecho->id_car)->pluck('id_modalidad_admision')->all())->toBe([$contexto['ordinario']->id_mad]);
+
+    $this->actingAs($usuario)
+        ->get(route('ofertas.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where("seleccion.carreras.{$contexto['sede']->id_sed}.{$contexto['ordinario']->id_mad}", fn ($ids): bool => collect($ids)->sort()->values()->all() === collect([$sistemas->id_car, $derecho->id_car])->sort()->values()->all())
+            ->where("seleccion.carreras.{$contexto['sede']->id_sed}.{$contexto['reserva']->id_mad}", [$sistemas->id_car]));
 });
 
 test('unchecking a carrera disables it without deleting the record', function () {
@@ -149,18 +156,19 @@ test('unchecking a carrera disables it without deleting the record', function ()
     ProcesoCarrera::query()->create([
         'id_proceso' => $contexto['proceso']->id_pro,
         'id_sede' => $contexto['sede']->id_sed,
+        'id_modalidad_admision' => $contexto['ordinario']->id_mad,
         'id_carrera' => $sistemas->id_car,
         'estado_pca' => 'HABILITADO',
     ]);
 
     $this->actingAs($usuario)
         ->get(route('ofertas.index'))
-        ->assertInertia(fn (AssertableInertia $page) => $page->where("seleccion.carreras.{$contexto['sede']->id_sed}", [$sistemas->id_car]));
+        ->assertInertia(fn (AssertableInertia $page) => $page->where("seleccion.carreras.{$contexto['sede']->id_sed}.{$contexto['ordinario']->id_mad}", [$sistemas->id_car]));
 
     $this->actingAs($usuario)
         ->put(route('ofertas.update', $contexto['proceso']), [
             'modalidades' => [$contexto['ordinario']->id_mad],
-            'carreras' => [$contexto['sede']->id_sed => []],
+            'carreras' => [$contexto['sede']->id_sed => [$contexto['ordinario']->id_mad => []]],
         ])
         ->assertSessionHasNoErrors();
 

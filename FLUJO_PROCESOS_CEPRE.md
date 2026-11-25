@@ -110,7 +110,7 @@ flowchart TD
     end
 
     subgraph CFG["Configuración académica: por cada proceso"]
-        C1["Proceso<br/>fechas y año de egreso<br/>máximo de ORDINARIO"] --> C2["Oferta del proceso<br/>modalidades y carreras por sede"]
+        C1["Proceso<br/>fechas y año de egreso<br/>máximo de ORDINARIO"] --> C2["Oferta del proceso<br/>modalidades y carreras<br/>por sede y modalidad"]
         C1 --> C3["Aulas del proceso<br/>turno + aula + capacidad"]
         C1 --> C4["Reglas de pago<br/>monto, cuotas y documento requerido"]
         C1 --> C5["Carnet<br/>director, cargo, firma y nota"]
@@ -132,7 +132,7 @@ flowchart TD
 | # | Menú | Qué registrar | Depende de |
 |---|---|---|---|
 | 1 | Configuración académica › Procesos | Nombre con el periodo en romanos (por ejemplo `2027-I`), fecha y hora de inicio y fin, y el **año de egreso máximo para ORDINARIO** | — |
-| 2 | Configuración académica › Oferta del proceso | Modalidades CEPRE habilitadas y carreras habilitadas en cada sede | Proceso, Sedes, Carreras, Modalidades |
+| 2 | Configuración académica › Oferta del proceso | Modalidades CEPRE habilitadas y carreras habilitadas en cada sede para cada modalidad | Proceso, Sedes, Carreras, Modalidades |
 | 3 | Configuración académica › Aulas por proceso › Asignar aulas | Turno, aula y capacidad | Proceso, Turnos, Aulas |
 | 4 | Configuración académica › Reglas de pago | Concepto, monto total, cuotas y monto mínimo de la primera, documento requerido (por ejemplo, N° de resolución de beca), vigencia y, si aplica, modalidad | Proceso, Conceptos de pago |
 | 5 | Configuración académica › Carnet | Nombre y cargo del director, imagen de firma y sello, nota del carnet | — |
@@ -378,6 +378,9 @@ stateDiagram-v2
 8. **Exportación para Admisión y el Drive:** el Excel con el formato CEPRE empieza con `NRO_REG` (código de inscripción) y `FECHA_Y_HORA`, en orden de registro, como la hoja `DATA CEPRE-UNU` del Drive. Usa los códigos de Admisión del proceso cuando están registrados; si no, muestra los nombres de la sede y la carrera.
 9. **Sincronización con el Drive:** cada 10 minutos (y con el botón `Drive` del listado) el sistema reescribe las hojas `DATA CEPRE-UNU {periodo}` y `PAGOS {periodo}` del Drive de CEPRE UNU virtual mediante un Apps Script. Así el buscador de estudiantes muestra el aula al día aunque el sistema solo funcione en la red local.
 10. **Edición de la postulación:** sede, carrera o turno se cambian con confirmación y motivo; si cambia el turno se reasigna el aula. Cada cambio queda en el historial de la inscripción.
+11. **Modalidad:** se sugiere por el año de egreso; el personal puede elegir otra habilitada y solo se ofrecen las carreras de esa sede y modalidad. En el portal siempre es la sugerida.
+12. **Pagos faltantes del TXT:** los que `Asociar pendientes` no asocia por DNI se asocian a mano desde el detalle de la importación; si el DNI del pago es otro, se exige un motivo que queda en la validación.
+13. **Foto en el asistente:** desde el paso 2 la ficha lateral muestra la foto registrada para el DNI (o permite subirla, solo al personal).
 
 ---
 

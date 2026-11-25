@@ -1,7 +1,8 @@
-import { router } from '@inertiajs/react';
-import { DoubleCheck, Eye, FileArrowUp, Receipt, Wallet } from '@keyline-icons/react/fill';
-import { useRef } from 'react';
+import { router, useForm } from '@inertiajs/react';
+import { DoubleCheck, Eye, FileArrowUp, Link, Receipt, Search, Wallet } from '@keyline-icons/react/fill';
+import { useEffect, useRef, useState } from 'react';
 import { Aviso } from '@/components/aviso';
+import { CampoArea, CampoTexto } from '@/components/campo';
 import { Enlace } from '@/components/enlace';
 import { FiltroEstado } from '@/components/filtro-estado';
 import { InsigniaEstado } from '@/components/insignia-estado';
@@ -14,7 +15,8 @@ import { useConfirmacion } from '@/components/dialogo-confirmacion';
 import { usePermiso } from '@/hooks/use-permiso';
 import { inicio } from '@/routes';
 import { index as pagos, importaciones } from '@/routes/pagos';
-import { cancelar, confirmar, previsualizar, validarPendientes } from '@/routes/pagos/importaciones';
+import { asociar, cancelar, confirmar, obligaciones as buscarObligaciones, previsualizar, validarPendientes } from '@/routes/pagos/importaciones';
+import { cn } from '@/lib/utils';
 import type { FiltrosCatalogo, Paginado, Registro } from '@/types';
 
 interface Importacion {
@@ -39,6 +41,19 @@ interface PagoLote {
     fecha: string | null;
     monto: number;
     estado: string;
+    /** Aún no se asoció a una inscripción. */
+    libre: boolean;
+}
+
+interface Obligacion {
+    id: number;
+    codigo: string | null;
+    dni: string | null;
+    postulante: string;
+    concepto: string | null;
+    total: number;
+    pagado: number;
+    saldo: number;
 }
 
 interface DetalleTxt {
@@ -88,11 +103,132 @@ function Dato({ etiqueta, valor, alerta = false }: { etiqueta: string; valor: st
     );
 }
 
+/**
+ * Asocia a mano un pago libre del lote: se busca la inscripción por código, DNI o nombre.
+ * Si el DNI del pago es otro (pagó un familiar), pide el motivo.
+ */
+function DialogoAsociar({ pago, alCerrar }: { pago: PagoLote | null; alCerrar: () => void }) {
+    const [buscar, setBuscar] = useState('');
+    const [resultados, setResultados] = useState<Obligacion[] | null>(null);
+    const [elegida, setElegida] = useState<Obligacion | null>(null);
+    const formulario = useForm({ obligacion: '', motivo: '' });
+    const otroDocumento = elegida !== null && pago !== null && (elegida.dni ?? '').replace(/^0+/, '') !== pago.documento.replace(/^0+/, '');
+
+    useEffect(() => {
+        setBuscar(pago?.documento.replace(/^0+(?=\d{8})/, '') ?? '');
+        setElegida(null);
+        formulario.reset();
+        formulario.clearErrors();
+    }, [pago?.id]);
+
+    useEffect(() => {
+        if (pago === null) {
+            return;
+        }
+
+        let vigente = true;
+        const espera = window.setTimeout(() => {
+            fetch(buscarObligaciones.url({ query: { buscar } }), { headers: { Accept: 'application/json' } })
+                .then((respuesta) => respuesta.json())
+                .then((cuerpo: { obligaciones: Obligacion[] }) => vigente && setResultados(cuerpo.obligaciones))
+                .catch(() => vigente && setResultados([]));
+        }, 300);
+
+        return () => {
+            vigente = false;
+            window.clearTimeout(espera);
+        };
+    }, [buscar, pago]);
+
+    const guardar = (): void => {
+        if (pago && elegida) {
+            formulario.transform((datos) => ({ ...datos, obligacion: String(elegida.id) }));
+            formulario.post(asociar.url(pago.id), { preserveScroll: true, onSuccess: alCerrar });
+        }
+    };
+
+    return (
+        <Dialog open={pago !== null} onOpenChange={(abierto) => !abierto && !formulario.processing && alCerrar()}>
+            <DialogContent className="sm:max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>Asociar pago {pago?.operacion ?? ''}</DialogTitle>
+                    <DialogDescription>
+                        DNI {pago?.documento} · {pago?.depositante ?? 'sin nombre'} · {pago ? soles(pago.monto) : ''} del {pago?.fecha ?? '—'}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <CampoTexto etiqueta="Buscar inscripción (código, DNI o nombre)" value={buscar} onChange={(evento) => setBuscar(evento.target.value)} iconoInicio={Search} autoFocus />
+
+                <div className="scrollbar-fino grid max-h-64 gap-2 overflow-y-auto">
+                    {resultados === null ? (
+                        <p className="py-4 text-center text-sm text-zinc-500">Buscando…</p>
+                    ) : resultados.length === 0 ? (
+                        <Aviso tono="info">No hay inscripciones con saldo que coincidan. Pruebe con el código o el apellido del postulante.</Aviso>
+                    ) : (
+                        resultados.map((obligacion) => (
+                            <label
+                                key={obligacion.id}
+                                className={cn(
+                                    'flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors',
+                                    elegida?.id === obligacion.id ? 'border-index-300 bg-index-50/50 dark:border-index-500/40 dark:bg-index-500/[0.07]' : 'border-zinc-200/80 dark:border-white/[0.08]',
+                                )}
+                            >
+                                <input type="radio" name="obligacion" className="accent-index-500 size-4" checked={elegida?.id === obligacion.id} onChange={() => setElegida(obligacion)} />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block truncate text-sm font-medium text-zinc-900 dark:text-white">{obligacion.postulante}</span>
+                                    <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                                        <span className="font-mono">{obligacion.codigo}</span> · DNI <span className="font-mono">{obligacion.dni}</span> · {obligacion.concepto}
+                                    </span>
+                                </span>
+                                <span className="text-end text-xs text-zinc-500 tabular-nums dark:text-zinc-400">
+                                    Saldo
+                                    <span className="block text-sm font-medium text-zinc-800 dark:text-zinc-100">{soles(obligacion.saldo)}</span>
+                                </span>
+                            </label>
+                        ))
+                    )}
+                </div>
+
+                {otroDocumento && (
+                    <>
+                        <Aviso tono="aviso" titulo="El DNI del pago no es el del postulante">
+                            El pago es del DNI {pago?.documento} y la inscripción es del DNI {elegida?.dni}. Asócielo solo si comprobó que corresponde (por ejemplo, pagó un familiar).
+                        </Aviso>
+                        <CampoArea
+                            etiqueta="Motivo"
+                            value={formulario.data.motivo}
+                            onChange={(evento) => formulario.setData('motivo', evento.target.value)}
+                            error={formulario.errors.motivo}
+                            maxLength={200}
+                            ayuda="Por ejemplo: pagó el padre con su DNI, presentó el voucher. Mínimo 10 caracteres."
+                            requerido
+                        />
+                    </>
+                )}
+                {!otroDocumento && formulario.errors.motivo && <p className="text-sm text-red-600 dark:text-red-400">{formulario.errors.motivo}</p>}
+                {formulario.errors.obligacion && <p className="text-sm text-red-600 dark:text-red-400">{formulario.errors.obligacion}</p>}
+
+                <DialogFooter>
+                    <Button variant="outline" onClick={alCerrar} disabled={formulario.processing}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={guardar} disabled={elegida === null || formulario.processing}>
+                        <Link className="size-4.5" />
+                        {formulario.processing ? 'Asociando…' : 'Asociar pago'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function Importaciones({ importaciones: lista, filtros, detalle, previsualizacion }: PropsImportaciones) {
     const puede = usePermiso();
     const confirmarAccion = useConfirmacion();
     const archivo = useRef<HTMLInputElement>(null);
     const [filtro, cambiarFiltro] = useFiltros<FiltrosCatalogo>(filtros);
+    const [asociando, setAsociando] = useState<PagoLote | null>(null);
+    const libres = detalle?.pagos.filter((pago) => pago.libre).length ?? 0;
 
     const subir = (lista: FileList | null): void => {
         const txt = lista?.[0];
@@ -211,7 +347,12 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                 vacio={<EstadoVacio icono={Receipt} titulo="Aún no se importaron archivos del banco." />}
             />
             {detalle && (
-                <Panel titulo={`Pagos de ${detalle.archivo}`} descripcion={`Lote del ${detalle.fechaLote ?? '—'} · ${detalle.pagos.length} pago(s)`}>
+                <Panel titulo={`Pagos de ${detalle.archivo}`} descripcion={`Lote del ${detalle.fechaLote ?? '—'} · ${detalle.pagos.length} pago(s)${libres > 0 ? ` · ${libres} libre(s) por asociar` : ''}`}>
+                    {libres > 0 && puede('pago_crear') && (
+                        <Aviso tono="info" titulo={`${libres} pago(s) sin asociar`} className="mb-4">
+                            Use «Asociar pendientes» para los que coinciden por DNI. Los que queden, asócielos a mano con el botón «Asociar» de cada pago.
+                        </Aviso>
+                    )}
                     <TablaDatos
                         className="shadow-none"
                         columnas={[
@@ -252,12 +393,27 @@ export default function Importaciones({ importaciones: lista, filtros, detalle, 
                                 titulo: 'Estado',
                                 celda: (pago) => <InsigniaEstado estado={pago.estado} />,
                             },
+                            {
+                                clave: 'acciones',
+                                titulo: <span className="sr-only">Acciones</span>,
+                                className: 'w-28 text-end',
+                                celda: (pago) =>
+                                    pago.libre &&
+                                    puede('pago_crear') && (
+                                        <Button variant="outline" size="sm" onClick={() => setAsociando(pago)}>
+                                            <Link className="size-4" />
+                                            Asociar
+                                        </Button>
+                                    ),
+                            },
                         ]}
                         filas={detalle.pagos}
                         claveFila={(pago) => pago.id}
                     />
                 </Panel>
             )}
+
+            <DialogoAsociar pago={asociando} alCerrar={() => setAsociando(null)} />
 
             <Dialog open={previsualizacion !== null} onOpenChange={(abierto) => !abierto && router.delete(cancelar.url(), { preserveScroll: true })}>
                 {previsualizacion && (

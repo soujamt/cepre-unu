@@ -16,6 +16,7 @@ use DomainException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class InscripcionPagoManager
 {
@@ -46,9 +47,15 @@ class InscripcionPagoManager
             ->get();
     }
 
+    /**
+     * Asocia un pago del banco a la obligación. El DNI del pago debe ser el del postulante,
+     * salvo que el personal lo valide a mano con un motivo (por ejemplo, pagó el padre con
+     * su DNI): el motivo queda en la observación de la validación.
+     */
     public function asociarDetalleAObligacion(
         InscripcionObligacionPago $obligacion,
         ImportacionBancoDetalle $detalle,
+        ?string $motivoOtroDocumento = null,
     ): InscripcionPago {
         $obligacion->loadMissing([
             'inscripcion.persona',
@@ -57,15 +64,22 @@ class InscripcionPagoManager
         ]);
         $detalle->loadMissing('inscripcionPago');
 
+        $motivoOtroDocumento = filled($motivoOtroDocumento) ? trim((string) $motivoOtroDocumento) : null;
         $this->validarDisponibilidadDetalle($detalle);
-        $this->validarDocumentoTitular($obligacion, $detalle);
 
-        return DB::transaction(function () use ($obligacion, $detalle): InscripcionPago {
+        if ($motivoOtroDocumento === null) {
+            $this->validarDocumentoTitular($obligacion, $detalle);
+        }
+
+        return DB::transaction(function () use ($obligacion, $detalle, $motivoOtroDocumento): InscripcionPago {
             $obligacion->refresh()->loadMissing(['reglaPago', 'inscripcion.persona', 'pagos']);
             $detalle->refresh()->loadMissing('inscripcionPago');
 
             $this->validarDisponibilidadDetalle($detalle);
-            $this->validarDocumentoTitular($obligacion, $detalle);
+
+            if ($motivoOtroDocumento === null) {
+                $this->validarDocumentoTitular($obligacion, $detalle);
+            }
 
             $montoPagadoActual = (float) $obligacion->pagos()
                 ->where('estado_validacion_ipa', EstadoValidacionPago::Verificado)
@@ -88,6 +102,9 @@ class InscripcionPagoManager
                 'fecha_pago_ipa' => $detalle->fecha_pago_ibd,
                 'numero_operacion_ipa' => $detalle->numero_operacion_visible_ibd ?: $detalle->numero_operacion_ibd,
                 'estado_validacion_ipa' => EstadoValidacionPago::Verificado,
+                'observacion_validacion_ipa' => $motivoOtroDocumento === null
+                    ? null
+                    : Str::limit("Validado a mano, pago con DNI {$detalle->numero_documento_ibd}: {$motivoOtroDocumento}", 255, ''),
                 'validado_en' => now(),
                 'id_usuario_validador' => Auth::id(),
             ]);
@@ -110,6 +127,64 @@ class InscripcionPagoManager
                 'obligacionPago',
             ]);
         });
+    }
+
+    /**
+     * El DNI del pago del banco es el del postulante de la obligación.
+     */
+    public function documentoCoincide(InscripcionObligacionPago $obligacion, ImportacionBancoDetalle $detalle): bool
+    {
+        $documentoInscripcion = $this->normalizarValorNumerico($obligacion->inscripcion?->persona?->numero_documento_per);
+
+        return $documentoInscripcion !== null && $documentoInscripcion === $this->normalizarValorNumerico($detalle->numero_documento_ibd);
+    }
+
+    /**
+     * Obligaciones pendientes o parciales de inscripciones no anuladas que coinciden con el
+     * código, DNI o nombre (las más recientes primero).
+     *
+     * @return Collection<int, InscripcionObligacionPago>
+     */
+    public function buscarObligacionesConSaldo(string $buscar, int $limite = 12): Collection
+    {
+        $texto = trim((string) preg_replace('/\s+/u', ' ', $buscar));
+
+        return InscripcionObligacionPago::query()
+            ->with(['inscripcion.persona', 'reglaPago.conceptoPago'])
+            ->whereIn('estado_iop', [EstadoObligacionPago::Pendiente->value, EstadoObligacionPago::Parcial->value])
+            ->whereHas('inscripcion', fn ($query) => $query->where('estado_ins', '!=', EstadoInscripcion::Anulado->value))
+            ->when($texto !== '', fn ($query) => $query->whereHas('inscripcion', fn ($inscripcion) => $inscripcion
+                ->where('codigo_ins', 'like', "%{$texto}%")
+                ->orWhereHas('persona', fn ($persona) => $persona
+                    ->where('numero_documento_per', 'like', "%{$texto}%")
+                    ->orWhere('apellido_paterno_per', 'like', "%{$texto}%")
+                    ->orWhere('apellido_materno_per', 'like', "%{$texto}%")
+                    ->orWhere('nombres_per', 'like', "%{$texto}%"))))
+            ->orderByDesc('id_iop')
+            ->limit($limite)
+            ->get();
+    }
+
+    /**
+     * Datos de una obligación para elegirla al validar un pago.
+     *
+     * @return array{id: int, codigo: ?string, dni: ?string, postulante: string, concepto: ?string, total: float, pagado: float, saldo: float, estado: string}
+     */
+    public function resumenObligacion(InscripcionObligacionPago $obligacion): array
+    {
+        $persona = $obligacion->inscripcion?->persona;
+
+        return [
+            'id' => $obligacion->id_iop,
+            'codigo' => $obligacion->inscripcion?->codigo_ins,
+            'dni' => $persona?->numero_documento_per,
+            'postulante' => trim(implode(' ', array_filter([$persona?->apellido_paterno_per, $persona?->apellido_materno_per, $persona?->nombres_per]))),
+            'concepto' => $obligacion->reglaPago?->conceptoPago?->nombre_cpg,
+            'total' => (float) $obligacion->monto_total_iop,
+            'pagado' => (float) $obligacion->monto_pagado_iop,
+            'saldo' => (float) $obligacion->saldo_iop,
+            'estado' => $obligacion->estado_iop->value,
+        ];
     }
 
     /**
