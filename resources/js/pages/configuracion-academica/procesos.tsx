@@ -16,21 +16,39 @@ interface Proceso {
     /** Fechas en formato del campo datetime-local para editar. */
     aperturaValor: string;
     cierreValor: string;
-    anioEgreso: number | null;
+    /** Primer año de egreso que es EXTRAORDINARIO (el configurado o el automático). */
+    extraordinarioDesde: number;
+    /** No se configuró: se usa el año de apertura del proceso. */
+    extraordinarioAutomatico: boolean;
     /** Carreras, modalidades y reglas de pago configuradas. */
     uso: number;
     estado: string;
     registro: Registro | null;
 }
 
+/**
+ * Explica el corte de modalidad con el año escrito o, si está vacío, con el de apertura.
+ */
+function ayudaExtraordinario(desde: string, apertura: string): string {
+    const anio = desde.length === 4 ? Number(desde) : Number(apertura.slice(0, 4)) || null;
+
+    if (anio === null) {
+        return 'Quien egresa desde ese año postula como EXTRAORDINARIO O RESERVA; antes, ORDINARIO. Vacío: el año de apertura.';
+    }
+
+    const origen = desde.length === 4 ? '' : ' (vacío: se usa el año de apertura)';
+
+    return `Egresados hasta ${anio - 1}: ORDINARIO. Desde ${anio}: EXTRAORDINARIO O RESERVA${origen}.`;
+}
+
 export default function Procesos({ procesos, filtros }: { procesos: Paginado<Proceso>; filtros: FiltrosCatalogo }) {
     const { formulario, control } = useCatalogo({
-        vacio: { nombre: '', fecha_inicio: '', fecha_fin: '', anio_egreso_max_ordinario: '' },
+        vacio: { nombre: '', fecha_inicio: '', fecha_fin: '', anio_extraordinario_desde: '' },
         aFormulario: (proceso: Proceso) => ({
             nombre: proceso.nombre,
             fecha_inicio: proceso.aperturaValor,
             fecha_fin: proceso.cierreValor,
-            anio_egreso_max_ordinario: proceso.anioEgreso === null ? '' : String(proceso.anioEgreso),
+            anio_extraordinario_desde: proceso.extraordinarioAutomatico ? '' : String(proceso.extraordinarioDesde),
         }),
         idDe: (proceso) => proceso.id,
         nombreDe: (proceso) => proceso.nombre,
@@ -62,7 +80,19 @@ export default function Procesos({ procesos, filtros }: { procesos: Paginado<Pro
                 },
                 { clave: 'apertura', titulo: 'Apertura', celda: (proceso) => <CeldaRegistro registro={proceso.apertura} /> },
                 { clave: 'cierre', titulo: 'Cierre', celda: (proceso) => <CeldaRegistro registro={proceso.cierre} /> },
-                { clave: 'egreso', titulo: 'Egreso ordinario', className: 'tabular-nums', celda: (proceso) => proceso.anioEgreso ?? <span className="text-zinc-400 dark:text-zinc-500">—</span> },
+                {
+                    clave: 'egreso',
+                    titulo: 'Extraordinario desde',
+                    className: 'tabular-nums',
+                    celda: (proceso) => (
+                        <>
+                            <span className="block font-medium text-zinc-900 dark:text-white">{proceso.extraordinarioDesde}</span>
+                            <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                                {proceso.extraordinarioAutomatico ? 'Automático (año de apertura)' : `Ordinario hasta ${proceso.extraordinarioDesde - 1}`}
+                            </span>
+                        </>
+                    ),
+                },
                 { clave: 'uso', titulo: 'Uso', className: 'w-20 tabular-nums', celda: (proceso) => proceso.uso },
             ]}
             campos={
@@ -93,13 +123,13 @@ export default function Procesos({ procesos, filtros }: { procesos: Paginado<Pro
                         requerido
                     />
                     <CampoTexto
-                        etiqueta="Año de egreso máximo para Ordinario"
+                        etiqueta="Extraordinario desde el año de egreso"
                         inputMode="numeric"
                         maxLength={4}
-                        value={formulario.data.anio_egreso_max_ordinario}
-                        onChange={(evento) => formulario.setData('anio_egreso_max_ordinario', evento.target.value.replace(/\D/g, ''))}
-                        error={formulario.errors.anio_egreso_max_ordinario}
-                        ayuda="Los egresados hasta ese año postulan por Ordinario; vacío si no aplica."
+                        value={formulario.data.anio_extraordinario_desde}
+                        onChange={(evento) => formulario.setData('anio_extraordinario_desde', evento.target.value.replace(/\D/g, ''))}
+                        error={formulario.errors.anio_extraordinario_desde}
+                        ayuda={ayudaExtraordinario(formulario.data.anio_extraordinario_desde, formulario.data.fecha_inicio)}
                     />
                 </>
             }

@@ -85,7 +85,7 @@ test('authorized users can register a proceso', function () {
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
     $this->actingAs($usuario)
-        ->post(route('procesos.store'), ['nombre' => '2026-II', 'fecha_inicio' => '2026-01-10T08:00', 'fecha_fin' => '2026-03-15T18:30', 'anio_egreso_max_ordinario' => ''])
+        ->post(route('procesos.store'), ['nombre' => '2026-II', 'fecha_inicio' => '2026-01-10T08:00', 'fecha_fin' => '2026-03-15T18:30', 'anio_extraordinario_desde' => ''])
         ->assertSessionHasNoErrors()
         ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => 'Proceso registrado correctamente.']);
 
@@ -98,6 +98,11 @@ test('authorized users can register a proceso', function () {
         'id_usuario_creador' => $usuario->id_usu,
         'id_usuario_actualizador' => $usuario->id_usu,
     ]);
+
+    $proceso = Proceso::query()->where('nombre_pro', '2026-II')->sole();
+
+    expect($proceso->anio_egreso_max_ordinario_pro)->toBeNull()
+        ->and($proceso->anioExtraordinarioDesde())->toBe(2026);
 });
 
 test('authorized users can update a proceso and a period written with a number is saved in roman numerals', function () {
@@ -113,11 +118,18 @@ test('authorized users can update a proceso and a period written with a number i
     ]);
 
     $this->actingAs($usuario)
-        ->put(route('procesos.update', $proceso), ['nombre' => '2026-3', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15', 'anio_egreso_max_ordinario' => '2025'])
+        ->put(route('procesos.update', $proceso), ['nombre' => '2026-3', 'fecha_inicio' => '2026-04-10', 'fecha_fin' => '2026-07-15', 'anio_extraordinario_desde' => '2026'])
         ->assertSessionHasNoErrors()
         ->assertSessionHas(SessionKey::FLASH_DATA.'.toast.message', 'Proceso actualizado correctamente.');
 
-    expect($proceso->fresh()->anio_egreso_max_ordinario_pro)->toBe(2025);
+    expect($proceso->fresh()->anio_egreso_max_ordinario_pro)->toBe(2025)
+        ->and($proceso->fresh()->anioExtraordinarioDesde())->toBe(2026);
+
+    $this->actingAs($usuario)
+        ->get(route('procesos.index'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->where('procesos.data.0.extraordinarioDesde', 2026)
+            ->where('procesos.data.0.extraordinarioAutomatico', false));
 
     $this->assertDatabaseHas('tbl_proceso', [
         'id_pro' => $proceso->id_pro,
@@ -248,11 +260,11 @@ test('proceso requires the year and roman period name format and a valid date ra
     otorgarPermisosProceso($usuario, ['proceso_indice', 'proceso_crear']);
 
     $this->actingAs($usuario)
-        ->post(route('procesos.store'), ['nombre' => 'Proceso 2026-I', 'fecha_inicio' => '2026-07-31', 'fecha_fin' => '2026-04-01', 'anio_egreso_max_ordinario' => '26'])
+        ->post(route('procesos.store'), ['nombre' => 'Proceso 2026-I', 'fecha_inicio' => '2026-07-31', 'fecha_fin' => '2026-04-01', 'anio_extraordinario_desde' => '26'])
         ->assertSessionHasErrors([
             'nombre' => 'El nombre debe tener el año y el periodo en romanos: 2026-I, 2026-II o 2026-III.',
             'fecha_fin' => 'El cierre debe ser posterior a la apertura.',
-            'anio_egreso_max_ordinario' => 'Ingrese un año de cuatro dígitos.',
+            'anio_extraordinario_desde' => 'Ingrese un año de cuatro dígitos.',
         ]);
 });
 

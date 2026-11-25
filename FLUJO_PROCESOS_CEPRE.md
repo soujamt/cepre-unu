@@ -110,7 +110,7 @@ flowchart TD
     end
 
     subgraph CFG["Configuración académica: por cada proceso"]
-        C1["Proceso<br/>fechas y año de egreso<br/>máximo de ORDINARIO"] --> C2["Oferta del proceso<br/>modalidades y carreras<br/>por sede y modalidad"]
+        C1["Proceso<br/>fechas y año desde el<br/>que es EXTRAORDINARIO"] --> C2["Oferta del proceso<br/>modalidades y carreras<br/>por sede y modalidad"]
         C1 --> C3["Aulas del proceso<br/>turno + aula + capacidad"]
         C1 --> C4["Reglas de pago<br/>monto, cuotas y documento requerido"]
         C1 --> C5["Carnet<br/>director, cargo, firma y nota"]
@@ -131,7 +131,7 @@ flowchart TD
 
 | # | Menú | Qué registrar | Depende de |
 |---|---|---|---|
-| 1 | Configuración académica › Procesos | Nombre con el periodo en romanos (por ejemplo `2027-I`), fecha y hora de inicio y fin, y el **año de egreso máximo para ORDINARIO** | — |
+| 1 | Configuración académica › Procesos | Nombre con el periodo en romanos (por ejemplo `2027-I`), fecha y hora de inicio y fin, y el **año desde el que es EXTRAORDINARIO** | — |
 | 2 | Configuración académica › Oferta del proceso | Modalidades CEPRE habilitadas y carreras habilitadas en cada sede para cada modalidad | Proceso, Sedes, Carreras, Modalidades |
 | 3 | Configuración académica › Aulas por proceso › Asignar aulas | Turno, aula y capacidad | Proceso, Turnos, Aulas |
 | 4 | Configuración académica › Reglas de pago | Concepto, monto total, cuotas y monto mínimo de la primera, documento requerido (por ejemplo, N° de resolución de beca), vigencia y, si aplica, modalidad | Proceso, Conceptos de pago |
@@ -155,7 +155,7 @@ Ejemplos de reglas de pago, como en el sistema anterior:
 ## 4. Checklist antes de abrir inscripciones
 
 - [ ] Hay un **proceso HABILITADO** cuya fecha de inicio ya pasó y cuya fecha de fin no ha llegado.
-- [ ] El proceso tiene el **año de egreso máximo para ORDINARIO** correcto (por ejemplo, en el proceso 2027-I: hasta 2025 es ORDINARIO y desde 2026 es EXTRAORDINARIO O RESERVA).
+- [ ] El proceso tiene correcto el **año desde el que es EXTRAORDINARIO** (por ejemplo, en el proceso 2027-I: desde 2026 es EXTRAORDINARIO O RESERVA y hasta 2025, ORDINARIO).
 - [ ] La **oferta del proceso** tiene habilitadas una modalidad para egresados y otra para quienes están en el colegio, y las carreras de cada sede.
 - [ ] Cada turno tiene **aulas habilitadas con capacidad** suficiente.
 - [ ] Hay **reglas de pago habilitadas y vigentes hoy** para el proceso.

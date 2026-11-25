@@ -39,7 +39,8 @@ class ProcesoController extends CatalogoController
                 'cierre' => $this->registro($proceso->fecha_fin_pro),
                 'aperturaValor' => $proceso->fecha_inicio_pro?->format('Y-m-d\TH:i') ?? '',
                 'cierreValor' => $proceso->fecha_fin_pro?->format('Y-m-d\TH:i') ?? '',
-                'anioEgreso' => $proceso->anio_egreso_max_ordinario_pro,
+                'extraordinarioDesde' => $proceso->anioExtraordinarioDesde(),
+                'extraordinarioAutomatico' => $proceso->anio_egreso_max_ordinario_pro === null,
                 'uso' => $proceso->proceso_carreras_count + $proceso->proceso_modalidades_count + $proceso->reglas_pago_count,
                 'estado' => $proceso->estado_pro->value,
                 'registro' => $this->registro($proceso->creado_en),
@@ -100,14 +101,15 @@ class ProcesoController extends CatalogoController
      */
     private function datos(ProcesoRequest $request): array
     {
-        $anio = $request->validated('anio_egreso_max_ordinario');
+        // En pantalla se indica desde qué año es EXTRAORDINARIO; se guarda el último ORDINARIO.
+        $desde = $request->validated('anio_extraordinario_desde');
 
         return [
             'codigo_pro' => ProcesoRequest::codigoDesdeNombre($request->validated('nombre')),
             'nombre_pro' => $request->validated('nombre'),
             'fecha_inicio_pro' => $request->validated('fecha_inicio'),
             'fecha_fin_pro' => $request->validated('fecha_fin'),
-            'anio_egreso_max_ordinario_pro' => filled($anio) ? (int) $anio : null,
+            'anio_egreso_max_ordinario_pro' => filled($desde) ? (int) $desde - 1 : null,
         ];
     }
 }

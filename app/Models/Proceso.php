@@ -89,6 +89,15 @@ class Proceso extends LegacyModel
             ?? static::query()->whereHas('inscripciones')->orderByDesc('fecha_inicio_pro')->orderByDesc('id_pro')->first();
     }
 
+    /**
+     * Primer año de egreso que entra como EXTRAORDINARIO O RESERVA (el siguiente al
+     * último ORDINARIO).
+     */
+    public function anioExtraordinarioDesde(): int
+    {
+        return $this->anioEgresoMaximoOrdinario() + 1;
+    }
+
     public function inscripciones(): HasMany
     {
         return $this->hasMany(Inscripcion::class, 'id_proceso', 'id_pro');
