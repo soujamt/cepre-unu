@@ -7,6 +7,7 @@ use App\Enums\TipoLenguaMaternaPersona;
 use App\Models\FotoPostulante;
 use App\Models\ImportacionBancoDetalle;
 use App\Models\Inscripcion;
+use App\Models\ModalidadAdmision;
 use App\Models\ReglaPago;
 use App\Traits\InscripcionCrear\GestionaAsistenteInscripcion;
 use Illuminate\Contracts\Support\MessageBag as MessageBagContract;
@@ -273,6 +274,7 @@ abstract class AsistenteInscripcion
         $regla = $this->reglaPagoSeleccionada();
         $foto = $this->fotoPostulanteActual();
         $modalidad = $this->modalidadPostulacion();
+        $sugerida = $this->modalidadSugerida();
         $catalogo = fn ($modelos, string $id, string $nombre): array => $modelos
             ->map(fn ($modelo): array => ['valor' => (string) $modelo->{$id}, 'nombre' => (string) $modelo->{$nombre}])
             ->values()
@@ -344,7 +346,12 @@ abstract class AsistenteInscripcion
                 'lenguasMaternas' => array_map(fn ($tipo): array => ['valor' => $tipo->value, 'nombre' => $tipo->getNombre()], TipoLenguaMaternaPersona::cases()),
             ],
             'postulacion' => [
-                'modalidad' => $modalidad === null ? null : ['nombre' => $modalidad->nombre_mad, 'condicion' => $modalidad->condicion_egreso_mad?->getNombre()],
+                'modalidad' => $modalidad === null ? null : ['valor' => (string) $modalidad->id_mad, 'nombre' => $modalidad->nombre_mad, 'condicion' => $modalidad->condicion_egreso_mad?->getNombre()],
+                'sugerida' => $sugerida === null ? null : ['valor' => (string) $sugerida->id_mad, 'nombre' => $sugerida->nombre_mad],
+                'puedeElegirModalidad' => $this->puedeElegirModalidad(),
+                'modalidades' => $this->puedeElegirModalidad()
+                    ? $this->modalidadesPostulacionDisponibles()->map(fn (ModalidadAdmision $opcion): array => ['valor' => (string) $opcion->id_mad, 'nombre' => $opcion->nombre_mad])->values()->all()
+                    : [],
                 'sedes' => $this->sedesPostulacionDisponibles()->map(fn (array $sede): array => ['valor' => $sede['id'], 'nombre' => $sede['nombre']])->all(),
                 'carreras' => $this->carrerasPostulacionDisponibles()->map(fn (array $carrera): array => ['valor' => $carrera['id'], 'nombre' => $carrera['nombre']])->all(),
                 'turnos' => $this->turnosPostulacionDisponibles()->map(fn (array $turno): array => ['valor' => $turno['id'], 'nombre' => $turno['nombre']])->values()->all(),

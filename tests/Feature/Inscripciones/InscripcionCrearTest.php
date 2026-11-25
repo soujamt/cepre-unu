@@ -1602,3 +1602,111 @@ test('an applicant whose mother tongue is spanish is saved without a native or f
 
     Carbon\Carbon::setTestNow();
 });
+
+test('staff can register with a modalidad other than the suggested one and only its careers are offered', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $persona = crearPersonaParaPostulacion('46027822');
+    $pais = Pais::query()->whereIn('codigo_pai', ['1', 'PE'])->firstOrFail();
+    $tipoColegio = TipoColegio::query()->firstOrFail();
+    $colegio = Colegio::query()->firstOrFail();
+    $postulacion = postulacionDePrueba(conAula: true);
+    $ordinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
+    $reserva = ModalidadAdmision::query()->where('codigo_mad', 'EXT')->firstOrFail();
+
+    ProcesoCarrera::query()
+        ->where('id_proceso', $postulacion->id_proceso)
+        ->where('id_carrera', $postulacion->id_carrera)
+        ->where('id_modalidad_admision', $reserva->id_mad)
+        ->update(['estado_pca' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario);
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $asistente = AsistentePrueba::personal(test())
+        ->set('personaId', $persona->id_per)
+        ->set('pasoActual', 4)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('generalForm.id_pais_colegio', (string) $pais->id_pai)
+        ->set('generalForm.id_tipo_colegio', (string) $tipoColegio->id_tco)
+        ->set('generalForm.id_colegio', $colegio->id_col)
+        ->set('generalForm.veces_postula_unu', 0)
+        ->set('generalForm.veces_postula_otras', 0);
+
+    $vista = $asistente->vista()['postulacion'];
+
+    expect($vista['sugerida']['valor'])->toBe((string) $reserva->id_mad)
+        ->and($vista['modalidad']['valor'])->toBe((string) $reserva->id_mad)
+        ->and($vista['puedeElegirModalidad'])->toBeTrue()
+        ->and(collect($vista['modalidades'])->pluck('valor')->sort()->values()->all())->toBe(collect([(string) $ordinario->id_mad, (string) $reserva->id_mad])->sort()->values()->all())
+        ->and(collect($vista['carreras'])->pluck('valor'))->not->toContain((string) $postulacion->id_carrera);
+
+    $asistente->set('postulacionForm.id_modalidad', (string) $ordinario->id_mad)
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera);
+
+    expect($asistente->vista()['postulacion']['modalidad']['valor'])->toBe((string) $ordinario->id_mad)
+        ->and(collect($asistente->vista()['postulacion']['carreras'])->pluck('valor'))->toContain((string) $postulacion->id_carrera);
+
+    $asistente->set('postulacionForm.id_turno', (string) $postulacion->id_turno)
+        ->set('confirmacionDatos', true)
+        ->call('guardarPasoPostulacion')
+        ->assertHasNoErrors();
+
+    expect(Inscripcion::query()->sole()->id_modalidad_admision)->toBe($ordinario->id_mad);
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('changing the modalidad clears a career that the new modalidad does not offer', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosInscripcionCrear($usuario, ['inscripcion_crear']);
+    sembrarConfiguracionAcademicaParaInscripcion();
+
+    $postulacion = postulacionDePrueba();
+    $reserva = ModalidadAdmision::query()->where('codigo_mad', 'EXT')->firstOrFail();
+
+    ProcesoCarrera::query()
+        ->where('id_proceso', $postulacion->id_proceso)
+        ->where('id_carrera', $postulacion->id_carrera)
+        ->where('id_modalidad_admision', $reserva->id_mad)
+        ->update(['estado_pca' => 'DESHABILITADO']);
+
+    $this->actingAs($usuario);
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    AsistentePrueba::personal(test())
+        ->set('pasoActual', 4)
+        ->set('generalForm.anio_graduacion', '2020')
+        ->set('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->set('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->assertSet('postulacionForm.id_carrera', (string) $postulacion->id_carrera)
+        ->set('postulacionForm.id_modalidad', (string) $reserva->id_mad)
+        ->assertSet('postulacionForm.id_sede', (string) $postulacion->id_sede)
+        ->assertSet('postulacionForm.id_carrera', '');
+
+    Carbon\Carbon::setTestNow();
+});
+
+test('the portal always uses the modalidad of the graduation year', function () {
+    sembrarConfiguracionAcademicaParaInscripcion();
+    $ordinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
+    $reserva = ModalidadAdmision::query()->where('codigo_mad', 'EXT')->firstOrFail();
+
+    Carbon\Carbon::setTestNow('2026-04-15 10:00:00');
+
+    $asistente = AsistentePrueba::portal(test())
+        ->set('pasoActual', 4)
+        ->set('generalForm.anio_graduacion', '2026')
+        ->set('postulacionForm.id_modalidad', (string) $ordinario->id_mad);
+
+    $vista = $asistente->vista()['postulacion'];
+
+    expect($vista['puedeElegirModalidad'])->toBeFalse()
+        ->and($vista['modalidades'])->toBe([])
+        ->and($vista['modalidad']['valor'])->toBe((string) $reserva->id_mad);
+
+    Carbon\Carbon::setTestNow();
+});

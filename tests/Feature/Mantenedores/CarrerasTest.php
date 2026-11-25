@@ -2,6 +2,7 @@
 
 use App\Models\Accion;
 use App\Models\Carrera;
+use App\Models\ModalidadAdmision;
 use App\Models\Permiso;
 use App\Models\PermisoAccion;
 use App\Models\Proceso;
@@ -242,6 +243,7 @@ test('carrera enabled in a proceso cannot be deleted', function () {
     ProcesoCarrera::query()->create([
         'id_proceso' => $proceso->id_pro,
         'id_sede' => $sede->id_sed,
+        'id_modalidad_admision' => ModalidadAdmision::query()->where('codigo_mad', 'ORD')->value('id_mad'),
         'id_carrera' => $carrera->id_car,
         'estado_pca' => 'HABILITADO',
     ]);

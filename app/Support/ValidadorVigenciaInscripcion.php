@@ -19,19 +19,20 @@ class ValidadorVigenciaInscripcion
 {
     /**
      * Comprueba que la sede, carrera y modalidad de la postulación sigan
-     * habilitadas en el proceso activo.
+     * habilitadas en el proceso activo (la carrera, en esa sede y modalidad).
      */
     public function postulacionVigente(int $idSede, int $idCarrera, int $idModalidad, Proceso $procesoActivo): void
     {
         $carreraHabilitada = ProcesoCarrera::query()
             ->where('id_proceso', $procesoActivo->id_pro)
             ->where('id_sede', $idSede)
+            ->where('id_modalidad_admision', $idModalidad)
             ->where('id_carrera', $idCarrera)
             ->where('estado_pca', EstadoCatalogo::Habilitado->value)
             ->exists();
 
         if (! $carreraHabilitada) {
-            throw new RuntimeException('La carrera seleccionada ya no se encuentra habilitada en esa sede para el proceso activo.');
+            throw new RuntimeException('La carrera seleccionada ya no se encuentra habilitada en esa sede y modalidad para el proceso activo.');
         }
 
         $modalidadHabilitada = ProcesoModalidad::query()

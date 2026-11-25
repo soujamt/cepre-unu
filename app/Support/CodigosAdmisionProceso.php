@@ -28,8 +28,8 @@ class CodigosAdmisionProceso
     public const ENCABEZADOS = ['CLAVE', 'TIPO', 'SEDE', 'MODALIDAD', 'CARRERA', 'CODIGO_ADMISION'];
 
     /**
-     * Cada lugar (sede + modalidad) seguido de sus ofertas (carreras), con el
-     * código guardado si lo hay.
+     * Cada lugar (sede + modalidad con carreras) seguido de sus ofertas (las carreras
+     * de esa sede en esa modalidad), con el código guardado si lo hay.
      *
      * @return Collection<int, array{clave:string,tipo:string,id_sede:int,sede:string,id_modalidad:int,modalidad:string,id_carrera:?int,carrera:?string,codigo:string}>
      */
@@ -59,9 +59,17 @@ class CodigosAdmisionProceso
 
         foreach ($carrerasPorSede as $grupo) {
             $sede = $grupo->first()->sede;
-            $carreras = $grupo->map->carrera->sortBy('nombre_car');
 
             foreach ($modalidades as $modalidad) {
+                $carreras = $grupo
+                    ->where('id_modalidad_admision', $modalidad->id_mad)
+                    ->map->carrera
+                    ->sortBy('nombre_car');
+
+                if ($carreras->isEmpty()) {
+                    continue;
+                }
+
                 $claveLugar = ProcesoCodigoAdmision::clave($sede->id_sed, $modalidad->id_mad);
                 $filas->push([
                     'clave' => $claveLugar,

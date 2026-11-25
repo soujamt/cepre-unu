@@ -257,3 +257,20 @@ test('the revision step shows the postulante photo and lets the operator upload 
 
     expect(FotoPostulante::deDocumento('47940211'))->not->toBeNull();
 });
+
+test('a photo already uploaded for the dni appears in the wizard as soon as the dni is known', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosDocumentos($usuario, ['inscripcion_crear']);
+    $this->actingAs($usuario);
+
+    $foto = FotoPostulante::query()->create(['numero_documento_fot' => '47940211', 'archivo_fot' => 'fotos/47940211.jpg']);
+
+    $componente = AsistentePrueba::personal(test())->set('pasoActual', 2);
+
+    expect($componente->vista()['foto']['actual'])->toBeNull();
+
+    $componente->set('personaForm.numero_documento', '47940211');
+
+    expect($componente->vista()['foto']['actual'])->toBe($foto->url())
+        ->and($componente->vista()['foto']['puedeCambiar'])->toBeTrue();
+});

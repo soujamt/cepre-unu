@@ -314,23 +314,25 @@ class CargarDatosPrueba extends Command
 
     private function crearInscripcion(int $indice, Persona $persona, bool $desdePortal, int $diasAtras): Inscripcion
     {
-        $carreras = ProcesoCarrera::query()
-            ->where('id_proceso', $this->proceso->id_pro)
-            ->where('estado_pca', 'HABILITADO')
-            ->orderBy('id_pca')
-            ->get();
-
-        if ($carreras->isEmpty()) {
-            throw new RuntimeException('el proceso no tiene carreras en su oferta');
-        }
-
-        $procesoCarrera = $carreras->get(($indice * 5) % $carreras->count());
         $anioEgreso = $this->anioEgreso($indice);
         $modalidad = app(ResolvedorModalidadEgreso::class)->resolver($this->proceso, $anioEgreso);
 
         if ($modalidad === null) {
             throw new RuntimeException("el proceso no tiene modalidad para el año de egreso {$anioEgreso}");
         }
+
+        $carreras = ProcesoCarrera::query()
+            ->where('id_proceso', $this->proceso->id_pro)
+            ->where('id_modalidad_admision', $modalidad->id_mad)
+            ->where('estado_pca', 'HABILITADO')
+            ->orderBy('id_pca')
+            ->get();
+
+        if ($carreras->isEmpty()) {
+            throw new RuntimeException("el proceso no tiene carreras en su oferta para {$modalidad->nombre_mad}");
+        }
+
+        $procesoCarrera = $carreras->get(($indice * 5) % $carreras->count());
 
         $turno = $this->turnoPara($indice);
         $colegio = Colegio::query()

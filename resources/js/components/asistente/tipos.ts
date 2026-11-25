@@ -46,7 +46,17 @@ export interface DatosAsistente {
         sexos: Opcion[];
         lenguasMaternas: Opcion[];
     };
-    postulacion: { modalidad: { nombre: string; condicion: string | null } | null; sedes: Opcion[]; carreras: Opcion[]; turnos: Opcion[] };
+    postulacion: {
+        /** Modalidad con la que se registrará: la elegida por el personal o la sugerida. */
+        modalidad: { valor: string; nombre: string; condicion: string | null } | null;
+        /** La que corresponde al año de egreso. */
+        sugerida: { valor: string; nombre: string } | null;
+        puedeElegirModalidad: boolean;
+        modalidades: Opcion[];
+        sedes: Opcion[];
+        carreras: Opcion[];
+        turnos: Opcion[];
+    };
     foto: { puedeCambiar: boolean; actual: string | null };
     registrada?: {
         codigo: string;

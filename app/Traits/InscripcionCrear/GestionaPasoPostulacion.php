@@ -23,8 +23,9 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Paso 3 del asistente de inscripción: sede, carrera y turno. La modalidad
- * se asigna sola según el año de egreso.
+ * Paso 3 del asistente de inscripción: modalidad, sede, carrera y turno. La
+ * modalidad se sugiere según el año de egreso; el personal puede elegir otra
+ * habilitada en el proceso (en el portal siempre es la sugerida).
  *
  * Lo usa el componente pages::inscripciones.inscripcion-crear, que declara
  * el estado (formularios y propiedades) sobre el que trabajan estos métodos.
@@ -34,6 +35,7 @@ trait GestionaPasoPostulacion
     private function cargarPostulacionExistente(Inscripcion $inscripcion): void
     {
         $this->postulacionForm = [
+            'id_modalidad' => (string) ($inscripcion->id_modalidad_admision ?? ''),
             'id_sede' => (string) ($inscripcion->id_sede ?? ''),
             'id_carrera' => (string) ($inscripcion->id_carrera ?? ''),
             'id_turno' => (string) ($inscripcion->id_turno ?? ''),
@@ -43,6 +45,28 @@ trait GestionaPasoPostulacion
     public function updatedPostulacionFormIdSede(): void
     {
         $this->postulacionForm['id_carrera'] = '';
+    }
+
+    /**
+     * Otra modalidad ofrece otras carreras: se quitan la sede y la carrera que ya no estén.
+     */
+    public function updatedPostulacionFormIdModalidad(): void
+    {
+        if (! $this->sedesPostulacionDisponibles()->contains('id', (string) $this->postulacionForm['id_sede'])) {
+            $this->postulacionForm['id_sede'] = '';
+        }
+
+        if (! $this->carrerasPostulacionDisponibles()->contains('id', (string) $this->postulacionForm['id_carrera'])) {
+            $this->postulacionForm['id_carrera'] = '';
+        }
+    }
+
+    /**
+     * El personal puede elegir la modalidad; en el portal se usa la sugerida.
+     */
+    public function puedeElegirModalidad(): bool
+    {
+        return ! $this->esModoPublico();
     }
 
     /**
@@ -68,7 +92,7 @@ trait GestionaPasoPostulacion
     /**
      * Modalidad que corresponde al año de egreso ingresado en el paso 2.
      */
-    public function modalidadPostulacion(): ?ModalidadAdmision
+    public function modalidadSugerida(): ?ModalidadAdmision
     {
         $proceso = $this->procesoPostulacionActivo();
         $anioEgreso = $this->generalForm['anio_graduacion'] ?? '';
@@ -81,9 +105,11 @@ trait GestionaPasoPostulacion
     }
 
     /**
-     * Carreras habilitadas en el proceso activo, con su sede.
+     * Modalidades habilitadas en el proceso activo que el personal puede elegir.
+     *
+     * @return EloquentCollection<int, ModalidadAdmision>
      */
-    public function carrerasProcesoDisponibles(): EloquentCollection
+    public function modalidadesPostulacionDisponibles(): EloquentCollection
     {
         $proceso = $this->procesoPostulacionActivo();
 
@@ -91,9 +117,50 @@ trait GestionaPasoPostulacion
             return new EloquentCollection;
         }
 
+        return ModalidadAdmision::query()
+            ->where('estado_mad', EstadoCatalogo::Habilitado->value)
+            ->whereNotNull('condicion_egreso_mad')
+            ->whereHas('procesoModalidades', fn ($query) => $query
+                ->where('id_proceso', $proceso->id_pro)
+                ->where('estado_pmo', EstadoCatalogo::Habilitado->value))
+            ->orderBy('nombre_mad')
+            ->get();
+    }
+
+    /**
+     * Modalidad de la postulación: la elegida por el personal si es válida, o la sugerida.
+     */
+    public function modalidadPostulacion(): ?ModalidadAdmision
+    {
+        $elegida = (string) ($this->postulacionForm['id_modalidad'] ?? '');
+
+        if ($this->puedeElegirModalidad() && $elegida !== '') {
+            $modalidad = $this->modalidadesPostulacionDisponibles()->firstWhere('id_mad', (int) $elegida);
+
+            if ($modalidad !== null) {
+                return $modalidad;
+            }
+        }
+
+        return $this->modalidadSugerida();
+    }
+
+    /**
+     * Carreras habilitadas en el proceso activo para la modalidad del postulante, con su sede.
+     */
+    public function carrerasProcesoDisponibles(): EloquentCollection
+    {
+        $proceso = $this->procesoPostulacionActivo();
+        $modalidad = $this->modalidadPostulacion();
+
+        if ($proceso === null || $modalidad === null) {
+            return new EloquentCollection;
+        }
+
         return ProcesoCarrera::query()
             ->with(['sede', 'carrera'])
             ->where('id_proceso', $proceso->id_pro)
+            ->where('id_modalidad_admision', $modalidad->id_mad)
             ->where('estado_pca', EstadoCatalogo::Habilitado->value)
             ->whereHas('sede', fn ($query) => $query->where('estado_sed', EstadoCatalogo::Habilitado->value))
             ->whereHas('carrera', fn ($query) => $query->where('estado_car', EstadoCatalogo::Habilitado->value))
@@ -310,8 +377,7 @@ trait GestionaPasoPostulacion
         try {
             DB::transaction(function () use ($data): void {
                 $procesoActivo = $this->obtenerProcesoActivoVigenteOrFail();
-                $modalidad = app(ResolvedorModalidadEgreso::class)
-                    ->resolver($procesoActivo, (int) $this->generalForm['anio_graduacion']);
+                $modalidad = $this->modalidadPostulacion();
 
                 if ($modalidad === null) {
                     throw new RuntimeException('El proceso activo no tiene habilitada una modalidad para ese año de egreso.');
@@ -474,6 +540,7 @@ trait GestionaPasoPostulacion
     private function resetPostulacionForm(): void
     {
         $this->postulacionForm = [
+            'id_modalidad' => '',
             'id_sede' => '',
             'id_carrera' => '',
             'id_turno' => '',

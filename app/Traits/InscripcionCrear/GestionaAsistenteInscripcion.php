@@ -127,12 +127,14 @@ trait GestionaAsistenteInscripcion
 
     /**
      * @var array{
+     *   id_modalidad:string,
      *   id_sede:string,
      *   id_carrera:string,
      *   id_turno:string
      * }
      */
     public array $postulacionForm = [
+        'id_modalidad' => '',
         'id_sede' => '',
         'id_carrera' => '',
         'id_turno' => '',

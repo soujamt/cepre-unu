@@ -82,7 +82,7 @@ function crearOfertaParaCodigos(): array
     ProcesoModalidad::query()->create(['id_proceso' => $proceso->id_pro, 'id_modalidad_admision' => $ordinario->id_mad, 'estado_pmo' => 'HABILITADO']);
 
     foreach ([$sistemas, $derecho] as $carrera) {
-        ProcesoCarrera::query()->create(['id_proceso' => $proceso->id_pro, 'id_sede' => $sede->id_sed, 'id_carrera' => $carrera->id_car, 'estado_pca' => 'HABILITADO']);
+        ProcesoCarrera::query()->create(['id_proceso' => $proceso->id_pro, 'id_sede' => $sede->id_sed, 'id_modalidad_admision' => $ordinario->id_mad, 'id_carrera' => $carrera->id_car, 'estado_pca' => 'HABILITADO']);
     }
 
     return compact('proceso', 'sede', 'sistemas', 'derecho', 'ordinario');

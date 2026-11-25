@@ -2,7 +2,7 @@
 ## CENTRO PREUNIVERSITARIO - CEPRE UNU
 ### MANUAL DE USUARIO DEL SISTEMA DE INSCRIPCIONES
 
-**Versión:** 1.4  
+**Versión:** 1.5  
 **Documento:** Manual de usuario funcional  
 **Dirigido a:** SuperAdministrador y Gestor de Inscripciones CEPRE  
 **Fecha:** Noviembre 2026
@@ -10,6 +10,8 @@
 > **Cambios en la versión 1.2:** el pago se valida primero y el asistente pasa a tener 4 pasos; la modalidad se asigna sola según el año de egreso; cada proceso define su propia oferta (modalidades y carreras por sede); se agregaron los pagos manuales, el portal del postulante con revisión de las inscripciones en línea, las fotos, la ficha de matrícula, el carnet con QR y los códigos de Admisión. Se retiraron los expedientes, los convenios, los requisitos, los lugares de inscripción y las ofertas base. Los diagramas del flujo completo están en `FLUJO_PROCESOS_CEPRE.md`.
 
 > **Cambios en la versión 1.3:** se renovó la interfaz. Las pantallas cambian sin recargar la página, los formularios se abren en un panel lateral a la derecha, las acciones delicadas (eliminar, anular, cambiar de estado) piden confirmación en un diálogo y los mensajes aparecen abajo a la derecha. El menú lateral agrupa los módulos en secciones que se pueden plegar, y el tema claro u oscuro se elige con el botón de la barra superior. Los módulos, permisos y procedimientos no cambian.
+
+> **Cambios en la versión 1.5:** la oferta del proceso define las carreras de cada sede **por modalidad**; en el asistente, el personal puede cambiar la modalidad sugerida por el año de egreso; la foto del postulante aparece desde el paso 2 en la ficha lateral; los pagos libres de una importación se pueden asociar a mano, aunque el DNI del pago sea otro, con un motivo; se puede editar la postulación (sede, carrera o turno) con confirmación e historial; los procesos se nombran con el periodo en romanos (2026-I); y el listado de inscripciones sincroniza con el Drive.
 
 > **Cambios en la versión 1.4:** se actualizaron los nombres de botones y menús de la nueva interfaz. El inicio y el reporte de inscripciones muestran gráficos (con vista de tabla), la recaudación y la ocupación de aulas. Las validaciones las hace el servidor y marcan en rojo el campo con error. En el paso 1, si no hay un pago libre con los datos ingresados aparece un aviso; con 8 dígitos el tipo de documento DNI se elige solo; la lengua materna incluye `CASTELLANO`; el buscador de ubigeo ofrece primero Ucayali; el listado de inscripciones muestra la foto del postulante; y la consulta del portal avisa cuando el pago existe pero falta inscribirse.
 
@@ -534,21 +536,21 @@ Referencia de imagen:
 
 #### 13.2.1. Objetivo
 
-Definir qué modalidades y qué carreras de cada sede se abren en el proceso.
+Definir qué modalidades se abren en el proceso y qué carreras se ofrecen en cada sede para cada modalidad (por ejemplo, una carrera puede ofrecerse en ORDINARIO y no en EXTRAORDINARIO).
 
 #### 13.2.2. Procedimiento
 
 1. ingresar a `Configuración académica > Oferta del proceso`;
 2. seleccionar el proceso;
 3. marcar las modalidades habilitadas: al menos una para egresados y una para estudiantes en colegio;
-4. en cada sede, marcar las carreras que se ofrecen; `Marcar todas` y `Quitar todas` ayudan a hacerlo por sede;
+4. en cada sede aparece una tabla con las carreras en filas y una columna por cada modalidad habilitada: marcar las casillas de las carreras que se ofrecen en cada modalidad. La casilla de la cabecera de cada columna marca o quita todas las de esa modalidad, y `Marcar todas` y `Quitar todas` lo hacen para toda la sede;
 5. seleccionar `Guardar oferta`.
 
 Si el proceso no tiene aulas asignadas, la pantalla lo advierte; desde `Ver aulas por proceso` se puede ir a asignarlas.
 
 #### 13.2.3. Resultado esperado
 
-En el paso de postulación solo aparecen las sedes y carreras marcadas, y la modalidad se elige sola entre las habilitadas.
+En el paso de postulación solo aparecen las sedes y carreras marcadas para la modalidad del postulante. La modalidad se sugiere sola según el año de egreso y el personal puede cambiarla por otra habilitada.
 
 Referencia de imagen:
 `[Figura SA-15: Oferta del proceso]`
@@ -729,6 +731,16 @@ En la lista se busca por DNI, operación o referencia, se filtra por estado (`LI
 
 Después de importar un TXT, la acción `Asociar pendientes` del menú de la importación asocia automáticamente los pagos libres a las inscripciones que ya tienen saldo por pagar (cuotas siguientes). Para cada pago busca, por DNI, una obligación con saldo. El sistema pide confirmar y, al terminar, informa cuántos pagos se asociaron y cuántos se omitieron.
 
+**Pagos que faltan asociar (validación manual):**
+
+1. en el menú de la importación, seleccionar `Ver pagos del lote`; el panel indica cuántos pagos siguen libres;
+2. en el pago libre, seleccionar `Asociar`;
+3. buscar la inscripción por código, DNI o nombre (la búsqueda empieza con el DNI del pago) y elegirla; se muestra su saldo;
+4. si el DNI del pago no es el del postulante (por ejemplo, pagó el padre con su DNI), el sistema lo advierte y pide el `Motivo` (mínimo 10 caracteres). Asociarlo solo si se comprobó con el voucher;
+5. seleccionar `Asociar pago`.
+
+El pago pasa a `REGISTRADO`, se descuenta del saldo y, si se alcanza el mínimo, la inscripción queda `ACTIVA`. El motivo queda guardado en la validación del pago.
+
 ### 15.5. Resultado esperado
 
 Los pagos quedan en el sistema como `LIBRES`, listos para usarse en el paso 1 del asistente, en el portal o en `Validar pagos`.
@@ -877,9 +889,9 @@ Elegir sede, carrera y turno, revisar el resumen y registrar la inscripción.
 
 #### 16.6.2. Procedimiento
 
-1. revisar la modalidad asignada automáticamente;
+1. revisar la `Modalidad`: viene sugerida según el año de egreso. Si el caso lo amerita (por ejemplo, un colegio que termina en otra fecha), se puede elegir otra modalidad habilitada; el sistema avisa que se eligió a mano y muestra las carreras de esa modalidad. En el portal la modalidad no se puede cambiar;
 2. seleccionar la sede, la carrera profesional y el turno;
-3. revisar la foto del postulante; si no tiene, se puede subir con `Subir foto` (o reemplazar con `Cambiar foto`);
+3. revisar la foto del postulante en la ficha de la columna izquierda (ver 16.6.4);
 4. revisar el resumen de todos los datos y marcar `Confirmo que los datos son correctos`;
 5. seleccionar `Registrar inscripción`.
 
@@ -898,6 +910,14 @@ Al terminar, el sistema muestra el detalle de la inscripción, desde donde se pu
 
 Referencia de imagen:
 `[Figura GI-09: Paso 4 - Postulación]`
+
+#### 16.6.4. Foto del postulante en el asistente
+
+Desde el paso 2, cuando ya se conoce el DNI, la columna izquierda muestra la ficha del postulante con su nombre, DNI y foto, como la revisión fotográfica del sistema anterior:
+
+- si la foto ya se subió en `Fotos` con ese DNI, aparece sola, con la marca `Foto registrada`;
+- si falta, se puede subir ahí mismo con `Subir foto` (o reemplazarla con `Cambiar foto`); queda guardada por DNI para la ficha y el carnet;
+- en el portal, el postulante ve su foto si ya está registrada, pero no puede subirla.
 
 ### 16.7. Detalle de inscripción
 
@@ -986,7 +1006,7 @@ Registrar las fotos de los postulantes para la ficha y el carnet. La foto se gua
 
 Si una foto ya existe, se reemplaza. El sistema recorta y ajusta cada foto al tamaño del carnet (300 × 400 px).
 
-También se puede subir la foto de un postulante en el paso 4 del asistente.
+También se puede subir la foto de un postulante desde la ficha lateral del asistente, a partir del paso 2 (ver 16.6.4).
 
 ### 17.3. Consultar, eliminar y exportar
 

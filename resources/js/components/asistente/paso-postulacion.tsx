@@ -1,5 +1,3 @@
-import { Camera } from '@keyline-icons/react/fill';
-import { useRef } from 'react';
 import { Aviso } from '@/components/aviso';
 import { CampoSelect } from '@/components/campo';
 import { Opciones, PiePaso, Seccion } from '@/components/asistente/comunes';
@@ -19,12 +17,12 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string | null | un
 }
 
 export function PasoPostulacion({ asistente, control, alSalir }: { asistente: DatosAsistente; control: ControlAsistente; alSalir: () => void }) {
-    const { formularios, etiquetas, errores, cambiar, accion, procesando, confirmacion, setConfirmacion, subirFoto } = control;
+    const { formularios, etiquetas, errores, cambiar, accion, procesando, confirmacion, setConfirmacion } = control;
     const postulacion = formularios.postulacionForm;
     const persona = formularios.personaForm;
     const general = formularios.generalForm;
-    const archivo = useRef<HTMLInputElement>(null);
-    const { modalidad, sedes, carreras, turnos } = asistente.postulacion;
+    const { modalidad, sugerida, puedeElegirModalidad, modalidades, sedes, carreras, turnos } = asistente.postulacion;
+    const elegidaAMano = modalidad !== null && sugerida !== null && modalidad.valor !== sugerida.valor;
     const nombre = [persona.apellido_paterno, persona.apellido_materno, persona.apellido_casada, persona.nombres].filter(Boolean).join(' ');
     const nombreDe = (lista: { valor: string; nombre: string }[], valor: string): string | undefined => lista.find((opcion) => opcion.valor === valor)?.nombre;
 
@@ -49,7 +47,25 @@ export function PasoPostulacion({ asistente, control, alSalir }: { asistente: Da
     return (
         <div className="space-y-6">
             <Seccion titulo={`Proceso ${asistente.proceso.nombre ?? ''}`} descripcion={`Inscripciones del ${asistente.proceso.apertura ?? '—'} al ${asistente.proceso.cierre ?? '—'}`}>
-                {modalidad ? (
+                {puedeElegirModalidad && modalidades.length > 0 ? (
+                    <div className="space-y-3">
+                        <CampoSelect
+                            etiqueta="Modalidad"
+                            value={modalidad?.valor ?? ''}
+                            onChange={(evento) => cambiar('postulacionForm', 'id_modalidad', evento.target.value, true)}
+                            error={errores['postulacionForm.id_modalidad']}
+                            ayuda={sugerida ? `Según el año de egreso ${String(general.anio_graduacion)} corresponde ${sugerida.nombre}. Puede elegir otra si el caso lo amerita.` : undefined}
+                            requerido
+                        >
+                            <Opciones opciones={modalidades} vacio="Seleccionar modalidad" />
+                        </CampoSelect>
+                        {elegidaAMano && (
+                            <Aviso tono="aviso" titulo="Modalidad elegida manualmente">
+                                Por el año de egreso correspondía {sugerida?.nombre}. Se registrará como {modalidad?.nombre}; las carreras disponibles son las de esa modalidad.
+                            </Aviso>
+                        )}
+                    </div>
+                ) : modalidad ? (
                     <Aviso tono="exito" titulo={modalidad.nombre}>
                         Modalidad que corresponde al año de egreso {String(general.anio_graduacion)}.
                     </Aviso>
@@ -59,7 +75,13 @@ export function PasoPostulacion({ asistente, control, alSalir }: { asistente: Da
                     </Aviso>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <CampoSelect etiqueta="Sede" value={String(postulacion.id_sede)} onChange={(evento) => cambiar('postulacionForm', 'id_sede', evento.target.value, true)} error={errores['postulacionForm.id_sede']} requerido>
+                    <CampoSelect
+                        etiqueta="Sede"
+                        value={String(postulacion.id_sede)}
+                        onChange={(evento) => cambiar('postulacionForm', 'id_sede', evento.target.value, true)}
+                        error={errores['postulacionForm.id_sede']}
+                        requerido
+                    >
                         <Opciones opciones={sedes} vacio="Seleccionar sede" />
                     </CampoSelect>
                     <CampoSelect
@@ -86,7 +108,13 @@ export function PasoPostulacion({ asistente, control, alSalir }: { asistente: Da
                                     postulacion.id_turno === turno.valor ? 'border-index-300 bg-index-50/50 dark:border-index-500/40 dark:bg-index-500/[0.07]' : 'border-zinc-200/80 dark:border-white/[0.08]',
                                 )}
                             >
-                                <input type="radio" name="turno" className="size-4 accent-index-500" checked={postulacion.id_turno === turno.valor} onChange={() => cambiar('postulacionForm', 'id_turno', turno.valor, true)} />
+                                <input
+                                    type="radio"
+                                    name="turno"
+                                    className="accent-index-500 size-4"
+                                    checked={postulacion.id_turno === turno.valor}
+                                    onChange={() => cambiar('postulacionForm', 'id_turno', turno.valor, true)}
+                                />
                                 {turno.nombre}
                             </label>
                         ))}
@@ -97,20 +125,9 @@ export function PasoPostulacion({ asistente, control, alSalir }: { asistente: Da
 
             <Seccion titulo="Revisión" descripcion="Revise los datos antes de registrar la inscripción.">
                 <div className="flex flex-col gap-5 sm:flex-row">
-                    {(asistente.foto.puedeCambiar || asistente.foto.actual) && (
-                        <div className="flex shrink-0 flex-col items-center gap-2">
-                            <div className="flex aspect-[3/4] w-28 items-center justify-center overflow-hidden rounded-xl border border-zinc-200/80 bg-zinc-50 dark:border-white/[0.08] dark:bg-white/[0.03]">
-                                {asistente.foto.actual ? <img src={asistente.foto.actual} alt="Foto del postulante" className="size-full object-cover" /> : <Camera className="size-7 text-zinc-300" />}
-                            </div>
-                            {asistente.foto.puedeCambiar && (
-                                <>
-                                    <Button variant="outline" size="sm" onClick={() => archivo.current?.click()} disabled={procesando}>
-                                        {asistente.foto.actual ? 'Cambiar foto' : 'Subir foto'}
-                                    </Button>
-                                    <input ref={archivo} type="file" accept="image/jpeg,image/png" className="sr-only" onChange={(evento) => evento.target.files?.[0] && subirFoto(evento.target.files[0])} />
-                                    {errores.fotoPostulante && <p className="max-w-36 text-center text-xs text-red-500">{errores.fotoPostulante}</p>}
-                                </>
-                            )}
+                    {asistente.foto.actual && (
+                        <div className="flex aspect-[3/4] w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-zinc-200/80 dark:border-white/[0.08]">
+                            <img src={asistente.foto.actual} alt="Foto del postulante" className="size-full object-cover" />
                         </div>
                     )}
                     <dl className="grid flex-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -125,7 +142,9 @@ export function PasoPostulacion({ asistente, control, alSalir }: { asistente: Da
                         <Dato etiqueta="Turno" valor={nombreDe(turnos, String(postulacion.id_turno))} />
                     </dl>
                 </div>
-                <label className={cn('flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3', errores.confirmacionDatos ? 'border-red-300 dark:border-red-500/40' : 'border-zinc-200/80 dark:border-white/[0.08]')}>
+                <label
+                    className={cn('flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3', errores.confirmacionDatos ? 'border-red-300 dark:border-red-500/40' : 'border-zinc-200/80 dark:border-white/[0.08]')}
+                >
                     <Checkbox checked={confirmacion} onCheckedChange={(valor) => setConfirmacion(valor === true)} className="mt-0.5" aria-invalid={Boolean(errores.confirmacionDatos) || undefined} />
                     <span className="text-sm text-zinc-700 dark:text-zinc-200">Confirmo que los datos son correctos.</span>
                 </label>

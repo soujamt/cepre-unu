@@ -604,3 +604,81 @@ test('searching imported payments validates the search data on the server', func
             ->where('erroresBusqueda.operacion', 'Ingrese el número de operación del voucher.')
             ->where('erroresBusqueda.fecha', 'La fecha de pago no puede ser posterior a hoy.'));
 });
+
+test('a free payment of the txt can be associated by hand from the import', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+    $contexto = crearContextoPagoValidar();
+
+    $this->actingAs($usuario)
+        ->getJson(route('pagos.importaciones.obligaciones', ['buscar' => $contexto['persona']->numero_documento_per]))
+        ->assertOk()
+        ->assertJsonPath('obligaciones.0.id', $contexto['obligacion']->id_iop)
+        ->assertJsonPath('obligaciones.0.saldo', 550);
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.asociar', $contexto['detalle']->id_ibd), ['obligacion' => $contexto['obligacion']->id_iop])
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'success', 'message' => "Pago 41676 asociado a la inscripción {$contexto['inscripcion']->codigo_ins}."]);
+
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
+        ->and($contexto['obligacion']->fresh()->saldo_iop)->toEqual(250)
+        ->and($contexto['detalle']->fresh()->inscripcionPago->observacion_validacion_ipa)->toBeNull();
+});
+
+test('a payment made with another dni needs a motivo to be associated by hand', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+    $contexto = crearContextoPagoValidar();
+    $contexto['detalle']->update(['numero_documento_ibd' => '40123456']);
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.asociar', $contexto['detalle']->id_ibd), ['obligacion' => $contexto['obligacion']->id_iop, 'motivo' => 'corto'])
+        ->assertSessionHasErrors(['motivo' => 'El DNI del pago no es el del postulante: indique el motivo (mínimo 10 caracteres).']);
+
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Pendiente);
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.asociar', $contexto['detalle']->id_ibd), ['obligacion' => $contexto['obligacion']->id_iop, 'motivo' => 'Pagó el padre con su DNI, presentó el voucher.'])
+        ->assertSessionHasNoErrors();
+
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Asociado)
+        ->and($contexto['detalle']->fresh()->inscripcionPago->observacion_validacion_ipa)->toBe('Validado a mano, pago con DNI 40123456: Pagó el padre con su DNI, presentó el voucher.');
+});
+
+test('the validation page still rejects a payment of another dni', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_crear']);
+    $contexto = crearContextoPagoValidar();
+    $contexto['detalle']->update(['numero_documento_ibd' => '40123456']);
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.validar.confirmar'), ['obligacion' => $contexto['obligacion']->id_iop, 'detalle' => $contexto['detalle']->id_ibd])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El DNI del pago bancario no coincide con el postulante de la inscripcion.']);
+
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Pendiente);
+});
+
+test('an already associated payment cannot be associated again by hand', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice', 'pago_crear']);
+    $contexto = crearContextoPagoValidar();
+    $contexto['detalle']->update(['estado_ibd' => EstadoImportacionBancoDetalle::Asociado]);
+
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.asociar', $contexto['detalle']->id_ibd), ['obligacion' => $contexto['obligacion']->id_iop])
+        ->assertSessionHas(SessionKey::FLASH_DATA.'.toast', ['type' => 'error', 'message' => 'El pago bancario seleccionado ya no se encuentra disponible.']);
+});
+
+test('users without permission to register payments cannot associate them by hand', function () {
+    $usuario = Usuario::factory()->create();
+    otorgarPermisosPagoValidar($usuario, ['pago_indice']);
+    $contexto = crearContextoPagoValidar();
+
+    $this->actingAs($usuario)->getJson(route('pagos.importaciones.obligaciones'))->assertForbidden();
+    $this->actingAs($usuario)
+        ->post(route('pagos.importaciones.asociar', $contexto['detalle']->id_ibd), ['obligacion' => $contexto['obligacion']->id_iop])
+        ->assertForbidden();
+
+    expect($contexto['detalle']->fresh()->estado_ibd)->toBe(EstadoImportacionBancoDetalle::Pendiente);
+});

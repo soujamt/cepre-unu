@@ -65,7 +65,10 @@ function contextoEdicion(string $estado = 'ACTIVO'): array
     $sede = fn (string $nombre): Sede => Sede::query()->create(['codigo_sed' => $nombre, 'nombre_sed' => $nombre, 'id_ubigeo' => $ubigeo->id_ubi, 'estado_sed' => 'HABILITADO']);
     $carrera = fn (string $nombre): Carrera => Carrera::query()->create(['codigo_car' => Str::upper(Str::random(6)), 'nombre_car' => $nombre, 'estado_car' => 'HABILITADO']);
     $turno = fn (string $nombre): Turno => Turno::query()->create(['codigo_tur' => $nombre, 'nombre_tur' => $nombre, 'estado_tur' => 'HABILITADO']);
-    $oferta = fn (Sede $sede, Carrera $carrera, string $estado = 'HABILITADO') => ProcesoCarrera::query()->create(['id_proceso' => $proceso->id_pro, 'id_sede' => $sede->id_sed, 'id_carrera' => $carrera->id_car, 'estado_pca' => $estado]);
+    $otraModalidad = ModalidadAdmision::query()->create(['codigo_mad' => 'OTRA', 'nombre_mad' => 'OTRA MODALIDAD DE PRUEBA', 'estado_mad' => 'HABILITADO']);
+    $oferta = fn (Sede $sede, Carrera $carrera, string $estado = 'HABILITADO', ?ModalidadAdmision $enModalidad = null) => ProcesoCarrera::query()->create([
+        'id_proceso' => $proceso->id_pro, 'id_sede' => $sede->id_sed, 'id_modalidad_admision' => ($enModalidad ?? $modalidad)->id_mad, 'id_carrera' => $carrera->id_car, 'estado_pca' => $estado,
+    ]);
     $aula = function (Turno $turno, string $nombre, int $capacidad) use ($proceso): ProcesoAula {
         $aula = Aula::query()->create(['nombre_aul' => $nombre, 'piso_aul' => 'PISO 1', 'lugar_aul' => 'UNU', 'orden_aul' => 1, 'estado_aul' => 'HABILITADO']);
 
@@ -78,6 +81,7 @@ function contextoEdicion(string $estado = 'ACTIVO'): array
     $oferta($central, $enfermeria);
     $oferta($central, $sistemas);
     $oferta($norte, $sistemas);
+    $oferta($norte, $carrera('MEDICINA'), 'HABILITADO', $otraModalidad);
     $oferta($central, $derecho, 'DESHABILITADO');
     [$aulaManana, $aulaTarde] = [$aula($manana, 'A-101', 40), $aula($tarde, 'B-201', 1)];
 
@@ -129,7 +133,7 @@ test('users without inscripcion editar permiso cannot edit a postulacion', funct
     expect($contexto['inscripcion']->fresh()->id_turno)->toBe($contexto['manana']->id_tur);
 });
 
-test('the edit page offers the enabled careers by sede and the turnos with their free seats', function () {
+test('the edit page offers the careers enabled for the sede and modalidad of the inscripcion and the turnos with their free seats', function () {
     $contexto = contextoEdicion();
 
     $this->actingAs($contexto['usuario'])

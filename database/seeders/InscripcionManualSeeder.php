@@ -53,13 +53,14 @@ class InscripcionManualSeeder extends Seeder
             ->where('codigo_tur', 'MAN')
             ->firstOrFail();
 
+        $modalidadOrdinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
+
         $procesoCarreras = ProcesoCarrera::query()
             ->where('id_proceso', $proceso->id_pro)
+            ->where('id_modalidad_admision', $modalidadOrdinario->id_mad)
             ->where('estado_pca', 'HABILITADO')
             ->orderBy('id_pca')
             ->get();
-
-        $modalidadOrdinario = ModalidadAdmision::query()->where('codigo_mad', 'ORD')->firstOrFail();
 
         $reglaPago = ReglaPago::query()
             ->where('id_proceso', $proceso->id_pro)

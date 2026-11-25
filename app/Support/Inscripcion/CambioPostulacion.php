@@ -35,7 +35,8 @@ class CambioPostulacion
     }
 
     /**
-     * Sedes con sus carreras habilitadas en el proceso; incluye la actual aunque ya no esté habilitada.
+     * Sedes con sus carreras habilitadas en el proceso para la modalidad de la inscripción;
+     * incluye la actual aunque ya no esté habilitada.
      *
      * @return list<array{valor: string, nombre: string, carreras: list<array{valor: string, nombre: string}>}>
      */
@@ -44,6 +45,7 @@ class CambioPostulacion
         $ofertas = ProcesoCarrera::query()
             ->with(['sede', 'carrera'])
             ->where('id_proceso', $inscripcion->id_proceso)
+            ->where('id_modalidad_admision', $inscripcion->id_modalidad_admision)
             ->where('estado_pca', EstadoCatalogo::Habilitado->value)
             ->whereHas('sede', fn (Builder $query) => $query->where('estado_sed', EstadoCatalogo::Habilitado->value))
             ->whereHas('carrera', fn (Builder $query) => $query->where('estado_car', EstadoCatalogo::Habilitado->value))

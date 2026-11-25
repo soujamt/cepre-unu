@@ -21,7 +21,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Oferta del proceso: modalidades habilitadas y carreras que se ofrecen en cada sede.
+ * Oferta del proceso: modalidades habilitadas y carreras que se ofrecen en cada sede
+ * para cada modalidad.
  */
 class OfertaController extends Controller
 {
@@ -67,14 +68,16 @@ class OfertaController extends Controller
             'modalidades.*' => ['integer'],
             'carreras' => ['array'],
             'carreras.*' => ['array'],
-            'carreras.*.*' => ['integer'],
+            'carreras.*.*' => ['array'],
+            'carreras.*.*.*' => ['integer'],
         ], [
             'modalidades.required' => 'Habilite al menos una modalidad.',
             'modalidades.min' => 'Habilite al menos una modalidad.',
         ]);
 
         $idsModalidad = array_map('intval', $datos['modalidades']);
-        $carrerasPorSede = collect($datos['carreras'] ?? [])->map(fn (array $ids): array => array_map('intval', $ids));
+        $carrerasPorSede = collect($datos['carreras'] ?? [])
+            ->map(fn (array $porModalidad): array => array_map(fn (array $ids): array => array_map('intval', $ids), $porModalidad));
 
         DB::transaction(function () use ($proceso, $idsModalidad, $carrerasPorSede): void {
             foreach ($this->modalidades() as $modalidad) {
@@ -88,14 +91,21 @@ class OfertaController extends Controller
             $carreras = $this->carreras();
 
             foreach ($this->sedes() as $sede) {
-                $idsCarrera = $carrerasPorSede->get($sede->id_sed, []);
+                foreach ($this->modalidades() as $modalidad) {
+                    $idsCarrera = $carrerasPorSede->get($sede->id_sed, [])[$modalidad->id_mad] ?? [];
 
-                foreach ($carreras as $carrera) {
-                    $this->sincronizar(
-                        ProcesoCarrera::withTrashed()->firstOrNew(['id_proceso' => $proceso->id_pro, 'id_sede' => $sede->id_sed, 'id_carrera' => $carrera->id_car]),
-                        'estado_pca',
-                        in_array($carrera->id_car, $idsCarrera, true),
-                    );
+                    foreach ($carreras as $carrera) {
+                        $this->sincronizar(
+                            ProcesoCarrera::withTrashed()->firstOrNew([
+                                'id_proceso' => $proceso->id_pro,
+                                'id_sede' => $sede->id_sed,
+                                'id_modalidad_admision' => $modalidad->id_mad,
+                                'id_carrera' => $carrera->id_car,
+                            ]),
+                            'estado_pca',
+                            in_array($carrera->id_car, $idsCarrera, true),
+                        );
+                    }
                 }
             }
         });
@@ -148,7 +158,9 @@ class OfertaController extends Controller
     }
 
     /**
-     * @return array{modalidades: list<int>, carreras: array<int, list<int>>}
+     * Modalidades habilitadas y carreras marcadas por sede y modalidad.
+     *
+     * @return array{modalidades: list<int>, carreras: array<int, array<int, list<int>>>}
      */
     private function seleccion(?Proceso $proceso): array
     {
@@ -167,9 +179,12 @@ class OfertaController extends Controller
             'carreras' => ProcesoCarrera::query()
                 ->where('id_proceso', $proceso->id_pro)
                 ->where('estado_pca', EstadoCatalogo::Habilitado->value)
-                ->get(['id_sede', 'id_carrera'])
+                ->get(['id_sede', 'id_modalidad_admision', 'id_carrera'])
                 ->groupBy('id_sede')
-                ->map(fn ($grupo): array => $grupo->pluck('id_carrera')->map(fn (mixed $id): int => (int) $id)->values()->all())
+                ->map(fn ($porSede): array => $porSede
+                    ->groupBy('id_modalidad_admision')
+                    ->map(fn ($grupo): array => $grupo->pluck('id_carrera')->map(fn (mixed $id): int => (int) $id)->values()->all())
+                    ->all())
                 ->all(),
         ];
     }

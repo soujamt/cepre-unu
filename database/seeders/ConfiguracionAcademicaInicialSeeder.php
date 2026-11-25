@@ -43,10 +43,12 @@ class ConfiguracionAcademicaInicialSeeder extends Seeder
         $sedePrincipal = Sede::query()->where('codigo_sed', 'SEDCAL')->firstOrFail();
 
         foreach (Carrera::query()->where('estado_car', EstadoCatalogo::Habilitado->value)->get() as $carrera) {
-            ProcesoCarrera::query()->updateOrCreate(
-                ['id_proceso' => $proceso->id_pro, 'id_sede' => $sedePrincipal->id_sed, 'id_carrera' => $carrera->id_car],
-                ['estado_pca' => EstadoCatalogo::Habilitado->value],
-            );
+            foreach ($modalidades as $modalidad) {
+                ProcesoCarrera::query()->updateOrCreate(
+                    ['id_proceso' => $proceso->id_pro, 'id_sede' => $sedePrincipal->id_sed, 'id_modalidad_admision' => $modalidad->id_mad, 'id_carrera' => $carrera->id_car],
+                    ['estado_pca' => EstadoCatalogo::Habilitado->value],
+                );
+            }
         }
 
         // Modalidades de pago del sistema anterior: [concepto, total, permite cuotas, mínimo, cuotas, documento].
