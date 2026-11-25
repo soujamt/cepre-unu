@@ -3,7 +3,7 @@ import { Aviso } from '@/components/aviso';
 import type { TonoAviso } from '@/components/aviso';
 import { CampoArea, CampoSelect, CampoTexto } from '@/components/campo';
 import { Combobox } from '@/components/combobox';
-import { Interruptor, Opciones, PiePaso, Seccion } from '@/components/asistente/comunes';
+import { Interruptor, Opciones, PiePaso, Seccion, opcionesBuscables } from '@/components/asistente/comunes';
 import type { ControlAsistente } from '@/components/asistente/use-asistente';
 import type { DatosAsistente } from '@/components/asistente/tipos';
 import { Button } from '@/components/ui/button';
@@ -82,12 +82,26 @@ export function PasoPersonal({ asistente, control }: { asistente: DatosAsistente
 
             <Seccion titulo="Nacimiento, domicilio y contacto">
                 <div className="grid gap-4 sm:grid-cols-2">
-                    <CampoSelect etiqueta="País nacimiento" value={texto('id_pais_nacimiento')} onChange={(evento) => cambiar('personaForm', 'id_pais_nacimiento', evento.target.value)} error={errores['personaForm.id_pais_nacimiento']} requerido>
-                        <Opciones opciones={catalogos.paises} vacio="Seleccionar país" />
-                    </CampoSelect>
-                    <CampoSelect etiqueta="Nacionalidad" value={texto('id_nacionalidad')} onChange={(evento) => cambiar('personaForm', 'id_nacionalidad', evento.target.value)} error={errores['personaForm.id_nacionalidad']} requerido>
-                        <Opciones opciones={catalogos.nacionalidades} vacio="Seleccionar nacionalidad" />
-                    </CampoSelect>
+                    <Combobox
+                        etiqueta="País nacimiento"
+                        valor={texto('id_pais_nacimiento')}
+                        alCambiar={(valor) => cambiar('personaForm', 'id_pais_nacimiento', valor)}
+                        opciones={opcionesBuscables(catalogos.paises, (pais) => pais.valor === catalogos.paisPeru)}
+                        placeholderBusqueda="Buscar país…"
+                        textoVacio="No hay países con ese nombre."
+                        error={errores['personaForm.id_pais_nacimiento']}
+                        requerido
+                    />
+                    <Combobox
+                        etiqueta="Nacionalidad"
+                        valor={texto('id_nacionalidad')}
+                        alCambiar={(valor) => cambiar('personaForm', 'id_nacionalidad', valor)}
+                        opciones={opcionesBuscables(catalogos.nacionalidades, (nacionalidad) => nacionalidad.nombre === 'PERUANA')}
+                        placeholderBusqueda="Buscar nacionalidad…"
+                        textoVacio="No hay nacionalidades con ese nombre."
+                        error={errores['personaForm.id_nacionalidad']}
+                        requerido
+                    />
                     <Combobox
                         etiqueta="Ubigeo nacimiento"
                         valor={texto('id_ubigeo_nacimiento')}

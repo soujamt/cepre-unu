@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight } from '@keyline-icons/react/fill';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import type { OpcionCombobox } from '@/components/combobox';
 import type { Opcion } from '@/types';
 
 /**
@@ -26,6 +27,15 @@ export function Interruptor({ etiqueta, marcado, alCambiar }: { etiqueta: string
             {etiqueta}
         </label>
     );
+}
+
+/**
+ * Catálogo para el selector con búsqueda; la opción indicada (por ejemplo PERÚ) va primero.
+ */
+export function opcionesBuscables(opciones: Opcion[], primero?: (opcion: Opcion) => boolean): OpcionCombobox[] {
+    const destacada = primero ? opciones.filter(primero) : [];
+
+    return [...destacada, ...opciones.filter((opcion) => !destacada.includes(opcion))].map((opcion) => ({ valor: opcion.valor, etiqueta: opcion.nombre }));
 }
 
 export function Opciones({ opciones, vacio }: { opciones: Opcion[]; vacio: string }) {
